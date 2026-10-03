@@ -833,8 +833,7 @@
                 <span class="highlight-teal">Annuities</span>
             </h1>
             <p class="hero-subtitle">
-                Master the mathematics of money growth with worked examples in
-                Python and Mojo 1.x side by side, and beautifully explained financial formulas.
+                Master the mathematics of money growth with worked examples in`r`n                   Mojo 1.x, and beautifully explained financial formulas.
             </p>
             <div class="hero-formula-preview">
                 <span class="formula">FV</span> = <span class="formula">PV</span> × <span class="formula">(1 + r)<sup>n</sup></span>
@@ -877,44 +876,22 @@
             <div class="card-grid">
                 
                 <div class="card">
-                    <h3>🐍 Python Implementation</h3>
-                    <p>Here's how to compute Future Value in Python:</p>
-                    <div class="code-section">
-                        <h4><span class="python-icon">🐍</span> Python Code</h4>
-                        <div class="code-block">
-                            <pre><code><span class="keyword">def</span> <span class="function">future_value</span>(pv, rate, years):
-    <span class="comment">"""Calculate future value with compound interest."""</span>
-    r = rate / <span class="number">100</span>  <span class="comment"># convert % to decimal</span>
-    fv = pv * (<span class="number">1</span> + r) ** years
-    <span class="keyword">return</span> round(fv, <span class="number">2</span>)
-
-<span class="comment"># Example usage</span>
-pv = <span class="number">10000</span>      <span class="comment"># present value</span>
-rate = <span class="number">7</span>        <span class="comment"># 7% annual interest</span>
-years = <span class="number">10</span>       <span class="comment"># 10 years</span>
-
-result = future_value(pv, rate, years)
-<span class="function">print</span>(<span class="string">f"FV = ${result:,.2f}"</span>)</code></pre>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
                     <h3>🔥 Mojo 1.x Implementation</h3>
                     <p>Same formula, typed end to end — <code>Float64</code> in and out, so the compiler checks every money computation and the result needs no <code>round()</code> boxing:</p>
                     <div class="code-section">
                         <h4><span class="python-icon">⚡</span> Mojo Code</h4>
                         <div class="code-block">
-                            <pre><code>from std.math import pow
+                            <pre>from std.math import pow
 
 def future_value(pv: Float64, rate: Float64, years: Int) -&gt; Float64:
-    &quot;&quot;&quot;Calculate future value with compound interest.&quot;&quot;&quot;
+    """Calculate future value with compound interest."""
     var r = rate / 100.0
     return pv * pow(1.0 + r, Float64(years))
 
 # Example usage
 def main():
     var result = future_value(10000.0, 7.0, 10)
-    print(&quot;FV = $&quot;, result)   # 19671.51…</code></pre>
+    print("FV = $", result)   # 19671.51…</pre>
                         </div>
                     </div>
                 </div>
@@ -938,39 +915,31 @@ def main():
             <div class="card-grid">
                 
                 <div class="card">
-                    <h3>🐍 Python Implementation</h3>
-                    <p>Compute the FVIF with this simple Python function:</p>
-                    <div class="code-section">
-                        <h4><span class="python-icon">🐍</span> Python Code</h4>
-                        <div class="code-block">
-                            <pre><code><span class="keyword">def</span> <span class="function">fvif</span>(rate, n):
-    <span class="comment">"""Calculate Future Value Interest Factor."""</span>
-    r = rate / <span class="number">100</span>
-    factor = (<span class="number">1</span> + r) ** n
-    <span class="keyword">return</span> round(factor, <span class="number">4</span>)
-
-<span class="comment"># Example: 7% for 10 years</span>
-factor = fvif(<span class="number">7</span>, <span class="number">10</span>)
-<span class="function">print</span>(<span class="string">f"FVIF = {factor}"</span>)
-<span class="comment"># Output: FVIF = 1.9672</span></code></pre>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
                     <h3>🔥 Mojo 1.x Implementation</h3>
                     <p>One factor, one line — and because the exponent is an <code>Int</code> promoted explicitly, there's no ambiguity about what <code>pow</code> receives:</p>
                     <div class="code-section">
                         <h4><span class="python-icon">⚡</span> Mojo Code</h4>
                         <div class="code-block">
-                            <pre><code><span class="keyword">from</span> std.math <span class="keyword">import</span> pow
+                            <pre>from std.math import pow
 
-<span class="keyword">def</span> <span class="function">fvif</span>(rate: Float64, n: Int) -&gt; Float64:
-    <span class="string">"""Future Value Interest Factor."""</span>
-    <span class="keyword">var</span> r = rate / <span class="number">100.0</span>
-    <span class="keyword">return</span> pow(<span class="number">1.0</span> + r, Float64(n))
+def fvif(rate: Float64, n: Int) -&gt; Float64:
+    """Future Value Interest Factor."""
+    var r = rate / 100.0
+    return pow(1.0 + r, Float64(n))
 
-<span class="keyword">def</span> <span class="function">main</span>():
-    <span class="keyword">print</span>(<span class="string">&quot;FVIF =&quot;</span>, <span class="function">fvif</span>(<span class="number">7.0</span>, <span class="number">10</span>))   <span class="comment"># 1.96715…</span></code></pre>
+def main():
+    print("FVIF =", fvif(7.0, 10))   # 1.96715…</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="info-box">
+                <h4>💡 Key Insight</h4>
+                <p>At 7% interest, money doubles roughly every 10 years (FVIF ≈ 2). This is the <strong>Rule of 72</strong> in action: 72 ÷ 7 ≈ 10.3 years.</p>
+            </div>
+            <div class="section-nav">
+                <a href="#future-value" class="prev">
+                    <span class="nav-label">← Previous</span>
                     <span class="nav-title">Future Value</span>
                 </a>
                 <a href="#annuities" class="next">
@@ -990,53 +959,42 @@ factor = fvif(<span class="number">7</span>, <span class="number">10</span>)
             <div class="card-grid">
                 
                 <div class="card">
-                    <h3>🐍 Python Implementation</h3>
-                    <p>Future Value of an Ordinary Annuity in Python:</p>
-                    <div class="code-section">
-                        <h4><span class="python-icon">🐍</span> Python Code</h4>
-                        <div class="code-block">
-                            <pre><code><span class="keyword">def</span> <span class="function">fv_annuity</span>(pmt, rate, n):
-    <span class="comment">"""Future Value of Ordinary Annuity."""</span>
-    r = rate / <span class="number">100</span>
-    fv = pmt * (((<span class="number">1</span> + r) ** n - <span class="number">1</span>) / r)
-    <span class="keyword">return</span> round(fv, <span class="number">2</span>)
-
-<span class="comment"># Example: $500/month for 20 years at 6%</span>
-result = fv_annuity(<span class="number">500</span>, <span class="number">6</span>, <span class="number">20</span>)
-<span class="function">print</span>(<span class="string">f"FV = ${result:,.2f}"</span>)
-<span class="comment"># Output: FV = $18,390.63</span></code></pre>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
                     <h3>🔥 Mojo 1.x Implementation</h3>
                     <p>The FVIFA formula ports line for line — and when the payments come as a whole portfolio, the same loop runs over a <code>Tensor</code> of terms at compiled speed:</p>
                     <div class="code-section">
                         <h4><span class="python-icon">⚡</span> Mojo Code</h4>
                         <div class="code-block">
-                            <pre><code><span class="keyword">from</span> std.math <span class="keyword">import</span> pow
+                            <pre>from std.math import pow
 
-<span class="keyword">def</span> <span class="function">fv_annuity</span>(pmt: Float64, rate: Float64, n: Int) -&gt; Float64:
-    <span class="string">"""Future Value of Ordinary Annuity."""</span>
-    <span class="keyword">var</span> r = rate / <span class="number">100.0</span>
-    <span class="keyword">return</span> pmt * (pow(<span class="number">1.0</span> + r, Float64(n)) - <span class="number">1.0</span>) / r
+def fv_annuity(pmt: Float64, rate: Float64, n: Int) -&gt; Float64:
+    """Future Value of Ordinary Annuity."""
+    var r = rate / 100.0
+    return pmt * (pow(1.0 + r, Float64(n)) - 1.0) / r
 
-<span class="keyword">def</span> <span class="function">main</span>():
-    <span class="function">print</span>(<span class="string">"FV = $"</span>, fv_annuity(<span class="number">500.0</span>, <span class="number">6.0</span>, <span class="number">20</span>))</code></pre>
+def main():
+    print("FV = $", fv_annuity(500.0, 6.0, 20))</pre>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="info-box tip">
-<pre><code>from std.math import pow
+                <h4>💡 Real-World Example</h4>
+                <p>Investing $500 per month at 6% for 20 years yields approximately <strong>$18,390</strong> — that's the power of disciplined, regular investing combined with compound interest!</p>
+            </div>
+            <div class="section-nav">
+                <a href="#fvif" class="prev">
+                    <span class="nav-label">← Previous</span>
+                    <span class="nav-title">FVIF</span>
+                </a>
+                <a href="#annuity-due" class="next">
+                    <span class="nav-label">Next →</span>
+                    <span class="nav-title">Annuity Due</span>
+                </a>
+            </div>
+        </section>
 
-def fv_annuity(pmt: Float64, rate: Float64, n: Int) -&gt; Float64:
-    &quot;&quot;&quot;Future Value of Ordinary Annuity.&quot;&quot;&quot;
-    var r = rate / 100.0
-    return pmt * (pow(1.0 + r, Float64(n)) - 1.0) / r
-
-def main():
-    print(&quot;FV = $&quot;, fv_annuity(500.0, 6.0, 20))</code></pre>ion class="section" id="annuity-due">
+        <!-- ===== ANNUITY DUE ===== -->
+        <section class="section" id="annuity-due">
             <div class="section-header">
                 <div class="section-icon">⏰</div>
                 <h2>Future Value of Annuity Due</h2>
@@ -1045,40 +1003,21 @@ def main():
             <div class="card-grid">
                 
                 <div class="card">
-                    <h3>🐍 Python Implementation</h3>
-                    <p>Future Value of an Annuity Due:</p>
-                    <div class="code-section">
-                        <h4><span class="python-icon">🐍</span> Python Code</h4>
-                        <div class="code-block">
-                            <pre><code><span class="keyword">def</span> <span class="function">fv_annuity_due</span>(pmt, rate, n):
-    <span class="comment">"""FV of Annuity Due (payments at period start)."""</span>
-    r = rate / <span class="number">100</span>
-    <span class="comment"># Multiply ordinary annuity FV by (1 + r)</span>
-    fv = pmt * (((<span class="number">1</span> + r) ** n - <span class="number">1</span>) / r) * (<span class="number">1</span> + r)
-    <span class="keyword">return</span> round(fv, <span class="number">2</span>)
-
-<span class="comment"># Example: $500 at period start, 6%, 20 periods</span>
-result = fv_annuity_due(<span class="number">500</span>, <span class="number">6</span>, <span class="number">20</span>)
-<span class="function">print</span>(<span class="string">f"FV Due = ${result:,.2f}"</span>)</code></pre>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
                     <h3>🔥 Mojo 1.x Implementation</h3>
                     <p>The <code>(1 + r)</code> bump for annuity-due becomes a <code>Bool</code> flag the compiler specializes on — one function, two variants, zero runtime branching cost:</p>
                     <div class="code-section">
                         <h4><span class="python-icon">⚡</span> Mojo Code</h4>
                         <div class="code-block">
-                            <pre><code><span class="keyword">from</span> std.math <span class="keyword">import</span> pow
+                            <pre>from std.math import pow
 
-<span class="keyword">def</span> <span class="function">fv_annuity_due</span>(pmt: Float64, rate: Float64, n: Int) -&gt; Float64:
-    <span class="string">"""FV of Annuity Due (payments at period start)."""</span>
-    <span class="keyword">var</span> r = rate / <span class="number">100.0</span>
-    <span class="keyword">var</span> ordinary = pmt * (pow(<span class="number">1.0</span> + r, Float64(n)) - <span class="number">1.0</span>) / r
-    <span class="keyword">return</span> ordinary * (<span class="number">1.0</span> + r)
+def fv_annuity_due(pmt: Float64, rate: Float64, n: Int) -&gt; Float64:
+    """FV of Annuity Due (payments at period start)."""
+    var r = rate / 100.0
+    var ordinary = pmt * (pow(1.0 + r, Float64(n)) - 1.0) / r
+    return ordinary * (1.0 + r)
 
-<span class="keyword">def</span> <span class="function">main</span>():
-    <span class="function">print</span>(<span class="string">"FV Due = $"</span>, fv_annuity_due(<span class="number">500.0</span>, <span class="number">6.0</span>, <span class="number">20</span>))</code></pre>
+def main():
+    print("FV Due = $", fv_annuity_due(500.0, 6.0, 20))</pre>
                         </div>
                     </div>
                 </div>
@@ -1087,51 +1026,42 @@ result = fv_annuity_due(<span class="number">500</span>, <span class="number">6<
                 <h4>🔍 Difference vs. Ordinary Annuity</h4>
                 <p>An Annuity Due is always worth <strong>more</strong> than an ordinary annuity with the same terms — by exactly a factor of <strong>(1 + r)</strong>. That's one extra period of growth for every payment.</p>
             </div>
-            <div class="sec<pre><code>from std.math import pow
+            <div class="section-nav">
+                <a href="#annuities" class="prev">
+                    <span class="nav-label">← Previous</span>
+                    <span class="nav-title">Annuities</span>
+                </a>
+                <a href="#present-value" class="next">
+                    <span class="nav-label">Next →</span>
+                    <span class="nav-title">Present Value</span>
+                </a>
+            </div>
+        </section>
 
-def fv_annuity_due(pmt: Float64, rate: Float64, n: Int) -&gt; Float64:
-    &quot;&quot;&quot;FV of Annuity Due (payments at period start).&quot;&quot;&quot;
-    var r = rate / 100.0
-    var ordinary = pmt * (pow(1.0 + r, Float64(n)) - 1.0) / r
-    return ordinary * (1.0 + r)
-
-def main():
-    print(&quot;FV Due = $&quot;, fv_annuity_due(500.0, 6.0, 20))</code></pre>ard-grid">
+        <!-- ===== PRESENT VALUE ===== -->
+        <section class="section" id="present-value">
+            <div class="section-header">
+                <div class="section-icon">💡</div>
+                <h2>Present Value (PV)</h2>
+                <p>Present Value is the current worth of a future sum of money — the reverse of Future Value. It tells you how much you need today to reach a future goal.</p>
+            </div>
+            <div class="card-grid">
                 
-                <div class="card">
-                    <h3>🐍 Python Implementation</h3>
-                    <p>Present Value calculation in Python:</p>
-                    <div class="code-section">
-                        <h4><span class="python-icon">🐍</span> Python Code</h4>
-                        <div class="code-block">
-                            <pre><code><span class="keyword">def</span> <span class="function">present_value</span>(fv, rate, years):
-    <span class="comment">"""Calculate present value (discounting)."""</span>
-    r = rate / <span class="number">100</span>
-    pv = fv / ((<span class="number">1</span> + r) ** years)
-    <span class="keyword">return</span> round(pv, <span class="number">2</span>)
-
-<span class="comment"># How much for $50,000 in 10 years at 7%?</span>
-result = present_value(<span class="number">50000</span>, <span class="number">7</span>, <span class="number">10</span>)
-<span class="function">print</span>(<span class="string">f"PV = ${result:,.2f}"</span>)
-<span class="comment"># Output: PV = $25,415.49</span></code></pre>
-                        </div>
-                    </div>
-                </div>
                 <div class="card">
                     <h3>🔥 Mojo 1.x Implementation</h3>
                     <p>Discounting is division by the same FVIF — in Mojo the negative exponent is explicit, and a whole ladder of future cashflows discounts in one typed loop:</p>
                     <div class="code-section">
                         <h4><span class="python-icon">⚡</span> Mojo Code</h4>
                         <div class="code-block">
-                            <pre><code><span class="keyword">from</span> std.math <span class="keyword">import</span> pow
+                            <pre>from std.math import pow
 
-<span class="keyword">def</span> <span class="function">present_value</span>(fv: Float64, rate: Float64, years: Int) -&gt; Float64:
-    <span class="string">"""Present value (discounting)."""</span>
-    <span class="keyword">var</span> r = rate / <span class="number">100.0</span>
-    <span class="keyword">return</span> fv / pow(<span class="number">1.0</span> + r, Float64(years))
+def present_value(fv: Float64, rate: Float64, years: Int) -&gt; Float64:
+    """Present value (discounting)."""
+    var r = rate / 100.0
+    return fv / pow(1.0 + r, Float64(years))
 
-<span class="keyword">def</span> <span class="function">main</span>():
-    <span class="function">print</span>(<span class="string">"PV = $"</span>, present_value(<span class="number">50000.0</span>, <span class="number">7.0</span>, <span class="number">10</span>))</code></pre>
+def main():
+    print("PV = $", present_value(50000.0, 7.0, 10))</pre>
                         </div>
                     </div>
                 </div>
@@ -1157,19 +1087,6 @@ result = present_value(<span class="number">50000</span>, <span class="number">7
             </div>
             <div class="card-grid">
 
-                <div class="ca<pre><code>from std.math import pow
-
-def present_value(fv: Float64, rate: Float64, years: Int) -&gt; Float64:
-    &quot;&quot;&quot;Present value (discounting).&quot;&quot;&quot;
-    var r = rate / 100.0
-    return fv / pow(1.0 + r, Float64(years))
-
-def main():
-    print(&quot;PV = $&quot;, present_value(50000.0, 7.0, 10))</code></pre>expected = capm_return(<span class="number">0.03</span>, <span class="number">1.2</span>, <span class="number">0.10</span>)
-<span class="function">print</span>(<span class="string">f"E(R) = {expected:.2%}"</span>)   <span class="comment"># 11.40%</span></code></pre>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="card">
                     <h3>🔥 Mojo 1.x Implementation</h3>
@@ -1188,27 +1105,6 @@ def main():
                     </div>
                 </div>
 
-                <div class="card">
-                    <h3>🐍 Python Implementation</h3>
-                    <p>Where does beta come from? Regression against the market: β = Cov(R<sub>i</sub>, R<sub>m</sub>) / Var(R<sub>m</sub>):</p>
-                    <div class="code-section">
-                        <h4><span class="python-icon">🐍</span> Python Code</h4>
-                        <div class="code-block">
-                            <pre><code><span class="keyword">def</span> <span class="function">beta</span>(asset, market):
-    <span class="comment">"""Beta from a series of paired returns (as decimals)."""</span>
-    n = <span class="function">len</span>(asset)
-    mean_a = <span class="function">sum</span>(asset) / n
-    mean_m = <span class="function">sum</span>(market) / n
-    cov = <span class="function">sum</span>((a - mean_a) * (m - mean_m) <span class="keyword">for</span> a, m <span class="keyword">in</span> <span class="function">zip</span>(asset, market))
-    var = <span class="function">sum</span>((m - mean_m) ** <span class="number">2</span> <span class="keyword">for</span> m <span class="keyword">in</span> market)
-    <span class="keyword">return</span> cov / var
-
-asset   = [<span class="number">0.02</span>, -<span class="number">0.01</span>, <span class="number">0.04</span>, <span class="number">0.03</span>, -<span class="number">0.02</span>, <span class="number">0.05</span>]
-market  = [<span class="number">0.01</span>, -<span class="number">0.02</span>, <span class="number">0.03</span>, <span class="number">0.02</span>, -<span class="number">0.01</span>, <span class="number">0.04</span>]
-<span class="function">print</span>(<span class="string">f"beta = {beta(asset, market):.3f}"</span>)</code></pre>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="card">
                     <h3>🔥 Mojo 1.x Implementation</h3>
@@ -1216,7 +1112,8 @@ market  = [<span class="number">0.01</span>, -<span class="number">0.02</span>, 
                     <div class="code-section">
                         <h4><span class="python-icon">⚡</span> Mojo Code</h4>
                         <div class="code-block">
-                            <pre>
+                            <pre><code><span class="keyword">from</span> collections <span class="keyword">import</span> List
+
 <span class="keyword">def</span> <span class="function">beta</span>(asset: List[Float64], market: List[Float64]) -&gt; Float64:
     <span class="string">"""Beta = Cov(asset, market) / Var(market)."""</span>
     <span class="keyword">var</span> n = <span class="function">len</span>(asset)
@@ -1240,7 +1137,7 @@ market  = [<span class="number">0.01</span>, -<span class="number">0.02</span>, 
 <span class="keyword">def</span> <span class="function">main</span>():
     <span class="keyword">var</span> asset = List[Float64](<span class="number">0.02</span>, -<span class="number">0.01</span>, <span class="number">0.04</span>, <span class="number">0.03</span>, -<span class="number">0.02</span>, <span class="number">0.05</span>)
     <span class="keyword">var</span> market = List[Float64](<span class="number">0.01</span>, -<span class="number">0.02</span>, <span class="number">0.03</span>, <span class="number">0.02</span>, -<span class="number">0.01</span>, <span class="number">0.04</span>)
-    <span class="function">print</span>(<span class="string">"beta = "</span>, beta(asset, market))   <span class="comment"># same ≈1.16 as Python</span></code></pre>
+    <span class="function">print</span>(<span class="string">"beta = "</span>, beta(asset, market))   <span class="comment"># ≈1.16</span></code></pre>
                         </div>
                     </div>
                 </div>
@@ -1274,7 +1171,7 @@ market  = [<span class="number">0.01</span>, -<span class="number">0.02</span>, 
                         <tr>
                             <th>Concept</th>
                             <th>Formula</th>
-                            <th>Function (Python &amp; Mojo)</th>
+                            <th>Function (<code>future_value</code> et al.)</th>
                             <th>Key Variables</th>
                         </tr>
                     </thead>
@@ -1345,7 +1242,7 @@ market  = [<span class="number">0.01</span>, -<span class="number">0.02</span>, 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
         <p>📚 <strong>FinCalc</strong> — Interactive Guide to Future Value, Interest Factors &amp; Annuities</p>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Every formula is shown with its Python implementation for reference &amp; learning.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Every formula is shown with a typed Mojo 1.x implementation for reference &amp; learning.</p>
         <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.6;">Made with ❤️ for finance &amp; programming enthusiasts | <a href="#top">Back to top ↑</a></p>
     </footer>
 
@@ -1378,4 +1275,141 @@ market  = [<span class="number">0.01</span>, -<span class="number">0.02</span>, 
     </script>
 
     
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body></html>

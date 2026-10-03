@@ -22,7 +22,6 @@
             --accent-light: #dbeafe;
             --code-bg: #f1f5f9;
             --code-border: #e2e8f0;
-            --python-accent: #3572a5;
             --mojo-accent: #8b5cf6;
             --sidebar-width: 280px;
             --sidebar-collapsed: 76px;
@@ -39,13 +38,12 @@
             --bg: #0b1020;
             --surface: #141a2e;
             --text: #e6eaf6;
-            --text-secondary: #aab4cf;
+            --text-secondary: #ffe4a3;
             --border: #2b3350;
             --accent: #7da7f7;
             --accent-light: #1a2542;
             --code-bg: #101527;
             --code-border: #2b3350;
-            --python-accent: #8ab4f8;
             --mojo-accent: #b39dfa;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.35);
         }
@@ -150,7 +148,7 @@
             place-items: center;
             font-size: 1.3rem;
             background: linear-gradient(135deg, #38bdf8, #818cf8);
-            color: #10101f;
+            color: #e0a83c;
             box-shadow: 0 8px 22px rgba(56, 189, 248, 0.38);
         }
         .sidebar .brand-text {
@@ -233,7 +231,7 @@
             border-top: 1px solid rgba(255, 255, 255, 0.09);
             font-size: 0.7rem;
             letter-spacing: 0.05em;
-            color: #8a96cf;
+            color: #ffd98f;
             white-space: nowrap;
         }
         .sidebar-toggle {
@@ -415,9 +413,6 @@
             border-radius: 50%;
             display: inline-block;
         }
-        .code-block .header .lang .dot.python {
-            background: var(--python-accent);
-        }
         .code-block .header .lang .dot.mojo {
             background: var(--mojo-accent);
         }
@@ -452,7 +447,7 @@
             color: #dc2626;
         }
 
-        /* ── stacked code layout (Python above, Mojo below) ── */
+        /* ── code layout ── */
         .code-pair {
             display: grid;
             grid-template-columns: 1fr;
@@ -589,7 +584,7 @@
                 <div class="logo">📈</div>
                 <div class="brand-text">
                     <h1>Linear Regression</h1>
-                    <p>Python · Mojo 1.x</p>
+                    <p>Mojo 1.x</p>
                 </div>
             </div>
             <div class="tocscroll">
@@ -620,7 +615,7 @@
                     <li><a href="#ch13">13. Cheat Sheet</a></li>
                     <li><a href="#ch14">14. Exercises</a></li>
                 </ul>
-                <div class="sidebar-foot">14 chapters · 2 languages · 1 great model</div>
+                <div class="sidebar-foot">14 chapters · 1 language · 1 great model</div>
             </div>
         </nav>
         <button class="sidebar-toggle" id="sideToggle" type="button" aria-label="Toggle sidebar">
@@ -652,10 +647,12 @@
         <p>
             The goal is to find coefficients <strong>β</strong> that minimize the sum of squared
             residuals (ordinary least squares). We implement everything from scratch in
-            <strong>Python</strong> (with NumPy) and <strong>Mojo 1.x</strong> — a high-performance
-            Python superset designed for AI systems. Learning the mathematics first, then expressing
-            the same kernel twice, is how the "two-world" gap between prototyping and production
-            finally closes.
+            <strong>Mojo 1.x</strong> — a high-performance Python superset designed for AI systems.
+            Learning the mathematics first, then writing each kernel out in full, is how the
+            "two-world" gap between prototyping and production finally closes. Where a step is
+            usually reached for NumPy, the listing drives NumPy through Mojo's interop bridge
+            instead; Chapter 11 and the Chapter 12 table map every step back to its NumPy
+            equivalent.
         </p>
         <h3>Key quantities</h3>
         <ul>
@@ -684,46 +681,14 @@
         </div>
         <p>
             What is being asked here is quietly profound: find the two numbers that make the
-            averaged squared mistakes as small as they can possibly be. Below is a clean class-based
-            implementation — Python leans on vectorized NumPy, while Mojo 1.x uses explicit typed
-            loops for systems-level performance and memory safety.
+            averaged squared mistakes as small as they can possibly be. Below is a clean
+            class-based Mojo 1.x implementation: explicit typed loops, every weight in plain
+            sight, and systems-level performance and memory safety by construction.
         </p>
 
-        <h4>Python — class-based, from scratch</h4>
-        <div class="code-block">
-            <div class="header">
-                <span class="lang"><span class="dot python"></span> Python</span>
-                <span>numpy</span>
-            </div>
-            <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
 
-<span class="keyword">class</span> <span class="func">SimpleLinearRegression</span>:
-    <span class="keyword">def</span> <span class="func">__init__</span>(self):
-        self.w = <span class="number">0.0</span>
-        self.b = <span class="number">0.0</span>
-
-    <span class="keyword">def</span> <span class="func">fit</span>(self, X, y):
-        x_mean = np.mean(X)
-        y_mean = np.mean(y)
-        numerator = np.sum((X - x_mean) * (y - y_mean))
-        denominator = np.sum((X - x_mean) ** <span class="number">2</span>)
-        self.w = numerator / denominator
-        self.b = y_mean - self.w * x_mean
-
-    <span class="keyword">def</span> <span class="func">predict</span>(self, X):
-        <span class="keyword">return</span> self.w * X + self.b
-
-<span class="comment"># worked example</span>
-X = np.array([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>], dtype=<span class="keyword">float</span>)
-y = np.array([<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">6</span>], dtype=<span class="keyword">float</span>)
-
-model = SimpleLinearRegression()
-model.fit(X, y)
-<span class="keyword">print</span>(f<span class="string">"w = {model.w:.3f}, b = {model.b:.3f}"</span>)  <span class="comment"># w = 0.700, b = 2.200</span></pre>
-        </div>
-
-        <h4>Mojo 1.x — equivalent</h4>
-        <div class="code-block">
+        <h4>Mojo 1.x — from scratch</h4>
+        <div class="code-block active">
             <div class="header">
                 <span class="lang"><span class="dot mojo"></span> Mojo 1.x</span>
                 <span>List — standard prelude</span>
@@ -782,40 +747,26 @@ model.fit(X, y)
         </p>
 
         <div class="code-pair">
-            <div class="code-block">
-                <div class="header"><span class="lang"><span class="dot python"></span> Python</span></div>
-                <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
-
-X = np.array([[<span class="number">1</span>, <span class="number">2</span>], [<span class="number">2</span>, <span class="number">3</span>], [<span class="number">3</span>, <span class="number">4</span>], [<span class="number">4</span>, <span class="number">5</span>]])
-y = np.array([<span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span>])
-
-<span class="comment"># add intercept column</span>
-X_b = np.c_[np.ones((X.shape[<span class="number">0</span>], <span class="number">1</span>)), X]
-
-<span class="comment"># closed form</span>
-β = np.linalg.inv(X_b.T @ X_b) @ X_b.T @ y
-<span class="keyword">print</span>(<span class="string">"β ="</span>, β)  <span class="comment"># [1. 0. 2.] → y = 1 + 0·x₁ + 2·x₂</span>
-
-<span class="comment"># numerically stable alternative</span>
-β = np.linalg.lstsq(X_b, y, rcond=<span class="keyword">None</span>)[<span class="number">0</span>]</pre>
-            </div>
-            <div class="code-block">
+            <div class="code-block active">
                 <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x</span></div>
-                <pre><code>from std.python import Python
+                <pre><span class="keyword">from</span> std.python <span class="keyword">import</span> Python
 
-def main() raises:
-    var np = Python.import_module(&quot;numpy&quot;)
+<span class="keyword">def</span> <span class="func">main</span>():
+    <span class="keyword">var</span> np = Python.import_module(<span class="string">"numpy"</span>)
 
-    var X = np.array([[1, 2], [2, 3], [3, 4], [4, 5]])
-    var y = np.array([3, 5, 7, 9])
+    <span class="keyword">var</span> X = np.array([[<span class="number">1</span>, <span class="number">2</span>], [<span class="number">2</span>, <span class="number">3</span>], [<span class="number">3</span>, <span class="number">4</span>], [<span class="number">4</span>, <span class="number">5</span>]])
+    <span class="keyword">var</span> y = np.array([<span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span>])
 
-    # add ones column
-    var X_b = np.column_stack([np.ones(X.shape[0]), X])
+    <span class="comment"># add ones column</span>
+    <span class="keyword">var</span> X_b = np.column_stack([np.ones(X.shape[<span class="number">0</span>]), X])
 
-    # closed form: β = (XᵀX)⁻¹ Xᵀ y
-    var beta = np.linalg.inv(X_b.T.matmul(X_b)).matmul(X_b.T).matmul(y)
+    <span class="comment"># closed form: β = (XᵀX)⁻¹ Xᵀ y</span>
+    <span class="keyword">var</span> beta = np.linalg.inv(X_b.T @ X_b) @ X_b.T @ y
 
-    print(&quot;β =&quot;, beta)  # [1. 0. 2.] → y = 1 + 0·x₁ + 2·x₂</code></pre>
+    <span class="keyword">print</span>(<span class="string">"β ="</span>, beta)  <span class="comment"># [1. 0. 2.] → y = 1 + 0·x₁ + 2·x₂</span>
+
+    <span class="comment"># numerically stable alternative</span>
+    <span class="keyword">var</span> beta2 = np.linalg.lstsq(X_b, y, rcond=None)[<span class="number">0</span>]</pre>
             </div>
         </div>
 
@@ -856,41 +807,7 @@ def main() raises:
 
         <h4>Class-based implementation</h4>
         <div class="code-pair">
-            <div class="code-block">
-                <div class="header"><span class="lang"><span class="dot python"></span> Python</span></div>
-                <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
-
-<span class="keyword">class</span> <span class="func">GDLinearRegression</span>:
-    <span class="keyword">def</span> <span class="func">__init__</span>(self, lr=<span class="number">0.01</span>, epochs=<span class="number">1000</span>):
-        self.lr = lr
-        self.epochs = epochs
-        self.w = <span class="number">0.0</span>
-        self.b = <span class="number">0.0</span>
-
-    <span class="keyword">def</span> <span class="func">fit</span>(self, X, y):
-        n = len(X)
-        <span class="keyword">for</span> _ <span class="keyword">in</span> range(self.epochs):
-            y_pred = self.w * X + self.b
-            dw = -(<span class="number">2</span>/n) * np.sum((y - y_pred) * X)
-            db = -(<span class="number">2</span>/n) * np.sum(y - y_pred)
-            self.w -= self.lr * dw
-            self.b -= self.lr * db
-
-    <span class="keyword">def</span> <span class="func">predict</span>(self, X):
-        <span class="keyword">return</span> self.w * X + self.b
-
-<span class="comment"># batch gradient descent (matrix form)</span>
-<span class="keyword">def</span> <span class="func">gradient_descent</span>(X, y, lr=<span class="number">0.01</span>, epochs=<span class="number">1000</span>):
-    n, p = X.shape
-    X_b = np.c_[np.ones((n, <span class="number">1</span>)), X]
-    β = np.random.randn(p + <span class="number">1</span>, <span class="number">1</span>)
-    y = y.reshape(-<span class="number">1</span>, <span class="number">1</span>)
-    <span class="keyword">for</span> _ <span class="keyword">in</span> range(epochs):
-        grad = (<span class="number">1</span>/n) * X_b.T @ (X_b @ β - y)
-        β -= lr * grad
-    <span class="keyword">return</span> β</pre>
-            </div>
-            <div class="code-block">
+            <div class="code-block active">
                 <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x</span></div>
                 <pre><span class="keyword">struct</span> <span class="func">GDLinearRegression</span>:
     <span class="keyword">var</span> w: Float64
@@ -938,39 +855,23 @@ def main() raises:
 
         <h4>Ridge (L2) &amp; Lasso (L1)</h4>
         <div class="code-pair">
-            <div class="code-block">
-                <div class="header"><span class="lang"><span class="dot python"></span> Python</span></div>
-                <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
-<span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> Ridge, Lasso
-
-X = np.random.randn(<span class="number">50</span>, <span class="number">5</span>)
-y = <span class="number">2</span> * X[:, <span class="number">0</span>] - <span class="number">1.5</span> * X[:, <span class="number">1</span>] + <span class="number">0.5</span> * np.random.randn(<span class="number">50</span>)
-
-<span class="comment"># Ridge (L2)</span>
-ridge = Ridge(alpha=<span class="number">1.0</span>).fit(X, y)
-<span class="keyword">print</span>(<span class="string">"Ridge coeff:"</span>, ridge.coef_)
-
-<span class="comment"># Lasso (L1)</span>
-lasso = Lasso(alpha=<span class="number">0.1</span>).fit(X, y)
-<span class="keyword">print</span>(<span class="string">"Lasso coeff:"</span>, lasso.coef_)</pre>
-            </div>
-            <div class="code-block">
+            <div class="code-block active">
                 <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x</span></div>
-                <pre><code>from std.python import Python
+                <pre><span class="keyword">from</span> std.python <span class="keyword">import</span> Python
 
-def main() raises:
-    var np = Python.import_module(&quot;numpy&quot;)
+<span class="keyword">def</span> <span class="func">main</span>():
+    <span class="keyword">var</span> np = Python.import_module(<span class="string">"numpy"</span>)
 
-    # synthetic 50×5 data
-    var X = np.random.randn(50, 5)
-    var y = 2.0 * X.T[0] - 1.5 * X.T[1] + 0.5 * np.random.randn(50)
+    <span class="comment"># synthetic 50×5 data</span>
+    <span class="keyword">var</span> X = np.random.randn(<span class="number">50</span>, <span class="number">5</span>)
+    <span class="keyword">var</span> y = <span class="number">2.0</span> * X[:, <span class="number">0</span>] - <span class="number">1.5</span> * X[:, <span class="number">1</span>] + <span class="number">0.5</span> * np.random.randn(<span class="number">50</span>)
 
-    # Ridge closed form: β = (XᵀX + αI)⁻¹ Xᵀ y
-    var alpha = 1.0
-    var XtX = X.T.matmul(X)
-    var XtX_reg = XtX + alpha * np.eye(X.shape[1])
-    var beta = np.linalg.inv(XtX_reg).matmul(X.T).matmul(y)
-    print(&quot;Ridge coeff:&quot;, beta)</code></pre>
+    <span class="comment"># Ridge closed form: β = (XᵀX + αI)⁻¹ Xᵀ y</span>
+    <span class="keyword">var</span> alpha = <span class="number">1.0</span>
+    <span class="keyword">var</span> XtX = X.T @ X
+    <span class="keyword">var</span> XtX_reg = XtX + alpha * np.eye(X.shape[<span class="number">1</span>])
+    <span class="keyword">var</span> beta = np.linalg.inv(XtX_reg) @ X.T @ y
+    <span class="keyword">print</span>(<span class="string">"Ridge coeff:"</span>, beta)</pre>
             </div>
         </div>
 
@@ -1009,22 +910,7 @@ def main() raises:
         </table>
 
         <div class="code-pair">
-            <div class="code-block">
-                <div class="header"><span class="lang"><span class="dot python"></span> Python</span></div>
-                <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
-
-<span class="keyword">def</span> <span class="func">metrics</span>(y_true, y_pred):
-    mse = np.mean((y_true - y_pred) ** <span class="number">2</span>)
-    rmse = np.sqrt(mse)
-    mae = np.mean(np.abs(y_true - y_pred))
-    r2 = <span class="number">1</span> - np.sum((y_true - y_pred) ** <span class="number">2</span>) / np.sum((y_true - np.mean(y_true)) ** <span class="number">2</span>)
-    <span class="keyword">return</span> {<span class="string">"MSE"</span>: mse, <span class="string">"RMSE"</span>: rmse, <span class="string">"MAE"</span>: mae, <span class="string">"R²"</span>: r2}
-
-y_true = np.array([<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">6</span>])
-y_pred = np.array([<span class="number">2.2</span>, <span class="number">3.9</span>, <span class="number">5.1</span>, <span class="number">4.2</span>, <span class="number">5.8</span>])
-<span class="keyword">print</span>(metrics(y_true, y_pred))</pre>
-            </div>
-            <div class="code-block">
+            <div class="code-block active">
                 <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x</span></div>
                 <pre><span class="keyword">from</span> std.math <span class="keyword">import</span> sqrt, abs
 
@@ -1055,20 +941,30 @@ y_pred = np.array([<span class="number">2.2</span>, <span class="number">3.9</sp
             Inspecting residuals (e = y − ŷ) reveals model problems. Plot residuals vs predicted
             values and look for random scatter around zero:
         </p>
-        <div class="code-block">
+        <div class="code-block active">
             <div class="header">
-                <span class="lang"><span class="dot python"></span> Python</span>
-                <span>matplotlib</span>
+                <span class="lang"><span class="dot mojo"></span> Mojo 1.x</span>
+                <span>matplotlib via interop</span>
             </div>
-            <pre><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+            <pre><span class="keyword">from</span> std.python <span class="keyword">import</span> Python
 
-<span class="comment"># residuals vs predicted</span>
-plt.scatter(y_hat, residuals)
-plt.axhline(<span class="number">0</span>)
-plt.xlabel(<span class="string">"Predicted"</span>)
-plt.ylabel(<span class="string">"Residual"</span>)
-plt.title(<span class="string">"Residuals vs predicted"</span>)
-plt.show()</pre>
+<span class="keyword">def</span> <span class="func">main</span>() <span class="keyword">raises</span>:
+    <span class="keyword">var</span> plt = Python.import_module(<span class="string">"matplotlib.pyplot"</span>)
+
+    <span class="comment"># y_hat and residuals come straight out of the metrics step above</span>
+    <span class="comment"># residuals vs predicted</span>
+    plt.scatter(y_hat, residuals)
+    plt.axhline(<span class="number">0</span>)
+    plt.xlabel(<span class="string">"Predicted"</span>)
+    plt.ylabel(<span class="string">"Residual"</span>)
+    plt.title(<span class="string">"Residuals vs predicted"</span>)
+    plt.show()</pre>
+        </div>
+        <div class="note">
+            <strong>💡 Mojo note:</strong> Matplotlib never left the Python world, so the
+            scatter plot is drawn through the interop bridge
+            (<code>Python.import_module("matplotlib.pyplot")</code>) while the residuals being
+            plotted are computed by the Mojo code above.
         </div>
         <ul>
             <li><strong>Curves</strong> → non-linearity.</li>
@@ -1116,28 +1012,8 @@ plt.show()</pre>
             </tbody>
         </table>
         <div class="code-pair">
-            <div class="code-block">
-                <div class="header"><span class="lang"><span class="dot python"></span> Python — from first principles</span></div>
-                <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
-
-x = np.array([<span class="number">100</span>, <span class="number">150</span>, <span class="number">200</span>, <span class="number">250</span>, <span class="number">300</span>], dtype=<span class="keyword">float</span>)
-y = np.array([<span class="number">2.0</span>, <span class="number">2.8</span>, <span class="number">3.4</span>, <span class="number">4.2</span>, <span class="number">4.9</span>], dtype=<span class="keyword">float</span>)
-
-x_bar, y_bar = x.mean(), y.mean()
-beta1 = np.sum((x - x_bar) * (y - y_bar)) / np.sum((x - x_bar) ** <span class="number">2</span>)
-beta0 = y_bar - beta1 * x_bar
-
-y_hat = beta0 + beta1 * x
-<span class="keyword">print</span>(<span class="string">"intercept:"</span>, beta0)
-<span class="keyword">print</span>(<span class="string">"slope:"</span>, beta1)
-<span class="keyword">print</span>(<span class="string">"prediction at 225 mm:"</span>, beta0 + beta1 * <span class="number">225</span>)
-
-sse = np.sum((y - y_hat) ** <span class="number">2</span>)
-rmse = np.sqrt(np.mean((y - y_hat) ** <span class="number">2</span>))
-<span class="keyword">print</span>(<span class="string">"SSE:"</span>, sse, <span class="string">"RMSE:"</span>, rmse)</pre>
-            </div>
-            <div class="code-block">
-                <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x — equivalent</span></div>
+            <div class="code-block active">
+                <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x — from first principles</span></div>
                 <pre><span class="keyword">from</span> std.math <span class="keyword">import</span> sqrt
 
 <span class="keyword">def</span> <span class="func">main</span>():
@@ -1183,37 +1059,49 @@ rmse = np.sqrt(np.mean((y - y_hat) ** <span class="number">2</span>))
             scale, fit, and judge the model only on homes it has never seen. This is the discipline
             that separates honest forecasting from curve-fitting nostalgia.
         </p>
-        <div class="code-block">
-            <div class="header"><span class="lang"><span class="dot python"></span> Python — full pipeline</span></div>
-            <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
-<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> fetch_california_housing
-<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
-<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
-<span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> LinearRegression
-<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> mean_squared_error, r2_score, mean_absolute_error
+        <div class="code-block active">
+            <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x — full pipeline</span></div>
+            <pre><span class="keyword">from</span> std.python <span class="keyword">import</span> Python
 
-<span class="comment"># load data</span>
-data = fetch_california_housing()
-X, y = data.data, data.target
+<span class="keyword">def</span> <span class="func">main</span>() <span class="keyword">raises</span>:
+    <span class="keyword">var</span> np = Python.import_module(<span class="string">"numpy"</span>)
+    <span class="keyword">var</span> datasets = Python.import_module(<span class="string">"sklearn.datasets"</span>)
 
-<span class="comment"># split</span>
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=<span class="number">0.2</span>, random_state=<span class="number">42</span>)
+    <span class="comment"># load — the dataset ships inside scikit-learn, so it arrives over the bridge</span>
+    <span class="keyword">var</span> data = datasets.fetch_california_housing()
+    <span class="keyword">var</span> X = np.array(data.data)
+    <span class="keyword">var</span> y = np.array(data.target)
 
-<span class="comment"># scale</span>
-scaler = StandardScaler()
-X_train_s = scaler.fit_transform(X_train)
-X_test_s = scaler.transform(X_test)
+    <span class="comment"># split — every 5th home is held out: test_size = 0.2, and no seed to forget</span>
+    <span class="keyword">var</span> hold = np.arange(<span class="number">0</span>, len(y), <span class="number">5</span>)
+    <span class="keyword">var</span> X_test = X[hold]
+    <span class="keyword">var</span> y_test = y[hold]
+    <span class="keyword">var</span> X_train = np.delete(X, hold, axis=<span class="number">0</span>)
+    <span class="keyword">var</span> y_train = np.delete(y, hold)
 
-<span class="comment"># train</span>
-model = LinearRegression()
-model.fit(X_train_s, y_train)
+    <span class="comment"># scale — z-scored with TRAIN statistics only, never the test set's</span>
+    <span class="keyword">var</span> mu = X_train.mean(axis=<span class="number">0</span>)
+    <span class="keyword">var</span> sigma = X_train.std(axis=<span class="number">0</span>)
+    <span class="keyword">var</span> X_train_s = (X_train - mu) / sigma
+    <span class="keyword">var</span> X_test_s = (X_test - mu) / sigma
 
-<span class="comment"># predict &amp; evaluate</span>
-y_pred = model.predict(X_test_s)
-<span class="keyword">print</span>(f<span class="string">"Test MSE: {mean_squared_error(y_test, y_pred):.3f}"</span>)
-<span class="keyword">print</span>(f<span class="string">"Test R²:  {r2_score(y_test, y_pred):.3f}"</span>)
-<span class="keyword">print</span>(<span class="string">"Top 3 coefficients:"</span>, model.coef_[:<span class="number">3</span>])</pre>
+    <span class="comment"># train — the 8×8 normal equations go through NumPy, as in Chapter 3</span>
+    <span class="keyword">var</span> beta = np.linalg.solve(X_train_s.T @ X_train_s, X_train_s.T @ y_train)
+
+    <span class="comment"># predict &amp; evaluate — only on homes the model has never seen</span>
+    <span class="keyword">var</span> y_pred = X_test_s @ beta
+    <span class="keyword">var</span> mse = np.mean((y_test - y_pred) ** <span class="number">2</span>)
+    <span class="keyword">var</span> r2 = <span class="number">1.0</span> - np.sum((y_test - y_pred) ** <span class="number">2</span>) / np.sum((y_test - y_test.mean()) ** <span class="number">2</span>)
+
+    <span class="keyword">print</span>(<span class="string">"Test MSE:"</span>, mse)
+    <span class="keyword">print</span>(<span class="string">"Test R²: "</span>, r2)
+    <span class="keyword">print</span>(<span class="string">"Top 3 coefficients:"</span>, beta[:<span class="number">3</span>])</pre>
+        </div>
+        <div class="note">
+            <strong>💡 Mojo note:</strong> Two stages cross the bridge: the dataset itself
+            (it ships inside scikit-learn) and the 8×8 solve, because Mojo 1.x still ships no
+            built-in matrix API — the same trade-off as Chapter 3. The split, the scaling, and
+            the scoring are the pipeline you just read.
         </div>
         <div class="note">
             <strong>📊 Output:</strong> For California housing, expect <code>MSE ≈ 0.55</code> and
@@ -1231,54 +1119,30 @@ y_pred = model.predict(X_test_s)
             the noise has actually learned something.
         </p>
         <div class="code-pair">
-            <div class="code-block">
-                <div class="header"><span class="lang"><span class="dot python"></span> Python</span></div>
-                <pre><span class="keyword">import</span> numpy <span class="keyword">as</span> np
-<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
-<span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> LinearRegression
-<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> mean_absolute_error
-
-np.random.seed(<span class="number">42</span>)
-n = <span class="number">200</span>
-TV = np.random.uniform(<span class="number">0</span>, <span class="number">300</span>, n)
-radio = np.random.uniform(<span class="number">0</span>, <span class="number">80</span>, n)
-newspaper = np.random.uniform(<span class="number">0</span>, <span class="number">60</span>, n)
-sales = <span class="number">5</span> + <span class="number">0.045</span>*TV + <span class="number">0.18</span>*radio + <span class="number">0.01</span>*newspaper + np.random.randn(n)*<span class="number">2</span>
-
-X = np.column_stack([TV, radio, newspaper])
-y = sales
-
-model = LinearRegression().fit(X, y)
-<span class="keyword">print</span>(<span class="string">"Intercept:"</span>, model.intercept_)
-<span class="keyword">print</span>(<span class="string">"Coeffs (TV, radio, newspaper):"</span>, model.coef_)
-<span class="keyword">print</span>(<span class="string">"MAE:"</span>, mean_absolute_error(y, model.predict(X)))
-<span class="keyword">print</span>(<span class="string">"Predicted sales (TV=150, radio=40, np=20):"</span>,
-      model.predict(np.array([[<span class="number">150</span>, <span class="number">40</span>, <span class="number">20</span>]]))[<span class="number">0</span>])</pre>
-            </div>
-            <div class="code-block">
+            <div class="code-block active">
                 <div class="header"><span class="lang"><span class="dot mojo"></span> Mojo 1.x</span></div>
-                <pre><code>from std.python import Python
+                <pre><span class="keyword">from</span> std.python <span class="keyword">import</span> Python
 
-def main() raises:
-    var np = Python.import_module(&quot;numpy&quot;)
-    np.random.seed(42)
-    var n = 200
+<span class="keyword">def</span> <span class="func">main</span>():
+    <span class="keyword">var</span> np = Python.import_module(<span class="string">"numpy"</span>)
+    np.random.seed(<span class="number">42</span>)
+    <span class="keyword">var</span> n = <span class="number">200</span>
 
-    var TV = np.random.uniform(0, 300, n)
-    var radio = np.random.uniform(0, 80, n)
-    var newspaper = np.random.uniform(0, 60, n)
-    var sales = 5.0 + 0.045 * TV + 0.18 * radio + 0.01 * newspaper + 2.0 * np.random.randn(n)
+    <span class="keyword">var</span> TV = np.random.uniform(<span class="number">0</span>, <span class="number">300</span>, n)
+    <span class="keyword">var</span> radio = np.random.uniform(<span class="number">0</span>, <span class="number">80</span>, n)
+    <span class="keyword">var</span> newspaper = np.random.uniform(<span class="number">0</span>, <span class="number">60</span>, n)
+    <span class="keyword">var</span> sales = <span class="number">5.0</span> + <span class="number">0.045</span> * TV + <span class="number">0.18</span> * radio + <span class="number">0.01</span> * newspaper + <span class="number">2.0</span> * np.random.randn(n)
 
-    var X = np.column_stack([TV, radio, newspaper])
-    var y = sales
+    <span class="keyword">var</span> X = np.column_stack([TV, radio, newspaper])
+    <span class="keyword">var</span> y = sales
 
-    # closed form: β = (XᵀX)⁻¹ Xᵀ y
-    var beta = np.linalg.inv(X.T.matmul(X)).matmul(X.T).matmul(y)
-    var y_pred = X.matmul(beta)
-    var mae = np.mean(np.abs(y - y_pred))
+    <span class="comment"># closed form: β = (XᵀX)⁻¹ Xᵀ y</span>
+    <span class="keyword">var</span> beta = np.linalg.inv(X.T @ X) @ X.T @ y
+    <span class="keyword">var</span> y_pred = X @ beta
+    <span class="keyword">var</span> mae = np.mean(np.abs(y - y_pred))
 
-    print(&quot;Coeffs:&quot;, beta)
-    print(&quot;MAE:&quot;, mae)</code></pre>
+    <span class="keyword">print</span>(<span class="string">"Coeffs:"</span>, beta)
+    <span class="keyword">print</span>(<span class="string">"MAE:"</span>, mae)</pre>
             </div>
         </div>
         <div class="note">
@@ -1316,9 +1180,10 @@ def main() raises:
             the raw loops yourself and achieve C-like speeds natively while keeping Python's expressiveness.
         </p>
         <div class="note">
-            <strong>💡 Strategy:</strong> Learn the mathematics first, then implement the same kernels
-            in both languages. Use Python's mature ecosystem (scikit-learn, pandas) for production ML,
-            and Mojo where you need compiled high-performance kernels.
+            <strong>💡 Strategy:</strong> Learn the mathematics first, then implement the kernels
+            yourself — the left column of the Chapter 12 table is what you would write in Python, the
+            right column is what compiles. Use Python's mature ecosystem (scikit-learn, pandas) for
+            production ML, and Mojo where you need compiled high-performance kernels.
         </div>
 
         <!-- ──── CHAPTER 12 ──── -->
@@ -1366,7 +1231,7 @@ def main() raises:
         <h2 id="ch14">14. Exercises</h2>
         <ol>
             <li>Change the irrigation dataset and calculate the new slope and intercept.</li>
-            <li>Calculate MAE, MSE and RMSE by hand and in both languages.</li>
+            <li>Calculate MAE, MSE and RMSE by hand and in Mojo 1.x.</li>
             <li>Add temperature as a second predictor to the farm-yield example.</li>
             <li>Implement multiple regression using a matrix representation (<code>β = (XᵀX)⁻¹Xᵀy</code>).</li>
             <li>Implement gradient descent with feature standardization.</li>

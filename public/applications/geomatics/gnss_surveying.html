@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>GNSS Surveying — Coordinate Frames, Site Calibration &amp; Georeferencing (Part 1 · Python + Mojo 1.x)</title>
+<title>GNSS Surveying — Coordinate Frames, Site Calibration &amp; Georeferencing (Part 1 · Mojo 1.x)</title>
 <style>
   :root {
     --bg: #0f1720;
@@ -10,7 +10,7 @@
     --accent: #4cc9f0;
     --accent2: #f72585;
     --text: #e6edf3;
-    --muted: #8aa0b4;
+    --muted: #ffd98f;
     --py: #3776ab;
     --mj: #ff5b12;
   }
@@ -95,7 +95,7 @@
     color: transparent;
   }
   header p.lede {
-    color: #a8bccf;
+    color: #fff4d6;
     font-size: 1.08rem;
     max-width: 62ch;
     margin: 20px auto 0;
@@ -140,7 +140,7 @@
   }
   nav a {
     display: inline-block;
-    color: #a9c1d6;
+    color: #ffe4a3;
     margin: 2px 2px;
     padding: 6px 13px;
     border-radius: 999px;
@@ -191,7 +191,7 @@
     padding-top: 4px;
     white-space: nowrap;
   }
-  .brief p { margin: 0; color: #b9cbdc; font-size: .95rem; }
+  .brief p { margin: 0; color: #ffe4a3; font-size: .95rem; }
   .brief p b { color: #dceaf6; }
   /* topic brief */
   .topic-brief {
@@ -225,7 +225,6 @@
     letter-spacing: 1px;
     color: white;
   }
-  .lang-python { background: var(--py); }
   .lang-mojo { background: var(--mj); }
   pre {
     background: #0b1220;
@@ -283,7 +282,7 @@
     padding: 14px 16px;
   }
   .card h4 { margin: 0 0 6px 0; color: #bde0fe; }
-  .card p { margin: 0; color: #9fb3c6; font-size: .9rem; }
+  .card p { margin: 0; color: #ffe4a3; font-size: .9rem; }
   .card .tag {
     display: inline-block;
     font-size: .72rem;
@@ -306,7 +305,7 @@
     padding: 10px 14px;
     margin: 12px 0;
     font-size: .93rem;
-    color: #b9cbdc;
+    color: #ffe4a3;
   }
   .xref a { color: var(--accent); font-weight: 600; text-decoration: none; }
   .xref a:hover { text-decoration: underline; }
@@ -333,7 +332,7 @@
     color: var(--accent2);
     margin-bottom: 6px;
   }
-  .continue p { margin: 0; color: #b9cbdc; font-size: .95rem; max-width: 72ch; }
+  .continue p { margin: 0; color: #ffe4a3; font-size: .95rem; max-width: 72ch; }
   .continue h3 { margin: 0 0 8px; font-size: 1.15rem; }
   .continue-btn {
     flex-shrink: 0;
@@ -359,7 +358,7 @@
   <p class="lede fade-in">
     A complete, code-backed tutorial on <b>coordinate frames &amp; transformations</b>,
     <b>site calibration</b>, <b>georeferencing</b> and <b>GPS/GNSS theory</b> — every core
-    algorithm implemented in both Python and Mojo&nbsp;1.x, with worked surveying examples
+    algorithm implemented in <b>Mojo&nbsp;1.x</b>, with worked surveying examples
     and quality-control procedures throughout. The course continues in
     <b>Part&nbsp;2 — The Karney-Krüger Equations</b>, the Transverse Mercator / UTM
     projection deep dive that picks up exactly where this part's projection thread ends.
@@ -374,7 +373,6 @@
     <a href="#gps">GNSS Point Positioning</a>
     <a href="#gps">DOP &amp; Error Budget</a>
     <a href="karney_krueger_equations.html" style="border-color:#4cc9f066;color:var(--accent);">Part 2 · TM / UTM Series →</a>
-    <a href="geo_computations.html" style="border-color:#f7258566;color:#f7a8c9;">🧮 Mojo Computations</a>
   </div>
 </header>
 
@@ -382,6 +380,7 @@
   <a href="../../index.html">📚 TutMe</a>
   <a href="../index.html">🧩 Applications</a>
   <a href="index.html">🌐 Geomatics</a>
+  <a href="geo_computations.html" style="color:var(--accent);">Geomatics Computations</a>
   <a href="#frames">1. Coordinate Frames</a>
   <a href="#transforms">2. Transformations</a>
   <a href="#calibration">3. Site Calibration</a>
@@ -389,7 +388,6 @@
   <a href="#gps">5. GPS Theory</a>
   <a href="#workflow">6. Workflow &amp; QC</a>
   <a href="karney_krueger_equations.html" style="color:var(--accent);border:1px solid #4cc9f04d;">Part 2: Karney-Krüger →</a>
-  <a href="geo_computations.html" style="color:#f7a8c9;border:1px solid #f7258566;">Mojo Computations</a>
 </nav>
 
 <main>
@@ -429,8 +427,7 @@
     These two constants are also the entry point to the projection half of the course: mapping
     ellipsoidal (φ, λ) onto a Transverse Mercator grid — UTM zones, Southern African LO belts —
     to sub-millimetre accuracy is developed in full in
-    <a href="karney_krueger_equations.html">Part 2 — The Karney-Krüger Equations</a>. For the code-first
-    coordinate and adjustment lab, see <a href="geo_computations.html#coordinates">Geomatics Computations</a>.
+    <a href="karney_krueger_equations.html">Part 2 — The Karney-Krüger Equations</a>.
   </p>
 
   <h3>1.2 Geodetic ↔ ECEF</h3>
@@ -447,111 +444,54 @@
   </div>
   <p>The reverse (ECEF → geodetic) is usually solved iteratively.</p>
 
+
   <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — coordinate_transform.py</span>
-<pre><code><span class="kw">import</span> <span class="typ">math</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x — coordinate_transform.mojo</span>
+<pre><code><span class="kw">from</span> std.math <span class="kw">import</span> sqrt, sin, cos, atan2, hypot, radians, degrees, abs
 
-<span class="com"># WGS84 constants</span>
-a = <span class="num">6378137.0</span>
-f = <span class="num">1</span> / <span class="num">298.257223563</span>
-e2 = <span class="num">2</span>*f - f*f
+<span class="kw">comptime</span> A: <span class="typ">Float64</span> = <span class="num">6378137.0</span>
+<span class="kw">comptime</span> F: <span class="typ">Float64</span> = <span class="num">1.0</span> / <span class="num">298.257223563</span>
+<span class="kw">comptime</span> E2: <span class="typ">Float64</span> = <span class="num">2.0</span> * F - F * F
 
-<span class="kw">def</span> <span class="fn">geodetic_to_ecef</span>(lat_deg, lon_deg, h):
-    <span class="str">"""Geodetic (lat, lon in degrees, height in metres) to ECEF."""</span>
-    lat = <span class="typ">math</span>.<span class="fn">radians</span>(lat_deg)
-    lon = <span class="typ">math</span>.<span class="fn">radians</span>(lon_deg)
-    sin_lat, cos_lat = <span class="typ">math</span>.<span class="fn">sin</span>(lat), <span class="typ">math</span>.<span class="fn">cos</span>(lat)
-    sin_lon, cos_lon = <span class="typ">math</span>.<span class="fn">sin</span>(lon), <span class="typ">math</span>.<span class="fn">cos</span>(lon)
+<span class="kw">def</span> <span class="fn">geodetic_to_ecef</span>(lat_deg: <span class="typ">Float64</span>, lon_deg: <span class="typ">Float64</span>, h: <span class="typ">Float64</span>)
+        -&gt; <span class="typ">Tuple</span>[<span class="typ">Float64</span>, <span class="typ">Float64</span>, <span class="typ">Float64</span>]:
+    <span class="kw">var</span> lat = <span class="fn">radians</span>(lat_deg)
+    <span class="kw">var</span> lon = <span class="fn">radians</span>(lon_deg)
+    <span class="kw">var</span> sin_lat = <span class="fn">sin</span>(lat)
+    <span class="kw">var</span> cos_lat = <span class="fn">cos</span>(lat)
+    <span class="kw">var</span> sin_lon = <span class="fn">sin</span>(lon)
+    <span class="kw">var</span> cos_lon = <span class="fn">cos</span>(lon)
 
-    <span class="com"># Prime-vertical radius of curvature</span>
-    N = a / <span class="typ">math</span>.<span class="fn">sqrt</span>(<span class="num">1</span> - e2 * sin_lat**<span class="num">2</span>)
+    <span class="com"># prime-vertical radius of curvature</span>
+    <span class="kw">var</span> N = A / <span class="fn">sqrt</span>(<span class="num">1.0</span> - E2 * sin_lat * sin_lat)
 
-    x = (N + h) * cos_lat * cos_lon
-    y = (N + h) * cos_lat * sin_lon
-    z = (N * (<span class="num">1</span> - e2) + h) * sin_lat
-    <span class="kw">return</span> x, y, z
+    <span class="kw">var</span> x = (N + h) * cos_lat * cos_lon
+    <span class="kw">var</span> y = (N + h) * cos_lat * sin_lon
+    <span class="kw">var</span> z = (N * (<span class="num">1.0</span> - E2) + h) * sin_lat
+    <span class="kw">return</span> (x, y, z)
 
-<span class="kw">def</span> <span class="fn">ecef_to_geodetic</span>(x, y, z):
-    <span class="str">"""Iterative ECEF to geodetic (lat, lon in degrees, height)."""</span>
-    lon = <span class="typ">math</span>.<span class="fn">atan2</span>(y, x)
-    p = <span class="typ">math</span>.<span class="fn">hypot</span>(x, y)
-    lat = <span class="typ">math</span>.<span class="fn">atan2</span>(z, p * (<span class="num">1</span> - e2))
-
-    <span class="com"># close to the true latitude, enough to start the iteration</span>
+<span class="kw">def</span> <span class="fn">ecef_to_geodetic</span>(x: <span class="typ">Float64</span>, y: <span class="typ">Float64</span>, z: <span class="typ">Float64</span>)
+        -&gt; <span class="typ">Tuple</span>[<span class="typ">Float64</span>, <span class="typ">Float64</span>, <span class="typ">Float64</span>]:
+    <span class="kw">var</span> lon = <span class="fn">atan2</span>(y, x)
+    <span class="kw">var</span> p = <span class="fn">hypot</span>(x, y)
+    <span class="kw">var</span> lat = <span class="fn">atan2</span>(z, p * (<span class="num">1.0</span> - E2))
+    <span class="kw">var</span> h: <span class="typ">Float64</span> = <span class="num">0.0</span>
     <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>):
-        sin_lat = <span class="typ">math</span>.<span class="fn">sin</span>(lat)
-        N = a / <span class="typ">math</span>.<span class="fn">sqrt</span>(<span class="num">1</span> - e2 * sin_lat**<span class="num">2</span>)
-        h = p / <span class="typ">math</span>.<span class="fn">cos</span>(lat) - N
-        lat_new = <span class="typ">math</span>.<span class="fn">atan2</span>(z, p * (<span class="num">1</span> - e2 * N / (N + h)))
+        <span class="kw">var</span> sin_lat = <span class="fn">sin</span>(lat)
+        <span class="kw">var</span> N = A / <span class="fn">sqrt</span>(<span class="num">1.0</span> - E2 * sin_lat * sin_lat)
+        h = p / <span class="fn">cos</span>(lat) - N
+        <span class="kw">var</span> lat_new = <span class="fn">atan2</span>(z, p * (<span class="num">1.0</span> - E2 * N / (N + h)))
         <span class="kw">if</span> <span class="fn">abs</span>(lat_new - lat) &lt; <span class="num">1e-12</span>:
             <span class="kw">break</span>
         lat = lat_new
-    <span class="kw">return</span> <span class="typ">math</span>.<span class="fn">degrees</span>(lat), <span class="typ">math</span>.<span class="fn">degrees</span>(lon), h
+    <span class="kw">return</span> (<span class="fn">degrees</span>(lat), <span class="fn">degrees</span>(lon), h)
 
-<span class="com"># Round trip: Matterhorn peak (approx)</span>
-lat, lon, h = <span class="num">45.9764</span>, <span class="num">7.6586</span>, <span class="num">4478</span>
-x, y, z = <span class="fn">geodetic_to_ecef</span>(lat, lon, h)
-<span class="kw">print</span>(<span class="str">f"ECEF: {x:.3f}, {y:.3f}, {z:.3f}"</span>)
-lat2, lon2, h2 = <span class="fn">ecef_to_geodetic</span>(x, y, z)
-<span class="kw">print</span>(<span class="str">f"Back: {lat2:.6f}°, {lon2:.6f}°, {h2:.3f} m"</span>)
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> x, y, z = <span class="fn">geodetic_to_ecef</span>(<span class="num">45.9764</span>, <span class="num">7.6586</span>, <span class="num">4478.0</span>)
+    <span class="fn">print</span>(<span class="str">"ECEF:"</span>, x, y, z)
+    <span class="kw">var</span> lat2, lon2, h2 = <span class="fn">ecef_to_geodetic</span>(x, y, z)
+    <span class="fn">print</span>(<span class="str">"Back:"</span>, lat2, <span class="str">"deg"</span>, lon2, <span class="str">"deg"</span>, h2, <span class="str">"m"</span>)
 </code></pre>
-  </div>
-
-  <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0 — coordinate_transform.mojo</span>
-<pre><code>from std.math import sqrt, sin, cos, atan2, hypot, abs
-
-comptime PI: Float64 = 3.14159265358979323846
-
-def radians(deg: Float64) -&gt; Float64:
-    return deg * PI / 180.0
-
-def degrees(rad: Float64) -&gt; Float64:
-    return rad * 180.0 / PI
-
-
-comptime A: Float64 = 6378137.0
-comptime F: Float64 = 1.0 / 298.257223563
-comptime E2: Float64 = 2.0 * F - F * F
-
-def geodetic_to_ecef(lat_deg: Float64, lon_deg: Float64, h: Float64)
-        -&gt; Tuple[Float64, Float64, Float64]:
-    var lat = radians(lat_deg)
-    var lon = radians(lon_deg)
-    var sin_lat = sin(lat)
-    var cos_lat = cos(lat)
-    var sin_lon = sin(lon)
-    var cos_lon = cos(lon)
-
-    # prime-vertical radius of curvature
-    var N = A / sqrt(1.0 - E2 * sin_lat * sin_lat)
-
-    var x = (N + h) * cos_lat * cos_lon
-    var y = (N + h) * cos_lat * sin_lon
-    var z = (N * (1.0 - E2) + h) * sin_lat
-    return (x, y, z)
-
-def ecef_to_geodetic(x: Float64, y: Float64, z: Float64)
-        -&gt; Tuple[Float64, Float64, Float64]:
-    var lon = atan2(y, x)
-    var p = hypot(x, y)
-    var lat = atan2(z, p * (1.0 - E2))
-    var h: Float64 = 0.0
-    for _ in range(10):
-        var sin_lat = sin(lat)
-        var N = A / sqrt(1.0 - E2 * sin_lat * sin_lat)
-        h = p / cos(lat) - N
-        var lat_new = atan2(z, p * (1.0 - E2 * N / (N + h)))
-        if abs(lat_new - lat) &lt; 1e-12:
-            break
-        lat = lat_new
-    return (degrees(lat), degrees(lon), h)
-
-def main():
-    var x, y, z = geodetic_to_ecef(45.9764, 7.6586, 4478.0)
-    print(&quot;ECEF:&quot;, x, y, z)
-    var lat2, lon2, h2 = ecef_to_geodetic(x, y, z)
-    print(&quot;Back:&quot;, lat2, &quot;deg&quot;, lon2, &quot;deg&quot;, h2, &quot;m&quot;)</code></pre>
   </div>
 
   <h3>1.3 ECEF → local ENU (East, North, Up)</h3>
@@ -570,79 +510,50 @@ def main():
     &nbsp;&nbsp;&nbsp;&nbsp;[ &nbsp;cosφ₀cosλ₀ &nbsp;&nbsp;&nbsp;cosφ₀sinλ₀ &nbsp;&nbsp;&nbsp;sinφ₀ ]
   </div>
 
-  <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON</span>
-<pre><code><span class="kw">import</span> <span class="typ">math</span>
-<span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
-
-<span class="kw">def</span> <span class="fn">ecef_to_enu</span>(dxyz, lat0_deg, lon0_deg):
-    <span class="str">"""Convert an ECEF difference vector to local ENU."""</span>
-    lat0, lon0 = <span class="typ">math</span>.<span class="fn">radians</span>(lat0_deg), <span class="typ">math</span>.<span class="fn">radians</span>(lon0_deg)
-    R = <span class="typ">np</span>.<span class="fn">array</span>([
-        [-<span class="typ">math</span>.<span class="fn">sin</span>(lon0),                <span class="typ">math</span>.<span class="fn">cos</span>(lon0),                 <span class="num">0.0</span>            ],
-        [-<span class="typ">math</span>.<span class="fn">sin</span>(lat0)*<span class="typ">math</span>.<span class="fn">cos</span>(lon0), -<span class="typ">math</span>.<span class="fn">sin</span>(lat0)*<span class="typ">math</span>.<span class="fn">sin</span>(lon0),  <span class="typ">math</span>.<span class="fn">cos</span>(lat0) ],
-        [ <span class="typ">math</span>.<span class="fn">cos</span>(lat0)*<span class="typ">math</span>.<span class="fn">cos</span>(lon0),  <span class="typ">math</span>.<span class="fn">cos</span>(lat0)*<span class="typ">math</span>.<span class="fn">sin</span>(lon0),  <span class="typ">math</span>.<span class="fn">sin</span>(lat0) ],
-    ])
-    <span class="kw">return</span> R @ <span class="typ">np</span>.<span class="fn">asarray</span>(dxyz)
-
-<span class="com"># A ~100 m baseline due east of the reference point</span>
-ref = <span class="fn">geodetic_to_ecef</span>(<span class="num">45.0</span>, <span class="num">8.0</span>, <span class="num">500.0</span>)
-tgt = <span class="fn">geodetic_to_ecef</span>(<span class="num">45.0</span>, <span class="num">8.0</span> + <span class="typ">math</span>.<span class="fn">degrees</span>(<span class="num">100.0</span>/(<span class="num">6371000</span>*<span class="typ">math</span>.<span class="fn">cos</span>(<span class="typ">math</span>.<span class="fn">radians</span>(<span class="num">45</span>)))), <span class="num">500.0</span>)
-<span class="kw">print</span>(<span class="fn">ecef_to_enu</span>(<span class="typ">np</span>.<span class="fn">array</span>(tgt) - <span class="typ">np</span>.<span class="fn">array</span>(ref), <span class="num">45.0</span>, <span class="num">8.0</span>))   <span class="com"># ≈ [100, 0, 0]</span>
-</code></pre>
-  </div>
 
   <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0 — ecef_to_enu.mojo</span>
-<pre><code>from std.math import sin, cos
+    <span class="lang-tag lang-mojo">MOJO 1.x — ecef_to_enu.mojo</span>
+<pre><code><span class="kw">from</span> std.math <span class="kw">import</span> sin, cos, radians
 
-comptime PI: Float64 = 3.14159265358979323846
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">Vec3</span>:
+    <span class="kw">var</span> x: <span class="typ">Float64</span>
+    <span class="kw">var</span> y: <span class="typ">Float64</span>
+    <span class="kw">var</span> z: <span class="typ">Float64</span>
 
-def radians(deg: Float64) -&gt; Float64:
-    return deg * PI / 180.0
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">ENU</span>:
+    <span class="kw">var</span> e: <span class="typ">Float64</span>
+    <span class="kw">var</span> n: <span class="typ">Float64</span>
+    <span class="kw">var</span> u: <span class="typ">Float64</span>
 
-def degrees(rad: Float64) -&gt; Float64:
-    return rad * 180.0 / PI
-
-
-@fieldwise_init
-struct Vec3:
-    var x: Float64
-    var y: Float64
-    var z: Float64
-
-@fieldwise_init
-struct ENU:
-    var e: Float64
-    var n: Float64
-    var u: Float64
-
-def ecef_delta_to_enu(d: Vec3, lat0_deg: Float64, lon0_deg: Float64) -&gt; ENU:
-    &quot;&quot;&quot;
+<span class="kw">def</span> <span class="fn">ecef_delta_to_enu</span>(d: <span class="typ">Vec3</span>, lat0_deg: <span class="typ">Float64</span>, lon0_deg: <span class="typ">Float64</span>) -&gt; <span class="typ">ENU</span>:
+    <span class="str">"""
     Rotate an ECEF difference vector into the local horizon frame
-    at (lat0_deg, lon0_deg). Same rotation as the NumPy version,
-    expanded component by component so no matrix library is needed.
-    &quot;&quot;&quot;
-    var lat0 = radians(lat0_deg)
-    var lon0 = radians(lon0_deg)
-    var sin_lat = sin(lat0)
-    var cos_lat = cos(lat0)
-    var sin_lon = sin(lon0)
-    var cos_lon = cos(lon0)
+    at (lat0_deg, lon0_deg). The rotation is expanded component by
+    component, so no matrix library is needed.
+    """</span>
+    <span class="kw">var</span> lat0 = <span class="fn">radians</span>(lat0_deg)
+    <span class="kw">var</span> lon0 = <span class="fn">radians</span>(lon0_deg)
+    <span class="kw">var</span> sin_lat = <span class="fn">sin</span>(lat0)
+    <span class="kw">var</span> cos_lat = <span class="fn">cos</span>(lat0)
+    <span class="kw">var</span> sin_lon = <span class="fn">sin</span>(lon0)
+    <span class="kw">var</span> cos_lon = <span class="fn">cos</span>(lon0)
 
-    # row 1 of R: east = -sin(lon)*dX + cos(lon)*dY
-    var e = -sin_lon * d.x + cos_lon * d.y
-    # row 2 of R: north = -sin(lat)cos(lon)*dX - sin(lat)sin(lon)*dY + cos(lat)*dZ
-    var n = -sin_lat*cos_lon * d.x - sin_lat*sin_lon * d.y + cos_lat * d.z
-    # row 3 of R: up = cos(lat)cos(lon)*dX + cos(lat)sin(lon)*dY + sin(lat)*dZ
-    var u =  cos_lat*cos_lon * d.x + cos_lat*sin_lon * d.y + sin_lat * d.z
-    return ENU(e, n, u)
+    <span class="com"># row 1 of R: east = -sin(lon)*dX + cos(lon)*dY</span>
+    <span class="kw">var</span> e = -sin_lon * d.x + cos_lon * d.y
+    <span class="com"># row 2 of R: north = -sin(lat)cos(lon)*dX - sin(lat)sin(lon)*dY + cos(lat)*dZ</span>
+    <span class="kw">var</span> n = -sin_lat*cos_lon * d.x - sin_lat*sin_lon * d.y + cos_lat * d.z
+    <span class="com"># row 3 of R: up = cos(lat)cos(lon)*dX + cos(lat)sin(lon)*dY + sin(lat)*dZ</span>
+    <span class="kw">var</span> u =  cos_lat*cos_lon * d.x + cos_lat*sin_lon * d.y + sin_lat * d.z
+    <span class="kw">return</span> <span class="fn">ENU</span>(e, n, u)
 
-def main():
-    # a 100 m step along the ECEF X axis, seen from 45 N, 8 E:
-    # mostly north with a small up component, as expected at mid-latitude
-    var enu = ecef_delta_to_enu(Vec3(100.0, 0.0, 0.0), 45.0, 8.0)
-    print(&quot;ENU (m):&quot;, enu.e, enu.n, enu.u)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="com"># a 100 m step along the ECEF X axis, seen from 45 N, 8 E:</span>
+    <span class="com"># mostly north with a small up component, as expected at mid-latitude</span>
+    <span class="kw">var</span> enu = <span class="fn">ecef_delta_to_enu</span>(<span class="fn">Vec3</span>(<span class="num">100.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>), <span class="num">45.0</span>, <span class="num">8.0</span>)
+    <span class="fn">print</span>(<span class="str">"ENU (m):"</span>, enu.e, enu.n, enu.u)
+</code></pre>
   </div>
 
   <div class="note">
@@ -675,11 +586,6 @@ def main():
     transformation used between geodetic datums (e.g. WGS84 ↔ a local datum).
   </p>
 
-  <p class="xref">
-    For a compact Mojo implementation of the planar similarity, control-point records and least-squares
-    fitting, continue with <a href="geo_computations.html#transformations">Geomatics Computations &sect;8</a>.
-  </p>
-
   <h3>2.1 Choosing a transformation</h3>
   <p class="topic-brief">
     Start from the simplest model that explains the data: every extra parameter must be paid for
@@ -705,45 +611,24 @@ def main():
     N′ = t<sub>y</sub> + s(E sin θ + N cos θ)
   </div>
 
+
   <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON</span>
-<pre><code><span class="kw">import</span> <span class="typ">math</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x</span>
+<pre><code><span class="kw">from</span> std.math <span class="kw">import</span> cos, sin, radians
 
-<span class="kw">def</span> <span class="fn">similarity</span>(E, N, tx, ty, scale, theta_deg):
-    t = <span class="typ">math</span>.<span class="fn">radians</span>(theta_deg)
-    Ep = tx + scale * (E*<span class="typ">math</span>.<span class="fn">cos</span>(t) - N*<span class="typ">math</span>.<span class="fn">sin</span>(t))
-    Np = ty + scale * (E*<span class="typ">math</span>.<span class="fn">sin</span>(t) + N*<span class="typ">math</span>.<span class="fn">cos</span>(t))
-    <span class="kw">return</span> Ep, Np
+<span class="kw">def</span> <span class="fn">similarity</span>(E: <span class="typ">Float64</span>, N: <span class="typ">Float64</span>,
+              tx: <span class="typ">Float64</span>, ty: <span class="typ">Float64</span>,
+              scale: <span class="typ">Float64</span>, theta_deg: <span class="typ">Float64</span>)
+              -&gt; <span class="typ">Tuple</span>[<span class="typ">Float64</span>, <span class="typ">Float64</span>]:
+    <span class="kw">var</span> t = <span class="fn">radians</span>(theta_deg)
+    <span class="kw">var</span> Ep = tx + scale * (E*<span class="fn">cos</span>(t) - N*<span class="fn">sin</span>(t))
+    <span class="kw">var</span> Np = ty + scale * (E*<span class="fn">sin</span>(t) + N*<span class="fn">cos</span>(t))
+    <span class="kw">return</span> (Ep, Np)
 
-<span class="kw">print</span>(<span class="fn">similarity</span>(<span class="num">1000</span>, <span class="num">500</span>, <span class="num">250</span>, -<span class="num">100</span>, <span class="num">1.0002</span>, <span class="num">0.15</span>))
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> p = <span class="fn">similarity</span>(<span class="num">1000.0</span>, <span class="num">500.0</span>, <span class="num">250.0</span>, -<span class="num">100.0</span>, <span class="num">1.0002</span>, <span class="num">0.15</span>)
+    <span class="fn">print</span>(p)
 </code></pre>
-  </div>
-
-  <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0</span>
-<pre><code>from std.math import cos, sin
-
-comptime PI: Float64 = 3.14159265358979323846
-
-def radians(deg: Float64) -&gt; Float64:
-    return deg * PI / 180.0
-
-def degrees(rad: Float64) -&gt; Float64:
-    return rad * 180.0 / PI
-
-
-def similarity(E: Float64, N: Float64,
-              tx: Float64, ty: Float64,
-              scale: Float64, theta_deg: Float64)
-              -&gt; Tuple[Float64, Float64]:
-    var t = radians(theta_deg)
-    var Ep = tx + scale * (E*cos(t) - N*sin(t))
-    var Np = ty + scale * (E*sin(t) + N*cos(t))
-    return (Ep, Np)
-
-def main():
-    var p = similarity(1000.0, 500.0, 250.0, -100.0, 1.0002, 0.15)
-    print(p)</code></pre>
   </div>
 
   <h3>2.3 Estimating a transformation from control points</h3>
@@ -762,33 +647,85 @@ def main():
   </div>
 
   <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — least-squares estimation</span>
-<pre><code><span class="kw">import</span> <span class="typ">math</span>
-<span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x — least-squares estimation</span>
+<pre><code><span class="kw">from</span> std.math <span class="kw">import</span> hypot, atan2, degrees
 
-<span class="kw">def</span> <span class="fn">solve_similarity</span>(src, dst):
-    <span class="str">"""Fit E' = tx + aE - bN / N' = ty + bE + aN by least squares.
-    Returns (tx, ty, scale, theta_deg)."""</span>
-    A, L = [], []
-    <span class="kw">for</span> (E, N), (Ep, Np) <span class="kw">in</span> <span class="fn">zip</span>(src, dst):
-        A += [[<span class="num">1</span>, <span class="num">0</span>, E, -N],
-              [<span class="num">0</span>, <span class="num">1</span>, N,  E]]
-        L += [Ep, Np]
+<span class="com"># 4-parameter similarity from control points via 4x4 normal equations</span>
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">CtrlPt</span>:
+    <span class="kw">var</span> E:  <span class="typ">Float64</span>
+    <span class="kw">var</span> N:  <span class="typ">Float64</span>
+    <span class="kw">var</span> Ep: <span class="typ">Float64</span>
+    <span class="kw">var</span> Np: <span class="typ">Float64</span>
 
-    <span class="com"># x = [tx, ty, a, b]; a = s*cos(theta), b = s*sin(theta)</span>
-    x, *_ = <span class="typ">np</span>.linalg.<span class="fn">lstsq</span>(<span class="typ">np</span>.<span class="fn">array</span>(A), <span class="typ">np</span>.<span class="fn">array</span>(L), rcond=<span class="kw">None</span>)
-    tx, ty, a, b = x
-    <span class="com"># recover classical parameters from a, b</span>
-    scale = <span class="typ">math</span>.<span class="fn">hypot</span>(a, b)
-    theta_deg = <span class="typ">math</span>.<span class="fn">degrees</span>(<span class="typ">math</span>.<span class="fn">atan2</span>(b, a))
-    <span class="kw">return</span> tx, ty, scale, theta_deg
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">Similarity4</span>:
+    <span class="kw">var</span> tx: <span class="typ">Float64</span>
+    <span class="kw">var</span> ty: <span class="typ">Float64</span>
+    <span class="kw">var</span> scale: <span class="typ">Float64</span>
+    <span class="kw">var</span> theta_deg: <span class="typ">Float64</span>
 
-source = <span class="typ">np</span>.<span class="fn">array</span>([[<span class="num">1000.0</span>, <span class="num">500.0</span>], [<span class="num">1200.0</span>, <span class="num">500.0</span>],
-                   [<span class="num">1000.0</span>, <span class="num">700.0</span>], [<span class="num">1200.0</span>, <span class="num">700.0</span>]])
-target = <span class="typ">np</span>.<span class="fn">array</span>([[<span class="num">1250.10</span>, <span class="num">399.80</span>], [<span class="num">1450.02</span>, <span class="num">400.25</span>],
-                   [<span class="num">1249.70</span>, <span class="num">600.05</span>], [<span class="num">1450.12</span>, <span class="num">600.10</span>]])
+<span class="com"># Solve an augmented 4x5 system M by Gauss elimination (last col = RHS).</span>
+<span class="com"># `mut` marks the argument as mutated in place — Mojo arguments are</span>
+<span class="com"># immutable by default in 1.0.</span>
+<span class="kw">def</span> <span class="fn">solve4x4</span>(<span class="kw">mut</span> M: <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]) -&gt; <span class="typ">List</span>[<span class="typ">Float64</span>]:
+    <span class="kw">var</span> n: <span class="typ">Int</span> = <span class="num">4</span>
+    <span class="com"># forward elimination</span>
+    <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k + <span class="num">1</span>, n):
+            <span class="kw">var</span> f = M[i][k] / M[k][k]
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(k, n + <span class="num">1</span>):
+                M[i][j] = M[i][j] - f * M[k][j]
+    <span class="com"># back substitution</span>
+    <span class="kw">var</span> x = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n):
+        x.<span class="fn">append</span>(<span class="num">0.0</span>)
+    <span class="kw">for</span> ii <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">var</span> i = n - <span class="num">1</span> - ii
+        <span class="kw">var</span> s: <span class="typ">Float64</span> = M[i][n]
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i + <span class="num">1</span>, n):
+            s = s - M[i][j] * x[j]
+        x[i] = s / M[i][i]
+    <span class="kw">return</span> x
 
-<span class="kw">print</span>(<span class="fn">solve_similarity</span>(source, target))
+<span class="kw">def</span> <span class="fn">solve_similarity</span>(pts: <span class="typ">List</span>[<span class="typ">CtrlPt</span>]) -&gt; <span class="typ">Similarity4</span>:
+    <span class="com"># Build normal equations for 4 unknowns (augmented 4x5)</span>
+    <span class="kw">var</span> M = <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+        <span class="kw">var</span> row = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+            row.<span class="fn">append</span>(<span class="num">0.0</span>)
+        M.<span class="fn">append</span>(row)
+
+    <span class="kw">for</span> p <span class="kw">in</span> pts:
+        <span class="com"># E equation: [1, 0, E, -N | Ep]</span>
+        <span class="com"># N equation: [0, 1, N,  E | Np]</span>
+        <span class="com"># one row per coordinate equation, augmented with the RHS value</span>
+        <span class="kw">var</span> r1: <span class="typ">List</span>[<span class="typ">Float64</span>] = [<span class="num">1.0</span>, <span class="num">0.0</span>, p.E, -p.N, p.Ep]
+        <span class="kw">var</span> r2: <span class="typ">List</span>[<span class="typ">Float64</span>] = [<span class="num">0.0</span>, <span class="num">1.0</span>, p.N,  p.E, p.Np]
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+                M[i][j] += r1[i]*r1[j] + r2[i]*r2[j]
+            M[i][<span class="num">4</span>] += r1[i]*r1[<span class="num">4</span>] + r2[i]*r2[<span class="num">4</span>]
+
+    <span class="kw">var</span> x = <span class="fn">solve4x4</span>(M)
+    <span class="com"># x = [tx, ty, a, b]; recover classical parameters from a, b</span>
+    <span class="kw">var</span> a = x[<span class="num">2</span>]
+    <span class="kw">var</span> b = x[<span class="num">3</span>]
+    <span class="kw">return</span> <span class="fn">Similarity4</span>(tx=x[<span class="num">0</span>], ty=x[<span class="num">1</span>],
+                       scale=<span class="fn">hypot</span>(a, b),
+                       theta_deg=<span class="fn">degrees</span>(<span class="fn">atan2</span>(b, a)))
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> pts: <span class="typ">List</span>[<span class="typ">CtrlPt</span>] = [
+        <span class="fn">CtrlPt</span>(<span class="num">1000.0</span>, <span class="num">500.0</span>, <span class="num">1250.10</span>, <span class="num">399.80</span>),
+        <span class="fn">CtrlPt</span>(<span class="num">1200.0</span>, <span class="num">500.0</span>, <span class="num">1450.02</span>, <span class="num">400.25</span>),
+        <span class="fn">CtrlPt</span>(<span class="num">1000.0</span>, <span class="num">700.0</span>, <span class="num">1249.70</span>, <span class="num">600.05</span>),
+        <span class="fn">CtrlPt</span>(<span class="num">1200.0</span>, <span class="num">700.0</span>, <span class="num">1450.12</span>, <span class="num">600.10</span>)
+    ]
+    <span class="kw">var</span> t = <span class="fn">solve_similarity</span>(pts)
+    <span class="fn">print</span>(<span class="str">"tx, ty:"</span>, t.tx, t.ty)                       <span class="com"># 249.98 -101.38</span>
+    <span class="fn">print</span>(<span class="str">"scale:"</span>, t.scale, <span class="str">"theta_deg:"</span>, t.theta_deg)  <span class="com"># 1.00055, 0.05726</span>
 </code></pre>
   </div>
 
@@ -807,46 +744,9 @@ target = <span class="typ">np</span>.<span class="fn">array</span>([[<span class
     (radians, small-angle form), and <i>s</i> is the scale factor (often given in ppm).
   </p>
 
-  <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — helmert.py</span>
-<pre><code><span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
-
-<span class="kw">def</span> <span class="fn">rotation_matrix</span>(rx, ry, rz):
-    <span class="str">"""Small-angle rotation matrix (radians)."""</span>
-    <span class="kw">return</span> <span class="typ">np</span>.<span class="fn">array</span>([
-        [<span class="num">1.0</span>, -rz,  ry],
-        [ rz, <span class="num">1.0</span>, -rx],
-        [-ry,  rx, <span class="num">1.0</span>]])
-
-<span class="kw">def</span> <span class="fn">helmert_forward</span>(xyz, tx, ty, tz, rx, ry, rz, s_ppm):
-    <span class="str">"""Apply Helmert 7-param to an Nx3 array of coordinates."""</span>
-    <span class="com"># ppm scale -&gt; dimensionless factor</span>
-    s = <span class="num">1.0</span> + s_ppm * <span class="num">1e-6</span>
-    xyz = <span class="typ">np</span>.<span class="fn">asarray</span>(xyz, dtype=<span class="typ">float</span>)
-    R = <span class="fn">rotation_matrix</span>(rx, ry, rz)
-    T = <span class="typ">np</span>.<span class="fn">array</span>([tx, ty, tz])
-    <span class="kw">return</span> (s * (R @ xyz.T)).T + T
-
-<span class="kw">def</span> <span class="fn">arcsec_to_rad</span>(a):
-    <span class="kw">return</span> a / <span class="num">3600.0</span> * <span class="typ">np</span>.pi / <span class="num">180.0</span>
-
-<span class="com"># Example: AGD66 → GDA94 approximate parameters (Australia)</span>
-params = <span class="typ">dict</span>(
-    tx=-<span class="num">117.763</span>, ty=-<span class="num">51.510</span>, tz=<span class="num">139.061</span>,
-    rx=<span class="fn">arcsec_to_rad</span>(-<span class="num">0.1917</span>),
-    ry=<span class="fn">arcsec_to_rad</span>(-<span class="num">0.2220</span>),
-    rz=<span class="fn">arcsec_to_rad</span>(-<span class="num">0.2470</span>),
-    s_ppm=-<span class="num">0.191</span>,
-)
-
-src = <span class="typ">np</span>.<span class="fn">array</span>([[-<span class="num">4852421.0</span>, <span class="num">2560578.0</span>, -<span class="num">3336862.0</span>]])
-dst = <span class="fn">helmert_forward</span>(src, **params)
-<span class="kw">print</span>(<span class="str">"Transformed XYZ:"</span>, dst)
-</code></pre>
-  </div>
 
   <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0 — helmert.mojo</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x — helmert.mojo</span>
 <pre><code><span class="com"># Helmert 7-parameter in pure Mojo — the small-angle rotation is</span>
 <span class="com"># expanded explicitly, so no matrix library is required.</span>
 <span class="kw">comptime</span> PI: <span class="typ">Float64</span> = <span class="num">3.14159265358979323846</span>
@@ -915,7 +815,7 @@ dst = <span class="fn">helmert_forward</span>(src, **params)
     <p>
       Site calibration ties a local survey grid to a global reference system using points observed
       in both. This chapter sets up the observation equations, solves them by least squares in
-      Python and in pure Mojo, and treats vertical localisation separately. The emphasis is on the
+      Mojo, and treats vertical localisation separately. The emphasis is on the
       <b>residual check</b>: a calibration is only credible if the misclosures at the control points
       are small, random and independently verified.
     </p>
@@ -935,185 +835,133 @@ dst = <span class="fn">helmert_forward</span>(src, **params)
     <div class="card"><h4>Residual check</h4><p>Differences after applying the transformation.</p></div>
   </div>
 
-  <h3>3.1 Python — least-squares 4-parameter calibration</h3>
+  <h3>3.1 Least-squares 4-parameter calibration</h3>
   <p class="topic-brief">
-    Stack the E and N observation equations for every common point, solve for
-    (a, b, tE, tN), then convert to scale and rotation and inspect the misclosures.
-  </p>
-  <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — calibration.py</span>
-<pre><code><span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
-
-<span class="kw">def</span> <span class="fn">calibrate_2d</span>(local_pts, global_pts):
-    <span class="str">"""
-    local_pts, global_pts: Nx2 arrays [[E, N], ...]
-    Returns (a, b, tE, tN), residuals, scale, rotation_deg.
-    """</span>
-    n = local_pts.shape[<span class="num">0</span>]
-    <span class="kw">assert</span> n &gt;= <span class="num">2</span>, <span class="str">"Need at least 2 common points"</span>
-
-    <span class="com"># Design matrix for unknowns [a, b, tE, tN]</span>
-    A = <span class="typ">np</span>.<span class="fn">zeros</span>((<span class="num">2</span> * n, <span class="num">4</span>))
-    L = <span class="typ">np</span>.<span class="fn">zeros</span>(<span class="num">2</span> * n)
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
-        E, N = local_pts[i]
-        A[<span class="num">2</span>*i,   <span class="num">0</span>] =  E;  A[<span class="num">2</span>*i,   <span class="num">1</span>] = -N;  A[<span class="num">2</span>*i,   <span class="num">2</span>] = <span class="num">1.0</span>
-        A[<span class="num">2</span>*i+<span class="num">1</span>, <span class="num">0</span>] =  N;  A[<span class="num">2</span>*i+<span class="num">1</span>, <span class="num">1</span>] =  E;  A[<span class="num">2</span>*i+<span class="num">1</span>, <span class="num">3</span>] = <span class="num">1.0</span>
-        L[<span class="num">2</span>*i]     = global_pts[i, <span class="num">0</span>]
-        L[<span class="num">2</span>*i+<span class="num">1</span>]   = global_pts[i, <span class="num">1</span>]
-
-    x, *_ = <span class="typ">np</span>.linalg.<span class="fn">lstsq</span>(A, L, rcond=<span class="kw">None</span>)
-    a, b, tE, tN = x
-
-    <span class="com"># misclosure at every control point — should be small and unstructured</span>
-    v = L - A @ x
-    scale = <span class="typ">np</span>.<span class="fn">sqrt</span>(a*a + b*b)
-    <span class="com"># rotation from the atan2 of the (a, b) complex number</span>
-    rot_deg = <span class="typ">np</span>.<span class="fn">degrees</span>(<span class="typ">np</span>.<span class="fn">arctan2</span>(b, a))
-
-    <span class="kw">return</span> (a, b, tE, tN), v, scale, rot_deg
-
-<span class="com"># Example: 3 local control points matched to UTM coordinates</span>
-local   = <span class="typ">np</span>.<span class="fn">array</span>([[  <span class="num">100.000</span>,  <span class="num">200.000</span>],
-                    [ <span class="num">1250.500</span>,  <span class="num">180.200</span>],
-                    [  <span class="num">700.300</span>, <span class="num">1450.800</span>]])
-global_ = <span class="typ">np</span>.<span class="fn">array</span>([[<span class="num">540123.456</span>, <span class="num">6234567.890</span>],
-                    [<span class="num">541273.812</span>, <span class="num">6234542.104</span>],
-                    [<span class="num">540719.331</span>, <span class="num">6235835.021</span>]])
-
-params, v, s, r = <span class="fn">calibrate_2d</span>(local, global_)
-<span class="kw">print</span>(<span class="str">f"a={params[0]:.6f}  b={params[1]:.6f}"</span>)
-<span class="kw">print</span>(<span class="str">f"tE={params[2]:.3f}  tN={params[3]:.3f}"</span>)
-<span class="kw">print</span>(<span class="str">f"Scale={s:.8f}  Rotation={r:.4f}°"</span>)
-<span class="kw">print</span>(<span class="str">"Residuals (m):"</span>, v.<span class="fn">reshape</span>(-<span class="num">1</span>, <span class="num">2</span>))
-</code></pre>
-  </div>
-
-  <h3>3.2 Mojo 1.x — least-squares 4-parameter calibration</h3>
-  <p class="topic-brief">
-    No NumPy in Mojo: form AᵀA and AᵀL by hand, then solve the 4×4 normal equations with Gaussian
-    elimination and partial pivoting — the same pattern reused in the georeferencing and GPS code.
+    Stack the E and N observation equations for every common point, form the normal equations
+    AᵀA and AᵀL by hand, then solve the 4×4 system with Gaussian elimination and partial pivoting —
+    the same pattern reused in the georeferencing and GPS code.
   </p>
   <p>
     Mojo has no NumPy, so we form the normal equations AᵀA x = AᵀL explicitly and solve the
-    4×4 system by Gaussian elimination — the same pattern reused in the georeferencing and
-    GPS sections.
+    4×4 system by Gaussian elimination. The four unknowns are the two translations plus the
+    linearised terms a and b; scale and rotation are recovered from a and b in the final step.
   </p>
   <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0 — calibration.mojo</span>
-<pre><code>from std.math import sqrt, atan2, abs
+    <span class="lang-tag lang-mojo">MOJO 1.x — calibration.mojo</span>
+<pre><code><span class="kw">from</span> std.math <span class="kw">import</span> sqrt, atan2, abs
 
-comptime PI: Float64 = 3.14159265358979323846
+<span class="kw">comptime</span> PI: <span class="typ">Float64</span> = <span class="num">3.14159265358979323846</span>
 
-@fieldwise_init
-struct Point2D:
-    var e: Float64
-    var n: Float64
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">Point2D</span>:
+    <span class="kw">var</span> e: <span class="typ">Float64</span>
+    <span class="kw">var</span> n: <span class="typ">Float64</span>
 
-@fieldwise_init
-struct CalibResult:
-    var a: Float64
-    var b: Float64
-    var tE: Float64
-    var tN: Float64
-    var scale: Float64
-    var rot_deg: Float64
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">CalibResult</span>:
+    <span class="kw">var</span> a: <span class="typ">Float64</span>
+    <span class="kw">var</span> b: <span class="typ">Float64</span>
+    <span class="kw">var</span> tE: <span class="typ">Float64</span>
+    <span class="kw">var</span> tN: <span class="typ">Float64</span>
+    <span class="kw">var</span> scale: <span class="typ">Float64</span>
+    <span class="kw">var</span> rot_deg: <span class="typ">Float64</span>
 
-# Solve a 4x4 linear system (normal equations) by Gaussian elimination.
-# A is 4x4, L is the right-hand side; returns the solution vector.
-def solve4x4(A: List[List[Float64]], L: List[Float64]) -&gt; List[Float64]:
-    var n: Int = 4
-    # build the augmented matrix [A | L]
-    var M = List[List[Float64]]()
-    for i in range(n):
-        var row = List[Float64]()
-        for j in range(n):
-            row.append(A[i][j])
-        row.append(L[i])
-        M.append(row^)
+<span class="com"># Solve a 4x4 linear system (normal equations) by Gaussian elimination.</span>
+<span class="com"># A is 4x4, L is the right-hand side; returns the solution vector.</span>
+<span class="kw">def</span> <span class="fn">solve4x4</span>(A: <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]], L: <span class="typ">List</span>[<span class="typ">Float64</span>]) -&gt; <span class="typ">List</span>[<span class="typ">Float64</span>]:
+    <span class="kw">var</span> n: <span class="typ">Int</span> = <span class="num">4</span>
+    <span class="com"># build the augmented matrix [A | L]</span>
+    <span class="kw">var</span> M = <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]()
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">var</span> row = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n):
+            row.<span class="fn">append</span>(A[i][j])
+        row.<span class="fn">append</span>(L[i])
+        M.<span class="fn">append</span>(row)
 
-    # forward elimination
-    for k in range(n):
-        # partial pivoting keeps the elimination stable
-        var pivot = k
-        for i in range(k + 1, n):
-            if abs(M[i][k]) &gt; abs(M[pivot][k]):
+    <span class="com"># forward elimination</span>
+    <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="com"># partial pivoting keeps the elimination stable</span>
+        <span class="kw">var</span> pivot = k
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k + <span class="num">1</span>, n):
+            <span class="kw">if</span> <span class="fn">abs</span>(M[i][k]) &gt; <span class="fn">abs</span>(M[pivot][k]):
                 pivot = i
-        if pivot != k:
-            var tmp = M[k].copy()
-            M[k] = M[pivot].copy()
-            M[pivot] = tmp^
-        for i in range(k + 1, n):
-            var factor = M[i][k] / M[k][k]
-            for j in range(k, n + 1):
+        <span class="kw">if</span> pivot != k:
+            <span class="kw">var</span> tmp = M[k]
+            M[k] = M[pivot]
+            M[pivot] = tmp
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k + <span class="num">1</span>, n):
+            <span class="kw">var</span> factor = M[i][k] / M[k][k]
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(k, n + <span class="num">1</span>):
                 M[i][j] = M[i][j] - factor * M[k][j]
 
-    # back substitution
-    var x = List[Float64]()
-    for _ in range(n):
-        x.append(0.0)
-    for ii in range(n):
-        var i = n - 1 - ii
-        var s: Float64 = M[i][n]
-        for j in range(i + 1, n):
+    <span class="com"># back substitution</span>
+    <span class="kw">var</span> x = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n):
+        x.<span class="fn">append</span>(<span class="num">0.0</span>)
+    <span class="kw">for</span> ii <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">var</span> i = n - <span class="num">1</span> - ii
+        <span class="kw">var</span> s: <span class="typ">Float64</span> = M[i][n]
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i + <span class="num">1</span>, n):
             s = s - M[i][j] * x[j]
         x[i] = s / M[i][i]
-    return x^
+    <span class="kw">return</span> x
 
-def calibrate_2d(local_pts: List[Point2D],
-                global_pts: List[Point2D]) -&gt; CalibResult:
-    var n = len(local_pts)
-    var ATA = List[List[Float64]]()
-    var ATL = List[Float64]()
-    for _ in range(4):
-        var row = List[Float64]()
-        for _ in range(4):
-            row.append(0.0)
-        ATA.append(row^)
-    for _ in range(4):
-        ATL.append(0.0)
+<span class="kw">def</span> <span class="fn">calibrate_2d</span>(local_pts: <span class="typ">List</span>[<span class="typ">Point2D</span>],
+                global_pts: <span class="typ">List</span>[<span class="typ">Point2D</span>]) -&gt; <span class="typ">CalibResult</span>:
+    <span class="kw">var</span> n = <span class="fn">len</span>(local_pts)
+    <span class="kw">var</span> ATA = <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]()
+    <span class="kw">var</span> ATL = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+        <span class="kw">var</span> row = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+            row.<span class="fn">append</span>(<span class="num">0.0</span>)
+        ATA.<span class="fn">append</span>(row)
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+        ATL.<span class="fn">append</span>(<span class="num">0.0</span>)
 
-    for i in range(n):
-        var E = local_pts[i].e
-        var N = local_pts[i].n
-        var r1: List[Float64] = [E, -N, 1.0, 0.0]   # -&gt; global E
-        var r2: List[Float64] = [N,  E, 0.0, 1.0]   # -&gt; global N
-        var l1 = global_pts[i].e
-        var l2 = global_pts[i].n
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">var</span> E = local_pts[i].e
+        <span class="kw">var</span> N = local_pts[i].n
+        <span class="kw">var</span> r1: <span class="typ">List</span>[<span class="typ">Float64</span>] = [E, -N, <span class="num">1.0</span>, <span class="num">0.0</span>]   <span class="com"># -&gt; global E</span>
+        <span class="kw">var</span> r2: <span class="typ">List</span>[<span class="typ">Float64</span>] = [N,  E, <span class="num">0.0</span>, <span class="num">1.0</span>]   <span class="com"># -&gt; global N</span>
+        <span class="kw">var</span> l1 = global_pts[i].e
+        <span class="kw">var</span> l2 = global_pts[i].n
 
-        # accumulate A^T A and A^T L from the two observation rows
-        for p in range(4):
-            for q in range(4):
+        <span class="com"># accumulate A^T A and A^T L from the two observation rows</span>
+        <span class="kw">for</span> p <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+            <span class="kw">for</span> q <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
                 ATA[p][q] += r1[p]*r1[q] + r2[p]*r2[q]
             ATL[p] += r1[p]*l1 + r2[p]*l2
 
-    var x = solve4x4(ATA, ATL)
-    var a = x[0]
-    var b = x[1]
-    return CalibResult(
-        a=a, b=b, tE=x[2], tN=x[3],
-        scale=sqrt(a*a + b*b),
-        rot_deg=atan2(b, a) * 180.0 / PI
+    <span class="kw">var</span> x = <span class="fn">solve4x4</span>(ATA, ATL)
+    <span class="kw">var</span> a = x[<span class="num">0</span>]
+    <span class="kw">var</span> b = x[<span class="num">1</span>]
+    <span class="kw">return</span> <span class="fn">CalibResult</span>(
+        a=a, b=b, tE=x[<span class="num">2</span>], tN=x[<span class="num">3</span>],
+        scale=<span class="fn">sqrt</span>(a*a + b*b),
+        rot_deg=<span class="fn">atan2</span>(b, a) * <span class="num">180.0</span> / PI
     )
 
-def main():
-    var local_pts: List[Point2D] = [
-        Point2D(100.000, 200.000),
-        Point2D(1250.500, 180.200),
-        Point2D(700.300, 1450.800)
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> local_pts: <span class="typ">List</span>[<span class="typ">Point2D</span>] = [
+        <span class="fn">Point2D</span>(<span class="num">100.000</span>, <span class="num">200.000</span>),
+        <span class="fn">Point2D</span>(<span class="num">1250.500</span>, <span class="num">180.200</span>),
+        <span class="fn">Point2D</span>(<span class="num">700.300</span>, <span class="num">1450.800</span>)
     ]
-    var global_pts: List[Point2D] = [
-        Point2D(540123.456, 6234567.890),
-        Point2D(541273.812, 6234542.104),
-        Point2D(540719.331, 6235835.021)
+    <span class="kw">var</span> global_pts: <span class="typ">List</span>[<span class="typ">Point2D</span>] = [
+        <span class="fn">Point2D</span>(<span class="num">540123.456</span>, <span class="num">6234567.890</span>),
+        <span class="fn">Point2D</span>(<span class="num">541273.812</span>, <span class="num">6234542.104</span>),
+        <span class="fn">Point2D</span>(<span class="num">540719.331</span>, <span class="num">6235835.021</span>)
     ]
-    var r = calibrate_2d(local_pts, global_pts)
-    print(&quot;a =&quot;, r.a, &quot; b =&quot;, r.b)
-    print(&quot;tE =&quot;, r.tE, &quot; tN =&quot;, r.tN)
-    print(&quot;Scale =&quot;, r.scale, &quot; Rot (deg) =&quot;, r.rot_deg)</code></pre>
+    <span class="kw">var</span> r = <span class="fn">calibrate_2d</span>(local_pts, global_pts)
+    <span class="fn">print</span>(<span class="str">"a ="</span>, r.a, <span class="str">" b ="</span>, r.b)
+    <span class="fn">print</span>(<span class="str">"tE ="</span>, r.tE, <span class="str">" tN ="</span>, r.tN)
+    <span class="fn">print</span>(<span class="str">"Scale ="</span>, r.scale, <span class="str">" Rot (deg) ="</span>, r.rot_deg)
+</code></pre>
   </div>
 
-  <h3>3.3 Vertical localisation</h3>
+  <h3>3.2 Vertical localisation</h3>
   <p class="topic-brief">
     Treat height separately unless you are deliberately running a rigorous 3D model — a constant
     offset, then a tilted plane, then a geoid-based correction as the site demands.
@@ -1126,34 +974,9 @@ def main():
     from control.
   </p>
 
-  <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — plane correction H = a + bE + cN</span>
-<pre><code><span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
-
-<span class="com"># Four points with (E, N, H) known in both the site datum and the</span>
-<span class="com"># target datum — enough to fit a tilted plane and still see a trend.</span>
-points = <span class="typ">np</span>.<span class="fn">array</span>([
-    [<span class="num">100</span>, <span class="num">200</span>, <span class="num">500.12</span>],
-    [<span class="num">300</span>, <span class="num">200</span>, <span class="num">500.28</span>],
-    [<span class="num">100</span>, <span class="num">400</span>, <span class="num">500.42</span>],
-    [<span class="num">300</span>, <span class="num">400</span>, <span class="num">500.58</span>]
-])
-
-A = <span class="typ">np</span>.c_[<span class="typ">np</span>.<span class="fn">ones</span>(<span class="fn">len</span>(points)), points[:, <span class="num">0</span>], points[:, <span class="num">1</span>]]
-H = points[:, <span class="num">2</span>]
-
-a, b, c = <span class="typ">np</span>.linalg.<span class="fn">lstsq</span>(A, H, rcond=<span class="kw">None</span>)[<span class="num">0</span>]
-<span class="kw">print</span>(a, b, c)
-
-<span class="kw">def</span> <span class="fn">corrected_height</span>(E, N):
-    <span class="kw">return</span> a + b*E + c*N
-
-<span class="kw">print</span>(<span class="fn">corrected_height</span>(<span class="num">200</span>, <span class="num">300</span>))
-</code></pre>
-  </div>
 
   <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x</span>
 <pre><code><span class="kw">def</span> <span class="fn">corrected_height</span>(E: <span class="typ">Float64</span>, N: <span class="typ">Float64</span>,
                     a: <span class="typ">Float64</span>, b: <span class="typ">Float64</span>, c: <span class="typ">Float64</span>) -&gt; <span class="typ">Float64</span>:
     <span class="com"># a + bE + cN: fitted tilt plane applied to a queried position.</span>
@@ -1183,7 +1006,7 @@ a, b, c = <span class="typ">np</span>.linalg.<span class="fn">lstsq</span>(A, H,
     <p>
       Georeferencing gives real-world coordinates to data that has none — raster pixels, scanned
       plans, DXF drawings and legacy local-grid files. This chapter builds the <b>6-parameter
-      affine</b> model behind world files, fits it from ground control points in Python and Mojo,
+      affine</b> model behind world files, fits it from ground control points in Mojo,
       and closes with the practical CAD/GIS pipeline and its documentation requirements.
     </p>
   </div>
@@ -1216,138 +1039,90 @@ a, b, c = <span class="typ">np</span>.linalg.<span class="fn">lstsq</span>(A, H,
     <tr><td>Polynomial / rubber-sheet</td><td>More control points</td><td>Non-uniform historical distortions</td></tr>
   </tbody></table>
 
-  <h3>4.2 Python — affine fit from ground control points</h3>
+  <h3>4.2 Affine fit from ground control points</h3>
   <p class="topic-brief">
-    Six unknowns, two equations per GCP: stack them, solve once, and write the coefficients
-    straight out in world-file line order.
+    Six unknowns, two equations per GCP: stack them, accumulate a 6×6 normal matrix and a
+    right-hand side, then solve the augmented 6×7 system in place — no linear-algebra library
+    required — and write the coefficients straight out in world-file line order.
   </p>
   <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — georef.py</span>
-<pre><code><span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x — georef.mojo</span>
+<pre><code><span class="com"># 6-parameter affine from GCPs via 6x6 normal equations</span>
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">GCP</span>:
+    <span class="kw">var</span> col: <span class="typ">Float64</span>
+    <span class="kw">var</span> row: <span class="typ">Float64</span>
+    <span class="kw">var</span> X:   <span class="typ">Float64</span>
+    <span class="kw">var</span> Y:   <span class="typ">Float64</span>
 
-<span class="kw">def</span> <span class="fn">fit_affine</span>(gcps):
-    <span class="str">"""
-    gcps: list of (col, row, X, Y)
-    Returns (A, B, C, D, E, F) for the world-file convention.
-    """</span>
-    n = <span class="fn">len</span>(gcps)
-    <span class="kw">assert</span> n &gt;= <span class="num">3</span>, <span class="str">"Need at least 3 GCPs"</span>
-    A = <span class="typ">np</span>.<span class="fn">zeros</span>((<span class="num">2</span> * n, <span class="num">6</span>))
-    L = <span class="typ">np</span>.<span class="fn">zeros</span>(<span class="num">2</span> * n)
-    <span class="kw">for</span> i, (c, r, X, Y) <span class="kw">in</span> <span class="fn">enumerate</span>(gcps):
-        A[<span class="num">2</span>*i,   :] = [c, r, <span class="num">1</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>]
-        A[<span class="num">2</span>*i+<span class="num">1</span>, :] = [<span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, c, r, <span class="num">1</span>]
-        L[<span class="num">2</span>*i]   = X
-        L[<span class="num">2</span>*i+<span class="num">1</span>] = Y
-    <span class="com"># least squares on both X and Y equations stacked in one system</span>
-    sol, *_ = <span class="typ">np</span>.linalg.<span class="fn">lstsq</span>(A, L, rcond=<span class="kw">None</span>)
-    <span class="kw">return</span> <span class="typ">tuple</span>(sol)
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">Affine6</span>:
+    <span class="kw">var</span> A: <span class="typ">Float64</span>   <span class="com"># pixel width</span>
+    <span class="kw">var</span> B: <span class="typ">Float64</span>   <span class="com"># row rotation</span>
+    <span class="kw">var</span> C: <span class="typ">Float64</span>   <span class="com"># X of upper-left centre</span>
+    <span class="kw">var</span> D: <span class="typ">Float64</span>   <span class="com"># col rotation</span>
+    <span class="kw">var</span> E: <span class="typ">Float64</span>   <span class="com"># pixel height (negative)</span>
+    <span class="kw">var</span> F: <span class="typ">Float64</span>   <span class="com"># Y of upper-left centre</span>
 
-<span class="kw">def</span> <span class="fn">write_world_file</span>(path, params):
-    A, B, C, D, E, F = params
-    <span class="kw">with</span> <span class="fn">open</span>(path, <span class="str">"w"</span>) <span class="kw">as</span> f:
-        <span class="com"># world-file line order: A, D, B, E, C, F</span>
-        f.<span class="fn">write</span>(<span class="str">f"{A:.10f}\n{D:.10f}\n{B:.10f}\n{E:.10f}\n{C:.10f}\n{F:.10f}\n"</span>)
+<span class="com"># Solve an augmented 6x7 system M by Gauss elimination (last col = RHS).</span>
+<span class="com"># `mut` marks the argument as mutated in place — Mojo arguments are</span>
+<span class="com"># immutable by default in 1.0.</span>
+<span class="kw">def</span> <span class="fn">solve6x6</span>(<span class="kw">mut</span> M: <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]) -&gt; <span class="typ">List</span>[<span class="typ">Float64</span>]:
+    <span class="kw">var</span> n: <span class="typ">Int</span> = <span class="num">6</span>
+    <span class="com"># forward elimination</span>
+    <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k + <span class="num">1</span>, n):
+            <span class="kw">var</span> f = M[i][k] / M[k][k]
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(k, n + <span class="num">1</span>):
+                M[i][j] = M[i][j] - f * M[k][j]
+    <span class="com"># back substitution</span>
+    <span class="kw">var</span> x = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n):
+        x.<span class="fn">append</span>(<span class="num">0.0</span>)
+    <span class="kw">for</span> ii <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">var</span> i = n - <span class="num">1</span> - ii
+        <span class="kw">var</span> s: <span class="typ">Float64</span> = M[i][n]
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i + <span class="num">1</span>, n):
+            s = s - M[i][j] * x[j]
+        x[i] = s / M[i][i]
+    <span class="kw">return</span> x
 
-<span class="com"># Example: 4 GCPs from an orthophoto (0.01 m pixels)</span>
-gcps = [
-    (    <span class="num">0</span>,     <span class="num">0</span>, <span class="num">540000.0</span>, <span class="num">6235000.0</span>),
-    (<span class="num">10000</span>,     <span class="num">0</span>, <span class="num">540100.0</span>, <span class="num">6235000.0</span>),
-    (    <span class="num">0</span>,  <span class="num">8000</span>, <span class="num">540000.0</span>, <span class="num">6234920.0</span>),
-    (<span class="num">10000</span>,  <span class="num">8000</span>, <span class="num">540100.0</span>, <span class="num">6234920.0</span>),
-]
-params = <span class="fn">fit_affine</span>(gcps)
-<span class="kw">print</span>(<span class="str">"World-file params:"</span>, params)
-<span class="fn">write_world_file</span>(<span class="str">"ortho.tfw"</span>, params)
+<span class="kw">def</span> <span class="fn">fit_affine</span>(gcps: <span class="typ">List</span>[<span class="typ">GCP</span>]) -&gt; <span class="typ">Affine6</span>:
+    <span class="com"># Build normal equations for 6 unknowns (augmented 6x7)</span>
+    <span class="kw">var</span> M = <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">6</span>):
+        <span class="kw">var</span> row = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">7</span>):
+            row.<span class="fn">append</span>(<span class="num">0.0</span>)
+        M.<span class="fn">append</span>(row)
+
+    <span class="kw">for</span> g <span class="kw">in</span> gcps:
+        <span class="com"># X equation: [c, r, 1, 0, 0, 0 | X]</span>
+        <span class="com"># one row per coordinate equation, augmented with the RHS value</span>
+        <span class="kw">var</span> r1: <span class="typ">List</span>[<span class="typ">Float64</span>] = [g.col, g.row, <span class="num">1.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, g.X]
+        <span class="com"># Y equation: [0, 0, 0, c, r, 1 | Y]</span>
+        <span class="kw">var</span> r2: <span class="typ">List</span>[<span class="typ">Float64</span>] = [<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, g.col, g.row, <span class="num">1.0</span>, g.Y]
+        <span class="kw">for</span> p <span class="kw">in</span> <span class="fn">range</span>(<span class="num">6</span>):
+            <span class="kw">for</span> q <span class="kw">in</span> <span class="fn">range</span>(<span class="num">6</span>):
+                M[p][q] += r1[p]*r1[q] + r2[p]*r2[q]
+            M[p][<span class="num">6</span>] += r1[p]*r1[<span class="num">6</span>] + r2[p]*r2[<span class="num">6</span>]
+
+    <span class="kw">var</span> x = <span class="fn">solve6x6</span>(M)
+    <span class="kw">return</span> <span class="fn">Affine6</span>(A=x[<span class="num">0</span>], B=x[<span class="num">1</span>], C=x[<span class="num">2</span>], D=x[<span class="num">3</span>], E=x[<span class="num">4</span>], F=x[<span class="num">5</span>])
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> gcps: <span class="typ">List</span>[<span class="typ">GCP</span>] = [
+        <span class="fn">GCP</span>(    <span class="num">0.0</span>,    <span class="num">0.0</span>, <span class="num">540000.0</span>, <span class="num">6235000.0</span>),
+        <span class="fn">GCP</span>(<span class="num">10000.0</span>,    <span class="num">0.0</span>, <span class="num">540100.0</span>, <span class="num">6235000.0</span>),
+        <span class="fn">GCP</span>(    <span class="num">0.0</span>, <span class="num">8000.0</span>, <span class="num">540000.0</span>, <span class="num">6234920.0</span>),
+        <span class="fn">GCP</span>(<span class="num">10000.0</span>, <span class="num">8000.0</span>, <span class="num">540100.0</span>, <span class="num">6234920.0</span>)
+    ]
+    <span class="kw">var</span> a = <span class="fn">fit_affine</span>(gcps)
+    <span class="fn">print</span>(<span class="str">"Affine params:"</span>, a.A, a.B, a.C, a.D, a.E, a.F)
 </code></pre>
   </div>
 
-  <h3>4.3 Mojo 1.x — affine fit from GCPs</h3>
-  <p class="topic-brief">
-    The same affine fit without a linear-algebra library: accumulate a 6×6 normal matrix and a
-    right-hand side, then solve the augmented 6×7 system in place.
-  </p>
-  <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0 — georef.mojo</span>
-<pre><code># 6-parameter affine from GCPs via 6x6 normal equations
-@fieldwise_init
-struct GCP:
-    var col: Float64
-    var row: Float64
-    var X:   Float64
-    var Y:   Float64
-
-@fieldwise_init
-struct Affine6:
-    var A: Float64   # pixel width
-    var B: Float64   # row rotation
-    var C: Float64   # X of upper-left centre
-    var D: Float64   # col rotation
-    var E: Float64   # pixel height (negative)
-    var F: Float64   # Y of upper-left centre
-
-# Solve an augmented 6x7 system M by Gauss elimination (last col = RHS).
-# `mut` marks the argument as mutated in place — Mojo arguments are
-# immutable by default in 1.0.
-def solve6x6(mut M: List[List[Float64]]) -&gt; List[Float64]:
-    var n: Int = 6
-    # forward elimination
-    for k in range(n):
-        for i in range(k + 1, n):
-            var f = M[i][k] / M[k][k]
-            for j in range(k, n + 1):
-                M[i][j] = M[i][j] - f * M[k][j]
-    # back substitution
-    var x = List[Float64]()
-    for _ in range(n):
-        x.append(0.0)
-    for ii in range(n):
-        var i = n - 1 - ii
-        var s: Float64 = M[i][n]
-        for j in range(i + 1, n):
-            s = s - M[i][j] * x[j]
-        x[i] = s / M[i][i]
-    return x^
-
-def fit_affine(gcps: List[GCP]) -&gt; Affine6:
-    # Build normal equations for 6 unknowns (augmented 6x7)
-    var M = List[List[Float64]]()
-    for _ in range(6):
-        var row = List[Float64]()
-        for _ in range(7):
-            row.append(0.0)
-        M.append(row^)
-
-    for i in range(len(gcps)):
-        # index-based — GCPS iteration needs Copyable elements
-        var gcol = gcps[i].col
-        var grow = gcps[i].row
-        var gX = gcps[i].X
-        var gY = gcps[i].Y
-        # X equation: [c, r, 1, 0, 0, 0 | X]
-        var r1: List[Float64] = [gcol, grow, 1.0, 0.0, 0.0, 0.0, gX]
-        # Y equation: [0, 0, 0, c, r, 1 | Y]
-        var r2: List[Float64] = [0.0, 0.0, 0.0, gcol, grow, 1.0, gY]
-        for p in range(6):
-            for q in range(6):
-                M[p][q] += r1[p]*r1[q] + r2[p]*r2[q]
-            M[p][6] += r1[p]*r1[6] + r2[p]*r2[6]
-
-    var x = solve6x6(M)
-    return Affine6(A=x[0], B=x[1], C=x[2], D=x[3], E=x[4], F=x[5])
-
-def main():
-    var gcps: List[GCP] = [
-        GCP(    0.0,    0.0, 540000.0, 6235000.0),
-        GCP(10000.0,    0.0, 540100.0, 6235000.0),
-        GCP(    0.0, 8000.0, 540000.0, 6234920.0),
-        GCP(10000.0, 8000.0, 540100.0, 6234920.0)
-    ]
-    var a = fit_affine(gcps)
-    print(&quot;Affine params:&quot;, a.A, a.B, a.C, a.D, a.E, a.F)</code></pre>
-  </div>
-
-  <h3>4.4 Georeferencing a CAD/DXF or GeoPackage — practical pipeline</h3>
+  <h3>4.3 Georeferencing a CAD/DXF or GeoPackage — practical pipeline</h3>
   <p class="topic-brief">
     The office procedure: know the source CRS, choose identifiable control, fit the simplest
     adequate model, check it on independent points, then transform everything and record what
@@ -1365,67 +1140,42 @@ def main():
     <li>Write CRS metadata and transformation parameters into the project record.</li>
   </ol>
 
-  <h3>4.5 Point transformation utility</h3>
+  <h3>4.4 Point transformation utility</h3>
   <p class="topic-brief">
     A small reusable routine that applies the fitted similarity parameters to an arbitrary list of
     points — the last step of any georeferencing job.
   </p>
   <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON</span>
-<pre><code><span class="kw">import</span> <span class="typ">math</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x</span>
+<pre><code><span class="kw">from</span> std.math <span class="kw">import</span> cos, sin, radians
 
-<span class="kw">def</span> <span class="fn">transform_points</span>(points, tx, ty, s, theta_deg):
-    t = <span class="typ">math</span>.<span class="fn">radians</span>(theta_deg)
-    out = []
-    <span class="kw">for</span> E, N <span class="kw">in</span> points:
-        x = tx + s*(E*<span class="typ">math</span>.<span class="fn">cos</span>(t) - N*<span class="typ">math</span>.<span class="fn">sin</span>(t))
-        y = ty + s*(E*<span class="typ">math</span>.<span class="fn">sin</span>(t) + N*<span class="typ">math</span>.<span class="fn">cos</span>(t))
-        out.<span class="fn">append</span>((x, y))
-    <span class="kw">return</span> out
+<span class="kw">def</span> <span class="fn">transform_points</span>(points: <span class="typ">List</span>[<span class="typ">Tuple</span>[<span class="typ">Float64</span>, <span class="typ">Float64</span>]],
+                    tx: <span class="typ">Float64</span>, ty: <span class="typ">Float64</span>,
+                    s: <span class="typ">Float64</span>, theta_deg: <span class="typ">Float64</span>)
+                    -&gt; <span class="typ">List</span>[<span class="typ">Tuple</span>[<span class="typ">Float64</span>, <span class="typ">Float64</span>]]:
+    <span class="kw">var</span> result = <span class="typ">List</span>[<span class="typ">Tuple</span>[<span class="typ">Float64</span>, <span class="typ">Float64</span>]]()
+    <span class="kw">var</span> t = <span class="fn">radians</span>(theta_deg)
 
-points = [(<span class="num">100</span>, <span class="num">200</span>), (<span class="num">120</span>, <span class="num">240</span>), (<span class="num">150</span>, <span class="num">210</span>)]
-<span class="kw">print</span>(<span class="fn">transform_points</span>(points, <span class="num">1000</span>, <span class="num">2000</span>, <span class="num">1.0001</span>, <span class="num">0.02</span>))
+    <span class="kw">for</span> p <span class="kw">in</span> points:
+        <span class="kw">var</span> E = p[<span class="num">0</span>]
+        <span class="kw">var</span> N = p[<span class="num">1</span>]
+        <span class="kw">var</span> x = tx + s*(E*<span class="fn">cos</span>(t) - N*<span class="fn">sin</span>(t))
+        <span class="kw">var</span> y = ty + s*(E*<span class="fn">sin</span>(t) + N*<span class="fn">cos</span>(t))
+        result.<span class="fn">append</span>((x, y))
+
+    <span class="kw">return</span> result
+
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> pts: <span class="typ">List</span>[<span class="typ">Tuple</span>[<span class="typ">Float64</span>, <span class="typ">Float64</span>]] = [(<span class="num">100.0</span>, <span class="num">200.0</span>), (<span class="num">120.0</span>, <span class="num">240.0</span>), (<span class="num">150.0</span>, <span class="num">210.0</span>)]
+    <span class="fn">print</span>(<span class="fn">transform_points</span>(pts, <span class="num">1000.0</span>, <span class="num">2000.0</span>, <span class="num">1.0001</span>, <span class="num">0.02</span>))
 </code></pre>
-  </div>
-  <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0</span>
-<pre><code>from std.math import cos, sin
-
-comptime PI: Float64 = 3.14159265358979323846
-
-def radians(deg: Float64) -&gt; Float64:
-    return deg * PI / 180.0
-
-def degrees(rad: Float64) -&gt; Float64:
-    return rad * 180.0 / PI
-
-
-def transform_points(points: List[Tuple[Float64, Float64]],
-                    tx: Float64, ty: Float64,
-                    s: Float64, theta_deg: Float64)
-                    -&gt; List[Tuple[Float64, Float64]]:
-    var result = List[Tuple[Float64, Float64]]()
-    var t = radians(theta_deg)
-
-    for p in points:
-        var E = p[0]
-        var N = p[1]
-        var x = tx + s*(E*cos(t) - N*sin(t))
-        var y = ty + s*(E*sin(t) + N*cos(t))
-        result.append((x, y))
-
-    return result^
-
-def main():
-    var pts: List[Tuple[Float64, Float64]] = [(100.0, 200.0), (120.0, 240.0), (150.0, 210.0)]
-    print(transform_points(pts, 1000.0, 2000.0, 1.0001, 0.02))</code></pre>
   </div>
 
   <div class="note">
     <b>Mojo 1.x syntax used in this tutorial:</b> functions are declared with
-    <code>def</code> (the <code>fn</code> keyword is deprecated as of Mojo v26.2);
-    <code>alias</code> has been replaced by <code>comptime</code> for compile-time constants;
-    <code>let</code> is gone — all local bindings use <code>var</code>; structs use
+    <code>def</code>;
+    <code>comptime</code> declares compile-time constants;
+    all local bindings use <code>var</code>; structs use
     <code>@fieldwise_init</code> to auto-generate the constructor (which takes
     <code>out self</code> when written manually); arguments are immutable by default and marked
     <code>mut</code> when the function modifies them in place; and standard-library imports use
@@ -1483,178 +1233,121 @@ def main():
     unit direction vectors from receiver to satellites.
   </p>
 
-  <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — gps.py, iterative least-squares point positioning</span>
-<pre><code><span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
 
-<span class="kw">def</span> <span class="fn">gps_fix</span>(sats, pranges, x0=<span class="kw">None</span>, tol=<span class="num">1e-4</span>, max_iter=<span class="num">10</span>):
-    <span class="str">"""
-    sats    : Nx3 array of satellite ECEF positions [X, Y, Z]
-    pranges : Nx1 array of pseudoranges (m)
-    Returns (X, Y, Z, clock_bias_m)
-    """</span>
-    n = sats.shape[<span class="num">0</span>]
-    <span class="kw">assert</span> n &gt;= <span class="num">4</span>, <span class="str">"Need at least 4 satellites"</span>
-    <span class="kw">if</span> x0 <span class="kw">is</span> <span class="kw">None</span>:
-        x0 = <span class="typ">np</span>.<span class="fn">array</span>([<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>])   <span class="com"># initial guess</span>
-    x = x0.<span class="fn">copy</span>()
-
-    <span class="kw">for</span> it <span class="kw">in</span> <span class="fn">range</span>(max_iter):
-        dx = sats[:, <span class="num">0</span>] - x[<span class="num">0</span>]
-        dy = sats[:, <span class="num">1</span>] - x[<span class="num">1</span>]
-        dz = sats[:, <span class="num">2</span>] - x[<span class="num">2</span>]
-        r  = <span class="typ">np</span>.<span class="fn">sqrt</span>(dx*dx + dy*dy + dz*dz)   <span class="com"># geometric ranges</span>
-
-        H = <span class="typ">np</span>.<span class="fn">zeros</span>((n, <span class="num">4</span>))                  <span class="com"># Jacobian</span>
-        H[:, <span class="num">0</span>] = -dx / r
-        H[:, <span class="num">1</span>] = -dy / r
-        H[:, <span class="num">2</span>] = -dz / r
-        H[:, <span class="num">3</span>] = <span class="num">1.0</span>                         <span class="com"># clock bias term</span>
-
-        <span class="com"># OMC: measurements minus model at current estimate — driven to zero</span>
-        b = pranges - (r + x[<span class="num">3</span>])
-
-        <span class="com"># linearised correction: solves H * delta = b in the least-squares sense</span>
-        delta, *_ = <span class="typ">np</span>.linalg.<span class="fn">lstsq</span>(H, b, rcond=<span class="kw">None</span>)
-        x = x + delta
-
-        <span class="com"># converged when the position correction is below tolerance</span>
-        <span class="kw">if</span> <span class="typ">np</span>.linalg.<span class="fn">norm</span>(delta[:<span class="num">3</span>]) &lt; tol:
-            <span class="kw">break</span>
-
-    <span class="kw">return</span> x
-
-<span class="com"># Synthetic example: 4 satellites, receiver near (0, 0, 6.4e6) m</span>
-sats = <span class="typ">np</span>.<span class="fn">array</span>([
-    [ <span class="num">1.5e7</span>,  <span class="num">0.0</span>,    <span class="num">2.0e7</span>],
-    [ <span class="num">0.0</span>,    <span class="num">1.5e7</span>,  <span class="num">2.0e7</span>],
-    [-<span class="num">1.5e7</span>,  <span class="num">0.0</span>,    <span class="num">2.0e7</span>],
-    [ <span class="num">0.0</span>,   -<span class="num">1.5e7</span>,  <span class="num">2.0e7</span>],
-])
-true_pos = <span class="typ">np</span>.<span class="fn">array</span>([<span class="num">1000.0</span>, <span class="num">2000.0</span>, <span class="num">6370000.0</span>])
-true_bias = <span class="num">50.0</span>                                     <span class="com"># metres</span>
-ranges = <span class="typ">np</span>.<span class="fn">sqrt</span>(((sats - true_pos)**<span class="num">2</span>).<span class="fn">sum</span>(axis=<span class="num">1</span>)) + true_bias
-
-sol = <span class="fn">gps_fix</span>(sats, ranges)
-<span class="kw">print</span>(<span class="str">"ECEF fix (m):"</span>, sol[:<span class="num">3</span>])
-<span class="kw">print</span>(<span class="str">"Clock bias (m):"</span>, sol[<span class="num">3</span>])
-<span class="kw">print</span>(<span class="str">"Position error (m):"</span>, <span class="typ">np</span>.linalg.<span class="fn">norm</span>(sol[:<span class="num">3</span>] - true_pos))
-</code></pre>
-  </div>
-
-  <h3>5.3 Mojo 1.x — iterative least-squares GPS fix</h3>
+  <h3>5.3 Iterative least-squares GPS fix</h3>
   <p class="topic-brief">
     The same Newton-style iteration in dependency-free Mojo: build the Jacobian each epoch, form
     the 4×4 normal equations, solve, update and test for convergence.
   </p>
   <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0 — gps.mojo</span>
-<pre><code>from std.math import sqrt
+    <span class="lang-tag lang-mojo">MOJO 1.x — gps.mojo</span>
+<pre><code><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
 
-@fieldwise_init
-struct Sat:
-    var x: Float64
-    var y: Float64
-    var z: Float64
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">Sat</span>:
+    <span class="kw">var</span> x: <span class="typ">Float64</span>
+    <span class="kw">var</span> y: <span class="typ">Float64</span>
+    <span class="kw">var</span> z: <span class="typ">Float64</span>
 
-@fieldwise_init
-struct Fix:
-    var x: Float64
-    var y: Float64
-    var z: Float64
-    var clock_bias_m: Float64
+<span class="dec">@fieldwise_init</span>
+<span class="kw">struct</span> <span class="typ">Fix</span>:
+    <span class="kw">var</span> x: <span class="typ">Float64</span>
+    <span class="kw">var</span> y: <span class="typ">Float64</span>
+    <span class="kw">var</span> z: <span class="typ">Float64</span>
+    <span class="kw">var</span> clock_bias_m: <span class="typ">Float64</span>
 
-# Solve 4x4 augmented normal equations by Gauss elimination (in place)
-def solve4x4(mut M: List[List[Float64]]) -&gt; List[Float64]:
-    var n: Int = 4
-    # forward elimination
-    for k in range(n):
-        for i in range(k + 1, n):
-            var f = M[i][k] / M[k][k]
-            for j in range(k, n + 1):
+<span class="com"># Solve 4x4 augmented normal equations by Gauss elimination (in place)</span>
+<span class="kw">def</span> <span class="fn">solve4x4</span>(<span class="kw">mut</span> M: <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]) -&gt; <span class="typ">List</span>[<span class="typ">Float64</span>]:
+    <span class="kw">var</span> n: <span class="typ">Int</span> = <span class="num">4</span>
+    <span class="com"># forward elimination</span>
+    <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(k + <span class="num">1</span>, n):
+            <span class="kw">var</span> f = M[i][k] / M[k][k]
+            <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(k, n + <span class="num">1</span>):
                 M[i][j] = M[i][j] - f * M[k][j]
-    # back substitution
-    var x = List[Float64]()
-    for _ in range(n):
-        x.append(0.0)
-    for ii in range(n):
-        var i = n - 1 - ii
-        var s: Float64 = M[i][n]
-        for j in range(i + 1, n):
+    <span class="com"># back substitution</span>
+    <span class="kw">var</span> x = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n):
+        x.<span class="fn">append</span>(<span class="num">0.0</span>)
+    <span class="kw">for</span> ii <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">var</span> i = n - <span class="num">1</span> - ii
+        <span class="kw">var</span> s: <span class="typ">Float64</span> = M[i][n]
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i + <span class="num">1</span>, n):
             s = s - M[i][j] * x[j]
         x[i] = s / M[i][i]
-    return x^
+    <span class="kw">return</span> x
 
-def gps_fix(sats: List[Sat], pr: List[Float64],
-           tol: Float64 = 1e-4, max_iter: Int = 10) -&gt; Fix:
-    var n = len(sats)
-    var x: Float64 = 0.0
-    var y: Float64 = 0.0
-    var z: Float64 = 0.0
-    var dt: Float64 = 0.0
+<span class="kw">def</span> <span class="fn">gps_fix</span>(sats: <span class="typ">List</span>[<span class="typ">Sat</span>], pr: <span class="typ">List</span>[<span class="typ">Float64</span>],
+           tol: <span class="typ">Float64</span> = <span class="num">1e-4</span>, max_iter: <span class="typ">Int</span> = <span class="num">10</span>) -&gt; <span class="typ">Fix</span>:
+    <span class="kw">var</span> n = <span class="fn">len</span>(sats)
+    <span class="kw">var</span> x: <span class="typ">Float64</span> = <span class="num">0.0</span>
+    <span class="kw">var</span> y: <span class="typ">Float64</span> = <span class="num">0.0</span>
+    <span class="kw">var</span> z: <span class="typ">Float64</span> = <span class="num">0.0</span>
+    <span class="kw">var</span> dt: <span class="typ">Float64</span> = <span class="num">0.0</span>
 
-    for _ in range(max_iter):
-        # Geometric ranges &amp; Jacobian rows
-        var H = List[List[Float64]]()
-        var b = List[Float64]()
-        for i in range(n):
-            var dx = sats[i].x - x
-            var dy = sats[i].y - y
-            var dz = sats[i].z - z
-            var r  = sqrt(dx*dx + dy*dy + dz*dz)
-            var row: List[Float64] = [-dx/r, -dy/r, -dz/r, 1.0]
-            H.append(row^)
-            b.append(pr[i] - (r + dt))
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(max_iter):
+        <span class="com"># Geometric ranges &amp; Jacobian rows</span>
+        <span class="kw">var</span> H = <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]()
+        <span class="kw">var</span> b = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+            <span class="kw">var</span> dx = sats[i].x - x
+            <span class="kw">var</span> dy = sats[i].y - y
+            <span class="kw">var</span> dz = sats[i].z - z
+            <span class="kw">var</span> r  = <span class="fn">sqrt</span>(dx*dx + dy*dy + dz*dz)
+            <span class="kw">var</span> row: <span class="typ">List</span>[<span class="typ">Float64</span>] = [-dx/r, -dy/r, -dz/r, <span class="num">1.0</span>]
+            H.<span class="fn">append</span>(row)
+            b.<span class="fn">append</span>(pr[i] - (r + dt))
 
-        # Normal equations: H^T H dx = H^T b (augmented 4x5)
-        var M = List[List[Float64]]()
-        for _ in range(4):
-            var mrow = List[Float64]()
-            for _ in range(5):
-                mrow.append(0.0)
-            M.append(mrow^)
-        for i in range(n):
-            for p in range(4):
-                for q in range(4):
+        <span class="com"># Normal equations: H^T H dx = H^T b (augmented 4x5)</span>
+        <span class="kw">var</span> M = <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]]()
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+            <span class="kw">var</span> mrow = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+                mrow.<span class="fn">append</span>(<span class="num">0.0</span>)
+            M.<span class="fn">append</span>(mrow)
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+            <span class="kw">for</span> p <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+                <span class="kw">for</span> q <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
                     M[p][q] += H[i][p] * H[i][q]
-                M[p][4] += H[i][p] * b[i]
+                M[p][<span class="num">4</span>] += H[i][p] * b[i]
 
-        # Newton-style update: linearise, solve, apply correction
-        var delta = solve4x4(M)
-        x  += delta[0]
-        y  += delta[1]
-        z  += delta[2]
-        dt += delta[3]
+        <span class="com"># Newton-style update: linearise, solve, apply correction</span>
+        <span class="kw">var</span> delta = <span class="fn">solve4x4</span>(M)
+        x  += delta[<span class="num">0</span>]
+        y  += delta[<span class="num">1</span>]
+        z  += delta[<span class="num">2</span>]
+        dt += delta[<span class="num">3</span>]
 
-        # convergence check on the positional part of the correction
-        var step = sqrt(delta[0]*delta[0] + delta[1]*delta[1] + delta[2]*delta[2])
-        if step &lt; tol:
-            break
+        <span class="com"># convergence check on the positional part of the correction</span>
+        <span class="kw">var</span> step = <span class="fn">sqrt</span>(delta[<span class="num">0</span>]*delta[<span class="num">0</span>] + delta[<span class="num">1</span>]*delta[<span class="num">1</span>] + delta[<span class="num">2</span>]*delta[<span class="num">2</span>])
+        <span class="kw">if</span> step &lt; tol:
+            <span class="kw">break</span>
 
-    return Fix(x=x, y=y, z=z, clock_bias_m=dt)
+    <span class="kw">return</span> <span class="fn">Fix</span>(x=x, y=y, z=z, clock_bias_m=dt)
 
-def main():
-    var sats: List[Sat] = [
-        Sat( 1.5e7,  0.0,    2.0e7),
-        Sat( 0.0,    1.5e7,  2.0e7),
-        Sat(-1.5e7,  0.0,    2.0e7),
-        Sat( 0.0,   -1.5e7,  2.0e7)
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> sats: <span class="typ">List</span>[<span class="typ">Sat</span>] = [
+        <span class="fn">Sat</span>( <span class="num">1.5e7</span>,  <span class="num">0.0</span>,    <span class="num">2.0e7</span>),
+        <span class="fn">Sat</span>( <span class="num">0.0</span>,    <span class="num">1.5e7</span>,  <span class="num">2.0e7</span>),
+        <span class="fn">Sat</span>(-<span class="num">1.5e7</span>,  <span class="num">0.0</span>,    <span class="num">2.0e7</span>),
+        <span class="fn">Sat</span>( <span class="num">0.0</span>,   -<span class="num">1.5e7</span>,  <span class="num">2.0e7</span>)
     ]
-    var tx: Float64 = 1000.0
-    var ty: Float64 = 2000.0
-    var tz: Float64 = 6370000.0
-    var true_bias: Float64 = 50.0
+    <span class="kw">var</span> tx: <span class="typ">Float64</span> = <span class="num">1000.0</span>
+    <span class="kw">var</span> ty: <span class="typ">Float64</span> = <span class="num">2000.0</span>
+    <span class="kw">var</span> tz: <span class="typ">Float64</span> = <span class="num">6370000.0</span>
+    <span class="kw">var</span> true_bias: <span class="typ">Float64</span> = <span class="num">50.0</span>
 
-    # simulate consistent pseudoranges from the true position
-    var pr = List[Float64]()
-    for i in range(4):
-        var dx = sats[i].x - tx
-        var dy = sats[i].y - ty
-        var dz = sats[i].z - tz
-        pr.append(sqrt(dx*dx + dy*dy + dz*dz) + true_bias)
+    <span class="com"># simulate consistent pseudoranges from the true position</span>
+    <span class="kw">var</span> pr = <span class="typ">List</span>[<span class="typ">Float64</span>]()
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+        <span class="kw">var</span> dx = sats[i].x - tx
+        <span class="kw">var</span> dy = sats[i].y - ty
+        <span class="kw">var</span> dz = sats[i].z - tz
+        pr.<span class="fn">append</span>(<span class="fn">sqrt</span>(dx*dx + dy*dy + dz*dz) + true_bias)
 
-    var sol = gps_fix(sats, pr)
-    print(&quot;ECEF fix:&quot;, sol.x, sol.y, sol.z, &quot;dt =&quot;, sol.clock_bias_m, &quot;m&quot;)</code></pre>
+    <span class="kw">var</span> sol = <span class="fn">gps_fix</span>(sats, pr)
+    <span class="fn">print</span>(<span class="str">"ECEF fix:"</span>, sol.x, sol.y, sol.z, <span class="str">"dt ="</span>, sol.clock_bias_m, <span class="str">"m"</span>)
+</code></pre>
   </div>
 
   <h3>5.4 Dilution of Precision (DOP)</h3>
@@ -1670,30 +1363,9 @@ def main():
     Q = (HᵀH)<sup>−1</sup> &nbsp;⇒&nbsp; PDOP = √(Q₁₁+Q₂₂+Q₃₃), &nbsp; TDOP = √Q₄₄, &nbsp; GDOP = √tr(Q)
   </div>
 
-  <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON — DOP from satellite geometry</span>
-<pre><code><span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
-
-<span class="com"># Unit line-of-sight vectors to satellites plus a receiver-clock column</span>
-los = <span class="typ">np</span>.<span class="fn">array</span>([
-    [ <span class="num">0.7</span>,  <span class="num">0.2</span>, <span class="num">0.68</span>],
-    [-<span class="num">0.4</span>,  <span class="num">0.8</span>, <span class="num">0.45</span>],
-    [ <span class="num">0.1</span>, -<span class="num">0.9</span>, <span class="num">0.42</span>],
-    [-<span class="num">0.8</span>, -<span class="num">0.2</span>, <span class="num">0.56</span>],
-])
-G = <span class="typ">np</span>.c_[los, <span class="typ">np</span>.<span class="fn">ones</span>(<span class="fn">len</span>(los))]
-
-<span class="com"># Cofactor matrix: geometry-only covariance (unit measurement noise)</span>
-Q = <span class="typ">np</span>.linalg.<span class="fn">inv</span>(G.T @ G)
-<span class="kw">print</span>(<span class="str">"Cofactor matrix Q:\n"</span>, Q)
-<span class="kw">print</span>(<span class="str">"PDOP ="</span>, <span class="typ">np</span>.<span class="fn">sqrt</span>(<span class="typ">np</span>.<span class="fn">trace</span>(Q[:<span class="num">3</span>, :<span class="num">3</span>])))
-<span class="kw">print</span>(<span class="str">"TDOP ="</span>, <span class="typ">np</span>.<span class="fn">sqrt</span>(Q[<span class="num">3</span>, <span class="num">3</span>]))
-<span class="kw">print</span>(<span class="str">"GDOP ="</span>, <span class="typ">np</span>.<span class="fn">sqrt</span>(<span class="typ">np</span>.<span class="fn">trace</span>(Q)))
-</code></pre>
-  </div>
 
   <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0 — dop.mojo</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x — dop.mojo</span>
 <pre><code><span class="kw">from</span> std.math <span class="kw">import</span> sqrt, abs
 
 <span class="com"># Invert a 4x4 matrix by Gauss-Jordan elimination with partial pivoting.</span>
@@ -1742,7 +1414,7 @@ Q = <span class="typ">np</span>.linalg.<span class="fn">inv</span>(G.T @ G)
     <span class="kw">return</span> inv
 
 <span class="kw">def</span> <span class="fn">main</span>():
-    <span class="com"># Same geometry matrix as the Python example: unit line-of-sight</span>
+    <span class="com"># Unit line-of-sight geometry: each row is a satellite direction</span>
     <span class="com"># vectors, each extended with a receiver-clock column of 1.0.</span>
     <span class="kw">var</span> G: <span class="typ">List</span>[<span class="typ">List</span>[<span class="typ">Float64</span>]] = [
         [ <span class="num">0.7</span>,  <span class="num">0.2</span>, <span class="num">0.68</span>, <span class="num">1.0</span>],
@@ -1832,7 +1504,7 @@ Q = <span class="typ">np</span>.linalg.<span class="fn">inv</span>(G.T @ G)
     <div class="card"><span class="tag">01</span><h4>Reconnaissance</h4><p>Existing control, monument condition, GNSS visibility, multipath risk, source drawings.</p></div>
     <div class="card"><span class="tag">02</span><h4>Observe control</h4><p>GNSS occupations with correct antenna-height and metadata procedures.</p></div>
     <div class="card"><span class="tag">03</span><h4>Establish reference</h4><p>Process observations; obtain coordinates in the required reference frame.</p></div>
-    <div class="card"><span class="tag">04</span><h4>Transform</h4><p>Apply the correct datum / projection transformation — the rigorous TM/UTM projection is developed in <a href="karney_krueger_equations.html" style="color:var(--accent);">Part 2</a>; the code-first survey-math bridge is <a href="geo_computations.html#workflow" style="color:var(--accent);">Geomatics Computations</a>.</p></div>
+    <div class="card"><span class="tag">04</span><h4>Transform</h4><p>Apply the correct datum / projection transformation — the rigorous TM/UTM projection is developed in <a href="karney_krueger_equations.html" style="color:var(--accent);">Part 2</a>.</p></div>
     <div class="card"><span class="tag">05</span><h4>Localise</h4><p>Fit the site transformation between GNSS/reference and the working grid.</p></div>
     <div class="card"><span class="tag">06</span><h4>Georeference</h4><p>Transform CAD, DXF, raster or legacy GIS data into the agreed CRS.</p></div>
     <div class="card"><span class="tag">07</span><h4>Check</h4><p>Independent check points; residuals, RMSE and maximum error.</p></div>
@@ -1850,35 +1522,9 @@ Q = <span class="typ">np</span>.linalg.<span class="fn">inv</span>(G.T @ G)
     Horizontal error = √(v<sub>E</sub>² + v<sub>N</sub>²) &nbsp;&nbsp; RMSE = √(Σ eᵢ² / n)
   </div>
 
-  <div class="code-block">
-    <span class="lang-tag lang-python">PYTHON</span>
-<pre><code><span class="kw">import</span> <span class="typ">numpy</span> <span class="kw">as</span> <span class="typ">np</span>
-
-<span class="com"># Check-point comparison: observed vs computed coordinates</span>
-observed = <span class="typ">np</span>.<span class="fn">array</span>([
-    [<span class="num">1000.010</span>, <span class="num">2000.020</span>],
-    [<span class="num">1200.030</span>, <span class="num">2000.010</span>],
-    [<span class="num">1000.000</span>, <span class="num">2200.040</span>]
-])
-
-computed = <span class="typ">np</span>.<span class="fn">array</span>([
-    [<span class="num">1000.000</span>, <span class="num">2000.000</span>],
-    [<span class="num">1200.000</span>, <span class="num">2000.000</span>],
-    [<span class="num">1000.000</span>, <span class="num">2200.000</span>]
-])
-
-v = observed - computed
-horizontal = <span class="typ">np</span>.linalg.<span class="fn">norm</span>(v, axis=<span class="num">1</span>)
-
-<span class="kw">print</span>(<span class="str">"Residuals:\n"</span>, v)
-<span class="kw">print</span>(<span class="str">"Horizontal errors:"</span>, horizontal)
-<span class="kw">print</span>(<span class="str">"RMSE:"</span>, <span class="typ">np</span>.<span class="fn">sqrt</span>(<span class="typ">np</span>.<span class="fn">mean</span>(horizontal**<span class="num">2</span>)))
-<span class="kw">print</span>(<span class="str">"Maximum:"</span>, horizontal.<span class="fn">max</span>())
-</code></pre>
-  </div>
 
   <div class="code-block">
-    <span class="lang-tag lang-mojo">MOJO 1.0</span>
+    <span class="lang-tag lang-mojo">MOJO 1.x</span>
 <pre><code><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">main</span>():
@@ -1918,9 +1564,7 @@ horizontal = <span class="typ">np</span>.linalg.<span class="fn">norm</span>(v, 
       deliberately treated the projection as one row in a table. Part 2 opens that row up: the
       n-series expansion, conformal latitude, forward and inverse (Newton) transformations,
       Clenshaw summation, Southern African grid constants (UTM 36S, LO belts) — with the same
-      Python + Mojo 1.x dual implementations throughout. If you want the underlying coordinate,
-      traverse and adjustment algorithms in one compact lab, open
-      <a href="geo_computations.html" style="color:var(--accent);">Geomatics Computations</a> alongside it.
+      Mojo 1.x treatment throughout.
     </p>
   </div>
   <a class="continue-btn" href="karney_krueger_equations.html">Continue to Part 2 →</a>
@@ -1933,8 +1577,9 @@ horizontal = <span class="typ">np</span>.linalg.<span class="fn">norm</span>(v, 
     <div style="font-weight:700;color:#bde0fe;letter-spacing:.06em;">GNSS SURVEYING — PART 1</div>
     <p style="margin:10px 0 0;">Part 1 of a two-part course ·
       <a href="karney_krueger_equations.html" style="color:var(--accent);">Part 2 — The Karney-Krüger Equations (Transverse Mercator / UTM)</a><br>
-      <a href="geo_computations.html" style="color:#f7a8c9;">Companion lab — Geomatics Computations in Mojo</a><br>
-      Python 3.x and Mojo 1.x · September 2026<br>
+      Practice the underlying survey mathematics in
+      <a href="geo_computations.html" style="color:var(--accent);">Geomatics Computations &amp; Adjustment Mathematics</a><br>
+      Mojo 1.x · September 2026<br>
     Educational material. CRSs, datum transformations, geoid models and survey tolerances must be
     selected for the specific survey jurisdiction, equipment and project specification.</p>
   </div>

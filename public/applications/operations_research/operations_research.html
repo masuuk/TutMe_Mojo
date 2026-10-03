@@ -189,15 +189,13 @@ pre.code .com{color:var(--paper-faint);font-style:italic;}
 pre.code .fn{color:#7fc8e8;}
 pre.code .num{color:var(--gold);}
 
-/* side-by-side language labels: Python reference vs Mojo 1.x port */
-pre.code.py{border-left:3px solid #9fd9a0;}
+/* language labels for the Mojo 1.x panes */
 pre.code.mojo{border-left:3px solid #7fc8e8;background:rgba(127,200,232,0.04);}
-pre.code.py::before, pre.code.mojo::before{
+pre.code.mojo::before{
   display:block;font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;
   font-family:'JetBrains Mono',monospace;margin-bottom:0.7rem;color:var(--paper-faint);
+  content:"mojo 1.x — native port";color:#7fc8e8;
 }
-pre.code.py::before{content:"python — reference";}
-pre.code.mojo::before{content:"mojo 1.0 — native port";color:#7fc8e8;}
 
 /* ---------- callouts ---------- */
 .callout{
@@ -285,7 +283,7 @@ footer{
 <div class="hero" id="top">
   <div class="eyebrow"><span class="dot"></span>The Science of Better &middot; TutMe Textbook</div>
   <h1 class="title">Operations <span class="flicker">Research.</span></h1>
-  <p class="subtitle">A concise, hands-on introduction to the mathematics of making good decisions under scarcity — linear programming, networks, queues, and simulation. Every example is shown twice: the Python reference you already know, and the same solution as a <strong>Mojo 1.x</strong> port. This book teaches Mojo through OR — read the Python to recognize the problem, read the Mojo to learn the language.</p>
+  <p class="subtitle">A concise, hands-on introduction to the mathematics of making good decisions under scarcity — linear programming, networks, queues, and simulation. Every example is written in <strong>Mojo 1.x</strong>: sometimes native compiled code (kernels, dynamic programs, simulations), sometimes Mojo orchestrating a Python solver through the interop bridge. This book teaches Mojo through OR — the mathematics first, then the typed implementation that runs it.</p>
   <div class="cta-row">
     <a class="btn btn-primary" href="#sec-1">Start with Section 1 →</a>
     <a class="btn btn-ghost" href="#toc">Browse the Contents</a>
@@ -296,7 +294,7 @@ footer{
   <div class="section-head">
     <div class="kicker">Contents</div>
     <h2>📖 What's inside</h2>
-    <p class="lead">Ten sections, built to be read in order but safe to jump into anywhere. Each algorithm appears first in Python, then as a Mojo 1.x port — sometimes native compiled code (kernels, DPs, simulations), sometimes Mojo orchestrating a Python solver through the interop bridge. The Mojo versions are the point; the Python is the Rosetta stone.</p>
+    <p class="lead">Ten sections, built to be read in order but safe to jump into anywhere. Each algorithm is given as a <strong>Mojo 1.x</strong> program — sometimes native compiled code (kernels, dynamic programs, simulations), sometimes Mojo orchestrating a Python solver through the interop bridge. The implementations are the point; the mathematics underneath them is what you are really learning.</p>
   </div>
   <div class="toc-parts">
     <a class="chapter-row" href="#sec-1"><span class="cnum">01</span><span class="ctitle">What is Operations Research</span><span class="topic">Modeling</span></a>
@@ -374,32 +372,19 @@ subject to  x₁ +  x₂ ≤ 100           (labor hours)
 
   <p>In practice nobody enumerates corners by hand. SciPy's <code>linprog</code> solves the problem with its Simplex- or interior-point-style methods (HiGHS by default):</p>
 
-<pre class="code py"><span class="kw">from</span> scipy.optimize <span class="kw">import</span> linprog
+  <p>Mojo 1\.x reaches the same answer, and only the solver call crosses the interop bridge — everything around it (the model data, the loops, any parameter sweep you wrap it in) is compiled native code, so sweeping this LP over hundreds of scenarios pays no interpreter tax:</p>
 
-<span class="com"># minimize -z = -(40x1 + 30x2)  →  maximizes 40x1 + 30x2</span>
-c = [-<span class="num">40</span>, -<span class="num">30</span>]
-A_ub = [[<span class="num">1</span>, <span class="num">1</span>],   <span class="com"># x1 + x2 ≤ 100</span>
-        [<span class="num">2</span>, <span class="num">1</span>],   <span class="com"># 2x1 + x2 ≤ 160</span>
-        [<span class="num">1</span>, <span class="num">0</span>]]  <span class="com"># x1 ≤ 60</span>
-b_ub = [<span class="num">100</span>, <span class="num">160</span>, <span class="num">60</span>]
+<pre class="code mojo">from std.python import Python
 
-res = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=[(<span class="num">0</span>, <span class="kw">None</span>)] * <span class="num">2</span>, method=<span class="str">"highs"</span>)
-<span class="kw">print</span>(res.x)    <span class="com"># [60. 40.]</span>
-<span class="kw">print</span>(-res.fun) <span class="com"># 3600.0</span></pre>
-
-  <p>The same solve from Mojo 1.x. Only the solver call crosses the interop bridge — everything around it (the model data, the loops, any parameter sweep you wrap it in) is compiled native code, so sweeping this LP over hundreds of scenarios pays no interpreter tax:</p>
-
-<pre class="code mojo"><span class="kw">from</span> python <span class="kw">import</span> Python
-
-<span class="kw">def</span> <span class="fn">solve_mix</span>() raises:
-    <span class="kw">var</span> linprog = Python.import_module(<span class="str">"scipy.optimize"</span>).linprog
-    <span class="kw">var</span> res = linprog(Python.evaluate(<span class="str">"[-40, -30]"</span>),
-                    A_ub=Python.evaluate(<span class="str">"[[1,1],[2,1],[1,0]]"</span>),
-                    b_ub=Python.evaluate(<span class="str">"[100,160,60]"</span>),
-                    bounds=Python.evaluate(<span class="str">"[(0,None)]*2"</span>),
-                    method=<span class="str">"highs"</span>)
-    <span class="kw">print</span>(res.x)       <span class="com"># [60. 40.] — same optimum, native orchestration</span>
-    <span class="kw">print</span>(-res.fun)    <span class="com"># 3600.0</span></pre>
+def solve_mix() raises:
+    var linprog = Python.import_module("scipy.optimize").linprog
+    var res = linprog(Python.evaluate("[-40, -30]"),
+                    A_ub=Python.evaluate("[[1,1],[2,1],[1,0]]"),
+                    b_ub=Python.evaluate("[100,160,60]"),
+                    bounds=Python.evaluate("[(0,None)]*2"),
+                    method="highs")
+    print(res.x)       # [60. 40.] — same optimum, native orchestration
+    print(-res.fun)    # 3600.0</pre>
 
   <p>Three observations that generalize. First, <code>linprog</code> minimizes, so maximizing means flipping the signs of <code>c</code>. Second, a constraint written as <code>≥</code> needs <code>A_ub</code> rows multiplied by −1 to fit the "≤" convention. Third, the problem can be infeasible (no point satisfies everything) or unbounded (profit can grow forever) — a competent solver reports both, and debugging those two cases is a core OR skill.</p>
 
@@ -488,40 +473,25 @@ s.t.  x₁ +  x₂ ≤ 100    ──────►        y₁ + 2y₂ + y₃ �
 
   <p>These ranges turn the LP from a one-shot answer into a decision-support tool: "the plan stays optimal as long as the unit profit of A stays in [30, ∞) and machine hours stay under 160." PuLP exposes them after solving:</p>
 
-<pre class="code py"><span class="kw">import</span> pulp
+  <p>Mojo 1.x drives PuLP across the interop bridge — the model is unchanged, but the surrounding analysis (re-solving under perturbed costs, logging shadow prices across a planning horizon) is compiled. The bridge is zero-overhead for the calls that matter:</p>
 
-prob = pulp.LpProblem(<span class="str">"mix"</span>, pulp.LpMaximize)
-x1 = pulp.LpVariable(<span class="str">"x1"</span>, lowBound=<span class="num">0</span>)
-x2 = pulp.LpVariable(<span class="str">"x2"</span>, lowBound=<span class="num">0</span>)
-prob += <span class="num">40</span> * x1 + <span class="num">30</span> * x2
-prob += x1 + x2 &lt;= <span class="num">100</span>          <span class="com"># labor</span>
-prob += <span class="num">2</span> * x1 + x2 &lt;= <span class="num">160</span>    <span class="com"># machine hours</span>
-prob += x1 &lt;= <span class="num">60</span>                 <span class="com"># market cap</span>
-prob.solve()
+<pre class="code mojo">from std.python import Python
 
-<span class="kw">for</span> name, c <span class="kw">in</span> prob.constraints.items():
-    <span class="kw">print</span>(name, <span class="str">"shadow ="</span>, c.pi, <span class="str">"range =("</span>,
-          c.pi + c.lc, <span class="str">","</span>, c.pi + c.uc, <span class="str">")"</span>)</pre>
-
-  <p>Mojo 1.x drives PuLP across the same bridge — the model is unchanged, but the surrounding analysis (re-solving under perturbed costs, logging shadow prices across a planning horizon) is compiled. Notice how the Python attribute access reads identically; the bridge is zero-overhead for the calls that matter:</p>
-
-<pre class="code mojo"><span class="kw">from</span> python <span class="kw">import</span> Python
-
-<span class="kw">def</span> <span class="fn">sensitivity</span>() raises:
-    <span class="kw">var</span> pulp = Python.import_module(<span class="str">"pulp"</span>)
-    <span class="kw">var</span> prob = pulp.LpProblem(<span class="str">"mix"</span>, pulp.LpMaximize)
-    <span class="kw">var</span> x1 = pulp.LpVariable(<span class="str">"x1"</span>, lowBound=<span class="num">0</span>)
-    <span class="kw">var</span> x2 = pulp.LpVariable(<span class="str">"x2"</span>, lowBound=<span class="num">0</span>)
-    prob += <span class="num">40</span> * x1 + <span class="num">30</span> * x2
-    prob += x1 + x2 &lt;= <span class="num">100</span>          <span class="com"># labor</span>
-    prob += <span class="num">2</span> * x1 + x2 &lt;= <span class="num">160</span>    <span class="com"># machine hours</span>
-    prob += x1 &lt;= <span class="num">60</span>                 <span class="com"># market cap</span>
+def sensitivity() raises:
+    var pulp = Python.import_module("pulp")
+    var prob = pulp.LpProblem("mix", pulp.LpMaximize)
+    var x1 = pulp.LpVariable("x1", lowBound=0)
+    var x2 = pulp.LpVariable("x2", lowBound=0)
+    prob += 40 * x1 + 30 * x2
+    prob += x1 + x2 &lt;= 100          # labor
+    prob += 2 * x1 + x2 &lt;= 160    # machine hours
+    prob += x1 &lt;= 60                 # market cap
     prob.solve()
 
-    <span class="kw">for</span> name <span class="kw">in</span> prob.constraints:
-        <span class="kw">var</span> c = prob.constraints[name]
-        <span class="kw">print</span>(name, <span class="str">"shadow ="</span>, c.pi,
-              <span class="str">"range = ("</span>, c.pi + c.lc, <span class="str">","</span>, c.pi + c.uc, <span class="str">")"</span>)</pre>
+    for name in prob.constraints:
+        var c = prob.constraints[name]
+        print(name, "shadow =", c.pi,
+              "range = (", c.pi + c.lc, ",", c.pi + c.uc, ")")</pre>
 
   <p>If the underlying data is uncertain (forecast demand, volatile costs), sensitivity analysis is often more valuable than the optimum itself — it tells you which numbers in the model are worth improving, and which you can stop worrying about.</p>
 </section>
@@ -551,51 +521,37 @@ subject to Σ wᵢxᵢ ≤ W
     <li>Repeat until every branch is pruned or solved. The best feasible integer solution found is the optimum.</li>
   </ol>
 
-  <p>The bound is what makes it efficient: pruning whole subtrees means you never examine most candidates. PuLP (which wraps CBC) does all of this; you only add the <code>cat=</code> argument:</p>
+  <p>The bound is what makes it efficient: pruning whole subtrees means you never examine most candidates. But a pure 0/1 knapsack needs no branch-and-bound solver at all - the dynamic program is exact:</p>
 
-<pre class="code py"><span class="kw">import</span> pulp
+  <p>Here is where Mojo 1.x stops borrowing and takes over completely: the dynamic program compiles to a tight nested loop over one contiguous flat <code>List[Float64]</code> table. No solver process, no interpreter, no dependencies; backtrack through the table to recover <em>which</em> items to pack:</p>
 
-items = {<span class="str">"tent"</span>: (<span class="num">2</span>, <span class="num">10</span>), <span class="str">"stove"</span>: (<span class="num">1</span>, <span class="num">6</span>), <span class="str">"food"</span>: (<span class="num">3</span>, <span class="num">9</span>),
-         <span class="str">"radio"</span>: (<span class="num">2</span>, <span class="num">5</span>), <span class="str">"tool"</span>: (<span class="num">1</span>, <span class="num">4</span>)}  <span class="com"># (weight, value)</span>
-W = <span class="num">5</span>
-
-prob = pulp.LpProblem(<span class="str">"knapsack"</span>, pulp.LpMaximize)
-x = {i: pulp.LpVariable(i, cat=<span class="str">"Binary"</span>) <span class="kw">for</span> i <span class="kw">in</span> items}
-prob += pulp.lpSum(items[i][<span class="num">1</span>] * x[i] <span class="kw">for</span> i <span class="kw">in</span> items)
-prob += pulp.lpSum(items[i][<span class="num">0</span>] * x[i] <span class="kw">for</span> i <span class="kw">in</span> items) &lt;= W
-prob.solve()
-<span class="kw">print</span>([i <span class="kw">for</span> i <span class="kw">in</span> items <span class="kw">if</span> x[i].value() &gt; <span class="num">0.5</span>])  <span class="com"># ['tent','stove','tool']</span></pre>
-
-  <p>Here is where Mojo 1.x stops borrowing from Python and takes over completely. A pure 0/1 knapsack needs no branch-and-bound solver — the dynamic program is exact, and in Mojo it compiles to a tight nested loop over one contiguous <code>Tensor</code> table. No solver process, no interpreter, no dependencies; backtrack through the table to recover <em>which</em> items to pack:</p>
-
-<pre class="code mojo"><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
-
-<span class="kw">def</span> <span class="fn">knapsack</span>(values: List[Float64], weights: List[Float64], capacity: Int) -&gt; (Float64, List[Int]):
+<pre class="code mojo"><span class="kw">def</span> <span class="fn">knapsack</span>(values: List[Float64], weights: List[Float64], capacity: Int) -&gt; (Float64, List[Int]):
     <span class="kw">var</span> n = len(values)
-    <span class="kw">var</span> dp = Tensor[DType.float64](n + <span class="num">1</span>, capacity + <span class="num">1</span>)   <span class="com"># zero-initialized</span>
+    <span class="kw">var</span> stride = capacity + <span class="num">1</span>
+    <span class="kw">var</span> dp = List[Float64](length=(n + <span class="num">1</span>) * stride, fill=<span class="num">0.0</span>)   <span class="com"># flat, zero-initialized</span>
     <span class="kw">for</span> i <span class="kw">in</span> range(<span class="num">1</span>, n + <span class="num">1</span>):
         <span class="kw">var</span> w = Int(weights[i - <span class="num">1</span>])
         <span class="kw">var</span> v = values[i - <span class="num">1</span>]
         <span class="kw">for</span> c <span class="kw">in</span> range(capacity + <span class="num">1</span>):
-            dp[i, c] = dp[i - <span class="num">1</span>, c]                       <span class="com"># skip item i</span>
-            <span class="kw">if</span> w &lt;= c <span class="kw">and</span> dp[i - <span class="num">1</span>, c - w] + v &gt; dp[i, c]:
-                dp[i, c] = dp[i - <span class="num">1</span>, c - w] + v            <span class="com"># take item i</span>
+            dp[i * stride + c] = dp[(i - <span class="num">1</span>) * stride + c]                   <span class="com"># skip item i</span>
+            <span class="kw">if</span> w &lt;= c <span class="kw">and</span> dp[(i - <span class="num">1</span>) * stride + c - w] + v &gt; dp[i * stride + c]:
+                dp[i * stride + c] = dp[(i - <span class="num">1</span>) * stride + c - w] + v        <span class="com"># take item i</span>
 
     <span class="kw">var</span> taken = List[Int]()                  <span class="com"># backtrack: which items</span>
     <span class="kw">var</span> c = capacity
     <span class="kw">for</span> i <span class="kw">in</span> range(n, <span class="num">0</span>, -<span class="num">1</span>):
-        <span class="kw">if</span> dp[i, c] != dp[i - <span class="num">1</span>, c]:
+        <span class="kw">if</span> dp[i * stride + c] != dp[(i - <span class="num">1</span>) * stride + c]:
             taken.append(i - <span class="num">1</span>)
             c -= Int(weights[i - <span class="num">1</span>])
     taken.reverse()
-    <span class="kw">return</span> (dp[n, capacity], taken)
+    <span class="kw">return</span> (dp[n * stride + capacity], taken)
 
 <span class="kw">def</span> <span class="fn">main</span>():
-    <span class="kw">var</span> v = [<span class="num">10.0</span>, <span class="num">6.0</span>, <span class="num">9.0</span>, <span class="num">5.0</span>, <span class="num">4.0</span>]   <span class="com"># tent, stove, food, radio, tool</span>
-    <span class="kw">var</span> w = [<span class="num">2.0</span>, <span class="num">1.0</span>, <span class="num">3.0</span>, <span class="num">2.0</span>, <span class="num">1.0</span>]
+    <span class="kw">var</span> v: List[Float64] = [<span class="num">10.0</span>, <span class="num">6.0</span>, <span class="num">9.0</span>, <span class="num">5.0</span>, <span class="num">4.0</span>]   <span class="com"># tent, stove, food, radio, tool</span>
+    <span class="kw">var</span> w: List[Float64] = [<span class="num">2.0</span>, <span class="num">1.0</span>, <span class="num">3.0</span>, <span class="num">2.0</span>, <span class="num">1.0</span>]
     <span class="kw">var</span> (best, picked) = knapsack(v, w, <span class="num">5</span>)
-    <span class="kw">print</span>(best)      <span class="com"># 20.0 — tent + stove + tool, same as PuLP</span>
-    <span class="kw">print</span>(picked)    <span class="com"># [0, 1, 4]</span></pre>
+    <span class="kw">print</span>(best)      <span class="com"># 21.0 — tent + stove + radio, same optimum the solver reported</span>
+    <span class="kw">print</span>(picked)    <span class="com"># [0, 1, 3]</span></pre>
 
   <p>The trade-off is worth stating precisely: PuLP (or any MILP solver) wins the moment you add continuous variables, side constraints, or thousands of items — then let Mojo orchestrate it through <code>Python.import_module("pulp")</code> as in Section 2. But for discrete, combinatorial kernels embedded in a bigger pipeline, the native DP is exact, dependency-free, and orders of magnitude faster than driving a solver from interpreted Python.</p>
 
@@ -628,31 +584,15 @@ subject to  Σⱼ xᵢⱼ = 1            for every customer i
   <h3 style="font-family:'Fraunces',serif;color:var(--orange-2);">Shortest path — Dijkstra's algorithm</h3>
   <p><strong>Dijkstra</strong> finds the shortest path from a source to every node, valid when arc lengths are non-negative. It keeps a tentative distance for each node and repeatedly "settles" the unsettled node with the smallest distance, relaxing its outgoing arcs (if <code>d[u] + w(u,v) &lt; d[v]</code>, update <code>d[v]</code>). The invariant: once a node is settled, its distance is final. A heap makes the "pick smallest" step fast, giving <code>O((V+E) log V)</code>. In OR you meet it as route planning, project crashing, and inside vehicle-routing solvers.</p>
 
-<pre class="code py"><span class="kw">import</span> heapq
-
-<span class="kw">def</span> <span class="fn">dijkstra</span>(graph, start):
-    d = {n: <span class="kw">float</span>(<span class="str">"inf"</span>) <span class="kw">for</span> n <span class="kw">in</span> graph}
-    d[start] = <span class="num">0</span>
-    heap = [(<span class="num">0</span>, start)]
-    <span class="kw">while</span> heap:
-        dist, u = heapq.heappop(heap)
-        <span class="kw">if</span> dist &gt; d[u]:
-            <span class="kw">continue</span>  <span class="com"># stale entry</span>
-        <span class="kw">for</span> v, w <span class="kw">in</span> graph[u]:
-            nd = dist + w
-            <span class="kw">if</span> nd &lt; d[v]:
-                d[v] = nd
-                heapq.heappush(heap, (nd, v))
-    <span class="kw">return</span> d</pre>
-
   <p>Mojo 1.x ports Dijkstra natively — and this is the pattern for all of Section 6. No <code>heapq</code>, no boxed floats in tuples: typed <code>List</code>s, one allocation, and a compiled inner loop. The linear-scan minimum is O(V²); swap it for a binary heap over <code>List[Int]</code> on sparse graphs, or <code>parallelize</code> the relaxation pass on dense ones:</p>
 
-<pre class="code mojo">
+<pre class="code mojo"><span class="kw">from</span> collections <span class="kw">import</span> List
+
 <span class="com"># graph[i] = List[Tuple[neighbor, weight]]</span>
 <span class="kw">def</span> <span class="fn">dijkstra</span>(graph: List[List[Tuple[Int, Int]]], start: Int) -&gt; List[Float64]:
     <span class="kw">var</span> n = len(graph)
-    <span class="kw">var</span> d = List[Float64](length=n, fill=<span class="num">1e18</span>)       <span class="com"># tentative distances, all "infinity"</span>
-    <span class="kw">var</span> settled = List[Bool](length=n, fill=<span class="kw">False</span>)
+    <span class="kw">var</span> d = List[Float64](n, <span class="num">1e18</span>)       <span class="com"># tentative distances, all "infinity"</span>
+    <span class="kw">var</span> settled = List[Bool](n, <span class="kw">False</span>)
     d[start] = <span class="num">0.0</span>
 
     <span class="kw">for</span> _ <span class="kw">in</span> range(n):
@@ -678,37 +618,23 @@ subject to  Σⱼ xᵢⱼ = 1            for every customer i
 
   <p>OR-Tools wraps all of this, so in practice you rarely hand-roll the algorithms — but understanding the invariants tells you which to reach for. A <strong>capacitated</strong> shortest-path problem, a <strong>multi-commodity</strong> flow (several products sharing pipes), or a <strong>fixed-charge</strong> network becomes an LP or IP (Sections 2 and 5), and the specialized algorithms only handle the pure versions.</p>
 
-<pre class="code py"><span class="kw">from</span> ortools.graph.python <span class="kw">import</span> min_cost_flow
+  <p>Keeping OR-Tools behind the interop bridge is the right call — specialized solvers are already written in C++ and there is nothing to gain from reimplementing them. What you gain is the orchestration: this compiled driver can fire thousands of min-cost-flow solves (one per scenario, per depot, per demand forecast) and post-process the results without a Python interpreter anywhere in the loop:</p>
 
-solver = min_cost_flow.SimpleMinCostFlow()
-start = [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>]
-end   = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">3</span>, <span class="num">4</span>]
-caps  = [<span class="num">10</span>, <span class="num">8</span>, <span class="num">5</span>, <span class="num">9</span>, <span class="num">7</span>, <span class="num">6</span>]
-costs = [<span class="num">1</span>, <span class="num">4</span>, <span class="num">2</span>, <span class="num">5</span>, <span class="num">3</span>, <span class="num">6</span>]
-<span class="kw">for</span> s, e, c, k <span class="kw">in</span> zip(start, end, caps, costs):
-    solver.add_arc_with_capacity_and_unit_cost(s, e, c, k)
-solver.set_node_supply(<span class="num">0</span>, <span class="num">12</span>)
-solver.set_node_supply(<span class="num">4</span>, -<span class="num">12</span>)  <span class="com"># demand</span>
-solver.solve()
-<span class="kw">print</span>(solver.optimal_cost())  <span class="com"># min cost to ship 12 units</span></pre>
+<pre class="code mojo">from std.python import Python
 
-  <p>The Mojo 1.x version keeps OR-Tools behind the bridge — specialized solvers are already written in C++ and there is nothing to gain from reimplementing them. What you gain is the orchestration: this compiled driver can fire thousands of min-cost-flow solves (one per scenario, per depot, per demand forecast) and post-process the results without a Python interpreter anywhere in the loop:</p>
-
-<pre class="code mojo"><span class="kw">from</span> python <span class="kw">import</span> Python
-
-<span class="kw">def</span> <span class="fn">ship_cheapest</span>() raises:
-    <span class="kw">var</span> mcf = Python.import_module(<span class="str">"ortools.graph.python"</span>).min_cost_flow
-    <span class="kw">var</span> solver = mcf.SimpleMinCostFlow()
-    <span class="kw">var</span> start  = [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>]
-    <span class="kw">var</span> end    = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">3</span>, <span class="num">4</span>]
-    <span class="kw">var</span> caps   = [<span class="num">10</span>, <span class="num">8</span>, <span class="num">5</span>, <span class="num">9</span>, <span class="num">7</span>, <span class="num">6</span>]
-    <span class="kw">var</span> costs  = [<span class="num">1</span>, <span class="num">4</span>, <span class="num">2</span>, <span class="num">5</span>, <span class="num">3</span>, <span class="num">6</span>]
-    <span class="kw">for</span> i <span class="kw">in</span> range(len(start)):
+def ship_cheapest() raises:
+    var mcf = Python.import_module("ortools.graph.python").min_cost_flow
+    var solver = mcf.SimpleMinCostFlow()
+    var start  = [0, 0, 1, 1, 2, 2]
+    var end    = [1, 2, 2, 3, 3, 4]
+    var caps   = [10, 8, 5, 9, 7, 6]
+    var costs  = [1, 4, 2, 5, 3, 6]
+    for i in range(len(start)):
         solver.add_arc_with_capacity_and_unit_cost(start[i], end[i], caps[i], costs[i])
-    solver.set_node_supply(<span class="num">0</span>, <span class="num">12</span>)
-    solver.set_node_supply(<span class="num">4</span>, -<span class="num">12</span>)   <span class="com"># demand</span>
+    solver.set_node_supply(0, 12)
+    solver.set_node_supply(4, -12)   # demand
     solver.solve()
-    <span class="kw">print</span>(solver.optimal_cost())  <span class="com"># same optimum — Mojo owns the loop around it</span></pre>
+    print(solver.optimal_cost())  # same optimum — Mojo owns the loop around it</pre>
 </section>
 
 <!-- ============================================================ -->
@@ -752,14 +678,6 @@ W  = 1 / (8 − 6) = 0.5 h = 30 min in system
 Wq = 0.75 / 2 = 0.375 h = 22.5 min waiting</pre>
 
   <p>The <strong>M/M/c</strong> extension adds <code>c</code> servers; utilization becomes <code>ρ = λ/(cμ)</code> and the formulas grow an Erlang-C term for the probability that all servers are busy. When arrivals or service depart from the exponential ideal, you either use approximation formulas or simulate (Section 9). Computing the M/M/1 numbers is a one-liner:</p>
-
-<pre class="code py">lam, mu = <span class="num">6.0</span>, <span class="num">8.0</span>
-rho = lam / mu
-L   = rho / (<span class="num">1</span> - rho)
-Lq  = rho**<span class="num">2</span> / (<span class="num">1</span> - rho)
-W   = <span class="num">1</span> / (mu - lam)
-Wq  = W - <span class="num">1</span>/mu
-<span class="kw">print</span>(rho, L, Lq, W, Wq)  <span class="com"># 0.75 3.0 2.25 0.5 0.375</span></pre>
 
   <p>Mojo 1.x makes the formulas typed and compile-time checked — <code>lam</code> and <code>mu</code> are <code>Float64</code> by declaration, not by accident, and mixing up a rate with a time shows up as a compile error at the call site. The struct bundles the parameters with the algebra; create one per scenario and evaluate a whole staffing table natively:</p>
 
@@ -836,87 +754,56 @@ EV(wait)   = $0   →  choose expand.</pre>
 
   <p><strong>Monte Carlo methods</strong> are simulation applied to computing numbers: instead of integrating a messy distribution analytically, sample it. To estimate a probability <code>p</code>, run <code>N</code> random trials and count successes — the estimate <code>p̂</code> converges to <code>p</code> with standard error <code>√(p(1−p)/N)</code>. The classic demo estimates <code>π</code>: throw points uniformly in the unit square, and the fraction landing inside the quarter-circle approximates <code>π/4</code>.</p>
 
-<pre class="code py"><span class="kw">import</span> random, math
+  <p>This is the canonical Mojo workload. The error shrinks as 1/√n, so sample throughput <em>is</em> accuracy budget — and a compiled loop has all of it: a few million darts per second, with no interpreter, no boxes, and a <code>seed</code> call that makes the run reproducible. Split the accumulation across cores with <code>parallelize</code> (one seed stream per core) and the gap widens further:</p>
 
-<span class="kw">def</span> <span class="fn">estimate_pi</span>(n=<span class="num">1_000_000</span>):
-    inside = <span class="num">0</span>
-    <span class="kw">for</span> _ <span class="kw">in</span> range(n):
-        x, y = random.random(), random.random()
-        <span class="kw">if</span> x*x + y*y &lt;= <span class="num">1</span>:
-            inside += <span class="num">1</span>
-    <span class="kw">return</span> <span class="num">4</span> * inside / n
+<pre class="code mojo">from std.random import random_float64, seed
 
-<span class="kw">print</span>(estimate_pi())  <span class="com"># ~3.1416, ± 2·sqrt(pi(4-pi)/4n) ≈ 0.0009</span></pre>
+def estimate_pi(n: Int) -&gt; Float64:
+    var inside = 0
+    for _ in range(n):
+        var x = random_float64(0.0, 1.0)
+        var y = random_float64(0.0, 1.0)
+        if x * x + y * y &lt;= 1.0:
+            inside += 1
+    return 4.0 * Float64(inside) / Float64(n)
 
-  <p>This is the canonical Mojo workload. The error shrinks as 1/√n, so sample throughput <em>is</em> accuracy budget — and a compiled loop has all of it. The Python loop above runs a few million darts per second; the Mojo port below runs the same experiment with no interpreter, no boxes, and a <code>seed</code> call that makes the run reproducible. Split the accumulation across cores with <code>parallelize</code> (one seed stream per core) and the gap widens further:</p>
-
-<pre class="code mojo"><span class="kw">from</span> std.random <span class="kw">import</span> random_float64, seed
-
-<span class="kw">def</span> <span class="fn">estimate_pi</span>(n: Int) -&gt; Float64:
-    <span class="kw">var</span> inside = <span class="num">0</span>
-    <span class="kw">for</span> _ <span class="kw">in</span> range(n):
-        <span class="kw">var</span> x = random_float64(<span class="num">0.0</span>, <span class="num">1.0</span>)
-        <span class="kw">var</span> y = random_float64(<span class="num">0.0</span>, <span class="num">1.0</span>)
-        <span class="kw">if</span> x * x + y * y &lt;= <span class="num">1.0</span>:
-            inside += <span class="num">1</span>
-    <span class="kw">return</span> <span class="num">4.0</span> * Float64(inside) / Float64(n)
-
-<span class="kw">def</span> <span class="fn">main</span>():
-    seed(<span class="num">42</span>)                     <span class="com"># reproducible — always seed</span>
-    <span class="kw">print</span>(estimate_pi(<span class="num">1_000_000</span>))  <span class="com"># ~3.1416, same 1/√n law, native speed</span></pre>
+def main():
+    seed(42)                     # reproducible — always seed
+    print(estimate_pi(1_000_000))  # ~3.1416, same 1/√n law, native speed</pre>
 
   <p>The error shrinks like <code>1/√N</code>: quadrupling the sample halves the error. That slow rate is why variance matters — reducing the <em>variance per sample</em> (not the sample count) is the real craft. Two cheap wins: use the same random seed across runs to make alternatives comparable, and use <strong>common random numbers</strong> when comparing two designs, so the difference between them is driven by the designs rather than by sampling luck.</p>
 
   <p>Beyond probabilities, simulation estimates <strong>expected values</strong> of complex quantities: expected cost of a plan, expected lost sales, expected wait time. A <strong>discrete-event simulation</strong> tracks events over time (customers arriving, servers finishing) rather than fixed time steps. Below is a Monte Carlo estimate for the simple single-server queue of Section 7 — verifying the M/M/1 formulas numerically:</p>
 
-<pre class="code py"><span class="kw">import</span> random
-
-<span class="kw">def</span> <span class="fn">sim_mm1</span>(lam=<span class="num">6.0</span>, mu=<span class="num">8.0</span>, hours=<span class="num">2000</span>):
-    t, busy_until, n_served, total_wait = <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0</span>, <span class="num">0.0</span>
-    arrival = random.expovariate(lam)
-    <span class="kw">while</span> t &lt; hours:
-        t = arrival
-        service = random.expovariate(mu)
-        <span class="kw">if</span> t &gt;= busy_until:          <span class="com"># server idle — no wait</span>
-            busy_until = t + service
-        <span class="kw">else</span>:                        <span class="com"># customer waits</span>
-            total_wait += busy_until - t
-            busy_until += service
-        n_served += <span class="num">1</span>
-        arrival = t + random.expovariate(lam)
-    <span class="kw">return</span> total_wait / n_served
-
-<span class="kw">print</span>(sim_mm1())  <span class="com"># ~0.375 h avg wait vs Wq = 0.375 from the formulas</span></pre>
-
   <p>The Mojo 1.x port is line-for-line the same event loop — but compiled. Discrete-event simulation is the textbook case for it: a long-running loop with cheap arithmetic per iteration is exactly what an interpreter penalizes most. Exponential draws come from the inverse CDF (<code>−ln(1−u)/rate</code>); crank <code>hours</code> from 2,000 to 2,000,000 for tighter confidence at barely any wall-clock cost:</p>
 
-<pre class="code mojo"><span class="kw">from</span> std.random <span class="kw">import</span> random_float64, seed
-<span class="kw">from</span> std.math <span class="kw">import</span> log
+<pre class="code mojo">from std.random import random_float64, seed
+from std.math import log
 
-<span class="kw">def</span> <span class="fn">expovariate</span>(rate: Float64) -&gt; Float64:
-    <span class="kw">return</span> -log(<span class="num">1.0</span> - random_float64(<span class="num">0.0</span>, <span class="num">1.0</span>)) / rate
+def expovariate(rate: Float64) -&gt; Float64:
+    return -log(1.0 - random_float64(0.0, 1.0)) / rate
 
-<span class="kw">def</span> <span class="fn">sim_mm1</span>(lam: Float64, mu: Float64, hours: Float64) -&gt; Float64:
-    <span class="kw">var</span> t: Float64 = <span class="num">0.0</span>
-    <span class="kw">var</span> busy_until: Float64 = <span class="num">0.0</span>
-    <span class="kw">var</span> n_served = <span class="num">0</span>
-    <span class="kw">var</span> total_wait: Float64 = <span class="num">0.0</span>
-    <span class="kw">var</span> arrival = expovariate(lam)
-    <span class="kw">while</span> t &lt; hours:
+def sim_mm1(lam: Float64, mu: Float64, hours: Float64) -&gt; Float64:
+    var t: Float64 = 0.0
+    var busy_until: Float64 = 0.0
+    var n_served = 0
+    var total_wait: Float64 = 0.0
+    var arrival = expovariate(lam)
+    while t &lt; hours:
         t = arrival
-        <span class="kw">var</span> service = expovariate(mu)
-        <span class="kw">if</span> t &gt;= busy_until:          <span class="com"># server idle — no wait</span>
+        var service = expovariate(mu)
+        if t &gt;= busy_until:          # server idle — no wait
             busy_until = t + service
-        <span class="kw">else</span>:                        <span class="com"># customer waits</span>
+        else:                        # customer waits
             total_wait += busy_until - t
             busy_until += service
-        n_served += <span class="num">1</span>
+        n_served += 1
         arrival = t + expovariate(lam)
-    <span class="kw">return</span> total_wait / Float64(n_served)
+    return total_wait / Float64(n_served)
 
-<span class="kw">def</span> <span class="fn">main</span>():
-    seed(<span class="num">42</span>)
-    <span class="kw">print</span>(sim_mm1(<span class="num">6.0</span>, <span class="num">8.0</span>, <span class="num">2000.0</span>))  <span class="com"># ~0.375 h — converges to Wq</span></pre>
+def main():
+    seed(42)
+    print(sim_mm1(6.0, 8.0, 2000.0))  # ~0.375 h — converges to Wq</pre>
 
   <p>Simulation's strengths — realism and flexibility — are its weaknesses too: results are noisy, slow, and only as good as the input distributions. A rule of thumb from practice: model the messy details that actually change the answer, and leave the rest out. If a Monte Carlo estimate of an expected value differs from an exact formula (when one exists), trust the formula and debug the simulator; where no formula exists, simulation is the only honest number you can produce.</p>
 </section>
@@ -970,5 +857,142 @@ EV(wait)   = $0   →  choose expand.</pre>
 </footer>
 
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body>
 </html>

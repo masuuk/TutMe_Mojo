@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Intro to pointers · Mojo v1 The Language Manual</title>
+<meta name="description" content="Raw and owned pointers, and the mental model behind them.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part IV · Memory &amp; Interop</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part IV</span><span class="sep">/</span><span>Memory &amp; Interop</span><span class="sep">/</span><span class="num">22</span></nav><h1>Intro to pointers</h1>
+<p class="dek">Raw and owned pointers, and the mental model behind them.</p><p class="byline">Chapter 22 · 1,436 words · 7 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/pointers/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>A pointer is an indirect reference to one or more values stored in memory. The
+pointer is a value that holds an address to memory, and provides APIs to store
+and retrieve values to that memory. The value pointed to by a pointer is also
+known as a <em>pointee</em>.</p>
+<p>The Mojo standard library includes several types of pointers, which provide
+different sets of features. All of these pointer types are <em>parameterized</em>—they
+can point to any type of value, and the value type is specified as a parameter.
+For example, the following code creates an <code>OwnedPointer</code> that points to an
+<code>Int</code> value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> OwnedPointer</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> ptr<span class="tk-punctuation">:</span> OwnedPointer<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4">ptr <span class="tk-operator">=</span> OwnedPointer<span class="tk-punctuation">(</span><span class="tk-number">100</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The <code>ptr</code> variable has a value of type <code>OwnedPointer[Int]</code>. The pointer <em>points
+to</em> a value of type <code>Int</code>, as shown in Figure 1.</p>
+<figure class="fig"><div class="fig__frame"><div class="fig__media"><img alt="A local variable, ptr, points to an OwnedPointer[Int] which points to an Int pointee. The value of the OwnedPointer is the address of the Int pointee." class="fig__img fig__img--light" decoding="async" loading="lazy" src="../assets/images/owned-pointer-diagram-087987eccd5c59dff85009c16d41d28a.png" width="552"/><img alt="" aria-hidden="true" class="fig__img fig__img--dark" decoding="async" loading="lazy" src="../assets/images/owned-pointer-diagram-dark-c0482d6196e7a16eaf58ebe19490866f.png" width="552"/></div></div><figcaption class="fig__caption"><b>Figure 1.</b> Pointer and pointee</figcaption></figure>
+<p>Accessing the memory—to retrieve or update a value—is called
+<em>dereferencing</em> the pointer. You can dereference a pointer by following the
+variable name with an empty pair of square brackets:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Update an initialized value</span></span>
+<span class="cl" data-line="2">ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span> <span class="tk-operator">+=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="3"><span class="tk-comment"># Access an initialized value</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="pointer-terminology">Pointer terminology<a aria-label="Link to Pointer terminology" class="h__link" href="#pointer-terminology"></a></h2>
+<p>Before jumping into the pointer types, here are a few terms you'll run across.
+Some of them may already be familiar to you.</p>
+<ul>
+<li class="">
+<p><strong>Safe pointers</strong>: are designed to prevent memory errors. Unless you use one
+of the APIs that are specially designated as unsafe, you can use these
+pointers without worrying about memory issues like double-free or
+use-after-free.</p>
+</li>
+<li class="">
+<p><strong>Nullable pointers</strong>: some languages use a sentinel value to represent
+a pointer that doesn't point to anything (a "null pointer").
+None of the Mojo standard library pointer types are nullable.
+To model a nullable pointer, use the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/optional/Optional/" rel="noopener noreferrer"><code>Optional</code></a> type. For example,
+<code>Optional[Pointer]</code> or <code>Optional[OwnedPointer]</code>.</p>
+</li>
+<li class="">
+<p><strong>Owning pointers</strong>: own their pointees, which means that the value they point
+to may be deallocated when the pointer itself is destroyed. Owning pointers
+(or <em>smart pointers</em>) are responsible for allocating and deallocating memory
+to hold their pointees. Non-owning pointers may point to values owned
+elsewhere, or may point to dynamically-allocated memory.</p>
+</li>
+<li class="">
+<p><strong>Uninitialized memory</strong>: refers to memory locations that haven't been
+initialized with a value, which may therefore contain random data.
+Newly-allocated memory is uninitialized. The safe pointer APIs don't let you
+access memory that's uninitialized. The unsafe APIs can access a block of
+uninitialized memory locations and then initialize them one at a time. Being
+able to access uninitialized memory is unsafe by definition.</p>
+</li>
+<li class="">
+<p><strong>Copyability</strong>: many pointer types can be copied implicitly (for example,
+by assigning a value to a variable):</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> copied_ptr <span class="tk-operator">=</span> ptr</span>
+</code></pre></figure>
+<p>The pointer itself is a small amount of data to copy (typically 64 bits), and
+copying the pointer doesn't copy the pointee—both the original pointer and the
+copy point to the same memory location and the same value.</p>
+</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="pointer-types">Pointer types<a aria-label="Link to Pointer types" class="h__link" href="#pointer-types"></a></h2>
+<p>The Mojo standard library includes several pointer types with different
+characteristics:</p>
+<ul>
+<li class="">
+<p><a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/pointer/Pointer/" rel="noopener noreferrer"><code>Pointer</code></a> is Mojo's primary pointer type.
+It points to one or more contiguous memory locations, and can refer to
+uninitialized memory.</p>
+</li>
+<li class="">
+<p><a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/owned_pointer/OwnedPointer/" rel="noopener noreferrer"><code>OwnedPointer</code></a> is a smart
+pointer that points to a single value, and maintains exclusive ownership of
+that value.</p>
+</li>
+<li class="">
+<p><a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/arc_pointer/ArcPointer/" rel="noopener noreferrer"><code>ArcPointer</code></a> is a
+reference-counted smart pointer that points to an owned value with ownership
+potentially shared with other instances of <code>ArcPointer</code>.</p>
+</li>
+</ul>
+<p>Table 1 summarizes the different types of pointers:</p>
+<figure class="table-wrap" id="table-1"><table><caption class="table__caption"><b>Table 1.</b> Pointer types</caption><thead><tr><th></th><th><code>Pointer</code></th><th><code>OwnedPointer</code></th><th><code>ArcPointer</code></th></tr></thead><tbody><tr><td>Safe</td><td>Conditionally <sup>1</sup></td><td>Yes</td><td>Yes</td></tr><tr><td>Memory allocation</td><td>Manual via <code>alloc()</code></td><td>Implicit <sup>2</sup></td><td>Implicit <sup>2</sup></td></tr><tr><td>Owns pointee(s)</td><td>No <sup>3</sup></td><td>Yes</td><td>Yes</td></tr><tr><td>Implicitly copyable</td><td>Yes</td><td>No</td><td>Yes</td></tr><tr><td>Nullable</td><td>No</td><td>No</td><td>No</td></tr><tr><td>Can point to uninitialized memory</td><td>Yes</td><td>No</td><td>No</td></tr><tr><td>Can point to multiple values (array-like access)</td><td>Yes</td><td>No</td><td>No</td></tr></tbody></table></figure>
+<p><sup>1</sup> <code>Pointer</code> has both safe and unsafe methods. Unsafe methods are
+named with the <code>unsafe_</code> prefix (or require an <code>unsafe_</code> keyword argument).</p>
+<p><sup>2</sup> <code>OwnedPointer</code> and <code>ArcPointer</code> implicitly allocate memory when you
+initialize the pointer with a value.</p>
+<p><sup>3</sup> <code>Pointer</code> provides unsafe methods for initializing and destroying
+instances of the stored type. The user is responsible for managing the lifecycle
+of stored values.</p>
+<p>The following sections provide more details on each pointer type.</p>
+<h2 class="h h--2" data-level="2" id="pointer"><code>Pointer</code><a aria-label="Link to Pointer" class="h__link" href="#pointer"></a></h2>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/pointer/Pointer/" rel="noopener noreferrer"><code>Pointer</code></a> type is Mojo's primary
+pointer type. It can access a block of contiguous memory locations, which might
+be uninitialized. Heap-allocated memory is accessed through a <code>Pointer</code>; the
+other pointer types wrap a <code>Pointer</code> to access heap memory.</p>
+<p>The <code>Pointer</code> type is <em>safe</em> when used to point to an existing value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> ptr <span class="tk-operator">=</span> Pointer<span class="tk-punctuation">(</span>to<span class="tk-operator">=</span>some_value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>When used this way, the <code>Pointer</code> type carries the origin of the value it points
+to. It can be used to store a reference in a struct field.</p>
+<p>The <code>Pointer</code> type also provides a number of unsafe methods you can use to
+access dynamically-allocated memory, initialize and destroy stored values, and
+more. These features are useful for low-level systems programming tasks, but you
+need to use them with care. Some examples of <em>unsafe</em> pointer uses include:</p>
+<ul>
+<li class="">
+<p>Building high-performance array-like collections, such as <code>List</code>. A single
+<code>Pointer</code> can access many values, and gives you a lot of control over how you
+allocate, use, and deallocate memory. Being able to access uninitialized
+memory means that you can preallocate a block of memory, and initialize values
+incrementally as they are added to the collection.</p>
+</li>
+<li class="">
+<p>Interacting with external libraries including C++ and Python. You can
+use <code>Pointer</code> to pass a buffer full of data to or from an external
+library.</p>
+</li>
+</ul>
+<p>For more information, see <a href="../pages/23_using-pointers.html">Using
+pointers</a>.</p>
+<h2 class="h h--2" data-level="2" id="ownedpointer"><code>OwnedPointer</code><a aria-label="Link to OwnedPointer" class="h__link" href="#ownedpointer"></a></h2>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/owned_pointer/OwnedPointer/" rel="noopener noreferrer"><code>OwnedPointer</code></a> type is a
+smart pointer designed for cases where there is single ownership of the
+underlying data. An <code>OwnedPointer</code> points to a single item, which is passed in
+when you initialize the <code>OwnedPointer</code>. The <code>OwnedPointer</code> allocates memory and
+moves or copies the value into the reserved memory.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> OwnedPointer</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> o_ptr <span class="tk-operator">=</span> OwnedPointer<span class="tk-punctuation">(</span>some_big_struct<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>An owned pointer can hold almost any type of item, but when constructing an
+<code>OwnedPointer</code>, the stored item must be either <code>Movable</code> or <code>Copyable</code>.</p>
+<p>Since an <code>OwnedPointer</code> is designed to enforce single ownership, the pointer
+itself can be moved, but not copied.</p>
+<p><code>OwnedPointer</code> does provide an initializer that creates a new <code>OwnedPointer</code> by
+copying the <em>stored value</em> from an existing <code>OwnedPointer</code>. This results in two
+owned pointers, each with its own separate allocation and its own copy of the
+stored value.</p>
+<h2 class="h h--2" data-level="2" id="arcpointer"><code>ArcPointer</code><a aria-label="Link to ArcPointer" class="h__link" href="#arcpointer"></a></h2>
+<p>An <a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/arc_pointer/ArcPointer/" rel="noopener noreferrer"><code>ArcPointer</code></a> is a
+reference-counted smart pointer, ideal for shared resources where the last owner
+for a given value may not be clear. Like an <code>OwnedPointer</code>, it points to a
+single value, and it allocates memory when you initialize the <code>ArcPointer</code> with
+a value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> ArcPointer</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> attributesDict<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> attributes <span class="tk-operator">=</span> ArcPointer<span class="tk-punctuation">(</span>attributesDict<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Unlike an <code>OwnedPointer</code>, an <code>ArcPointer</code> can be freely copied. All instances
+of a given <code>ArcPointer</code> share a reference count, which is incremented whenever
+the <code>ArcPointer</code> is copied and decremented whenever an instance is destroyed.
+When the reference count reaches zero, the stored value is destroyed and the
+allocated memory is freed.</p>
+<p>You can use <code>ArcPointer</code> to implement safe reference-semantic types. For
+example, in the following code snippet <code>SharedDict</code> uses an <code>ArcPointer</code> to
+store a dictionary. Copying an instance of <code>SharedDict</code> only copies the
+<code>ArcPointer</code>, not the dictionary, which is shared between all of the copies.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> ArcPointer</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">struct</span> <span class="tk-class-name">SharedDict</span><span class="tk-punctuation">(</span>ImplicitlyCopyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> attributes<span class="tk-punctuation">:</span> ArcPointer<span class="tk-punctuation">[</span>Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> String<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> attributesDict<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="9"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>attributes <span class="tk-operator">=</span> ArcPointer<span class="tk-punctuation">(</span>attributesDict<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-operator">*</span><span class="tk-punctuation">,</span> copy<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>attributes <span class="tk-operator">=</span> copy<span class="tk-punctuation">.</span>attributes</span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">def</span> <span class="tk-function">__setitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> key<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>attributes<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">[</span>key<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> value</span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> key<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>attributes<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>get<span class="tk-punctuation">(</span>key<span class="tk-punctuation">,</span> default<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"></span>
+<span class="cl" data-line="20"></span>
+<span class="cl" data-line="21"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">var</span> thing1 <span class="tk-operator">=</span> SharedDict<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">var</span> thing2 <span class="tk-operator">=</span> thing1</span>
+<span class="cl" data-line="24">    thing1<span class="tk-punctuation">[</span><span class="tk-string">"Flip"</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-string">"Flop"</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>thing2<span class="tk-punctuation">[</span><span class="tk-string">"Flip"</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p><code>ArcPointer</code> makes the reference count itself thread-safe, but reads and writes
+to the stored value are not—callers are responsible for synchronization.</p></div></aside>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/pointers/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/pointers/</a>, saved Thu, 01 Oct 2026 15:38:21 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/21_lifetimes-origins-and-references.html"><span class="pager__dir">← Previous</span><span class="pager__title">Lifetimes, origins, and references</span></a><a class="pager__link pager__link--next" href="../pages/23_using-pointers.html"><span class="pager__dir">Next →</span><span class="pager__title">Using pointers</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#pointer-terminology">Pointer terminology</a></li><li class="rail__depth-2"><a href="#pointer-types">Pointer types</a></li><li class="rail__depth-2"><a href="#pointer">Pointer</a></li><li class="rail__depth-2"><a href="#ownedpointer">OwnedPointer</a></li><li class="rail__depth-2"><a href="#arcpointer">ArcPointer</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#pointer-terminology">Pointer terminology</a></li><li class="rail__depth-2"><a href="#pointer-types">Pointer types</a></li><li class="rail__depth-2"><a href="#pointer">Pointer</a></li><li class="rail__depth-2"><a href="#ownedpointer">OwnedPointer</a></li><li class="rail__depth-2"><a href="#arcpointer">ArcPointer</a></li></ol>
+<p class="rail__meta">Chapter 22 of 38 · Part IV, Memory &amp; Interop.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

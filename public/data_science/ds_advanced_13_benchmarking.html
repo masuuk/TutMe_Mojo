@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -118,17 +118,17 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (cProfile)</div>
+        
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo"><code><span class="kw">from</span> profiler <span class="kw">import</span> Profiler, FlameGraphConfig
 
-<span class="com"># Start profiling with flame graph output</span>
+<span class="com">// Start profiling with flame graph output</span>
 <span class="kw">var</span> profiler = Profiler(
     FlameGraphConfig(
         output=<span class="str">"train_flame.svg"</span>,
-        sample_rate_us=<span class="num">100</span>,  <span class="com"># 100μs sampling</span>
+        sample_rate_us=<span class="num">100</span>,  <span class="com">// 100μs sampling</span>
         include_memory=<span class="num">True</span>,
         track_allocations=<span class="num">True</span>
     )
@@ -138,22 +138,15 @@ profiler.start()
 train_model(model, data, epochs=<span class="num">10</span>)
 profiler.stop()
 
-<span class="com"># Generate HTML report with interactive flame graph</span>
+<span class="com">// Generate HTML report with interactive flame graph</span>
 profiler.report()
-<span class="com"># → train_flame.svg + train_report.html</span></code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> cProfile
-<span class="kw">import</span> pstats
-
-<span class="com"># Profile with cProfile</span>
-cProfile.run(<span class="str">'train_model(model, data, epochs=10)'</span>, <span class="str">'train.prof'</span>)
-
-<span class="com"># Convert to flame graph externally</span>
-<span class="com"># pip install snakeviz</span>
-<span class="com"># snakeviz train.prof</span></code></pre>
+<span class="com">// → train_flame.svg + train_report.html</span></code></pre>
+        
       </div>
     </div>
 
-    <div class="info-box">
+    <p>If you are coming from Python, the equivalent workflow is <code>cProfile.run(..., "train.prof")</code> followed by <code>snakeviz train.prof</code>. That path needs an extra tool and a manual conversion step, whereas Mojo emits the flame graph directly.</p>
+<div class="info-box">
       <strong>Interactive Reports</strong>
       <p>Mojo's profiler generates self-contained HTML files with D3.js-powered flame graphs. You can zoom into specific call stacks, filter by function name, and see both time and allocation breakdowns in a single view.</p>
     </div>
@@ -169,20 +162,21 @@ cProfile.run(<span class="str">'train_model(model, data, epochs=10)'</span>, <sp
   </section>
 
   <section id="memory-traces">
-    <h2>Memory Traces</h2>
+    <p>The Python-side equivalent is <code>tracemalloc</code>, which snapshots allocations and ranks them by source line. It tracks Python object lifetimes only, so it cannot see allocations made inside Mojo's own runtime.</p>
+<h2>Memory Traces</h2>
     <p>Memory allocations are often the hidden bottleneck in ML code. Mojo's memory tracer tracks every allocation, its lifetime, and which function requested it. This is especially useful for finding temporary tensors that should be reused.</p>
 
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo2">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (tracemalloc)</div>
+        
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo2"><code><span class="kw">from</span> profiler <span class="kw">import</span> MemoryTracer, MemoryReport
 
 <span class="kw">var</span> tracer = MemoryTracer(
-    snapshot_interval=<span class="num">1000</span>,  <span class="com"># Every 1000 allocations</span>
+    snapshot_interval=<span class="num">1000</span>,  <span class="com">// Every 1000 allocations</span>
     track_lifetime=<span class="num">True</span>,
     detect_leaks=<span class="num">True</span>
 )
@@ -191,29 +185,18 @@ tracer.start()
 <span class="kw">var</span> result = model.forward(batch)
 tracer.stop()
 
-<span class="com"># Analyze allocation patterns</span>
+<span class="com">// Analyze allocation patterns</span>
 <span class="kw">var</span> report = tracer.report()
-print(report.peak_memory_bytes())    <span class="com"># Peak RSS</span>
-print(report.allocation_count())      <span class="com"># Total allocations</span>
-print(report.temporary_count())       <span class="com"># Allocations freed within 1 step</span>
-print(report.leak_count())            <span class="com"># Potential memory leaks</span>
+print(report.peak_memory_bytes())    <span class="com">// Peak RSS</span>
+print(report.allocation_count())      <span class="com">// Total allocations</span>
+print(report.temporary_count())       <span class="com">// Allocations freed within 1 step</span>
+print(report.leak_count())            <span class="com">// Potential memory leaks</span>
 
-<span class="com"># Show top 10 allocation hotspots</span>
+<span class="com">// Show top 10 allocation hotspots</span>
 report.top_allocators(n=<span class="num">10</span>)
-<span class="com"># → attention.bmm: 847 allocations (2.1 GB)</span>
-<span class="com"># → layer_norm.reduce: 512 allocations (128 MB)</span></code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> tracemalloc
-
-tracemalloc.start()
-
-result = model.forward(batch)
-
-<span class="com"># Snapshot and compare</span>
-snapshot = tracemalloc.take_snapshot()
-top = snapshot.statistics(<span class="str">'lineno'</span>)
-
-<span class="kw">for</span> stat <span class="kw">in</span> top[:<span class="num">10</span>]:
-    print(stat)</code></pre>
+<span class="com">// → attention.bmm: 847 allocations (2.1 GB)</span>
+<span class="com">// → layer_norm.reduce: 512 allocations (128 MB)</span></code></pre>
+        
       </div>
     </div>
 
@@ -230,18 +213,18 @@ top = snapshot.statistics(<span class="str">'lineno'</span>)
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> std.memory <span class="kw">import</span> ArenaAllocator, arena_scope
+        <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> memory <span class="kw">import</span> ArenaAllocator, arena_scope
 
-<span class="com"># Before: 1000 small allocations per forward pass</span>
+<span class="com">// Before: 1000 small allocations per forward pass</span>
 <span class="kw">def</span> <span class="fn">forward_slow</span>(x: Tensor[Float32]) -&gt; Tensor[Float32]:
-    <span class="kw">var</span> a = x[:, :d_model]       <span class="com"># alloc 1</span>
-    <span class="kw">var</span> b = self.W_q(a)          <span class="com"># alloc 2</span>
-    <span class="kw">var</span> c = self.W_k(a)          <span class="com"># alloc 3</span>
-    <span class="kw">var</span> d = b @ c.transpose()     <span class="com"># alloc 4</span>
-    <span class="kw">var</span> e = softmax(d)           <span class="com"># alloc 5</span>
-    <span class="kw">return</span> e @ self.W_v(a)       <span class="com"># alloc 6</span>
+    <span class="kw">var</span> a = x[:, :d_model]       <span class="com">// alloc 1</span>
+    <span class="kw">var</span> b = self.W_q(a)          <span class="com">// alloc 2</span>
+    <span class="kw">var</span> c = self.W_k(a)          <span class="com">// alloc 3</span>
+    <span class="kw">var</span> d = b @ c.transpose()     <span class="com">// alloc 4</span>
+    <span class="kw">var</span> e = softmax(d)           <span class="com">// alloc 5</span>
+    <span class="kw">return</span> e @ self.W_v(a)       <span class="com">// alloc 6</span>
 
-<span class="com"># After: single arena allocation, freed at scope end</span>
+<span class="com">// After: single arena allocation, freed at scope end</span>
 <span class="kw">def</span> <span class="fn">forward_fast</span>(x: Tensor[Float32]) -&gt; Tensor[Float32]:
     <span class="kw">with</span> arena_scope():
         <span class="kw">var</span> a = x[:, :d_model]
@@ -250,7 +233,7 @@ top = snapshot.statistics(<span class="str">'lineno'</span>)
         <span class="kw">var</span> d = b @ c.transpose()
         <span class="kw">var</span> e = softmax(d)
         <span class="kw">return</span> e @ self.W_v(a)
-    <span class="com"># All temporaries freed here</span></code></pre>
+    <span class="com">// All temporaries freed here</span></code></pre>
       </div>
     </div>
   </section>
@@ -267,7 +250,7 @@ top = snapshot.statistics(<span class="str">'lineno'</span>)
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo4"><code><span class="kw">from</span> bench <span class="kw">import</span> Benchmark, PerfCounter
 
-<span class="com"># Microbenchmark with statistical rigor</span>
+<span class="com">// Microbenchmark with statistical rigor</span>
 <span class="kw">var</span> bench = Benchmark(
     name=<span class="str">"matmul_4096x4096"</span>,
     warmup=<span class="num">100</span>,
@@ -279,9 +262,9 @@ bench.run(<span class="kw">def</span>():
     <span class="kw">var</span> c = a @ b
 )
 bench.report()
-<span class="com"># → 12.3 TFLOPS (78% of peak)</span>
-<span class="com"># → 487 GB/s memory bandwidth (65% of peak)</span>
-<span class="com"># → p50: 0.42ms, p99: 0.48ms, p999: 0.51ms</span></code></pre>
+<span class="com">// → 12.3 TFLOPS (78% of peak)</span>
+<span class="com">// → 487 GB/s memory bandwidth (65% of peak)</span>
+<span class="com">// → p50: 0.42ms, p99: 0.48ms, p999: 0.51ms</span></code></pre>
       </div>
     </div>
 
@@ -315,7 +298,7 @@ bench.report()
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo5"><code><span class="kw">from</span> kernel <span class="kw">import</span> fused_kernel
 
-<span class="com"># Write a custom fused kernel</span>
+<span class="com">// Write a custom fused kernel</span>
 <span class="kw">@fused_kernel</span>
 <span class="kw">def</span> <span class="fn">bias_gelu_fused</span>(
     output: Tensor[Float32],
@@ -327,7 +310,7 @@ bench.report()
         <span class="kw">var</span> val = input[idx] + bias[idx % bias.size]
         output[idx] = <span class="num">0.5</span> * val * (<span class="num">1.0</span> + tanh(<span class="num">0.7978845608</span> * (val + <span class="num">0.044715</span> * val ** <span class="num">3</span>)))
 
-<span class="com"># 3x faster than separate bias + gelu kernels</span></code></pre>
+<span class="com">// 3x faster than separate bias + gelu kernels</span></code></pre>
       </div>
     </div>
 
@@ -351,14 +334,14 @@ bench.report()
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo6"><code><span class="kw">from</span> async <span class="kw">import</span> Pipeline, Stage
 
-<span class="com"># Pipeline: prefetch → preprocess → compute</span>
+<span class="com">// Pipeline: prefetch → preprocess → compute</span>
 <span class="kw">var</span> pipeline = Pipeline([
     Stage(<span class="str">"load"</span>, <span class="kw">def</span>(): loader.next_batch(), buffer=<span class="num">4</span>),
     Stage(<span class="str">"preprocess"</span>, <span class="kw">def</span>(b): augment(b), buffer=<span class="num">2</span>),
     Stage(<span class="str">"compute"</span>, <span class="kw">def</span>(b): model.forward(b), buffer=<span class="num">1</span>),
 ])
 
-<span class="com"># All 3 stages run concurrently on different data</span>
+<span class="com">// All 3 stages run concurrently on different data</span>
 <span class="kw">for</span> batch <span class="kw">in</span> pipeline:
     loss = loss_fn(batch, targets)
     loss.backward()</code></pre>

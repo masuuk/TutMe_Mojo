@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -190,12 +190,11 @@ git clone https://github.com/modular/modular.git
     <p>An unannotated <code class="inline">def</code> behaves almost exactly like a Python function. Parameters are dynamically typed, and you get the full flexibility (and looseness) of Python semantics. This makes it easy to port Python code to Mojo without changing every line.</p>
 
     <h3>An annotated <code class="inline">def</code></h3>
-    <p>Type annotations turn the same <code class="inline">def</code> strict: annotated parameters are checked at compile time, arguments are immutable by default, and the compiler can perform full static analysis. This is where you get C-level performance. (The old pre-1.0 <code class="inline">fn</code> keyword provided this behavior; it was removed in the 1.0 unification and is now a compile error.)</p>
+    <p>Type annotations turn the same <code class="inline">def</code> strict: annotated parameters are checked at compile time, arguments are immutable by default, and the compiler can perform full static analysis. This is where you get C-level performance.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch2-def-vs-fn">Mojo</button>
-        <button class="tab-btn" data-tab="ch2-def-vs-fn-py">Python</button>
       </div>
       <div class="tab-content active" id="ch2-def-vs-fn">
         <pre><span class="cmt"># unannotated def — Python-like, dynamically typed</span>
@@ -214,19 +213,6 @@ git clone https://github.com/modular/modular.git
 <span class="kw">def</span> <span class="fn">increment</span>(<span class="kw">mut</span> x: Int64):
     x += <span class="num">1</span></pre>
       </div>
-      <div class="tab-content" id="ch2-def-vs-fn-py">
-        <pre><span class="cmt"># Python — all functions are dynamically typed</span>
-<span class="kw">def</span> <span class="fn">add_loose</span>(a, b):
-    <span class="kw">return</span> a + b
-
-<span class="kw">def</span> <span class="fn">greet</span>(name: str) -&gt; str:
-    <span class="cmt"># Type hints are optional, not enforced</span>
-    <span class="kw">return</span> <span class="str">f"Hello, </span>{name}<span class="str">"</span>
-
-<span class="kw">def</span> <span class="fn">increment</span>(x: int) -&gt; int:
-    <span class="cmt"># Python ints are immutable, no 'mut' concept</span>
-    <span class="kw">return</span> x + <span class="num">1</span></pre>
-      </div>
     </div>
 
     <div class="info-box warning-box">
@@ -234,7 +220,12 @@ git clone https://github.com/modular/modular.git
       <p>Prefer fully-annotated <code class="inline">def</code> functions by default. Leave annotations off only when porting Python code or writing quick scripts. Type annotations unlock compile-time checks and optimizations that untyped code cannot provide.</p>
     </div>
 
-    <p>Notice the <code class="inline">mut</code> keyword (renamed from the pre-1.0 <code class="inline">inout</code>) — this is how Mojo marks a parameter as mutable. By default, function arguments are immutable, which prevents accidental side effects.</p>
+        <p>Notice the <code class="inline">mut</code> keyword (renamed from the pre-1.0 <code class="inline">inout</code>) — this is how Mojo marks a parameter as mutable. By default, function arguments are immutable, which prevents accidental side effects.</p>
+
+    <div class="info-box">
+      <strong>💡 Coming from Python:</strong>
+      <p>Three spellings change when you port. Type hints are optional in Python but enforced in Mojo, so <code class="inline">def greet(name: str) -&gt; str:</code> becomes <code class="inline">def greet(name: String) -&gt; String:</code> with the <code class="inline">str</code> spellings capitalized. Python's integers are immutable and simply rebound by name, so it has no <code class="inline">mut</code> at all — in Mojo a parameter that is rebound has to be declared <code class="inline">mut</code> or the call is an error. And formatted output moves from an f-string, <code class="inline">f"Hello, {name}"</code>, to a t-string, <code class="inline">t"Hello, {name}"</code>, or to separate <code class="inline">print</code> arguments.</p>
+    </div>
   </section>
 
   <section id="variables">
@@ -243,12 +234,11 @@ git clone https://github.com/modular/modular.git
     <ul>
       <li><strong><code class="inline">var</code></strong> — declares a variable. The keyword is mandatory: assigning to a new name without <code class="inline">var</code> is a deprecation error.</li>
     </ul>
-    <p>Unlike Python — where variables spring into existence on first assignment — Mojo makes the declaration explicit so the compiler always knows when a name enters scope. A variable you never reassign is your immutable binding; the old <code class="inline">let</code> keyword was removed before 1.0.</p>
+    <p>Unlike Python — where variables spring into existence on first assignment — Mojo makes the declaration explicit so the compiler always knows when a name enters scope. A variable you never reassign is your immutable binding.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch2-vars-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch2-vars-py">Python</button>
       </div>
       <div class="tab-content active" id="ch2-vars-mojo">
         <pre><span class="kw">def</span> <span class="fn">main</span>():
@@ -264,24 +254,12 @@ git clone https://github.com/modular/modular.git
     <span class="cmt"># Printing values</span>
     <span class="fn">print</span>(<span class="str">"x ="</span>, x, <span class="str">"y ="</span>, y)</pre>
       </div>
-      <div class="tab-content" id="ch2-vars-py">
-        <pre><span class="cmt"># Python — no immutability concept for variables</span>
-x = <span class="num">10</span>     <span class="cmt"># can reassign</span>
-y = <span class="num">20</span>     <span class="cmt"># can reassign</span>
-y = <span class="num">30</span>     <span class="cmt"># OK</span>
-
-<span class="cmt"># Type hints are purely advisory</span>
-name: str = <span class="str">"Mojo"</span>
-pi: float = <span class="num">3.14159</span>
-
-<span class="cmt"># The closest to "immutable" is a tuple</span>
-point = (<span class="num">1</span>, <span class="num">2</span>)  <span class="cmt"># tuple can't be reassigned, but contents can</span></pre>
-      </div>
     </div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
       <p>Mojo performs <strong>type inference</strong> when you don't specify a type — the compiler deduces the type from the right-hand side. This keeps code concise while maintaining full static typing under the hood.</p>
+      <p>In Python the annotation is purely advisory and the name is just a label on a mutable cell, so <code class="inline">x = 10</code> can be rebound freely. In Mojo the declaration is the contract, and "a variable you never reassign" is the safe default. If you need a genuinely fixed, hashable value in Python, the usual stand-in is a tuple — a tuple cannot be rebound but its contents still can. Mojo has no need for that workaround: the absence of reassignment is already what <code class="inline">var</code> expresses.</p>
     </div>
   </section>
 
@@ -298,7 +276,6 @@ point = (<span class="num">1</span>, <span class="num">2</span>)  <span class="c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch2-control-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch2-control-py">Python</button>
       </div>
       <div class="tab-content active" id="ch2-control-mojo">
         <pre><span class="kw">def</span> <span class="fn">control_flow_examples</span>():
@@ -326,24 +303,7 @@ point = (<span class="num">1</span>, <span class="num">2</span>)  <span class="c
         <span class="fn">print</span>(n)
         n -= <span class="num">1</span></pre>
       </div>
-      <div class="tab-content" id="ch2-control-py">
-        <pre><code>def main():
-    # Python — virtually identical syntax
-    score = 85
-    if score &gt;= 90:
-        print(&quot;Excellent&quot;)
-    elif score &gt;= 70:
-        print(&quot;Good&quot;)
-    else:
-        print(&quot;Needs improvement&quot;)
-    for i in range(5):
-        print(i)
-    fruits = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;]
-    for fruit in fruits:
-        print(fruit)
-</code></pre>
-      </div>
-    <p>Like Python, Mojo uses indentation — not curly braces — to delimit blocks. Where Python opens a block with a colon and indents, Mojo does exactly the same: there are no <code class="inline">{ }</code> in sight.</p>
+    <p>Like Python, Mojo uses indentation — not curly braces — to delimit blocks. Where Python opens a block with a colon and indents, Mojo does exactly the same: there are no <code class="inline">{ }</code> in sight. The <code class="inline">if</code> / <code class="inline">elif</code> / <code class="inline">else</code> chain and the <code class="inline">for</code> / <code class="inline">in</code> / <code class="inline">range()</code> loop above are the whole story: the syntax a Python reader expects is the syntax Mojo uses, and <code class="inline">while</code> behaves identically too.</p>
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
@@ -358,7 +318,6 @@ point = (<span class="num">1</span>, <span class="num">2</span>)  <span class="c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch2-first-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch2-first-py">Python</button>
       </div>
       <div class="tab-content active" id="ch2-first-mojo">
         <pre><span class="kw">def</span> <span class="fn">classify_temperature</span>(temp: Float64) -&gt; String:
@@ -388,37 +347,11 @@ point = (<span class="num">1</span>, <span class="num">2</span>)  <span class="c
     <span class="fn">print</span>(<span class="str">"\nAverage:"</span>, avg, <span class="str">"°C"</span>)
     <span class="fn">print</span>(<span class="str">"Hot readings:"</span>, hot_count)</pre>
       </div>
-      <div class="tab-content" id="ch2-first-py">
-        <pre><span class="kw">def</span> <span class="fn">classify_temperature</span>(temp: float) -&gt; str:
-    <span class="kw">if</span> temp &lt; <span class="num">0.0</span>:
-        <span class="kw">return</span> <span class="str">"Freezing"</span>
-    <span class="kw">elif</span> temp &lt; <span class="num">20.0</span>:
-        <span class="kw">return</span> <span class="str">"Cold"</span>
-    <span class="kw">elif</span> temp &lt; <span class="num">35.0</span>:
-        <span class="kw">return</span> <span class="str">"Warm"</span>
-    <span class="kw">else</span>:
-        <span class="kw">return</span> <span class="str">"Hot"</span>
-
-readings = [<span class="num">-5.0</span>, <span class="num">12.5</span>, <span class="num">22.0</span>, <span class="num">38.5</span>, <span class="num">8.0</span>]
-hot_count = <span class="num">0</span>
-total = <span class="num">0.0</span>
-
-<span class="kw">for</span> temp <span class="kw">in</span> readings:
-    category = classify_temperature(temp)
-    <span class="fn">print</span>(<span class="str">f"</span>{temp}<span class="str">°C → </span>{category}<span class="str">"</span>)
-    <span class="kw">if</span> category == <span class="str">"Hot"</span>:
-        hot_count += <span class="num">1</span>
-    total += temp
-
-avg = total / <span class="fn">len</span>(readings)
-<span class="fn">print</span>(<span class="str">f"\nAverage: </span>{avg}<span class="str">°C"</span>)
-<span class="fn">print</span>(<span class="str">f"Hot readings: </span>{hot_count}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
-      <p>Notice how the Mojo version uses <code class="inline">def main()</code> — in Mojo, the entry point is a regular function, not a script. Every <code class="inline">.mojo</code> file can contain multiple functions, but <code class="inline">main()</code> is what the compiler targets when you run <code class="inline">mojo file.mojo</code>.</p>
+      <p>Notice how the Mojo version uses <code class="inline">def main()</code> — in Mojo, the entry point is a regular function, not a script. Every <code class="inline">.mojo</code> file can contain multiple functions, but <code class="inline">main()</code> is what the compiler targets when you run <code class="inline">mojo file.mojo</code>. A Python script would instead run top-level statements in order, and its per-row output would be an f-string like <code class="inline">f"{temp}°C → {category}"</code>; the Mojo pane gets the same line by passing the values as separate <code class="inline">print</code> arguments, so no interpolation is needed at all.</p>
     </div>
   </section>
 
@@ -431,7 +364,7 @@ avg = total / <span class="fn">len</span>(readings)
       <div class="opts" id="quiz1">
         <button class="opt" data-correct="false">Nothing — annotations are ignored</button>
         <button class="opt" data-correct="false">It becomes a Python function at runtime</button>
-        <button class="opt" data-correct="true">Arguments are checked at compile time and immutable by default — the old <code class="inline">fn</code> behavior</button>
+        <button class="opt" data-correct="true">Arguments are checked at compile time and immutable by default</button>
         <button class="opt" data-correct="false">It can no longer call other functions</button>
       </div>
       <div class="feedback" id="feedback1"></div>

@@ -10,7 +10,7 @@
     --bg-1:#12122a;
     --bg-2:#1a1a3a;
     --ink:#e8e6f0;
-    --ink-dim:#a9a6bd;
+    --ink-dim:#ffd98f;
     --gold:#d4af6a;
     --gold-soft:#f0d8a8;
     --accent:#7c6ef0;
@@ -283,17 +283,14 @@
   .com{color:#676e95;font-style:italic}
   .op{color:#89ddff}
 
-  /* side-by-side language labels: Python reference vs Mojo 1.x port */
-  pre.py{border-left:3px solid #c3e88d}
+  /* language labels for the Mojo 1.x panes */
   pre.mojo{border-left:3px solid #82aaff;background:#0c1024}
-  pre.py::before,pre.mojo::before{
+  pre.mojo::before{
     display:block;font-size:10px;letter-spacing:3px;text-transform:uppercase;
     font-family:Consolas,'Courier New',monospace;margin-bottom:10px;color:#676e95;
   }
-  pre.py::before{content:"python — reference"}
-  pre.mojo::before{content:"mojo 1.0 — native port";color:#82aaff}
+  pre.mojo::before{content:"mojo 1.x — native port";color:#82aaff}
   /* A data-label attribute overrides the default snippet captions above */
-  pre.py[data-label]::before,
   pre.mojo[data-label]::before{content:attr(data-label)}
 
   /* Small caption introducing a code pair */
@@ -580,7 +577,7 @@
       <h1>The Annuity<br>Codex</h1>
       <p class="subtitle">On the Future Value of Annuities, the Patience of Compounding, and the Quiet Mathematics of Time.</p>
       <div class="ornament">❦ ❦ ❦</div>
-      <div class="meta">With Calculations in Python · MMXXVI</div>
+      <div class="meta">With Calculations in Mojo 1.x · MMXXVI</div>
       <button class="btn" onclick="goPage(1)">Begin Reading →</button>
     </div>
   </section>
@@ -597,7 +594,7 @@
       <li onclick="goPage(3)"><span class="toc-num">II ·</span><span class="toc-title">The Anatomy of an Annuity</span><span class="toc-arrow">→</span></li>
       <li onclick="goPage(4)"><span class="toc-num">III ·</span><span class="toc-title">Future Value Interest Factor of Annuity</span><span class="toc-arrow">→</span></li>
       <li onclick="goPage(5)"><span class="toc-num">IV ·</span><span class="toc-title">Present Value Interest Factor of Annuity</span><span class="toc-arrow">→</span></li>
-      <li onclick="goPage(6)"><span class="toc-num">V ·</span><span class="toc-title">Python &amp; Mojo, the Scribes</span><span class="toc-arrow">→</span></li>
+      <li onclick="goPage(6)"><span class="toc-num">V ·</span><span class="toc-title">Mojo 1.x, the Scribes</span><span class="toc-arrow">→</span></li>
     </ul>
   </section>
 
@@ -623,22 +620,15 @@
 
     <p class="code-note">Formula 1.1 — in code</p>
 
-<pre class="py" data-label="python — future value"><span class="kw">def</span> <span class="fn">fv_single</span>(pv, r, n):
-    <span class="str">"""FV = PV · (1 + r)^n"""</span>
-    <span class="kw">return</span> pv * (<span class="num">1</span> + r) ** n
+<pre class="mojo" data-label="mojo 1.x — future value">from std.math import pow
 
-<span class="com"># $1,000 at 6% for 10 years</span>
-<span class="fn">print</span>(<span class="str">f"FV = ${fv_single(1000, 0.06, 10):,.2f}"</span>)   <span class="com"># FV = $1,790.85</span></pre>
+def fv_single(pv: Float64, r: Float64, n: Int) -&gt; Float64:
+    """FV = PV · (1 + r)^n"""
+    return pv * pow(1.0 + r, Float64(n))
 
-<pre class="mojo" data-label="mojo 1.0 — future value"><span class="kw">from</span> std.math <span class="kw">import</span> pow
-
-<span class="kw">def</span> <span class="fn">fv_single</span>(pv: Float64, r: Float64, n: Int) -&gt; Float64:
-    <span class="str">"""FV = PV · (1 + r)^n"""</span>
-    <span class="kw">return</span> pv * pow(<span class="num">1.0</span> + r, Float64(n))
-
-<span class="kw">def</span> <span class="fn">main</span>():
-    <span class="com"># $1,000 at 6% for 10 years</span>
-    <span class="fn">print</span>(<span class="str">"FV = $"</span>, fv_single(<span class="num">1000.0</span>, <span class="num">0.06</span>, <span class="num">10</span>))  <span class="com"># 1790.847...</span></pre>
+def main():
+    # $1,000 at 6% for 10 years
+    print("FV = $", fv_single(1000.0, 0.06, 10))  # 1790.847...</pre>
 
     <div class="card">
       <h4>A small example</h4>
@@ -724,45 +714,27 @@
 
     <p class="code-note">Formulas 3.1 &amp; 3.2 — in code</p>
 
-<pre class="py" data-label="python — fvifa &amp; fv_annuity"><span class="kw">def</span> <span class="fn">fvifa</span>(r, n):
-    <span class="str">"""[ (1 + r)^n - 1 ] / r"""</span>
-    <span class="kw">if</span> r == <span class="num">0</span>:
-        <span class="kw">return</span> <span class="fn">float</span>(n)
-    <span class="kw">return</span> ((<span class="num">1</span> + r) ** n - <span class="num">1</span>) / r
+<pre class="mojo" data-label="mojo 1.x — fvifa &amp; fv_annuity">from std.math import pow
 
-<span class="kw">def</span> <span class="fn">fv_annuity</span>(pmt, r, n, due=<span class="kw">False</span>):
-    <span class="str">"""FV = PMT × FVIFA(r, n), × (1 + r) if due"""</span>
-    factor = <span class="fn">fvifa</span>(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1</span> + r)
-    <span class="kw">return</span> pmt * factor
+def fvifa(r: Float64, n: Int) -&gt; Float64:
+    """[ (1 + r)^n - 1 ] / r"""
+    if r == 0.0:
+        return Float64(n)
+    return (pow(1.0 + r, Float64(n)) - 1.0) / r
 
-<span class="com"># $200 / month, 20 years, 7% compounded monthly</span>
-r, n = <span class="num">0.07</span> / <span class="num">12</span>, <span class="num">20</span> * <span class="num">12</span>
-<span class="fn">print</span>(<span class="str">f"FVIFA = {fvifa(r, n):,.4f}"</span>)              <span class="com"># 520.9267</span>
-<span class="fn">print</span>(<span class="str">f"FV    = ${fv_annuity(200, r, n):,.2f}"</span>)  <span class="com"># $104,185.34</span></pre>
+def fv_annuity(pmt: Float64, r: Float64, n: Int, due: Bool = False) -&gt; Float64:
+    """FV = PMT × FVIFA(r, n), × (1 + r) if due"""
+    var factor = fvifa(r, n)
+    if due:
+        factor *= (1.0 + r)
+    return pmt * factor
 
-<pre class="mojo" data-label="mojo 1.0 — fvifa &amp; fv_annuity"><span class="kw">from</span> std.math <span class="kw">import</span> pow
-
-<span class="kw">def</span> <span class="fn">fvifa</span>(r: Float64, n: Int) -&gt; Float64:
-    <span class="str">"""[ (1 + r)^n - 1 ] / r"""</span>
-    <span class="kw">if</span> r == <span class="num">0.0</span>:
-        <span class="kw">return</span> Float64(n)
-    <span class="kw">return</span> (pow(<span class="num">1.0</span> + r, Float64(n)) - <span class="num">1.0</span>) / r
-
-<span class="kw">def</span> <span class="fn">fv_annuity</span>(pmt: Float64, r: Float64, n: Int, due: Bool = <span class="kw">False</span>) -&gt; Float64:
-    <span class="str">"""FV = PMT × FVIFA(r, n), × (1 + r) if due"""</span>
-    <span class="kw">var</span> factor = fvifa(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1.0</span> + r)
-    <span class="kw">return</span> pmt * factor
-
-<span class="kw">def</span> <span class="fn">main</span>():
-    <span class="com"># $200 / month, 20 years, 7% compounded monthly</span>
-    <span class="kw">var</span> r = <span class="num">0.07</span> / <span class="num">12.0</span>
-    <span class="kw">var</span> n = <span class="num">240</span>
-    <span class="fn">print</span>(<span class="str">"FVIFA = "</span>, fvifa(r, n))              <span class="com"># 520.9267...</span>
-    <span class="fn">print</span>(<span class="str">"FV    = $"</span>, fv_annuity(<span class="num">200.0</span>, r, n))  <span class="com"># 104185.34...</span></pre>
+def main():
+    # $200 / month, 20 years, 7% compounded monthly
+    var r = 0.07 / 12.0
+    var n = 240
+    print("FVIFA = ", fvifa(r, n))              # 520.9267...
+    print("FV    = $", fv_annuity(200.0, r, n))  # 104185.34...</pre>
 
     <h3>For an Annuity Due</h3>
     <div class="formula">
@@ -772,11 +744,7 @@ r, n = <span class="num">0.07</span> / <span class="num">12</span>, <span class=
 
     <p class="code-note">Formula 3.3 — one extra term</p>
 
-<pre class="py" data-label="python — annuity due"><span class="com"># Same stream, paid at the start of each period instead</span>
-fv_due = <span class="fn">fv_annuity</span>(<span class="num">200</span>, r, n, due=<span class="kw">True</span>)
-<span class="fn">print</span>(<span class="str">f"FV due = ${fv_due:,.2f}"</span>)   <span class="com"># $104,793.09</span></pre>
-
-<pre class="mojo" data-label="mojo 1.0 — annuity due"><span class="com"># Same stream, paid at the start of each period instead</span>
+<pre class="mojo" data-label="mojo 1.x — annuity due"><span class="com"># Same stream, paid at the start of each period instead</span>
 <span class="kw">var</span> fv_due = fv_annuity(<span class="num">200.0</span>, r, n, due=<span class="kw">True</span>)
 <span class="fn">print</span>(<span class="str">"FV due = $"</span>, fv_due)   <span class="com"># 104793.09...</span></pre>
 
@@ -826,42 +794,25 @@ fv_due = <span class="fn">fv_annuity</span>(<span class="num">200</span>, r, n, 
 
     <p class="code-note">Formulas 4.1 &amp; 4.2 — in code</p>
 
-<pre class="py" data-label="python — pvifa &amp; pv_annuity"><span class="kw">def</span> <span class="fn">pvifa</span>(r, n):
-    <span class="str">"""[ 1 - (1 + r)^-n ] / r"""</span>
-    <span class="kw">if</span> r == <span class="num">0</span>:
-        <span class="kw">return</span> <span class="fn">float</span>(n)
-    <span class="kw">return</span> (<span class="num">1</span> - (<span class="num">1</span> + r) ** -n) / r
+<pre class="mojo" data-label="mojo 1.x — pvifa &amp; pv_annuity">from std.math import pow
 
-<span class="kw">def</span> <span class="fn">pv_annuity</span>(pmt, r, n, due=<span class="kw">False</span>):
-    <span class="str">"""PV = PMT × PVIFA(r, n), × (1 + r) if due"""</span>
-    factor = <span class="fn">pvifa</span>(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1</span> + r)
-    <span class="kw">return</span> pmt * factor
+def pvifa(r: Float64, n: Int) -&gt; Float64:
+    """[ 1 - (1 + r)^-n ] / r"""
+    if r == 0.0:
+        return Float64(n)
+    return (1.0 - pow(1.0 + r, -Float64(n))) / r
 
-<span class="com"># $50,000 a year for 20 years, discounted at 5%</span>
-<span class="fn">print</span>(<span class="str">f"PVIFA = {pvifa(0.05, 20):,.4f}"</span>)                <span class="com"># 12.4622</span>
-<span class="fn">print</span>(<span class="str">f"PV    = ${pv_annuity(50000, 0.05, 20):,.2f}"</span>)  <span class="com"># $623,110.50</span></pre>
+def pv_annuity(pmt: Float64, r: Float64, n: Int, due: Bool = False) -&gt; Float64:
+    """PV = PMT × PVIFA(r, n), × (1 + r) if due"""
+    var factor = pvifa(r, n)
+    if due:
+        factor *= (1.0 + r)
+    return pmt * factor
 
-<pre class="mojo" data-label="mojo 1.0 — pvifa &amp; pv_annuity"><span class="kw">from</span> std.math <span class="kw">import</span> pow
-
-<span class="kw">def</span> <span class="fn">pvifa</span>(r: Float64, n: Int) -&gt; Float64:
-    <span class="str">"""[ 1 - (1 + r)^-n ] / r"""</span>
-    <span class="kw">if</span> r == <span class="num">0.0</span>:
-        <span class="kw">return</span> Float64(n)
-    <span class="kw">return</span> (<span class="num">1.0</span> - pow(<span class="num">1.0</span> + r, -Float64(n))) / r
-
-<span class="kw">def</span> <span class="fn">pv_annuity</span>(pmt: Float64, r: Float64, n: Int, due: Bool = <span class="kw">False</span>) -&gt; Float64:
-    <span class="str">"""PV = PMT × PVIFA(r, n), × (1 + r) if due"""</span>
-    <span class="kw">var</span> factor = pvifa(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1.0</span> + r)
-    <span class="kw">return</span> pmt * factor
-
-<span class="kw">def</span> <span class="fn">main</span>():
-    <span class="com"># $50,000 a year for 20 years, discounted at 5%</span>
-    <span class="fn">print</span>(<span class="str">"PVIFA = "</span>, pvifa(<span class="num">0.05</span>, <span class="num">20</span>))              <span class="com"># 12.4622...</span>
-    <span class="fn">print</span>(<span class="str">"PV    = $"</span>, pv_annuity(<span class="num">50000.0</span>, <span class="num">0.05</span>, <span class="num">20</span>))  <span class="com"># 623110.50...</span></pre>
+def main():
+    # $50,000 a year for 20 years, discounted at 5%
+    print("PVIFA = ", pvifa(0.05, 20))              # 12.4622...
+    print("PV    = $", pv_annuity(50000.0, 0.05, 20))  # 623110.50...</pre>
 
     <h3>For an Annuity Due</h3>
     <div class="formula">
@@ -871,11 +822,7 @@ fv_due = <span class="fn">fv_annuity</span>(<span class="num">200</span>, r, n, 
 
     <p class="code-note">Formula 4.3 — one extra term</p>
 
-<pre class="py" data-label="python — annuity due"><span class="com"># The same lottery, paid at the start of each year</span>
-pv_due = <span class="fn">pv_annuity</span>(<span class="num">50000</span>, <span class="num">0.05</span>, <span class="num">20</span>, due=<span class="kw">True</span>)
-<span class="fn">print</span>(<span class="str">f"PV due = ${pv_due:,.2f}"</span>)   <span class="com"># $654,266.02</span></pre>
-
-<pre class="mojo" data-label="mojo 1.0 — annuity due"><span class="com"># The same lottery, paid at the start of each year</span>
+<pre class="mojo" data-label="mojo 1.x — annuity due"><span class="com"># The same lottery, paid at the start of each year</span>
 <span class="kw">var</span> pv_due = pv_annuity(<span class="num">50000.0</span>, <span class="num">0.05</span>, <span class="num">20</span>, due=<span class="kw">True</span>)
 <span class="fn">print</span>(<span class="str">"PV due = $"</span>, pv_due)   <span class="com"># 654266.02...</span></pre>
 
@@ -899,119 +846,67 @@ pv_due = <span class="fn">pv_annuity</span>(<span class="num">50000</span>, <spa
       </a>
       <a href="javascript:void(0)" onclick="goPage(6)" class="next">
         <span class="nav-label">Next →</span>
-        <span class="nav-title">Chapter V · Python &amp; Mojo</span>
+        <span class="nav-title">Chapter V · Mojo 1.x</span>
       </a>
     </div>
   </section>
 
-  <!-- CHAPTER 5: PYTHON -->
+  <!-- CHAPTER 5: MOJO -->
   <section class="page" data-page="6">
     <div class="chapter-head">
       <div class="chapter-num">Chapter V</div>
-      <h1 class="chapter-title">Python &amp; Mojo, the Scribes</h1>
-      <p class="chapter-lead">The formulas as code, in both languages. Clean, readable, and yours to take.</p>
+      <h1 class="chapter-title">Mojo 1.x, the Scribes</h1>
+      <p class="chapter-lead">The formulas as code, function for function. Clean, readable, and yours to take.</p>
     </div>
 
-    <p class="lead">Below is the full Python module behind the formulas in this book — and, side by side, the same module as a Mojo 1.x port. Read the Python to check the math; read the Mojo to learn the language. Every rate and payment is a typed <code>Float64</code>, so a percentage handed in where a decimal belongs is a compile error, not a silent wrong answer — and the compiled version evaluates a whole portfolio of annuities in the time Python spends importing.</p>
+    <p class="lead">Below is the full module behind the formulas in this book, written in Mojo 1.x. Every rate and payment is a typed <code>Float64</code>, so a percentage handed in where a decimal belongs is a compile error, not a silent wrong answer — and the compiled version evaluates a whole portfolio of annuities in the time an interpreter spends importing.</p>
 
-<pre class="py"><span class="kw">def</span> <span class="fn">fvifa</span>(r, n):
-    <span class="str">"""Future Value Interest Factor of Annuity.
-    r : rate per period
-    n : number of periods"""</span>
-    <span class="kw">if</span> r == <span class="num">0</span>:
-        <span class="kw">return</span> <span class="fn">float</span>(n)
-    <span class="kw">return</span> ((<span class="num">1</span> + r) ** n - <span class="num">1</span>) / r
+    <p>Here it is, function for function. Everything that distinguishes this from a scripting-language version of the same arithmetic is a compile-time guarantee: typed arguments and returns, <code>pow</code> with an explicit exponent, and no boxing of numbers on the heap:</p>
 
-<span class="kw">def</span> <span class="fn">pvifa</span>(r, n):
-    <span class="str">"""Present Value Interest Factor of Annuity."""</span>
-    <span class="kw">if</span> r == <span class="num">0</span>:
-        <span class="kw">return</span> <span class="fn">float</span>(n)
-    <span class="kw">return</span> (<span class="num">1</span> - (<span class="num">1</span> + r) ** -n) / r
+<pre class="mojo">from std.math import pow
 
-<span class="kw">def</span> <span class="fn">fv_annuity</span>(pmt, r, n, due=<span class="kw">False</span>):
-    <span class="str">"""Future value of an annuity."""</span>
-    factor = <span class="fn">fvifa</span>(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1</span> + r)
-    <span class="kw">return</span> pmt * factor
+def fvifa(r: Float64, n: Int) -&gt; Float64:
+    """Future Value Interest Factor of Annuity."""
+    if r == 0.0:
+        return Float64(n)
+    return (pow(1.0 + r, Float64(n)) - 1.0) / r
 
-<span class="kw">def</span> <span class="fn">pv_annuity</span>(pmt, r, n, due=<span class="kw">False</span>):
-    <span class="str">"""Present value of an annuity."""</span>
-    factor = <span class="fn">pvifa</span>(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1</span> + r)
-    <span class="kw">return</span> pmt * factor
+def pvifa(r: Float64, n: Int) -&gt; Float64:
+    """Present Value Interest Factor of Annuity."""
+    if r == 0.0:
+        return Float64(n)
+    return (1.0 - pow(1.0 + r, -Float64(n))) / r
 
-<span class="com"># ---- Example ----</span>
-pmt = <span class="num">200</span>
-annual_rate = <span class="num">0.07</span>
-years = <span class="num">20</span>
-freq = <span class="num">12</span>
+def fv_annuity(pmt: Float64, r: Float64, n: Int, due: Bool = False) -&gt; Float64:
+    """Future value of an annuity."""
+    var factor = fvifa(r, n)
+    if due:
+        factor *= (1.0 + r)
+    return pmt * factor
 
-r = annual_rate / freq
-n = years * freq
+def pv_annuity(pmt: Float64, r: Float64, n: Int, due: Bool = False) -&gt; Float64:
+    """Present value of an annuity."""
+    var factor = pvifa(r, n)
+    if due:
+        factor *= (1.0 + r)
+    return pmt * factor
 
-<span class="fn">print</span>(<span class="str">f"FVIFA  = {fvifa(r, n):.4f}"</span>)
-<span class="fn">print</span>(<span class="str">f"PVIFA  = {pvifa(r, n):.4f}"</span>)
-<span class="fn">print</span>(<span class="str">f"FV     = ${fv_annuity(pmt, r, n):,.2f}"</span>)
-<span class="fn">print</span>(<span class="str">f"PV     = ${pv_annuity(pmt, r, n):,.2f}"</span>)</pre>
+# ---- Example ----
+def main():
+    var pmt = 200.0
+    var annual_rate = 0.07
+    var years = 20
+    var freq = 12
 
-    <p>And here is that module, function for function, in Mojo 1.x. The shape is identical — the differences are all compile-time guarantees: typed arguments and returns, <code>pow</code> with an explicit exponent, and no boxing of numbers on the heap:</p>
+    var r = annual_rate / Float64(freq)
+    var n = years * freq
 
-<pre class="mojo"><span class="kw">from</span> std.math <span class="kw">import</span> pow
-
-<span class="kw">def</span> <span class="fn">fvifa</span>(r: Float64, n: Int) -&gt; Float64:
-    <span class="str">"""Future Value Interest Factor of Annuity."""</span>
-    <span class="kw">if</span> r == <span class="num">0.0</span>:
-        <span class="kw">return</span> Float64(n)
-    <span class="kw">return</span> (pow(<span class="num">1.0</span> + r, Float64(n)) - <span class="num">1.0</span>) / r
-
-<span class="kw">def</span> <span class="fn">pvifa</span>(r: Float64, n: Int) -&gt; Float64:
-    <span class="str">"""Present Value Interest Factor of Annuity."""</span>
-    <span class="kw">if</span> r == <span class="num">0.0</span>:
-        <span class="kw">return</span> Float64(n)
-    <span class="kw">return</span> (<span class="num">1.0</span> - pow(<span class="num">1.0</span> + r, -Float64(n))) / r
-
-<span class="kw">def</span> <span class="fn">fv_annuity</span>(pmt: Float64, r: Float64, n: Int, due: Bool = <span class="kw">False</span>) -&gt; Float64:
-    <span class="str">"""Future value of an annuity."""</span>
-    <span class="kw">var</span> factor = fvifa(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1.0</span> + r)
-    <span class="kw">return</span> pmt * factor
-
-<span class="kw">def</span> <span class="fn">pv_annuity</span>(pmt: Float64, r: Float64, n: Int, due: Bool = <span class="kw">False</span>) -&gt; Float64:
-    <span class="str">"""Present value of an annuity."""</span>
-    <span class="kw">var</span> factor = pvifa(r, n)
-    <span class="kw">if</span> due:
-        factor *= (<span class="num">1.0</span> + r)
-    <span class="kw">return</span> pmt * factor
-
-<span class="com"># ---- Example ----</span>
-<span class="kw">def</span> <span class="fn">main</span>():
-    <span class="kw">var</span> pmt = <span class="num">200.0</span>
-    <span class="kw">var</span> annual_rate = <span class="num">0.07</span>
-    <span class="kw">var</span> years = <span class="num">20</span>
-    <span class="kw">var</span> freq = <span class="num">12</span>
-
-    <span class="kw">var</span> r = annual_rate / Float64(freq)
-    <span class="kw">var</span> n = years * freq
-
-    <span class="fn">print</span>(<span class="str">"FVIFA  = "</span>, fvifa(r, n))
-    <span class="fn">print</span>(<span class="str">"PVIFA  = "</span>, pvifa(r, n))
-    <span class="fn">print</span>(<span class="str">"FV     = $"</span>, fv_annuity(pmt, r, n))
-    <span class="fn">print</span>(<span class="str">"PV     = $"</span>, pv_annuity(pmt, r, n))</pre>
+    print("FVIFA  = ", fvifa(r, n))
+    print("PVIFA  = ", pvifa(r, n))
+    print("FV     = $", fv_annuity(pmt, r, n))
+    print("PV     = $", pv_annuity(pmt, r, n))</pre>
 
     <h2>Using the Standard Library</h2>
-    <p>If you prefer not to reinvent the wheel, Python's ecosystem has you covered:</p>
-
-<pre class="py"><span class="com"># Using numpy-financial (pip install numpy-financial)</span>
-<span class="kw">import</span> numpy_financial <span class="kw">as</span> npf
-
-fv = npf.<span class="fn">fv</span>(rate=<span class="num">0.07/12</span>, nper=<span class="num">240</span>, pmt=-<span class="num">200</span>, pv=<span class="num">0</span>)
-pv = npf.<span class="fn">pv</span>(rate=<span class="num">0.07/12</span>, nper=<span class="num">240</span>, pmt=-<span class="num">200</span>, fv=<span class="num">0</span>)
-
-<span class="fn">print</span>(<span class="str">f"FV = ${fv:,.2f}, PV = ${pv:,.2f}"</span>)</pre>
-
     <p>Mojo 1.x has no numpy-financial — and for these closed-form formulas it doesn't need one. The standard library is enough, and the two lines you'd spend installing the dependency become the whole program. If the rest of your stack lives in Python, the same calls also ride the interop bridge (<code>Python.import_module("numpy_financial")</code>) while Mojo keeps the loop around them:</p>
 
 <pre class="mojo"><span class="com"># No dependency needed — the factors are two lines each (see above).</span>
@@ -1028,37 +923,23 @@ pv = npf.<span class="fn">pv</span>(rate=<span class="num">0.07/12</span>, nper=
     <h2>Amortization Table</h2>
     <p>A common companion task: printing a period-by-period schedule.</p>
 
-<pre class="py"><span class="kw">def</span> <span class="fn">amortization</span>(pv, annual_rate, years, freq=<span class="num">12</span>):
-    r = annual_rate / freq
-    n = years * freq
-    pmt = pv * r / (<span class="num">1</span> - (<span class="num">1</span> + r) ** -n)
-    balance = pv
-    <span class="fn">print</span>(<span class="str">f"{'Period':&gt;6} {'Payment':&gt;10} {'Interest':&gt;10} {'Principal':&gt;10} {'Balance':&gt;12}"</span>)
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, n + <span class="num">1</span>):
-        interest = balance * r
-        principal = pmt - interest
-        balance -= principal
-        <span class="fn">print</span>(<span class="str">f"{i:&gt;6} {pmt:&gt;10.2f} {interest:&gt;10.2f} {principal:&gt;10.2f} {balance:&gt;12.2f}"</span>)
-
-<span class="fn">amortization</span>(<span class="num">250000</span>, <span class="num">0.06</span>, <span class="num">30</span>)</pre>
-
     <p>The amortization loop is where Mojo 1.x earns its keep: 360 rows for one mortgage is trivial, but a bank running sensitivity sweeps — thousands of rate scenarios × millions of loans — turns this exact loop into the hot path. Ported, it compiles to straight-line Float64 arithmetic with no interpreter between the rows:</p>
 
-<pre class="mojo"><span class="kw">from</span> std.math <span class="kw">import</span> pow
+<pre class="mojo">from std.math import pow
 
-<span class="kw">def</span> <span class="fn">amortization</span>(pv: Float64, annual_rate: Float64, years: Int, freq: Int = <span class="num">12</span>):
-    <span class="kw">var</span> r = annual_rate / Float64(freq)
-    <span class="kw">var</span> n = years * freq
-    <span class="kw">var</span> pmt = pv * r / (<span class="num">1.0</span> - pow(<span class="num">1.0</span> + r, -Float64(n)))
-    <span class="kw">var</span> balance = pv
-    <span class="kw">for</span> i <span class="kw">in</span> range(<span class="num">1</span>, n + <span class="num">1</span>):
-        <span class="kw">var</span> interest = balance * r
-        <span class="kw">var</span> principal = pmt - interest
+def amortization(pv: Float64, annual_rate: Float64, years: Int, freq: Int = 12):
+    var r = annual_rate / Float64(freq)
+    var n = years * freq
+    var pmt = pv * r / (1.0 - pow(1.0 + r, -Float64(n)))
+    var balance = pv
+    for i in range(1, n + 1):
+        var interest = balance * r
+        var principal = pmt - interest
         balance -= principal
-        <span class="fn">print</span>(i, pmt, interest, principal, balance)
+        print(i, pmt, interest, principal, balance)
 
-<span class="kw">def</span> <span class="fn">main</span>():
-    amortization(<span class="num">250000.0</span>, <span class="num">0.06</span>, <span class="num">30</span>)</pre>
+def main():
+    amortization(250000.0, 0.06, 30)</pre>
 
     <p>Want the schedule as data instead of print lines? Accumulate the four columns into a <code>Tensor[DType.float64](n, 4)</code> and return it — the whole 30-year table is one contiguous allocation, ready for the sensitivity sweep or a chart.</p>
 
@@ -1127,4 +1008,141 @@ pv = npf.<span class="fn">pv</span>(rate=<span class="num">0.07/12</span>, nper=
 </script>
 
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body></html>

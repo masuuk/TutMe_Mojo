@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -367,14 +367,14 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">6</span>Level 6 — Expert Challenge</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Code Reasoning Modification</span></div>
 <p><strong>Challenge:</strong> The initial tableau's objective row holds the negated costs [−4, −3] for x₁, x₂. Complete the loop that applies Dantzig's rule — enter the column with the MOST negative reduced cost. What column (1-based) enters?</p>
-<pre><code>from std.collections import List
+<pre><code><span class="kw">from</span> std.collections <span class="kw">import</span> <span class="tp">List</span>
 
-def main():
-    var reduced: List[Float64] = [-4.0, -3.0]
-    var enter = 0
-    for i in range(1, len(reduced)):
-        pass                     # your line
-    print(enter + 1)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> reduced = <span class="tp">List</span>[<span class="tp">Float64</span>](-4.0, -3.0)
+    <span class="kw">var</span> enter = 0
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(1, <span class="fn">len</span>(reduced)):
+        pass                     <span class="cm"># your line</span>
+    <span class="fn">print</span>(enter + 1)</code></pre>
 <textarea id="a6" placeholder="Write the output or answer here..." onkeydown="onKey(event,6,'1')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(6,'1')">Check Answer</button>
@@ -418,7 +418,10 @@ def main():
 
 <footer>
 Operations Research Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_12_ecef.html">&larr; Previous: Geodetic to ECEF</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="prog_12_ecef.html">← Previous</a> <a href="progressive.html">All 13 drills</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a>
 </footer>
 
 <script>

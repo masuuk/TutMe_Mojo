@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -118,11 +118,10 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (pytest)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo"><code><span class="kw">from</span> std.testing <span class="kw">import</span> TestCase, assert_close, assert_no_nan
+        <pre class="code-block active" id="mojo"><code><span class="kw">from</span> testing <span class="kw">import</span> TestCase, assert_close, assert_no_nan
 
 <span class="kw">class</span> <span class="type">AttentionTest</span>(TestCase):
     <span class="kw">def</span> <span class="fn">test_output_shape</span>(self):
@@ -137,25 +136,12 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
         assert_no_nan(out)
 
     <span class="kw">def</span> <span class="fn">test_numerical_stability</span>(self):
-        <span class="com"># Test with extreme values</span>
+        <span class="com">// Test with extreme values</span>
         <span class="kw">var</span> x = Tensor[Float32](<span class="num">1e6</span>, shape=(<span class="num">1</span>, <span class="num">1</span>, <span class="num">512</span>))
         <span class="kw">var</span> out = model.forward(x)
         assert_no_nan(out)
-        <span class="com"># Output should be finite even with large inputs</span>
+        <span class="com">// Output should be finite even with large inputs</span>
         assert all(out.to_list().map(is_finite))</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> pytest
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">test_output_shape</span>():
-    attn = MultiHeadAttention(n_heads=<span class="num">8</span>, d_model=<span class="num">512</span>)
-    x = np.random.randn(<span class="num">1</span>, <span class="num">10</span>, <span class="num">512</span>).astype(np.float32)
-    out = attn(x)
-    <span class="kw">assert</span> out.shape == (<span class="num">1</span>, <span class="num">10</span>, <span class="num">512</span>)
-
-<span class="kw">def</span> <span class="fn">test_no_nan</span>():
-    x = np.random.randn(<span class="num">4</span>, <span class="num">128</span>, <span class="num">768</span>).astype(np.float32)
-    out = model.forward(x)
-    <span class="kw">assert not</span> np.any(np.isnan(out))</code></pre>
       </div>
     </div>
 
@@ -173,23 +159,23 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo2"><code><span class="kw">from</span> std.testing <span class="kw">import</span> PerformanceTest, baseline
+        <pre class="code-block active" id="mojo2"><code><span class="kw">from</span> testing <span class="kw">import</span> PerformanceTest, baseline
 
 <span class="kw">class</span> <span class="type">AttentionPerfTest</span>(PerformanceTest):
     <span class="kw">def</span> <span class="fn">test_throughput</span>(self):
         <span class="kw">var</span> attn = MultiHeadAttention(n_heads=<span class="num">8</span>, d_model=<span class="num">512</span>)
         <span class="kw">var</span> x = Tensor[Float32](<span class="num">32</span>, <span class="num">128</span>, <span class="num">512</span>)
 
-        <span class="com"># Baseline from last commit (auto-loaded)</span>
+        <span class="com">// Baseline from last commit (auto-loaded)</span>
         <span class="kw">var</span> prev = baseline(<span class="str">"attention_throughput"</span>)
 
-        <span class="com"># Measure current performance</span>
+        <span class="com">// Measure current performance</span>
         <span class="kw">var</span> current = self.benchmark(
             <span class="kw">def</span>(): attn.forward(x),
             iterations=<span class="num">1000</span>
         )
 
-        <span class="com"># Fail if greater than 5% regression</span>
+        <span class="com">// Fail if greater than 5% regression</span>
         self.assert_within_pct(current, prev, tolerance=<span class="num">5.0</span>)</code></pre>
       </div>
     </div>
@@ -213,7 +199,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     ttl_days=<span class="num">30</span>
 )
 
-<span class="com"># Hash-based caching: skip if inputs unchanged</span>
+<span class="com">// Hash-based caching: skip if inputs unchanged</span>
 <span class="kw">var</span> key = CacheKey.from_files([
     <span class="str">"data/raw.parquet"</span>,
     <span class="str">"src/preprocess.mojo"</span>,
@@ -228,7 +214,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     cache.save(key, dataset)
     print(<span class="str">"Cache miss -- preprocessing and storing"</span>)
 
-<span class="com"># Model compilation cache</span>
+<span class="com">// Model compilation cache</span>
 <span class="kw">var</span> model_key = CacheKey.from_config({
     <span class="str">"model"</span>: <span class="str">"transformer_v3"</span>,
     <span class="str">"precision"</span>: <span class="str">"fp16"</span>,
@@ -277,7 +263,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo4"><code><span class="kw">from</span> std.testing <span class="kw">import</span> TestCase, DataTest
+        <pre class="code-block active" id="mojo4"><code><span class="kw">from</span> testing <span class="kw">import</span> TestCase, DataTest
 <span class="kw">from</span> data <span class="kw">import</span> Dataset
 
 <span class="kw">class</span> <span class="type">DataValidationTest</span>(DataTest):
@@ -289,14 +275,14 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
 
     <span class="kw">def</span> <span class="fn">test_distribution</span>(self):
         <span class="kw">var</span> ds = Dataset.load(<span class="str">"train.parquet"</span>)
-        <span class="com"># Ensure no class has less than 5% representation</span>
+        <span class="com">// Ensure no class has less than 5% representation</span>
         <span class="kw">var</span> dist = ds.column(<span class="str">"label"</span>).value_counts(normalized=<span class="num">True</span>)
         <span class="kw">for</span> label, pct <span class="kw">in</span> dist:
             self.assert_gt(pct, <span class="num">0.05</span>,
                 msg=f<span class="str">"Class {label} underrepresented at {pct:.1%}"</span>)
 
     <span class="kw">def</span> <span class="fn">test_no_leakage</span>(self):
-        <span class="com"># Ensure train/val/test splits don't overlap</span>
+        <span class="com">// Ensure train/val/test splits don't overlap</span>
         <span class="kw">var</span> train = Dataset.load(<span class="str">"train.parquet"</span>)
         <span class="kw">var</span> val = Dataset.load(<span class="str">"val.parquet"</span>)
         self.assert_no_overlap(train.ids, val.ids)</code></pre>
@@ -316,7 +302,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo5">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (GitHub Actions)</div>
+        <div class="tab" data-target="gha">GitHub Actions (YAML)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -356,7 +342,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
         ),
     ]
 )</code></pre>
-        <pre class="code-block" id="python"><code><span class="com"># .github/workflows/train.yml</span>
+        <pre class="code-block" id="gha"><code><span class="com"># .github/workflows/train.yml</span>
 <span class="kw">name</span>: ML Pipeline
 <span class="kw">on</span>:
   <span class="kw">push</span>:

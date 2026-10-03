@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -118,12 +118,11 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-simd">Mojo</div>
-        <div class="tab" data-target="python-simd">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo-simd"><code><span class="com"># SIMD: process 8 floats simultaneously</span>
-<span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+<span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">simd_dot</span>(a: Pointer[Float32],
              b: Pointer[Float32],
@@ -159,21 +158,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <span class="kw">while</span> i &lt; n:
         data[i] = max(data[i], <span class="num">0</span>)
         i += <span class="num">1</span></code></pre>
-        <pre class="code-block" id="python-simd"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="com"># NumPy uses SIMD under the hood (C implementation)</span>
-<span class="kw">def</span> <span class="fn">dot_product</span>(a, b):
-    <span class="kw">return</span> np.dot(a, b)
-
-<span class="kw">def</span> <span class="fn">relu</span>(data):
-    <span class="kw">return</span> np.maximum(data, <span class="num">0</span>)
-
-<span class="com"># But Python loops are NOT SIMD:</span>
-<span class="kw">def</span> <span class="fn">slow_dot</span>(a, b):
-    result = <span class="num">0</span>
-    <span class="kw">for</span> i <span class="kw">in</span> range(len(a)):  <span class="com"># Pure Python loop — 100x slower</span>
-        result += a[i] * b[i]
-    <span class="kw">return</span> result</code></pre>
       </div>
     </div>
 
@@ -231,8 +215,8 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
 
     <span class="com"># Each thread sums its chunk</span>
     <span class="kw">for</span> t <span class="kw">in</span> parallelize(num_tasks):
-        <span class="kw">var</span> start = t * (n # num_tasks)
-        <span class="kw">var</span> end = (t + <span class="num">1</span>) * (n # num_tasks)
+        <span class="kw">var</span> start = t * (n // num_tasks)
+        <span class="kw">var</span> end = (t + <span class="num">1</span>) * (n // num_tasks)
         <span class="kw">var</span> local_sum = <span class="num">0</span>
         <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(start, end):
             local_sum += data[i]
@@ -259,7 +243,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-view">Mojo</div>
-        <div class="tab" data-target="python-view">Python (NumPy)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -287,26 +270,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
         <span class="kw">var</span> mean = row.reduce_add() / Float32(t.dim[<span class="num">1</span>])
         <span class="kw">var</span> std = row.std()
         t[i, :] = (row - mean) / std  <span class="com"># In-place via view</span></code></pre>
-        <pre class="code-block" id="python-view"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">process_rows</span>():
-    t = np.zeros((<span class="num">100</span>, <span class="num">10</span>), dtype=np.float32)
-
-    <span class="com"># Slicing — zero-copy view in NumPy</span>
-    row5 = t[<span class="num">5</span>, :]        <span class="com"># View of row 5</span>
-    col3 = t[:, <span class="num">3</span>]        <span class="com"># View of column 3</span>
-    block = t[<span class="num">10</span>:<span class="num">20</span>, <span class="num">2</span>:<span class="num">8</span>]  <span class="com"># View of sub-block</span>
-
-    <span class="com"># Reshape — zero-copy</span>
-    flat = t.reshape(<span class="num">1000</span>)
-
-    <span class="com"># Transpose — zero-copy</span>
-    transposed = t.T
-
-<span class="kw">def</span> <span class="fn">normalize_rows</span>(t):
-    <span class="kw">for</span> i <span class="kw">in</span> range(t.shape[<span class="num">0</span>]):
-        row = t[i, :]
-        t[i, :] = (row - np.mean(row)) / np.std(row)</code></pre>
       </div>
     </div>
   </section>
@@ -318,7 +281,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-broadcast">Mojo</div>
-        <div class="tab" data-target="python-broadcast">Python (NumPy)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -342,24 +304,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <span class="kw">var</span> stds = batch.std(axis=<span class="num">1</span>)    <span class="com"># shape: (N, 1, H, W)</span>
 
     <span class="com"># Broadcasting: (N, C, H, W) - (N, 1, H, W) / (N, 1, H, W)</span>
-    <span class="kw">return</span> (batch - means) / stds</code></pre>
-        <pre class="code-block" id="python-broadcast"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">broadcast_add</span>():
-    a = np.zeros((<span class="num">4</span>, <span class="num">3</span>))
-    b = np.zeros(<span class="num">3</span>)
-
-    <span class="com"># b is broadcast to (4, 3)</span>
-    result = a + b
-
-    matrix = np.zeros((<span class="num">100</span>, <span class="num">64</span>))
-    bias = np.zeros((<span class="num">1</span>, <span class="num">64</span>))
-    output = matrix + bias  <span class="com"># broadcast along axis 0</span>
-
-<span class="kw">def</span> <span class="fn">normalize_batch</span>(batch):
-    <span class="com"># batch shape: (N, C, H, W)</span>
-    means = np.mean(batch, axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>)
-    stds = np.std(batch, axis=<span class="num">1</span>, keepdims=<span class="kw">True</span>)
     <span class="kw">return</span> (batch - means) / stds</code></pre>
       </div>
     </div>

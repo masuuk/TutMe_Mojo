@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -137,7 +135,6 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="scalars"><span class="sw"></span>scalars.mojo</div>
-        <div class="tab" data-lang="python" data-group="scalars"><span class="sw"></span>scalars.py</div>
       </div>
       <div class="panes" data-group="scalars">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — explicit numeric types</span>
@@ -157,24 +154,9 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
 <span class="tok-com"># BFloat16 for ML inference</span>
 <span class="tok-kw">var</span> weight: BFloat16 = <span class="tok-num">0.75</span>
 print(<span class="tok-str">f"Weight type: {<span class="tok-fn">typeof</span>(weight)}"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — everything is an object</span>
-a = <span class="tok-num">42</span>          <span class="tok-com"># arbitrary-precision int</span>
-b = <span class="tok-num">3.14</span>        <span class="tok-com"># 64-bit float (always)</span>
-c = <span class="tok-num">2.718281828</span>
-
-<span class="tok-com"># No BFloat16 in standard library</span>
-<span class="tok-com"># Must use numpy: np.bfloat16(1.5)</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-d = np.bfloat16(<span class="tok-num">1.5</span>)
-
-<span class="tok-com"># Conversions are implicit (and sometimes surprising)</span>
-e = <span class="tok-fn">int</span>(<span class="tok-num">3.9</span>)  <span class="tok-com"># 3 — no error, silent truncation</span>
-
-<span class="tok-com"># Python ints never overflow</span>
-huge = <span class="tok-num">10</span> ** <span class="tok-num">100</span>  <span class="tok-com"># works fine, arbitrary precision</span></pre></div>
       </div>
     </div>
-    <p class="cap">Mojo requires explicit casts between numeric types — no implicit widening or narrowing. This prevents an entire class of silent numeric bugs.</p>
+    <p class="cap">Mojo requires explicit casts between numeric types — no implicit widening or narrowing. This prevents an entire class of silent numeric bugs: in Python <code class="inline">int(3.9)</code> quietly becomes <code class="inline">3</code>, whereas <code class="inline">Int(c)</code> above is explicit about doing the same thing. The other side of the trade is that Python's <code class="inline">int</code> is arbitrary-precision, so <code class="inline">10 ** 100</code> simply works; Mojo's <code class="inline">Int</code> is a fixed 64 bits. Python's standard library has no <code class="inline">BFloat16</code> at all either — you reach for <code class="inline">numpy.bfloat16</code> — while here it is a built-in type.</p>
 
     <p>The key takeaway: <b>Mojo gives you hardware-native types from day one.</b> You choose the precision you need, and the compiler generates code that matches. Python hides all of this behind objects; Mojo exposes the same hardware-native types with none of the boilerplate. That's the sweet spot.</p>
   </section>
@@ -186,11 +168,10 @@ huge = <span class="tok-num">10</span> ** <span class="tok-num">100</span>  <spa
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="simd"><span class="sw"></span>simd_basics.mojo</div>
-        <div class="tab" data-lang="python" data-group="simd"><span class="sw"></span>simd_numpy.py</div>
       </div>
       <div class="panes" data-group="simd">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — SIMD is a built-in type</span>
-<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
+<span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt
 
 <span class="tok-com"># SIMD[T, width] — vector of `width` elements of type T</span>
 <span class="tok-kw">var</span> a = <span class="tok-ty">SIMD</span>[<span class="tok-ty">Float32</span>, <span class="tok-num">8</span>](<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>,
@@ -221,52 +202,33 @@ huge = <span class="tok-num">10</span> ** <span class="tok-num">100</span>  <spa
 <span class="tok-kw">var</span> v1 = vec_t(<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>, <span class="tok-num">6</span>, <span class="tok-num">7</span>, <span class="tok-num">8</span>)
 <span class="tok-kw">var</span> v2 = vec_t(<span class="tok-num">8</span>, <span class="tok-num">7</span>, <span class="tok-num">6</span>, <span class="tok-num">5</span>, <span class="tok-num">4</span>, <span class="tok-num">3</span>, <span class="tok-num">2</span>, <span class="tok-num">1</span>)
 print(<span class="tok-fn">dot_product</span>(v1, v2))  <span class="tok-com"># 120</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — numpy provides SIMD under the hood</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-a = np.array([<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>, <span class="tok-num">6</span>, <span class="tok-num">7</span>, <span class="tok-num">8</span>], dtype=np.float32)
-b = np.array([<span class="tok-num">8</span>, <span class="tok-num">7</span>, <span class="tok-num">6</span>, <span class="tok-num">5</span>, <span class="tok-num">4</span>, <span class="tok-num">3</span>, <span class="tok-num">2</span>, <span class="tok-num">1</span>], dtype=np.float32)
-
-c = a + b       <span class="tok-com"># numpy calls SIMD kernels internally</span>
-d = a * b
-total = np.<span class="tok-fn">sum</span>(a)  <span class="tok-com"># 36.0</span>
-
-<span class="tok-com"># No fused multiply-add in standard numpy</span>
-<span class="tok-com"># Must use np.multiply/add separately or scipy</span>
-
-<span class="tok-com"># Dot product</span>
-result = np.dot(a, b)  <span class="tok-com"># 120.0</span>
-
-<span class="tok-com"># Key difference: numpy is a C library called from Python</span>
-<span class="tok-com"># Mojo SIMD is native to the language — zero FFI overhead</span></pre></div>
       </div>
     </div>
-    <p class="cap">Mojo's SIMD type is comptime-parameterized — the width and element type are baked in at compile time, generating optimal machine code.</p>
+    <p class="cap">Mojo's SIMD type is comptime-parameterized — the width and element type are baked in at compile time, generating optimal machine code. <code class="inline">numpy</code> gives you the same arithmetic through <code class="inline">a + b</code>, <code class="inline">np.sum(a)</code> and <code class="inline">np.dot(a, b)</code>, but each of those crosses the Python↔C boundary, and stock <code class="inline">numpy</code> has no fused multiply-add — the <code class="inline">.fma()</code> above is a single instruction the compiler emits for you.</p>
 
     <h3>DType: the type of types</h3>
     <p>The <code class="inline">DType</code> enum is how Mojo represents data types as first-class compile-time values. You use it when you need to write generic code that works across multiple numeric types without writing separate implementations for each one.</p>
 
     <div class="code-block">
       <div class="head">DType for generic numeric code</div>
-      <pre><code>def relu[dtype: DType](x: SIMD[dtype, 1]) -&gt; SIMD[dtype, 1]:
-    return max(x, 0)
+      <pre><span class="tok-com"># Write ONCE, works with any numeric type</span>
+<span class="tok-kw">def</span> <span class="tok-fn">relu</span>[<span class="tok-ty">dtype</span>: <span class="tok-ty">DType</span>](x: <span class="tok-ty">SIMD</span>[<span class="tok-ty">dtype</span>, <span class="tok-num">1</span>]) -&gt; <span class="tok-ty">SIMD</span>[<span class="tok-ty">dtype</span>, <span class="tok-num">1</span>]:
+    <span class="tok-kw">return</span> max(x, <span class="tok-num">0</span>)
 
-def relu_vec[dtype: DType, width: Int](x: SIMD[dtype, width]) -&gt; SIMD[dtype, width]:
-    return max(x, 0)
+<span class="tok-com"># Instantiate for different precisions</span>
+<span class="tok-kw">var</span> r1 = <span class="tok-fn">relu</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>](<span class="tok-num">-1.5</span>)
+<span class="tok-kw">var</span> r2 = <span class="tok-fn">relu</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float64</span>](<span class="tok-num">-1.5</span>)
+<span class="tok-kw">var</span> r3 = <span class="tok-fn">relu</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">bfloat16</span>](<span class="tok-num">-1.5</span>)
 
-def main():
-    # Write ONCE, works with any numeric type
-    # Instantiate for different precisions
-    var r1 = relu[DType.float32](-1.5)
-    var r2 = relu[DType.float64](-1.5)
-    var r3 = relu[DType.bfloat16](-1.5)
-    # SIMD-aware version — processes 8 values at once
-    var batch = SIMD[DType.float32, 8](
-        -1.0, 2.0, -3.0, 4.0, -5.0, 6.0, -7.0, 8.0
-    )
-    print(relu_vec[DType.float32, 8](batch))
-    # [0, 2, 0, 4, 0, 6, 0, 8]
-</code></pre>
+<span class="tok-com"># SIMD-aware version — processes 8 values at once</span>
+<span class="tok-kw">def</span> <span class="tok-fn">relu_vec</span>[<span class="tok-ty">dtype</span>: <span class="tok-ty">DType</span>, <span class="tok-ty">width</span>: Int](x: <span class="tok-ty">SIMD</span>[<span class="tok-ty">dtype</span>, <span class="tok-ty">width</span>]) -&gt; <span class="tok-ty">SIMD</span>[<span class="tok-ty">dtype</span>, <span class="tok-ty">width</span>]:
+    <span class="tok-kw">return</span> max(x, <span class="tok-num">0</span>)
+
+<span class="tok-kw">var</span> batch = <span class="tok-ty">SIMD</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>, <span class="tok-num">8</span>](
+    <span class="tok-num">-1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">-3.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">-5.0</span>, <span class="tok-num">6.0</span>, <span class="tok-num">-7.0</span>, <span class="tok-num">8.0</span>
+)
+print(<span class="tok-fn">relu_vec</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>, <span class="tok-num">8</span>](batch))
+<span class="tok-com"># [0, 2, 0, 4, 0, 6, 0, 8]</span></pre>
     </div>
 
     <div class="callout">
@@ -292,7 +254,7 @@ def main():
 
 <span class="tok-com"># Copying and moving are unified into __init__ overloads:</span>
 <span class="tok-com">#   Mojo synthesizes __init__(out self, *, copy: Self) for Copyable</span>
-<span class="tok-com">#   Mojo synthesizes __init__(out self, *, take: Self) for Movable</span>
+<span class="tok-com">#   Mojo synthesizes __init__(out self, *, deinit move: Self) for Movable</span>
 <span class="tok-com"># (the old __copyinit__/__moveinit__ spellings were removed pre-1.0)</span>
 
 <span class="tok-com"># Generic function constrained by traits</span>
@@ -336,7 +298,6 @@ print(<span class="tok-fn">mean</span>(int_vals))    <span class="tok-com"># 20<
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="comptime"><span class="sw"></span>comptime.mojo</div>
-        <div class="tab" data-lang="python" data-group="comptime"><span class="sw"></span>metaclass.py</div>
       </div>
       <div class="panes" data-group="comptime">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — comptime values and parameters</span>
@@ -349,9 +310,9 @@ print(<span class="tok-fn">mean</span>(int_vals))    <span class="tok-com"># 20<
 <span class="tok-kw">comptime</span>:
     print(<span class="tok-str">"This prints during compilation!"</span>)
     <span class="tok-kw">if</span> <span class="tok-ty">sys</span>.<span class="tok-ty">arch</span> == <span class="tok-str">"x86_64"</span>:
-        <span class="tok-kw">comptime</span> SIMD_WIDTH = <span class="tok-num">8</span>
+        alias SIMD_WIDTH = <span class="tok-num">8</span>
     <span class="tok-kw">else</span>:
-        <span class="tok-kw">comptime</span> SIMD_WIDTH = <span class="tok-num">4</span>
+        alias SIMD_WIDTH = <span class="tok-num">4</span>
 
 <span class="tok-com"># comptime parameters in functions</span>
 <span class="tok-kw">def</span> <span class="tok-fn">matrix_multiply</span>[<span class="tok-ty">M</span>: Int, <span class="tok-ty">N</span>: Int, <span class="tok-ty">K</span>: Int](
@@ -366,45 +327,23 @@ print(<span class="tok-fn">mean</span>(int_vals))    <span class="tok-com"># 20<
 <span class="tok-kw">comptime</span> msg = <span class="tok-str">"Hello"</span> + <span class="tok-str">", "</span> + <span class="tok-str">"World"</span>  <span class="tok-com"># resolved at compile time</span>
 
 <span class="tok-com"># Conditional compilation</span>
-<span class="tok-kw">comptime if</span> <span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>.is_floating_point():
-    <span class="tok-kw">comptime</span> default_dt = <span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>
+<span class="tok-kw">@parameter</span>
+<span class="tok-kw">if</span> <span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>.is_floating_point():
+    alias default_dt = <span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>
 <span class="tok-kw">else</span>:
-    <span class="tok-kw">comptime</span> default_dt = <span class="tok-ty">DType</span>.<span class="tok-ty">float64</span>
+    alias default_dt = <span class="tok-ty">DType</span>.<span class="tok-ty">float64</span>
 
 <span class="tok-com"># Compile-time loop unrolling</span>
 <span class="tok-kw">def</span> <span class="tok-fn">unrolled_sum</span>[<span class="tok-ty">N</span>: Int](data: <span class="tok-ty">Tensor</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>, <span class="tok-ty">N</span>]) -&gt; Float32:
     <span class="tok-kw">var</span> total: Float32 = <span class="tok-num">0</span>
-    <span class="tok-kw">comptime</span> UNROLL = <span class="tok-num">4</span>
+    <span class="tok-ty">alias</span> UNROLL = <span class="tok-num">4</span>
     <span class="tok-kw">for</span> i <span class="tok-kw">in</span> range(<span class="tok-num">0</span>, <span class="tok-ty">N</span>, UNROLL):
         <span class="tok-kw">for</span> j <span class="tok-kw">in</span> range(UNROLL):
             total += data[i + j]
     <span class="tok-kw">return</span> total</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — metaclasses and decorators</span>
-<span class="tok-com"># Python has no true compile-time execution</span>
-<span class="tok-com"># The closest equivalents are:</span>
-
-<span class="tok-com"># 1. Class-level computation at import time</span>
-<span class="tok-kw">class</span> <span class="ty">Config</span>:
-    PI = <span class="tok-num">3.14159265358979</span>
-    BUFFER_SIZE = <span class="tok-num">1024</span>
-
-<span class="tok-com"># 2. Metaclasses (very different from comptime)</span>
-<span class="tok-kw">class</span> <span class="ty">Meta</span>(type):
-    <span class="tok-kw">def</span> <span class="tok-fn">__new__</span>(mcs, name, bases, dict):
-        <span class="tok-com"># Runs when the class is DEFINED, not instantiated</span>
-        print(f<span class="tok-str">"Defining {name}"</span>)
-        <span class="tok-kw">return</span> <span class="tok-fn">super</span>().__new__(mcs, name, bases, dict)
-
-<span class="tok-com"># 3. import-time side effects</span>
-<span class="tok-kw">import</span> platform
-IS_X86 = platform.machine().endswith(<span class="tok-str">"64"</span>)
-SIMD_WIDTH = <span class="tok-num">8</span> <span class="tok-kw">if</span> IS_X86 <span class="tok-kw">else</span> <span class="tok-num">4</span>
-
-<span class="tok-com"># None of these generate optimized machine code</span>
-<span class="tok-com"># Python's "compile time" is just bytecode generation</span></pre></div>
       </div>
     </div>
-    <p class="cap">Mojo's comptime can execute arbitrary Mojo code during compilation — not just simple constant expressions.</p>
+    <p class="cap">Mojo's comptime can execute arbitrary Mojo code during compilation — not just simple constant expressions. Python's nearest neighbours all run at import time instead: a class body evaluated when the module loads, a <code class="inline">__new__</code> that fires when a class is <i>defined</i> rather than instantiated, or a module-level <code class="inline">platform.machine()</code> check picking a width. None of those unroll a loop or emit specialised machine code, which is what the <code class="inline">SIMD_WIDTH</code> branch above gets for free.</p>
 
     <div class="callout">
       <span class="lbl">The comptime mental model</span>
@@ -440,12 +379,12 @@ SIMD_WIDTH = <span class="tok-num">8</span> <span class="tok-kw">if</span> IS_X8
 
     <div class="quiz">
       <div class="qlbl">✅ Quick check</div>
-      <div class="qtext">What happens when you declare <code>comptime x = 42</code> vs <code>var x = 42</code>?</div>
+      <div class="qtext">What happens when you declare <code>alias x = 42</code> vs <code>var x = 42</code>?</div>
       <div class="opts" id="quiz2">
-        <button class="opt" data-correct="false">They are identical — comptime is just syntactic sugar</button>
-        <button class="opt" data-correct="false">comptime creates a stack variable, var creates a heap variable</button>
-        <button class="opt" data-correct="true">comptime is resolved at compile time and baked into the binary; var is a runtime variable</button>
-        <button class="opt" data-correct="false">comptime makes the variable immutable at runtime</button>
+        <button class="opt" data-correct="false">They are identical — alias is just syntactic sugar</button>
+        <button class="opt" data-correct="false">alias creates a stack variable, var creates a heap variable</button>
+        <button class="opt" data-correct="true">alias is resolved at compile time and baked into the binary; var is a runtime variable</button>
+        <button class="opt" data-correct="false">alias makes the variable immutable at runtime</button>
       </div>
       <div class="feedback" id="feedback2"></div>
     </div>
@@ -468,9 +407,9 @@ SIMD_WIDTH = <span class="tok-num">8</span> <span class="tok-kw">if</span> IS_X8
     <div class="exercises">
       <ol>
         <li>Write a generic function <code class="inline">elementwise_max</code> that takes two <code class="inline">SIMD</code> vectors of the same type and width, and returns a new vector containing the element-wise maximum. Test it with both <code class="inline">Float32</code> and <code class="inline">Int32</code>.</li>
-        <li>Use a <code class="inline">comptime</code> block to detect the platform architecture and set a <code class="inline">comptime</code> constant <code class="inline">TENSOR_WIDTH</code> to 8 on x86_64 and 4 on other platforms. Then write a function that creates a <code class="inline">SIMD</code> vector of that width filled with ones.</li>
+        <li>Use a <code class="inline">comptime</code> block to detect the platform architecture and set an alias <code class="inline">TENSOR_WIDTH</code> to 8 on x86_64 and 4 on other platforms. Then write a function that creates a <code class="inline">SIMD</code> vector of that width filled with ones.</li>
         <li>Define a trait <code class="inline">Differentiable</code> with a method <code class="inline">derivative</code> that returns a <code class="inline">Float64</code>. Implement it for at least two structs (e.g., <code class="inline">Polynomial</code> and <code class="inline">Exponential</code>), then write a generic function that takes any <code class="inline">Differentiable</code> type and evaluates its derivative at a given point.</li>
-        <li>Write a comptime function <code class="inline">factorial</code> that computes N! at compile time, then use it to create a <code class="inline">comptime</code> constant that holds the value of 10!.</li>
+        <li>Write a comptime function <code class="inline">factorial</code> that computes N! at compile time, then use it to create an alias that holds the value of 10!.</li>
       </ol>
     </div>
   </section>

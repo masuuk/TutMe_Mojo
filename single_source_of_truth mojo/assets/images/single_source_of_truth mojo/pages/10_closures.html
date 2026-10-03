@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Closures · Mojo v1 The Language Manual</title>
+<meta name="description" content="Capturing state, reference semantics, and escaping values.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">10</span></nav><h1>Closures</h1>
+<p class="dek">Capturing state, reference semantics, and escaping values.</p><p class="byline">Chapter 10 · 2,275 words · 18 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/functions/closures/" rel="noopener noreferrer" data-external>docs source</a></p>
+<aside class="callout callout--caution"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">▲</span>Evolving feature</p><div class="callout__body"><p>Closures are a longstanding part of Mojo, used throughout the standard
+library and kernel infrastructure.</p><p>Mojo's updated capture-list syntax is now available. Code examples
+on this page reflect the redesigned compiler behavior.</p></div></aside>
+<p>A <em>closure</em> is a function bundled together with values from its surrounding
+scope. You define it in one place and pass it somewhere else to run. The
+closure carries captured data with it. The compiler transforms it to a type
+with both behavior and storage. The code executing the closure doesn't
+need to know where that data came from.</p>
+<p>This allows closures to carry state and configuration into code that
+executes later or elsewhere. Configuration uses capture conventions to
+specify how the closure interacts with captured values, choosing between
+read-only references, mutable references, copies, or moves.</p>
+<p>Mojo closures look like nested functions, but they use a special
+syntax. Curly braces after the argument list form a <em>capture list</em> that
+declares which outer values the closure captures and how it interacts
+with them.</p>
+<p>The capture list is what distinguishes a closure from an ordinary nested
+function. It gives the compiler the information needed to manage captured
+values safely and eliminate ambiguity. When you specify how a value is
+captured, the compiler can enforce correct usage:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> multiplier <span class="tk-operator">=</span> <span class="tk-number">3</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">scale</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span>imm multiplier<span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> x <span class="tk-operator">*</span> multiplier</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>scale<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 15</span></span>
+</code></pre></figure>
+<p><code>scale</code> is a closure. It captures <code>multiplier</code> from the enclosing
+scope using its capture list (<code>{imm multiplier}</code>). When you call
+<code>scale(5)</code>, the closure multiplies <code>5</code> by the captured value of
+<code>multiplier</code> and returns <code>15</code>.</p>
+<p>Without a capture list, the inner function can't see anything outside its
+own arguments.</p>
+<h2 class="h h--2" data-level="2" id="why-closures-matter">Why closures matter<a aria-label="Link to Why closures matter" class="h__link" href="#why-closures-matter"></a></h2>
+<p>Closures package behavior together with the data that behavior
+needs. You define the work in one place, then pass that package for
+execution later, elsewhere, or on different hardware.</p>
+<p>This separation between defining work and executing work is central
+to how Mojo expresses computation.</p>
+<h2 class="h h--2" data-level="2" id="the-capture-list">The capture list<a aria-label="Link to The capture list" class="h__link" href="#the-capture-list"></a></h2>
+<p>A capture list such as <code>{imm x, mut y}</code> tells the compiler how the
+closure captures and uses values from the surrounding scope.</p>
+<p>For this list, <code>x</code> is captured as an immutable reference. The closure
+can read it but can't modify it. <code>y</code> is captured as a mutable
+reference, so the closure can modify it and those changes are visible
+in the outer scope.</p>
+<p>Mojo requires captures to be explicit. In a systems language, knowing
+exactly which values a closure holds, and whether it reads, copies, or
+takes ownership of them, matters for both performance and correctness.</p>
+<h2 class="h h--2" data-level="2" id="capture-by-immutable-reference-imm">Capture by immutable reference: <code>imm</code><a aria-label="Link to Capture by immutable reference: imm" class="h__link" href="#capture-by-immutable-reference-imm"></a></h2>
+<p>Use <code>imm</code> when the closure needs to see a value but not change it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> threshold <span class="tk-operator">=</span> <span class="tk-number">100</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">is_over</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span>imm threshold<span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> x <span class="tk-operator">&gt;</span> threshold</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>is_over<span class="tk-punctuation">(</span><span class="tk-number">50</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>is_over<span class="tk-punctuation">(</span><span class="tk-number">200</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+</code></pre></figure>
+<p>The closure reads an immutable reference to <code>threshold</code>. It sees the
+current value each time it's called, including changes made after the
+closure was created:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> limit <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">check</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span>imm limit<span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> x <span class="tk-operator">&lt;</span> limit</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>check<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="8">    limit <span class="tk-operator">=</span> <span class="tk-number">3</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>check<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False  (sees updated limit)</span></span>
+</code></pre></figure>
+<p>Because <code>imm</code> captures a reference, the closure reflects the
+live state of the original value.</p>
+<p>To capture every used outer value by immutable reference without
+naming each one, use <code>{imm}</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> b <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">sum_ab</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span>imm<span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> a <span class="tk-operator">+</span> b</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>sum_ab<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 3</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="capture-by-mutable-reference-mut">Capture by mutable reference: <code>mut</code><a aria-label="Link to Capture by mutable reference: mut" class="h__link" href="#capture-by-mutable-reference-mut"></a></h2>
+<p>Use <code>mut</code> when a closure needs to modify a captured value and make
+those changes visible in the enclosing scope:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> total <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">accumulate</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">mut</span> total<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">        total <span class="tk-operator">+=</span> x</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7">    accumulate<span class="tk-punctuation">(</span><span class="tk-number">10</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8">    accumulate<span class="tk-punctuation">(</span><span class="tk-number">20</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>total<span class="tk-punctuation">)</span> <span class="tk-comment"># 30</span></span>
+</code></pre></figure>
+<p>Changes to <code>total</code> inside the closure modify the original variable
+directly. This is a mutable reference, not a copy.</p>
+<p>The implicit form <code>{mut}</code> captures every used outer value with a
+mutable reference:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> count <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> items <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">record</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">mut</span><span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">        items<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">        count <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9">    record<span class="tk-punctuation">(</span><span class="tk-string">"alpha"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10">    record<span class="tk-punctuation">(</span><span class="tk-string">"beta"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span> <span class="tk-comment"># 2</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>items<span class="tk-punctuation">)</span> <span class="tk-comment"># ['alpha', 'beta']</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="capture-by-copy-var">Capture by copy: <code>var</code><a aria-label="Link to Capture by copy: var" class="h__link" href="#capture-by-copy-var"></a></h2>
+<p>Use <code>var</code> when the closure needs its own independent copy of a
+value. Changes to the original don't affect the closure, and
+changes inside the closure don't affect the original.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> snapshot_val <span class="tk-operator">=</span> <span class="tk-number">42</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">frozen</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">var</span> snapshot_val<span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> snapshot_val</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7">    snapshot_val <span class="tk-operator">=</span> <span class="tk-number">999</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>frozen<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 42  (captured the value at definition time)</span></span>
+</code></pre></figure>
+<p>The closure copied <code>snapshot_val</code> when it was created. Later
+changes to <code>snapshot_val</code> in the outer scope don't affect the
+closure's copy.</p>
+<p>The implicit form <code>{var}</code> copies every used outer value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> y <span class="tk-operator">=</span> <span class="tk-number">20</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">snap</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">var</span><span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> x <span class="tk-operator">+</span> y</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8">    x <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="9">    y <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>snap<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 30  (uses copied values)</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Copy captures call the value's copy initializer at the point
+where the closure is defined. For types with expensive copies
+(large lists, strings with allocations), prefer <code>imm</code> or <code>mut</code>
+when you don't need an independent copy.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="move-capture-var-name">Move capture: <code>var name^</code><a aria-label="Link to Move capture: var name^" class="h__link" href="#move-capture-var-name"></a></h2>
+<p>Use <code>var name^</code> to transfer ownership of a value into the closure.
+The closure consumes the outer binding, which can't be used after
+the closure is created:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> data<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">take_data</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">var</span> data<span class="tk-operator">^</span><span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>data<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7">    take_data<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 2, 3]</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># data can't be used here: ownership transferred to the closure</span></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># print(data)  # Uncomment for error: 'data' is uninitialized after move</span></span>
+</code></pre></figure>
+<p>Move capture avoids a copy entirely. The value moves into the
+closure's storage. This is useful for types that are expensive to
+copy or for transferring unique ownership.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>The <code>^</code> transfer operator only works with <code>var</code> or a bare name in
+capture lists. <code>{mut name^}</code>, <code>{ref name^}</code>, and <code>{imm name^}</code> are
+compiler errors.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="copyable-closures-var">Copyable closures: <code>var^</code><a aria-label="Link to Copyable closures: var^" class="h__link" href="#copyable-closures-var"></a></h2>
+<p>The <code>{var^}</code> capture list moves all referenced outer values into the
+closure. When the captured types are <code>Copyable</code>, the closure value also
+becomes copyable.</p>
+<p>This allows the closure itself to be assigned to new variables or
+passed by value.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> label <span class="tk-operator">=</span> <span class="tk-string">"sensor-1"</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">tag</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">var</span><span class="tk-operator">^</span><span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> label</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> also_tag <span class="tk-operator">=</span> tag  <span class="tk-comment"># copies the closure (and its captures)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>tag<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># sensor-1</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>also_tag<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># sensor-1</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>When you copy a closure created with <code>{var^}</code>, each captured value
+is copied again through its copy initializer. For closures that
+capture large or expensive values, be aware of the cost.</p></div></aside>
+<p>Without <code>{var^}</code>, closures can't be assigned to new variables or
+copied.</p>
+<h2 class="h h--2" data-level="2" id="caller-determined-mutability-ref">Caller-determined mutability: <code>ref</code><a aria-label="Link to Caller-determined mutability: ref" class="h__link" href="#caller-determined-mutability-ref"></a></h2>
+<p>Use <code>{ref name}</code> when the closure's mutability depends on the
+caller's context. If the caller provides a mutable reference, the
+closure captures mutably. If immutable, the closure captures
+immutably.</p>
+<p>The following example uses <code>comptime if origin_of(items).mut</code> to inspect
+how the closure captures the value at each call site:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">show_mutability</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span> items<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">report</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">ref</span> items<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> origin_of<span class="tk-punctuation">(</span>items<span class="tk-punctuation">)</span><span class="tk-punctuation">.</span><span class="tk-keyword">mut</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"mut"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"immut"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">    report<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-comment"># Show immutability: `xs` uses the default `imm` argument convention</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">def</span> <span class="tk-function">from_imm</span><span class="tk-punctuation">(</span>xs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11">    show_mutability<span class="tk-punctuation">(</span>xs<span class="tk-punctuation">)</span> <span class="tk-comment"># xs is an immutable reference here</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"><span class="tk-comment"># Show mutability: `xs` uses the `mut` argument convention</span></span>
+<span class="cl" data-line="14"><span class="tk-keyword">def</span> <span class="tk-function">from_mut</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> xs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15">    show_mutability<span class="tk-punctuation">(</span>xs<span class="tk-punctuation">)</span> <span class="tk-comment"># xs is a mutable reference here</span></span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">var</span> nums<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">10</span><span class="tk-punctuation">,</span> <span class="tk-number">20</span><span class="tk-punctuation">,</span> <span class="tk-number">30</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="19">    from_imm<span class="tk-punctuation">(</span>nums<span class="tk-punctuation">)</span> <span class="tk-comment"># immut</span></span>
+<span class="cl" data-line="20">    from_mut<span class="tk-punctuation">(</span>nums<span class="tk-punctuation">)</span> <span class="tk-comment"># mut</span></span>
+</code></pre></figure>
+<p><code>{ref name}</code> doesn't choose a mutability. It shares the captured <code>name</code>'s
+existing origin. The mutability is whatever that origin already carries,
+decided wherever <code>name</code> was bound. This is often the function's own <code>ref</code>
+parameter, ultimately resolved at the call site.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p><code>ref</code> captures are an advanced feature for writing parameterized code
+that works across mutability contexts. For most closures, <code>imm</code>
+or <code>mut</code> is the right choice.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="empty-capture-list-">Empty capture list: <code>{}</code><a aria-label="Link to Empty capture list: {}" class="h__link" href="#empty-capture-list-"></a></h2>
+<p>An empty capture list means the closure uses nothing from its surrounding
+scope. It's a plain function that happens to be defined inside
+another function:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">doubled</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> x <span class="tk-operator">*</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>doubled<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 10</span></span>
+</code></pre></figure>
+<p>The body may only use its own arguments. Referencing any outer value is a
+compile error:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># This example doesn't compile</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-number">42</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">wrong</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">)</span> <span class="tk-comment"># error: no capture convention for 'a'</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="mixing-capture-conventions">Mixing capture conventions<a aria-label="Link to Mixing capture conventions" class="h__link" href="#mixing-capture-conventions"></a></h2>
+<p>A capture list is a comma-separated sequence of independent entries.
+Each entry specifies its own convention, and conventions don't carry
+over from one entry to the next.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> config <span class="tk-operator">=</span> <span class="tk-string">"prod"</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> count <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> label <span class="tk-operator">=</span> <span class="tk-string">"run-1"</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">process</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span>imm config<span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> count<span class="tk-punctuation">,</span> <span class="tk-keyword">var</span> label<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">        count <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>config<span class="tk-punctuation">,</span> count<span class="tk-punctuation">,</span> label<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10">    process<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prod 1 run-1</span></span>
+<span class="cl" data-line="11">    label <span class="tk-operator">=</span> <span class="tk-string">"run-2"</span></span>
+<span class="cl" data-line="12">    process<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prod 2 run-1  (label was copied at definition time)</span></span>
+</code></pre></figure>
+<p>Each entry is self-contained: <code>imm config</code> is a read-only reference,
+<code>mut count</code> is a mutable reference, and <code>var label</code> is a copy. A bare name
+without a convention keyword defaults to <code>imm</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">show</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span>x<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span> <span class="tk-comment"># same as {imm x}</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7">    show<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 10</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="setting-a-default-convention">Setting a default convention<a aria-label="Link to Setting a default convention" class="h__link" href="#setting-a-default-convention"></a></h3>
+<p>A convention list can mix implicit and explicit entries, such as
+<code>{imm, mut count, var label}</code>. You may use at most one implicit
+entry per capture list, and you can place the entries in any order.
+<code>{mut count, var label, imm}</code> is equivalent to
+<code>{var label, imm, mut count}</code>.</p>
+<p>For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> b <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> z <span class="tk-operator">=</span> <span class="tk-string">"snapshot"</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">mixed</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">mut</span><span class="tk-punctuation">,</span> <span class="tk-keyword">var</span> z<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">        a <span class="tk-operator">+=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="8">        b <span class="tk-operator">+=</span> <span class="tk-number">20</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">,</span> b<span class="tk-punctuation">,</span> z<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11">    mixed<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 11 22 snapshot</span></span>
+<span class="cl" data-line="12">    z <span class="tk-operator">=</span> <span class="tk-string">"changed"</span></span>
+<span class="cl" data-line="13">    mixed<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 21 42 snapshot</span></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># z was copied at def-time</span></span>
+<span class="cl" data-line="15"> <span class="tk-comment"># Changes to outer z don't reach the closure</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="closures-in-practice">Closures in practice<a aria-label="Link to Closures in practice" class="h__link" href="#closures-in-practice"></a></h2>
+<h3 class="h h--3" data-level="3" id="configurable-behavior">Configurable behavior<a aria-label="Link to Configurable behavior" class="h__link" href="#configurable-behavior"></a></h3>
+<p>Closures let you build specialized behavior from general-purpose parts.
+The following parameterized function accepts any callable with the expected
+signature. The closure carries the configuration:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># `G` matches any `def(String) -&gt; None` callable</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> greet_all<span class="tk-punctuation">[</span>G<span class="tk-punctuation">:</span> <span class="tk-keyword">def</span><span class="tk-punctuation">(</span>String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>names<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> greet<span class="tk-punctuation">:</span> G<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">for</span> n <span class="tk-keyword">in</span> names<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4">        greet<span class="tk-punctuation">(</span>n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> names<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-string">"Alice"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Bob"</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> greeting <span class="tk-operator">=</span> <span class="tk-string">"Hello"</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">def</span> <span class="tk-function">greeter</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span>imm greeting<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>greeting <span class="tk-operator">+</span> <span class="tk-string">", "</span> <span class="tk-operator">+</span> name <span class="tk-operator">+</span> <span class="tk-string">"!"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13">    greet_all<span class="tk-punctuation">(</span>names<span class="tk-punctuation">,</span> greeter<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># Hello, Alice!</span></span>
+<span class="cl" data-line="15"> <span class="tk-comment"># Hello, Bob!</span></span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17">    greeting <span class="tk-operator">=</span> <span class="tk-string">"Hi"</span></span>
+<span class="cl" data-line="18">    greet_all<span class="tk-punctuation">(</span>names<span class="tk-punctuation">,</span> greeter<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"> <span class="tk-comment"># Hi, Alice!</span></span>
+<span class="cl" data-line="20"> <span class="tk-comment"># Hi, Bob!</span></span>
+</code></pre></figure>
+<p>The inner function <code>greeter</code> captures <code>greeting</code> as an immutable read-only
+reference.</p>
+<p><code>greet_all</code> doesn't know anything about the greeting itself. It only
+knows how to call a function with the type
+<code>def(String) -&gt; None</code>.</p>
+<p>Because the closure captures <code>greeting</code> by reference instead of by
+copy, changes to <code>greeting</code> between calls are visible inside the
+closure.</p>
+<h3 class="h h--3" data-level="3" id="accumulating-state">Accumulating state<a aria-label="Link to Accumulating state" class="h__link" href="#accumulating-state"></a></h3>
+<p>Closures with <code>mut</code> captures can build up results across
+multiple calls.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> log <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">record</span><span class="tk-punctuation">(</span>event<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">mut</span> log<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">        log<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>event<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7">    record<span class="tk-punctuation">(</span><span class="tk-string">"started"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8">    record<span class="tk-punctuation">(</span><span class="tk-string">"processed item"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9">    record<span class="tk-punctuation">(</span><span class="tk-string">"finished"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">for</span> entry <span class="tk-keyword">in</span> log<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>entry<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-comment"># started</span></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># processed item</span></span>
+<span class="cl" data-line="15"> <span class="tk-comment"># finished</span></span>
+</code></pre></figure>
+<p>The closure <code>record</code> mutates <code>log</code> in the outer scope. Each call
+appends to the same list without passing it as an argument.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/functions/closures/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/functions/closures/</a>, saved Thu, 01 Oct 2026 15:39:09 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/09_lambda-expressions.html"><span class="pager__dir">← Previous</span><span class="pager__title">Lambda expressions</span></a><a class="pager__link pager__link--next" href="../pages/11_control-flow.html"><span class="pager__dir">Next →</span><span class="pager__title">Control flow</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#why-closures-matter">Why closures matter</a></li><li class="rail__depth-2"><a href="#the-capture-list">The capture list</a></li><li class="rail__depth-2"><a href="#capture-by-immutable-reference-imm">Capture by immutable reference: imm</a></li><li class="rail__depth-2"><a href="#capture-by-mutable-reference-mut">Capture by mutable reference: mut</a></li><li class="rail__depth-2"><a href="#capture-by-copy-var">Capture by copy: var</a></li><li class="rail__depth-2"><a href="#move-capture-var-name">Move capture: var name^</a></li><li class="rail__depth-2"><a href="#copyable-closures-var">Copyable closures: var^</a></li><li class="rail__depth-2"><a href="#caller-determined-mutability-ref">Caller-determined mutability: ref</a></li><li class="rail__depth-2"><a href="#empty-capture-list-">Empty capture list: {}</a></li><li class="rail__depth-2"><a href="#mixing-capture-conventions">Mixing capture conventions</a></li><li class="rail__depth-2"><a href="#closures-in-practice">Closures in practice</a></li><li class="rail__depth-3"><a href="#setting-a-default-convention">Setting a default convention</a></li><li class="rail__depth-3"><a href="#configurable-behavior">Configurable behavior</a></li><li class="rail__depth-3"><a href="#accumulating-state">Accumulating state</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#why-closures-matter">Why closures matter</a></li><li class="rail__depth-2"><a href="#the-capture-list">The capture list</a></li><li class="rail__depth-2"><a href="#capture-by-immutable-reference-imm">Capture by immutable reference: imm</a></li><li class="rail__depth-2"><a href="#capture-by-mutable-reference-mut">Capture by mutable reference: mut</a></li><li class="rail__depth-2"><a href="#capture-by-copy-var">Capture by copy: var</a></li><li class="rail__depth-2"><a href="#move-capture-var-name">Move capture: var name^</a></li><li class="rail__depth-2"><a href="#copyable-closures-var">Copyable closures: var^</a></li><li class="rail__depth-2"><a href="#caller-determined-mutability-ref">Caller-determined mutability: ref</a></li><li class="rail__depth-2"><a href="#empty-capture-list-">Empty capture list: {}</a></li><li class="rail__depth-2"><a href="#mixing-capture-conventions">Mixing capture conventions</a></li><li class="rail__depth-2"><a href="#closures-in-practice">Closures in practice</a></li><li class="rail__depth-3"><a href="#setting-a-default-convention">Setting a default convention</a></li><li class="rail__depth-3"><a href="#configurable-behavior">Configurable behavior</a></li><li class="rail__depth-3"><a href="#accumulating-state">Accumulating state</a></li></ol>
+<p class="rail__meta">Chapter 10 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -183,13 +183,12 @@ Temperature Analyzer</code></pre>
   </section>
 
   <section id="first-look">
-    <h2>A First Look: Same Algorithm, Two Languages</h2>
-    <p>Mean Squared Error computation in Python and Mojo:</p>
+    <h2>A First Look: The Same Algorithm in Mojo</h2>
+    <p>Mean Squared Error, written in Mojo 1.x:</p>
 
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -201,13 +200,11 @@ Temperature Analyzer</code></pre>
     <span class="kw">var</span> diff = a - b
     <span class="kw">var</span> squared = diff ** <span class="num">2.0</span>
     <span class="kw">return</span> squared.sum() / <span class="fn">Float32</span>(a.size)</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">mse</span>(a: np.ndarray, b: np.ndarray) -&gt; float:
-    <span class="kw">assert</span> a.shape == b.shape
-    <span class="kw">return</span> np.mean((a - b) ** <span class="num">2</span>)</code></pre>
       </div>
     </div>
+    <p class="note">The three-line NumPy form (<code>np.mean((a - b) ** 2)</code>) reaches the
+    same answer, but it dispatches into C and the surrounding function carries no compile-time
+    types. Here the shapes, dtypes and reduction are all checked before the program runs.</p>
   </section>
 
   <section id="interop">
@@ -218,11 +215,17 @@ Temperature Analyzer</code></pre>
       <div class="tabs"><div class="tab active" data-target="interop-mojo">Mojo</div></div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="interop-mojo"><code><span class="kw">from</span> std.python <span class="kw">import</span> Python, PythonObject
-<span class="kw">from</span> std.python.numpy <span class="kw">import</span> copy_to_numpy_array
+        <pre class="code-block active" id="interop-mojo"><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
+
+<span class="com"># Mojo has no std.python.numpy, so build the Python-side list by hand.</span>
+<span class="kw">def</span> <span class="fn">to_python_list</span>(data: <span class="type">List</span>[Float64]) <span class="kw">raises</span>:
+    <span class="kw">var</span> out = Python.<span class="fn">list</span>()
+    <span class="kw">for</span> v <span class="kw">in</span> data:
+        out.<span class="fn">append</span>(v)
+    <span class="kw">return</span> out
 
 <span class="kw">var</span> np = Python.<span class="fn">import_module</span>(<span class="str">"numpy"</span>)
-<span class="kw">var</span> pytemps = <span class="fn">copy_to_numpy_array</span>(temps)   <span class="com"># zero-copy handoff</span>
+<span class="kw">var</span> pytemps = np.<span class="fn">array</span>(<span class="fn">to_python_list</span>(temps))
 <span class="kw">var</span> std_dev = np.<span class="fn">std</span>(pytemps)
 <span class="fn">print</span>(<span class="str">"Temperature standard deviation:"</span>, std_dev)</code></pre>
       </div>
@@ -234,7 +237,7 @@ Temperature Analyzer</code></pre>
   <section id="milestone">
     <h2>The 1.0 Milestone</h2>
     <p>Mojo 1.x shipped with source stability in 2026, and the compiler, standard library, and toolchain are open source under Apache 2.0 (with LLVM exceptions) in the <code>modular/modular</code> GitHub repository. For a data scientist, that matters more than a version number: the language you're betting a pipeline on is now inspectable, forkable, and community-driven.</p>
-    <p>The 1.0 release also settled the syntax this series teaches: <code>def</code> is the one function keyword (<code>fn</code> removed), <code>var</code> is mandatory (<code>let</code> removed), <code>mut</code> replaces <code>inout</code>, <code>comptime</code> replaces <code>alias</code>, and t-strings (<code>t"...{expr}..."</code>) give you interpolation without f-string allocation churn.</p>
+    <p>The 1.0 release also settled the syntax this series teaches: <code>def</code> for every function, <code>var</code> mandatory for local bindings, <code>mut</code> for mutable arguments, <code>comptime</code> for compile-time constants, and t-strings (<code>t"...{expr}..."</code>) that give you interpolation without f-string allocation churn.</p>
   </section>
 
   <section id="quiz">

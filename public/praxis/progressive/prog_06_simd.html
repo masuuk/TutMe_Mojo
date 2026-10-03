@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -200,7 +200,7 @@ footer a:hover{text-decoration:underline}
 <div class="hero">
 <a class="backlink" href="../../index.html">&larr; TutMe🔥 Learning Hub</a><br>
 <a class="backlink" href="../index.html">&larr; Praxis shelf</a>
-<div><span class="badge">MOJO 1.0 &bull; PRAXIS &bull; PROGRESSIVE DRILLS</span></div>
+<div><span class="badge">MOJO 1.x &bull; PRAXIS &bull; PROGRESSIVE DRILLS</span></div>
 <h1>SIMD Vector Arithmetic</h1>
 <p class="subtitle">Learn by doing. Start with a single SIMD lane and progressively move toward multi-lane arithmetic, reductions and why vectorization pays.</p>
 </div>
@@ -273,7 +273,7 @@ footer a:hover{text-decoration:underline}
 <div id="f2" class="feedback"></div>
 <div id="s2" class="solution">
 <strong>Solution</strong>
-<pre><code>[11.0, 22.0]</code></pre>
+<pre><code>[11, 22]</code></pre>
 <p>Addition is lane-wise: lane 0 gives 1+10 = 11, lane 1 gives 2+20 = 22.</p>
 </div>
 </section>
@@ -282,12 +282,12 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">3</span>Level 3 — Scalar Broadcast</h2>
 <div class="meta"><span class="tag">Intermediate</span><span class="tag">Broadcast</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
-<pre><code>def main():
-    var v = SIMD[DType.float64, 4](2.0, 4.0, 6.0, 8.0)
-    print(v * 0.5)</code></pre>
+<pre><code><span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> v = <span class="tp">SIMD</span>[<span class="tp">DType</span>.float64, 3](2.0, 4.0, 6.0)
+    <span class="fn">print</span>(v * 0.5)</code></pre>
 <textarea id="a3" placeholder="Write the output or answer here..." onkeydown="onKey(event,3,'[1, 2, 3]')"></textarea>
 <div class="btnrow">
-<button class="primary" onclick="check(3,'[1.0, 2.0, 3.0, 4.0]')">Check Answer</button>
+<button class="primary" onclick="check(3,'[1, 2, 3]')">Check Answer</button>
 <button class="secondary" onclick="show(3)">Show Solution</button>
 <button class="ghost" id="hintbtn3" onclick="showHint(3)" style="display:none">💡 Hint</button>
 <span class="attempts" id="att3"></span>
@@ -296,8 +296,8 @@ footer a:hover{text-decoration:underline}
 <div id="f3" class="feedback"></div>
 <div id="s3" class="solution">
 <strong>Solution</strong>
-<pre><code>[1.0, 2.0, 3.0, 4.0]</code></pre>
-<p>The scalar 0.5 broadcasts across all four lanes, halving every element at once.</p>
+<pre><code>[1, 2, 3]</code></pre>
+<p>The scalar 0.5 broadcasts across all three lanes, halving every element at once.</p>
 </div>
 </section>
 
@@ -328,23 +328,23 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">5</span>Level 5 — Dot Product in One Line</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Dot Product</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
-<pre><code>def main():
-    var a = SIMD[DType.float64, 4](1.0, 2.0, 3.0, 4.0)
-    var b = SIMD[DType.float64, 4](4.0, 5.0, 6.0, 7.0)
-    print((a * b).reduce_add())</code></pre>
+<pre><code><span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> a = <span class="tp">SIMD</span>[<span class="tp">DType</span>.float64, 3](1.0, 2.0, 3.0)
+    <span class="kw">var</span> b = <span class="tp">SIMD</span>[<span class="tp">DType</span>.float64, 3](4.0, 5.0, 6.0)
+    <span class="fn">print</span>((a * b).<span class="fn">reduce_add</span>())</code></pre>
 <textarea id="a5" placeholder="Write the output or answer here..." onkeydown="onKey(event,5,'32')"></textarea>
 <div class="btnrow">
-<button class="primary" onclick="check(5,'60')">Check Answer</button>
+<button class="primary" onclick="check(5,'32')">Check Answer</button>
 <button class="secondary" onclick="show(5)">Show Solution</button>
 <button class="ghost" id="hintbtn5" onclick="showHint(5)" style="display:none">💡 Hint</button>
 <span class="attempts" id="att5"></span>
 </div>
-<div id="h5" class="hint">First multiply lane-wise, then reduce: compute 1·4 + 2·5 + 3·6 + 4·7. No explicit loop is involved.</div>
+<div id="h5" class="hint">First multiply lane-wise, then reduce: compute 1·4 + 2·5 + 3·6. No explicit loop is involved.</div>
 <div id="f5" class="feedback"></div>
 <div id="s5" class="solution">
 <strong>Solution</strong>
-<pre><code>60.0</code></pre>
-<p>Lane-wise multiply gives [4, 10, 18, 28]; the reduction sums them to 60 — the dot product with zero explicit loops.</p>
+<pre><code>32.0</code></pre>
+<p>Lane-wise multiply gives [4, 10, 18]; the reduction sums them to 32 — the dot product with zero explicit loops.</p>
 </div>
 </section>
 
@@ -352,14 +352,13 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">6</span>Level 6 — Expert Challenge</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Code Reasoning Modification</span></div>
 <p><strong>Challenge:</strong> Rewrite the scalar loop as one vector expression so it prints the same mean of 2, 4, 6, 8. Verify: what is printed?</p>
-<pre><code>from std.collections import List
+<pre><code><span class="kw">from</span> std.collections <span class="kw">import</span> <span class="tp">List</span>
 
-def main():
-    var total = 0.0
-    var xs: List[Float64] = [2.0, 4.0, 6.0, 8.0]
-    for x in xs:
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> total = 0.0
+    <span class="kw">for</span> x <span class="kw">in</span> <span class="tp">List</span>[<span class="tp">Float64</span>](2.0, 4.0, 6.0, 8.0):
         total += x
-    print(total / 4.0)</code></pre>
+    <span class="fn">print</span>(total / 4.0)</code></pre>
 <textarea id="a6" placeholder="Write the output or answer here..." onkeydown="onKey(event,6,'5')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(6,'5')">Check Answer</button>
@@ -401,7 +400,10 @@ def main():
 
 <footer>
 Mojo 1.x Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_05_structs.html">&larr; Previous: Structs, Traits &amp; Fieldwise Init</a><br><a href="prog_07_regression.html">Next: Covariance &amp; the Regression Line &rarr;</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="prog_05_structs.html">← Previous</a> <a href="progressive.html">All 13 drills</a> <a href="prog_07_regression.html">Next drill →</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a>
 </footer>
 
 <script>

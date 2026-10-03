@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Operators · Mojo v1 The Language Manual</title>
+<meta name="description" content="Arithmetic, comparison, bitwise, and boolean logic.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">07</span></nav><h1>Operators</h1>
+<p class="dek">Arithmetic, comparison, bitwise, and boolean logic.</p><p class="byline">Chapter 07 · 1,997 words · 30 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/operators/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Operators are symbols and keywords that act on values. They support
+addition, comparison, bitwise operations, and boolean logic using operator
+syntax instead of method calls.</p>
+<p>Mojo's operator syntax mirrors Python. Symbols, precedence, and
+associativity use Python conventions, so most behavior will feel familiar
+if you've used Python, C, Rust, or similar languages.</p>
+<p>That said, a few details are specific to Mojo. Boolean operators use words
+(<code>and</code>, <code>or</code>, <code>not</code>) instead of symbols like <code>&amp;&amp;</code> and <code>||</code>. The ternary
+expression places the condition in the middle. The caret (<code>^</code>) serves as
+both bitwise XOR and the transfer sigil for ownership and memory management.</p>
+<h2 class="h h--2" data-level="2" id="arithmetic">Arithmetic<a aria-label="Link to Arithmetic" class="h__link" href="#arithmetic"></a></h2>
+<p>Standard arithmetic operators match what you see in most languages:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">7</span> <span class="tk-operator">+</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 10, add</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">7</span> <span class="tk-operator">-</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 4, subtract</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">7</span> <span class="tk-operator">*</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 21, multiply</span></span>
+</code></pre></figure>
+<p>Exponentiation uses two stars (<code>**</code>) and not a caret (<code>^</code>). If you prefer
+a function form, call <code>pow(base, exponent)</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">2</span> <span class="tk-operator">**</span> <span class="tk-number">8</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 256 (exponentiation)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="unary-symbols">Unary symbols<a aria-label="Link to Unary symbols" class="h__link" href="#unary-symbols"></a></h3>
+<p>Three prefix operators apply to single values. Place the operator to the
+immediate left of the value without spaces:</p>
+<ul>
+<li class=""><code>-x</code> negates (<code>-7</code>, the operator is <code>-</code>, the expression is <code>7</code>)</li>
+<li class=""><code>+x</code> is a no-op identity (<code>+7</code>)</li>
+<li class=""><code>~x</code> inverts bits (<code>var a: Int8 = -128; print(~a) # 127</code>)</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="division-and-remainder">Division and remainder<a aria-label="Link to Division and remainder" class="h__link" href="#division-and-remainder"></a></h3>
+<p>Mojo has two division operators, and the difference matters
+for negative numbers:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-operator">-</span><span class="tk-number">7</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> b <span class="tk-operator">=</span> <span class="tk-number">4</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a <span class="tk-operator">/</span> b<span class="tk-punctuation">)</span> <span class="tk-comment"># -1 (truncates toward zero)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a <span class="tk-operator">//</span> b<span class="tk-punctuation">)</span> <span class="tk-comment"># -2 (rounds toward negative infinity)</span></span>
+</code></pre></figure>
+<ul>
+<li class="">Use <code>/</code> when you want truncation toward zero.</li>
+<li class="">Use <code>//</code> when you want floor division.</li>
+</ul>
+<p>For floating-point types, <code>/</code> performs standard division and <code>//</code>
+returns a float rounded down to the nearest whole number.</p>
+<p>The modulo operator <code>%</code> returns the remainder, following this rule:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a == b * (a // b) + (a % b)</span>
+</code></pre></figure>
+<p>For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">7</span> <span class="tk-operator">%</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 1</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">7</span> <span class="tk-operator">%</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 1</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">7</span> <span class="tk-operator">%</span> <span class="tk-operator">-</span><span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-comment"># -1</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="exponentiation">Exponentiation<a aria-label="Link to Exponentiation" class="h__link" href="#exponentiation"></a></h3>
+<p>The <code>**</code> operator is right-associative, so it groups from the
+right:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">2</span> <span class="tk-operator">**</span> <span class="tk-number">3</span> <span class="tk-operator">**</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 512, same as 2 ** (3 ** 2)</span></span>
+</code></pre></figure>
+<p>Exponentiation is one of only two right-associative operators in
+Mojo. The other is the ternary conditional expression (<code>if</code>-<code>else</code>).</p>
+<h3 class="h h--3" data-level="3" id="matrix-multiplication">Matrix multiplication<a aria-label="Link to Matrix multiplication" class="h__link" href="#matrix-multiplication"></a></h3>
+<p>The <code>@</code> operator performs matrix multiplication. If you've
+used NumPy, this will look familiar.</p>
+<p>Mojo doesn't include a built-in matrix type, but any type
+that implements <code>__matmul__()</code> can use it.</p>
+<h2 class="h h--2" data-level="2" id="comparisons">Comparisons<a aria-label="Link to Comparisons" class="h__link" href="#comparisons"></a></h2>
+<p>Mojo provides six comparison operators: <code>==</code>, <code>!=</code>, <code>&lt;</code>,
+<code>&lt;=</code>, <code>&gt;</code>, and <code>&gt;=</code>. Each returns a <code>Bool</code> value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">10</span> <span class="tk-operator">&gt;</span> <span class="tk-number">5</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">10</span> <span class="tk-operator">==</span> <span class="tk-number">10</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">10</span> <span class="tk-operator">!=</span> <span class="tk-number">10</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="floating-point-comparison">Floating-point comparison<a aria-label="Link to Floating-point comparison" class="h__link" href="#floating-point-comparison"></a></h3>
+<p>Don't compare floating-point values with the equality operator (<code>==</code>).
+Small rounding errors accumulate, and values that look equal often aren't:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>math <span class="tk-keyword">import</span> isclose</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> total<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">0.0</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">for</span> _ <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">10</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    total <span class="tk-operator">+=</span> <span class="tk-number">0.1</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>total <span class="tk-operator">==</span> <span class="tk-number">1.0</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+</code></pre></figure>
+<p>Use <code>isclose()</code> for approximate comparison on any
+floating-point type.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>isclose<span class="tk-punctuation">(</span>total<span class="tk-punctuation">,</span> <span class="tk-number">1.0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="chained-comparisons">Chained comparisons<a aria-label="Link to Chained comparisons" class="h__link" href="#chained-comparisons"></a></h3>
+<p>You can chain comparisons to check a range or a sequence of
+conditions in one expression. Each pair is evaluated from left to
+right:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">5</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">1</span> <span class="tk-operator">&lt;</span> x <span class="tk-operator">&lt;</span> <span class="tk-number">10</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True, 1 &lt; x and x &lt; 10</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">1</span> <span class="tk-operator">&lt;</span> x <span class="tk-operator">&lt;</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False, 1 &lt; x and x &lt; 3</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">1</span> <span class="tk-operator">&lt;</span> x <span class="tk-operator">&lt;=</span> <span class="tk-number">5</span> <span class="tk-operator">&lt;</span> <span class="tk-number">9</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True, 1 &lt; x and x &lt;= 5 and 5 &lt; 9</span></span>
+</code></pre></figure>
+<p>The expression <code>a &lt; b &lt; c</code> is equivalent to <code>(a &lt; b) and (b &lt; c)</code>.
+The middle value is evaluated once, not twice. This matters when the
+value comes from a function:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> short_item_list<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> ok <span class="tk-operator">=</span> <span class="tk-number">0</span> <span class="tk-operator">&lt;</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>short_item_list<span class="tk-punctuation">)</span> <span class="tk-operator">&lt;=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>ok<span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+</code></pre></figure>
+<p>Comparison, membership, and identity operators share the same precedence,
+so you can combine them in a single chain. As a hypothetical example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-number">5</span> <span class="tk-operator">!=</span> a <span class="tk-operator">&lt;</span> b <span class="tk-keyword">in</span> c <span class="tk-keyword">is</span> d</span>
+</code></pre></figure>
+<p>This evaluates as:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">(</span><span class="tk-number">5</span> <span class="tk-operator">!=</span> a<span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> <span class="tk-punctuation">(</span>a <span class="tk-operator">&lt;</span> b<span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> <span class="tk-punctuation">(</span>b <span class="tk-keyword">in</span> c<span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> <span class="tk-punctuation">(</span>c <span class="tk-keyword">is</span> d<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="bitwise-operations">Bitwise operations<a aria-label="Link to Bitwise operations" class="h__link" href="#bitwise-operations"></a></h2>
+<p>Bitwise operators work on integer types at the bit level. They let
+you inspect and manipulate individual bits directly.</p>
+<p>AND (<code>&amp;</code>) keeps bits that are set in both operands, OR (<code>|</code>) keeps bits set
+in either, and XOR (<code>^</code>) keeps bits that differ:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> flags<span class="tk-punctuation">:</span> UInt8 <span class="tk-operator">=</span> <span class="tk-number">0b0000_0101</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> mask<span class="tk-punctuation">:</span> UInt8 <span class="tk-operator">=</span> <span class="tk-number">0b0000_0011</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>flags <span class="tk-operator">&amp;</span> mask<span class="tk-punctuation">)</span> <span class="tk-comment"># 1 (only bit 0 set in both)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>flags <span class="tk-operator">|</span> mask<span class="tk-punctuation">)</span> <span class="tk-comment"># 7 (bits 0, 1, and 2)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>flags <span class="tk-operator">^</span> mask<span class="tk-punctuation">)</span> <span class="tk-comment"># 6 (bits 1 and 2 differ)</span></span>
+</code></pre></figure>
+<p>Left shift (<code>&lt;&lt;</code>) and right shift (<code>&gt;&gt;</code>) move bits by a given number
+of positions. Left shift by <em>n</em> is equivalent to multiplying by 2^n,
+right shift to dividing by 2^n:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">1</span> <span class="tk-operator">&lt;&lt;</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 16</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">16</span> <span class="tk-operator">&gt;&gt;</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 4</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">16</span> <span class="tk-operator">&gt;&gt;</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-comment"># -4</span></span>
+</code></pre></figure>
+<p>Among the bitwise operators, precedence runs: NOT (<code>~</code>) is tightest,
+then shift operators, then AND, then XOR, then OR. If the grouping isn't
+obvious, use parentheses.</p>
+<aside class="callout callout--caution"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">▲</span>Caution</p><div class="callout__body"><p>Mojo uses the caret (<code>^</code>) for both bitwise XOR and the transfer operator.
+In expressions where the meaning could be ambiguous, Mojo treats it as XOR.
+For example, <code>x^+1</code> is <code>(x ^ (+1))</code>, not <code>((x^) + 1)</code>.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="boolean-logic">Boolean logic<a aria-label="Link to Boolean logic" class="h__link" href="#boolean-logic"></a></h2>
+<p>Mojo uses words for boolean operators instead of symbols like <code>&amp;&amp;</code>
+or <code>||</code>. The operators read like plain language:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-boolean">True</span> <span class="tk-keyword">and</span> <span class="tk-boolean">False</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-boolean">True</span> <span class="tk-keyword">or</span> <span class="tk-boolean">False</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-keyword">not</span> <span class="tk-boolean">True</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="short-circuit-evaluation">Short-circuit evaluation<a aria-label="Link to Short-circuit evaluation" class="h__link" href="#short-circuit-evaluation"></a></h3>
+<p>The <code>and</code> and <code>or</code> operators stop as soon as the result is known.
+With <code>and</code>, if the left side is falsy, the right side isn't
+evaluated. With <code>or</code>, if the left side is truthy, the right side is
+skipped.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">always_true</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"called"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> <span class="tk-boolean">True</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># The string "called" never prints because the left side</span></span>
+<span class="cl" data-line="6"><span class="tk-comment"># of `and` is already False:</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-boolean">False</span> <span class="tk-keyword">and</span> always_true<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+</code></pre></figure>
+<p>This behavior is useful when the right side has side effects or is
+expensive to compute.</p>
+<h3 class="h h--3" data-level="3" id="truthiness">Truthiness<a aria-label="Link to Truthiness" class="h__link" href="#truthiness"></a></h3>
+<p>Types that conform to <code>Boolable</code> have a truth value, so they can be
+used directly in boolean expressions and <code>if</code> conditions. The rules
+are predictable: zero, empty strings, empty collections, and <code>None</code>
+are falsy. Everything else is truthy.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> name <span class="tk-operator">=</span> <span class="tk-string">"Mojo"</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> name<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Name is set"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="membership-and-identity">Membership and identity<a aria-label="Link to Membership and identity" class="h__link" href="#membership-and-identity"></a></h2>
+<h3 class="h h--3" data-level="3" id="in-and-not-in"><code>in</code> and <code>not in</code><a aria-label="Link to in and not in" class="h__link" href="#in-and-not-in"></a></h3>
+<p>The <code>in</code> operator checks whether a collection contains a value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> colors<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-string">"red"</span><span class="tk-punctuation">,</span> <span class="tk-string">"green"</span><span class="tk-punctuation">,</span> <span class="tk-string">"blue"</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"red"</span> <span class="tk-keyword">in</span> colors<span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"yellow"</span> <span class="tk-keyword">not</span> <span class="tk-keyword">in</span> colors<span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+</code></pre></figure>
+<p>It also works with strings to check for substrings:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> food <span class="tk-operator">=</span> <span class="tk-string">"peanut butter"</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> <span class="tk-string">"nut"</span> <span class="tk-keyword">in</span> food<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Contains a nut"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prints</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="is-and-is-not"><code>is</code> and <code>is not</code><a aria-label="Link to is and is not" class="h__link" href="#is-and-is-not"></a></h3>
+<p>Identity operators check whether two values refer to the same object,
+not just whether they are equal. The most common use is checking
+<code>Optional</code> values against <code>None</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> opt<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-boolean">None</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> opt <span class="tk-keyword">is</span> <span class="tk-boolean">None</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"No value"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prints</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5">opt <span class="tk-operator">=</span> <span class="tk-number">42</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">if</span> opt <span class="tk-keyword">is</span> <span class="tk-keyword">not</span> <span class="tk-boolean">None</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Has a value"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prints</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="string-operators">String operators<a aria-label="Link to String operators" class="h__link" href="#string-operators"></a></h2>
+<p>Strings support concatenation with <code>+</code> and repetition with <code>*</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> greeting <span class="tk-operator">=</span> <span class="tk-string">"Hello"</span> <span class="tk-operator">+</span> <span class="tk-string">" "</span> <span class="tk-operator">+</span> <span class="tk-string">"Mojo"</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>greeting<span class="tk-punctuation">)</span> <span class="tk-comment"># Hello Mojo</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"ha"</span> <span class="tk-operator">*</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-comment"># hahaha</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"="</span> <span class="tk-operator">*</span> <span class="tk-number">40</span><span class="tk-punctuation">)</span> <span class="tk-comment"># a line of 40 equals signs</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>When building a string from multiple values, the multi-argument
+<code>String()</code> initializer is more efficient than chaining <code>+</code>:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> result <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span><span class="tk-string">"Point ("</span><span class="tk-punctuation">,</span> x<span class="tk-punctuation">,</span> <span class="tk-string">", "</span><span class="tk-punctuation">,</span> y<span class="tk-punctuation">,</span> <span class="tk-string">")"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-comment"># or</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> result <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span>t<span class="tk-string">"Point({x}, {y})"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure></div></aside>
+<p>Strings compare lexicographically. Uppercase letters sort before
+lowercase:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Zebra"</span> <span class="tk-operator">&lt;</span> <span class="tk-string">"ant"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"bird"</span> <span class="tk-operator">==</span> <span class="tk-string">"bird"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="conditional-expression">Conditional expression<a aria-label="Link to Conditional expression" class="h__link" href="#conditional-expression"></a></h2>
+<p>Mojo uses <code>if</code>-<code>else</code> for conditional expressions instead of <code>? :</code>.
+The condition sits in the middle:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> score <span class="tk-operator">=</span> <span class="tk-number">80</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> result <span class="tk-operator">=</span> <span class="tk-string">"pass"</span> <span class="tk-keyword">if</span> score <span class="tk-operator">&gt;</span> <span class="tk-number">65</span> <span class="tk-keyword">else</span> <span class="tk-string">"fail"</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>result<span class="tk-punctuation">)</span> <span class="tk-comment"># pass</span></span>
+</code></pre></figure>
+<p>You can use this form anywhere an expression is valid, including
+function arguments:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">greet</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello,"</span><span class="tk-punctuation">,</span> name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4">greet<span class="tk-punctuation">(</span><span class="tk-string">"Sami"</span> <span class="tk-keyword">if</span> <span class="tk-boolean">True</span> <span class="tk-keyword">else</span> <span class="tk-string">"Cass"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Hello, Sami</span></span>
+</code></pre></figure>
+<p>Like exponentiation, chained ternary expressions are right-associative.
+They group from the right, which can be hard to read:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> value <span class="tk-operator">=</span> <span class="tk-number">50</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> label <span class="tk-operator">=</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3"> <span class="tk-string">"low"</span> <span class="tk-keyword">if</span> value <span class="tk-operator">&lt;</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">else</span> <span class="tk-string">"high"</span> <span class="tk-keyword">if</span> value <span class="tk-operator">&gt;</span> <span class="tk-number">100</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">else</span> <span class="tk-string">"mid"</span></span>
+<span class="cl" data-line="6"><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>label<span class="tk-punctuation">)</span> <span class="tk-comment"># mid</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="assignment-operators">Assignment operators<a aria-label="Link to Assignment operators" class="h__link" href="#assignment-operators"></a></h2>
+<h3 class="h h--3" data-level="3" id="in-place-assignment">In-place assignment<a aria-label="Link to In-place assignment" class="h__link" href="#in-place-assignment"></a></h3>
+<p>Most binary operators have a compound assignment form: <code>+=</code>, <code>-=</code>, <code>*=</code>,
+<code>/=</code>, <code>//=</code>, <code>%=</code>, <code>**=</code>, <code>@=</code>, <code>&amp;=</code>, <code>|=</code>, <code>^=</code>, <code>&lt;&lt;=</code>, and <code>&gt;&gt;=</code>. These
+update the left-hand value instead of creating a new one:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> count <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="2">count <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="3">count <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span> <span class="tk-comment"># 2</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">var</span> flags<span class="tk-punctuation">:</span> UInt8 <span class="tk-operator">=</span> <span class="tk-number">0b0000_0001</span></span>
+<span class="cl" data-line="7">flags <span class="tk-operator">|</span><span class="tk-operator">=</span> <span class="tk-number">0b0000_0100</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>flags<span class="tk-punctuation">)</span> <span class="tk-comment"># 5 (bits 0 and 2 set)</span></span>
+</code></pre></figure>
+<p>For types that store data on the heap, in-place operators can avoid
+allocating intermediate values. A type must implement its in-place methods
+explicitly, so not every type that supports <code>+</code> also supports <code>+=</code>.</p>
+<h3 class="h h--3" data-level="3" id="walrus-operator">Walrus operator<a aria-label="Link to Walrus operator" class="h__link" href="#walrus-operator"></a></h3>
+<p>The walrus operator (<code>:=</code>, officially an <em>assignment expression</em>) assigns a
+value inside an expression. The assigned value becomes the result of that
+expression.</p>
+<p>Press Return without entering text to terminate the loop. Non-empty strings are
+truthy:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">while</span> <span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name <span class="tk-operator">:=</span> <span class="tk-builtin">input</span><span class="tk-punctuation">(</span><span class="tk-string">"Name or return: "</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello,"</span><span class="tk-punctuation">,</span> name<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>input()</code> is a raising function, so call it from a raising function or
+handle its errors with <code>try</code>.</p>
+<h2 class="h h--2" data-level="2" id="precedence">Precedence<a aria-label="Link to Precedence" class="h__link" href="#precedence"></a></h2>
+<p>When an expression mixes operators, precedence determines what runs first.
+From tightest to loosest, they are: calls and attribute access,
+exponentiation, unary prefix operators, arithmetic (multiply and divide
+before add and subtract), shifts, bitwise operators (AND before XOR before
+OR), comparisons, boolean logic (<code>not</code> before <code>and</code> before <code>or</code>),
+conditional expression, and the walrus operator.</p>
+<p>When in doubt, use parentheses. They cost nothing at runtime and make
+your intent clear both when you write the code and when it is later read
+and maintained:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Clear without thinking about precedence</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> ready <span class="tk-operator">=</span> <span class="tk-punctuation">(</span>age <span class="tk-operator">&gt;=</span> <span class="tk-number">18</span><span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> <span class="tk-punctuation">(</span>score <span class="tk-operator">&gt;</span> threshold<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Assignment operators (<code>=</code>, <code>+=</code>, <code>-=</code>, and others) are
+statements, not expressions. You can't mix them into
+expressions.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/operators/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/operators/</a>, saved Thu, 01 Oct 2026 15:33:36 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/06_types.html"><span class="pager__dir">← Previous</span><span class="pager__title">Types</span></a><a class="pager__link pager__link--next" href="../pages/08_functions.html"><span class="pager__dir">Next →</span><span class="pager__title">Functions</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#arithmetic">Arithmetic</a></li><li class="rail__depth-2"><a href="#comparisons">Comparisons</a></li><li class="rail__depth-2"><a href="#bitwise-operations">Bitwise operations</a></li><li class="rail__depth-2"><a href="#boolean-logic">Boolean logic</a></li><li class="rail__depth-2"><a href="#membership-and-identity">Membership and identity</a></li><li class="rail__depth-2"><a href="#string-operators">String operators</a></li><li class="rail__depth-2"><a href="#conditional-expression">Conditional expression</a></li><li class="rail__depth-2"><a href="#assignment-operators">Assignment operators</a></li><li class="rail__depth-2"><a href="#precedence">Precedence</a></li><li class="rail__depth-3"><a href="#unary-symbols">Unary symbols</a></li><li class="rail__depth-3"><a href="#division-and-remainder">Division and remainder</a></li><li class="rail__depth-3"><a href="#exponentiation">Exponentiation</a></li><li class="rail__depth-3"><a href="#matrix-multiplication">Matrix multiplication</a></li><li class="rail__depth-3"><a href="#floating-point-comparison">Floating-point comparison</a></li><li class="rail__depth-3"><a href="#chained-comparisons">Chained comparisons</a></li><li class="rail__depth-3"><a href="#short-circuit-evaluation">Short-circuit evaluation</a></li><li class="rail__depth-3"><a href="#truthiness">Truthiness</a></li><li class="rail__depth-3"><a href="#in-and-not-in">in and not in</a></li><li class="rail__depth-3"><a href="#is-and-is-not">is and is not</a></li><li class="rail__depth-3"><a href="#in-place-assignment">In-place assignment</a></li><li class="rail__depth-3"><a href="#walrus-operator">Walrus operator</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#arithmetic">Arithmetic</a></li><li class="rail__depth-2"><a href="#comparisons">Comparisons</a></li><li class="rail__depth-2"><a href="#bitwise-operations">Bitwise operations</a></li><li class="rail__depth-2"><a href="#boolean-logic">Boolean logic</a></li><li class="rail__depth-2"><a href="#membership-and-identity">Membership and identity</a></li><li class="rail__depth-2"><a href="#string-operators">String operators</a></li><li class="rail__depth-2"><a href="#conditional-expression">Conditional expression</a></li><li class="rail__depth-2"><a href="#assignment-operators">Assignment operators</a></li><li class="rail__depth-2"><a href="#precedence">Precedence</a></li><li class="rail__depth-3"><a href="#unary-symbols">Unary symbols</a></li><li class="rail__depth-3"><a href="#division-and-remainder">Division and remainder</a></li><li class="rail__depth-3"><a href="#exponentiation">Exponentiation</a></li><li class="rail__depth-3"><a href="#matrix-multiplication">Matrix multiplication</a></li><li class="rail__depth-3"><a href="#floating-point-comparison">Floating-point comparison</a></li><li class="rail__depth-3"><a href="#chained-comparisons">Chained comparisons</a></li><li class="rail__depth-3"><a href="#short-circuit-evaluation">Short-circuit evaluation</a></li><li class="rail__depth-3"><a href="#truthiness">Truthiness</a></li><li class="rail__depth-3"><a href="#in-and-not-in">in and not in</a></li><li class="rail__depth-3"><a href="#is-and-is-not">is and is not</a></li><li class="rail__depth-3"><a href="#in-place-assignment">In-place assignment</a></li><li class="rail__depth-3"><a href="#walrus-operator">Walrus operator</a></li></ol>
+<p class="rail__meta">Chapter 07 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Mojo v1 The Language Manual · Contents</title>
+<meta name="description" content="Thirty-eight chapters of the Mojo manual, in reading order, rendered for reading. Ownership, traits, pointers, comptime, and the C foreign function interface — the whole language, ">
+<link rel="stylesheet" href="assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="cover">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">The whole manual</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell shell--single" id="main">
+<div class="hero">
+<div class="hero__eyebrow">Single source of truth</div>
+<h1>The Mojo language, <em>end to end</em>.</h1>
+<p class="hero__lede">Thirty-eight chapters of the Mojo manual, in reading order, rendered for reading. Ownership, traits, pointers, comptime, and the C foreign function interface — the whole language, once, offline.</p>
+<div class="stats">
+<div class="stat"><b>38</b><span>Chapters</span></div>
+<div class="stat"><b>87,226</b><span>Words</span></div>
+<div class="stat"><b>805</b><span>Code blocks</span></div>
+<div class="stat"><b>11</b><span>Languages</span></div>
+<div class="stat"><b>7</b><span>Parts</span></div>
+</div>
+</div>
+<div class="cover">
+<h2 class="h h--2" id="contents">Contents</h2>
+<p class="cover__lede">Seven parts, thirty-eight chapters, in reading order. Every chapter carries its own
+table of contents, copyable code, and links back to the manual it came from.</p>
+<section class="part" id="part-i">
+<div class="part__head">
+<span class="part__num">PART I</span>
+<div><h2 class="part__title">Orientation</h2><p class="part__blurb">What Mojo is, and how to hold it in your head.</p></div>
+<span class="part__count">4 chapters</span>
+</div>
+<ul class="toc"><li class="toc__item"><a class="toc__link" href="pages/01_mojo-quickstart.html"><span class="toc__num">01</span><span><span class="toc__title">Mojo quickstart</span><span class="toc__blurb">A guided first program: install, build, run.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/02_get-started-with-mojo.html"><span class="toc__num">02</span><span><span class="toc__title">Get started with Mojo</span><span class="toc__blurb">Toolchain, first project, and the full source of two samples.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/03_mojo-language-basics.html"><span class="toc__num">03</span><span><span class="toc__title">Mojo language basics</span><span class="toc__blurb">The small set of ideas the rest of the manual depends on.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/04_mojo-tips-for-python-devs.html"><span class="toc__num">04</span><span><span class="toc__title">Mojo tips for Python devs</span><span class="toc__blurb">A translation table for people who already code Python.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li></ul>
+</section><section class="part" id="part-ii">
+<div class="part__head">
+<span class="part__num">PART II</span>
+<div><h2 class="part__title">The Language</h2><p class="part__blurb">Variables, types, functions, and the shape of control flow.</p></div>
+<span class="part__count">8 chapters</span>
+</div>
+<ul class="toc"><li class="toc__item"><a class="toc__link" href="pages/05_variables.html"><span class="toc__num">05</span><span><span class="toc__title">Variables</span><span class="toc__blurb">Declaration, mutation, aliasing, and scopes.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/06_types.html"><span class="toc__num">06</span><span><span class="toc__title">Types</span><span class="toc__blurb">The type system: integers, floats, strings, collections, SIMD, and Tensor.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/07_operators.html"><span class="toc__num">07</span><span><span class="toc__title">Operators</span><span class="toc__blurb">Arithmetic, comparison, bitwise, and boolean logic.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/08_functions.html"><span class="toc__num">08</span><span><span class="toc__title">Functions</span><span class="toc__blurb">Parameters, returns, default and keyword arguments, raising and yielding.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/09_lambda-expressions.html"><span class="toc__num">09</span><span><span class="toc__title">Lambda expressions</span><span class="toc__blurb">Anonymous functions and closures over surrounding scope.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/10_closures.html"><span class="toc__num">10</span><span><span class="toc__title">Closures</span><span class="toc__blurb">Capturing state, reference semantics, and escaping values.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/11_control-flow.html"><span class="toc__num">11</span><span><span class="toc__title">Control flow</span><span class="toc__blurb">Branching, looping, and the Mojo equivalents of Python's statements.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/12_errors-and-context-managers.html"><span class="toc__num">12</span><span><span class="toc__title">Errors, error handling, and context managers</span><span class="toc__blurb">Failable types, raises, and cleanup.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li></ul>
+</section><section class="part" id="part-iii">
+<div class="part__head">
+<span class="part__num">PART III</span>
+<div><h2 class="part__title">Abstraction &amp; Values</h2><p class="part__blurb">Structs, traits, generics, and the ownership model.</p></div>
+<span class="part__count">9 chapters</span>
+</div>
+<ul class="toc"><li class="toc__item"><a class="toc__link" href="pages/13_mojo-structs.html"><span class="toc__num">13</span><span><span class="toc__title">Mojo structs</span><span class="toc__blurb">Methods, constructors, overloading, and generic fields.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/14_operator-support.html"><span class="toc__num">14</span><span><span class="toc__title">Add operator support to custom types</span><span class="toc__blurb">Implementing dunder methods and the full protocol.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/15_self-referential-structs.html"><span class="toc__num">15</span><span><span class="toc__title">Self-referential structs</span><span class="toc__blurb">Lists, sets, and graphs built out of Mojo itself.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/16_traits.html"><span class="toc__num">16</span><span><span class="toc__title">Traits</span><span class="toc__blurb">Contracts between types and the code that uses them.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/17_parameterized-declarations.html"><span class="toc__num">17</span><span><span class="toc__title">Parameterized declarations</span><span class="toc__blurb">Generic types and functions, and how they specialise.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/18_value-semantics.html"><span class="toc__num">18</span><span><span class="toc__title">Value semantics</span><span class="toc__blurb">What it means for a type to behave like a value.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/19_intro-to-value-ownership.html"><span class="toc__num">19</span><span><span class="toc__title">Intro to value ownership</span><span class="toc__blurb">Copying, moving, borrowing: the three ways a value reaches a function.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/20_ownership.html"><span class="toc__num">20</span><span><span class="toc__title">Ownership</span><span class="toc__blurb">Affine types, single ownership, and the borrow checker.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/21_lifetimes-origins-and-references.html"><span class="toc__num">21</span><span><span class="toc__title">Lifetimes, origins, and references</span><span class="toc__blurb">Reading the origin lattice and writing safe borrows.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li></ul>
+</section><section class="part" id="part-iv">
+<div class="part__head">
+<span class="part__num">PART IV</span>
+<div><h2 class="part__title">Memory &amp; Interop</h2><p class="part__blurb">Pointers, Python, and the C foreign function interface.</p></div>
+<span class="part__count">7 chapters</span>
+</div>
+<ul class="toc"><li class="toc__item"><a class="toc__link" href="pages/22_intro-to-pointers.html"><span class="toc__num">22</span><span><span class="toc__title">Intro to pointers</span><span class="toc__blurb">Raw and owned pointers, and the mental model behind them.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/23_using-pointers.html"><span class="toc__num">23</span><span><span class="toc__title">Using pointers</span><span class="toc__blurb">Allocation, offsets, strided loads, and the pointer lifecycle.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/24_python-interoperability.html"><span class="toc__num">24</span><span><span class="toc__title">Python interoperability</span><span class="toc__blurb">The shape of the boundary between Mojo and Python.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/25_python-types.html"><span class="toc__num">25</span><span><span class="toc__title">Python types</span><span class="toc__blurb">Using Python objects, and what crosses the boundary.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/26_calling-python-from-mojo.html"><span class="toc__num">26</span><span><span class="toc__title">Calling Python from Mojo</span><span class="toc__blurb">Importing modules and invoking Python at run time.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/27_calling-mojo-from-python.html"><span class="toc__num">27</span><span><span class="toc__title">Calling Mojo from Python</span><span class="toc__blurb">Exposing Mojo functions as Python extension types.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/28_c-foreign-function-interface.html"><span class="toc__num">28</span><span><span class="toc__title">Using Mojo's C FFI to call C libraries</span><span class="toc__blurb">Declaring externs, linking, and calling C.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li></ul>
+</section><section class="part" id="part-v">
+<div class="part__head">
+<span class="part__num">PART V</span>
+<div><h2 class="part__title">Compile-Time Programming</h2><p class="part__blurb">Metaprogramming, comptime evaluation, and reflection.</p></div>
+<span class="part__count">5 chapters</span>
+</div>
+<ul class="toc"><li class="toc__item"><a class="toc__link" href="pages/29_intro-to-metaprogramming.html"><span class="toc__num">29</span><span><span class="toc__title">Intro to metaprogramming</span><span class="toc__blurb">Why Mojo runs part of your program before you do.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/30_compile-time-evaluation.html"><span class="toc__num">30</span><span><span class="toc__title">Compile-time evaluation</span><span class="toc__blurb">Compiling code as a value, with alias and let.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/31_comptime-constraints-and-assertions.html"><span class="toc__num">31</span><span><span class="toc__title">Comptime constraints and assertions</span><span class="toc__blurb">Rejecting types and values the compiler cannot accept.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/32_materializing-comptime-values.html"><span class="toc__num">32</span><span><span class="toc__title">Materializing compile-time values at run time</span><span class="toc__blurb">Turning parameters and comptime values into run-time data.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/33_reflection.html"><span class="toc__num">33</span><span><span class="toc__title">Reflection</span><span class="toc__blurb">Introspecting types, functions, and their parameters.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li></ul>
+</section><section class="part" id="part-vi">
+<div class="part__head">
+<span class="part__num">PART VI</span>
+<div><h2 class="part__title">Projects &amp; Tooling</h2><p class="part__blurb">Packages, distribution, notebooks, and agent skills.</p></div>
+<span class="part__count">4 chapters</span>
+</div>
+<ul class="toc"><li class="toc__item"><a class="toc__link" href="pages/34_modules-and-packages.html"><span class="toc__num">34</span><span><span class="toc__title">Modules and packages</span><span class="toc__blurb">Splitting a codebase across modules and packages.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/35_packaging.html"><span class="toc__num">35</span><span><span class="toc__title">Packaging</span><span class="toc__blurb">Publishing a Mojo package to a package index.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/36_jupyter-notebooks.html"><span class="toc__num">36</span><span><span class="toc__title">Jupyter notebooks</span><span class="toc__blurb">Writing, running, and publishing .ipynb Mojo notebooks.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li><li class="toc__item"><a class="toc__link" href="pages/37_mojo-ai-skills.html"><span class="toc__num">37</span><span><span class="toc__title">Mojo AI skills</span><span class="toc__blurb">Teaching an agent the Mojo toolchain.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li></ul>
+</section><section class="part" id="part-vii">
+<div class="part__head">
+<span class="part__num">PART VII</span>
+<div><h2 class="part__title">Reference</h2><p class="part__blurb">One-page tables to keep open while you work.</p></div>
+<span class="part__count">1 chapter</span>
+</div>
+<ul class="toc"><li class="toc__item"><a class="toc__link" href="pages/38_types-and-literals-cheat-sheet.html"><span class="toc__num">38</span><span><span class="toc__title">Mojo types &amp; literals cheat sheet</span><span class="toc__blurb">Every builtin type and literal form, on one page.</span></span><span class="toc__go" aria-hidden="true">→</span></a></li></ul>
+</section>
+</div>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="index.html">Contents</a> · <a href="raw/">Archives</a></span>
+</div></footer>
+<script src="assets/mojo.js" defer></script>
+</body>
+</html>

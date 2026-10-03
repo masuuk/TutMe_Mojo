@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -604,10 +604,11 @@ optimized path</pre>
     <span class="kw">var</span> count = <span class="type">Int</span>(n)
     <span class="kw">var</span> results = List[Int64](length=count, fill=<span class="num">0</span>)
 
-    <span class="kw">def</span> <span class="fn">fill</span>(i: <span class="type">Int</span>) {mut results}:
+    <span class="fn">@parameter</span>
+    <span class="kw">def</span> <span class="fn">fill</span>(i: <span class="type">Int</span>):
         results[i] = Int64(i)
 
-    <span class="fn">parallelize</span>(count, fill)
+    <span class="fn">parallelize</span>[fill](count)
 
     <span class="kw">var</span> total = Int64(<span class="num">0</span>)
     <span class="kw">for</span> r <span class="kw">in</span> results:

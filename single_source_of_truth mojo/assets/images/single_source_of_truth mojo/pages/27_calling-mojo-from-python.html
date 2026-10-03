@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Calling Mojo from Python · Mojo v1 The Language Manual</title>
+<meta name="description" content="Exposing Mojo functions as Python extension types.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part IV · Memory &amp; Interop</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part IV</span><span class="sep">/</span><span>Memory &amp; Interop</span><span class="sep">/</span><span class="num">27</span></nav><h1>Calling Mojo from Python</h1>
+<p class="dek">Exposing Mojo functions as Python extension types.</p><p class="byline">Chapter 27 · 3,544 words · 34 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/python/mojo-from-python/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>If you have an existing Python project that would benefit from Mojo's
+high-performance computing, you shouldn't have to rewrite the whole thing in
+Mojo. Instead, you can write just the performance-critical parts your code in
+Mojo and then call it from Python.</p>
+<aside class="callout callout--experiment"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◈</span>Beta feature</p><div class="callout__body"><p>Calling Mojo code from Python is in early development. You should expect a lot
+of changes to the API and ergonomics. Likewise, this documentation is still a
+work in progress. See below for <a href="../pages/27_calling-mojo-from-python.html#known-limitations">known limitations</a>.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="import-a-mojo-module-in-python">Import a Mojo module in Python<a aria-label="Link to Import a Mojo module in Python" class="h__link" href="#import-a-mojo-module-in-python"></a></h2>
+<p>To illustrate what calling Mojo from Python looks like, we'll start with a
+simple example, and then dig into the details of how it works and what is
+possible today.</p>
+<p>Consider a project with the following structure:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">project</span>
+<span class="cl" data-line="2">├── 🐍 main.py</span>
+<span class="cl" data-line="3">└── 🔥 mojo_module.mojo</span>
+</code></pre></figure>
+<p>The main entrypoint is a Python program called <code>main.py</code>, and the Mojo code
+includes functions to call from Python.</p>
+<p>For example, let's say we want a Mojo function to take a Python value as an
+argument:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">mojo_module.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">factorial</span><span class="tk-punctuation">(</span>py_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Python</span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> n <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>py<span class="tk-operator">=</span>py_obj<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> math<span class="tk-punctuation">.</span>factorial<span class="tk-punctuation">(</span>n<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>And we want to call it from Python like this:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__file">main.py</span><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> mojo_module</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>mojo_module<span class="tk-punctuation">.</span>factorial<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>However, before we can call the Mojo function from Python, we must declare it
+so Python knows it exists.</p>
+<p>Because Python is trying to load <code>mojo_module</code>, it looks for a function called
+<code>PyInit_mojo_module()</code>. (If our file was called <code>foo.mojo</code>, the function Python
+looked for would be <code>PyInit_foo()</code>.) Within the <code>PyInit_mojo_module()</code>, we must
+declare all Mojo functions and types that are callable from Python using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonModuleBuilder/" rel="noopener noreferrer"><code>PythonModuleBuilder</code></a>.</p>
+<p>So the complete Mojo code looks like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">mojo_module.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> PythonObject</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python<span class="tk-punctuation">.</span>bindings <span class="tk-keyword">import</span> PythonModuleBuilder</span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> std <span class="tk-keyword">import</span> math</span>
+<span class="cl" data-line="4"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>os <span class="tk-keyword">import</span> abort</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-punctuation">@export</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> <span class="tk-function">PyInit_mojo_module</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> m <span class="tk-operator">=</span> PythonModuleBuilder<span class="tk-punctuation">(</span><span class="tk-string">"mojo_module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10">        m<span class="tk-punctuation">.</span>def_function<span class="tk-punctuation">[</span>factorial<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"factorial"</span><span class="tk-punctuation">,</span> docstring<span class="tk-operator">=</span><span class="tk-string">"Compute n!"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">return</span> m<span class="tk-punctuation">.</span>finalize<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13">        abort<span class="tk-punctuation">(</span>String<span class="tk-punctuation">(</span><span class="tk-string">"error creating Python Mojo module:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-keyword">def</span> <span class="tk-function">factorial</span><span class="tk-punctuation">(</span>py_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-comment"># Raises an exception if `py_obj` is not convertible to a Mojo `Int`.</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">var</span> n <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>py<span class="tk-operator">=</span>py_obj<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18"></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">return</span> math<span class="tk-punctuation">.</span>factorial<span class="tk-punctuation">(</span>n<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>On the Python side, we add the directory containing <code>mojo_module.mojo</code> to the
+Python path, and then use a normal <code>import</code> statement to load our Mojo code:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__file">main.py</span><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> mojo<span class="tk-punctuation">.</span>importer</span>
+<span class="cl" data-line="2"><span class="tk-keyword">import</span> mojo_module</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>mojo_module<span class="tk-punctuation">.</span>factorial<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>That's it! Try it:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">python main.py</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">120</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="how-it-works">How it works<a aria-label="Link to How it works" class="h__link" href="#how-it-works"></a></h3>
+<p>Python supports a standard mechanism called <a class="ext" data-external="" href="https://docs.python.org/3/extending/extending.html" rel="noopener noreferrer">Python extension
+modules</a> that enables
+compiled languages (like Mojo, C, C++, or Rust) to make themselves callable
+from Python in an intuitive way. Concretely, a Python extension module is
+simply a dynamic library that defines a suitable <code>PyInit_*()</code> function.</p>
+<p>Mojo comes with built-in functionality for defining Python extension modules.
+The special stuff happens in the <code>mojo.importer</code> module we imported.</p>
+<p>If we have a look at the filesystem after Python imports the Mojo code, we'll
+notice there's a new <code>__mojocache__</code> directory, with a dynamic library (<code>.so</code>)
+file inside:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">project</span>
+<span class="cl" data-line="2">├── main.py</span>
+<span class="cl" data-line="3">├── mojo_module.mojo</span>
+<span class="cl" data-line="4">└── __mojocache__</span>
+<span class="cl" data-line="5">    └── mojo_module.hash-ABC123.so</span>
+</code></pre></figure>
+<p>Loading <code>mojo.importer</code> loads our Python Mojo
+<a class="ext" data-external="" href="https://docs.python.org/3/reference/import.html#import-hooks" rel="noopener noreferrer">import hook</a>,
+which behind the scenes looks for a <code>.mojo</code> file that matches the imported
+module name, and if found, compiles it using
+<a class="ext" data-external="" href="https://mojolang.org/docs/cli/build/#--emit-file_type" rel="noopener noreferrer"><code>mojo build --emit shared-lib</code></a> to generate
+a dynamic library. The resulting file is stored in <code>__mojocache__</code>, and is
+rebuilt only when it becomes stale (typically, when the Mojo source file
+changes).</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Clearing cached build artifacts</p><div class="callout__body"><p>The <code>__mojocache__</code> directory should contain only derived artifacts. It is
+always safe to delete the contents of a <code>__mojocache__</code> directory. Needed
+artifacts will simply be rebuilt the next time the Mojo module is imported.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="the-abi-of-exported-functions">The <code>abi</code> of exported functions<a aria-label="Link to The abi of exported functions" class="h__link" href="#the-abi-of-exported-functions"></a></h3>
+<p>An <a class="ext" data-external="" href="https://mojolang.org/docs/reference/decorators/export/" rel="noopener noreferrer"><code>@export</code></a> function must declare which
+calling convention it uses with an explicit
+<a class="ext" data-external="" href="https://mojolang.org/docs/reference/function-declarations/#abi-c" rel="noopener noreferrer"><code>abi</code></a> effect. In a Python
+extension module, the only function you need to export is the
+<code>PyInit_&lt;module&gt;</code> entry point, and it must use <code>abi("C")</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@export</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">PyInit_mojo_module</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>This is because the CPython runtime locates and calls <code>PyInit_&lt;module&gt;</code>
+directly across the C boundary, so it must expose the C calling convention. A
+<code>abi("C")</code> function can't be marked <code>raises</code>, which is why the examples above
+catch any error inside the body and <code>abort</code> instead of propagating it.</p>
+<p>The functions, methods, and initializers you register with the module builder
+(<code>def_function</code>, <code>def_method</code>, <code>def_py_init</code>, and so on) don't need <code>@export</code> at
+all; you pass them by reference, and Mojo generates the C wrapper that CPython
+actually calls. That wrapper invokes your function using the Mojo calling
+convention and translates any raised error into a Python exception, so a
+registered function such as <code>factorial</code> above can freely be marked <code>raises</code>.</p>
+<p>Now that we've looked at the basics of how Mojo can be used from Python, let's
+dig into the available features and how you can leverage them to accelerate
+your Python with Mojo.</p>
+<h2 class="h h--2" data-level="2" id="bindings-features">Bindings features<a aria-label="Link to Bindings features" class="h__link" href="#bindings-features"></a></h2>
+<h3 class="h h--3" data-level="3" id="binding-mojo-types">Binding Mojo types<a aria-label="Link to Binding Mojo types" class="h__link" href="#binding-mojo-types"></a></h3>
+<p>You can bind any Mojo type for use in Python using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonModuleBuilder/" rel="noopener noreferrer"><code>PythonModuleBuilder</code></a>.
+For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Person</span><span class="tk-punctuation">(</span>Movable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> age<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-punctuation">@export</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> <span class="tk-function">PyInit_person_module</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> mb <span class="tk-operator">=</span> PythonModuleBuilder<span class="tk-punctuation">(</span><span class="tk-string">"person_module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> person_type <span class="tk-operator">=</span> mb<span class="tk-punctuation">.</span>add_type<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Person"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12">        abort<span class="tk-punctuation">(</span><span class="tk-string">"error creating Mojo module"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>When you call
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonModuleBuilder/#add_type" rel="noopener noreferrer"><code>add_type()</code></a>, it
+returns a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonTypeBuilder/" rel="noopener noreferrer"><code>PythonTypeBuilder</code></a>, which
+you can then use to bind the type constructor (see <a href="../pages/27_calling-mojo-from-python.html#constructing-mojo-objects-in-python">binding Python
+initializers</a>, below) and methods.</p>
+<p>Any Mojo type bound using a <code>PythonTypeBuilder</code> has the resulting Python
+'type' object globally registered, enabling two features:</p>
+<ul>
+<li class="">
+<p>Constructing Python objects that wrap Mojo values for use from Python using
+<code>PythonObject(alloc=Person(..))</code>.</p>
+</li>
+<li class="">
+<p>Downcasting using <code>python_obj.downcast_value_ptr[Person]()</code></p>
+</li>
+</ul>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Mojo types must implement
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a> to be bound for use
+in Python. Additional traits are required for specific binding features:
+<code>Movable</code> for custom initializers (<code>def_py_init</code>), and both <code>Defaultable</code> and
+<code>Movable</code> for default initializers (<code>def_init_defaultable</code>).</p></div></aside>
+<p>However, merely binding a Mojo type to a Python <code>type</code> object isn't very useful
+on its own. Next, we'll tell Python how to interact with our Mojo type—starting
+with how to construct instances of our Mojo type from within Python.</p>
+<h3 class="h h--3" data-level="3" id="constructing-mojo-objects-in-python">Constructing Mojo objects in Python<a aria-label="Link to Constructing Mojo objects in Python" class="h__link" href="#constructing-mojo-objects-in-python"></a></h3>
+<p>Mojo types can be constructed from Python by declaring a Mojo initializer
+function as a Python-compatible object initializer using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonTypeBuilder/#def_py_init" rel="noopener noreferrer"><code>def_py_init()</code></a> when
+you add the type to your module. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@export</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">PyInit_person_module</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> mb <span class="tk-operator">=</span> PythonModuleBuilder<span class="tk-punctuation">(</span><span class="tk-string">"person_module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="5">        _ <span class="tk-operator">=</span> mb<span class="tk-punctuation">.</span>add_type<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Person"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>def_py_init<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">.</span>py_init<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> mb<span class="tk-punctuation">.</span>finalize<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">        abort<span class="tk-punctuation">(</span>String<span class="tk-punctuation">(</span><span class="tk-string">"error creating Python Mojo module:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="11"><span class="tk-keyword">struct</span> <span class="tk-class-name">Person</span><span class="tk-punctuation">(</span>Movable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="13"> <span class="tk-keyword">var</span> age<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="14"></span>
+<span class="cl hl" data-line="15"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl hl" data-line="16"> <span class="tk-keyword">def</span> <span class="tk-function">py_init</span><span class="tk-punctuation">(</span></span>
+<span class="cl hl" data-line="17"> <span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">:</span> Person<span class="tk-punctuation">,</span> args<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span> kwargs<span class="tk-punctuation">:</span> PythonObject</span>
+<span class="cl hl" data-line="18"> <span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl hl" data-line="19"> <span class="tk-comment"># Validate argument count</span></span>
+<span class="cl hl" data-line="20"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>args<span class="tk-punctuation">)</span> <span class="tk-operator">!=</span> <span class="tk-number">2</span><span class="tk-punctuation">:</span></span>
+<span class="cl hl" data-line="21"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"Person() takes exactly 2 arguments"</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="22"></span>
+<span class="cl hl" data-line="23"> <span class="tk-comment"># Convert Python arguments to Mojo types</span></span>
+<span class="cl hl" data-line="24"> <span class="tk-keyword">var</span> name <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span>args<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="25"> <span class="tk-keyword">var</span> age <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>args<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="26"></span>
+<span class="cl hl" data-line="27"> <span class="tk-special-vars">self</span> <span class="tk-operator">=</span> Self<span class="tk-punctuation">(</span>name<span class="tk-punctuation">,</span> age<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>With this Mojo binding, you can create <code>Person</code> instances in Python:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">person <span class="tk-operator">=</span> person_module<span class="tk-punctuation">.</span>Person<span class="tk-punctuation">(</span><span class="tk-string">"Sarah"</span><span class="tk-punctuation">,</span> <span class="tk-number">32</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>person<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Person(name=Sarah, age=32)</span>
+</code></pre></figure>
+<p>For types that support default construction, you can use the simpler
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonTypeBuilder/#def_init_defaultable" rel="noopener noreferrer"><code>def_init_defaultable()</code></a>
+method:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> counter_type <span class="tk-operator">=</span> m<span class="tk-punctuation">.</span>add_type<span class="tk-punctuation">[</span>Counter<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Counter"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2">counter_type<span class="tk-punctuation">.</span>def_init_defaultable<span class="tk-punctuation">[</span>Counter<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>This enables Python code to create instances without arguments:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">counter <span class="tk-operator">=</span> counter_module<span class="tk-punctuation">.</span>Counter<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Creates Counter()</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>"Constructor" vs "Initializer"</p><div class="callout__body"><p>In Python, object construction happens across both the <code>__new__()</code> and
+<code>__init__()</code> methods, so the <code>__init__()</code> method is technically just the
+attribute initializer. However, in a Mojo struct, there's no <code>__new__()</code>
+method, so we prefer to always call <code>__init__()</code> the initializer.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="returning-mojo-objects-to-python">Returning Mojo objects to Python<a aria-label="Link to Returning Mojo objects to Python" class="h__link" href="#returning-mojo-objects-to-python"></a></h3>
+<p>Mojo functions called from Python don't just need to be able to accept
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python_object/PythonObject/" rel="noopener noreferrer"><code>PythonObject</code></a> values as
+arguments, they also need to be able to return new values. And sometimes, they
+even need to be able to return Mojo native values back to Python. This is
+possible by using the <code>PythonObject(alloc=&lt;value&gt;)</code> constructor.</p>
+<p>An example of this looks like:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">create_person</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> person <span class="tk-operator">=</span> Person<span class="tk-punctuation">(</span><span class="tk-string">"Sarah"</span><span class="tk-punctuation">,</span> <span class="tk-number">32</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> PythonObject<span class="tk-punctuation">(</span>alloc<span class="tk-operator">=</span>person<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<aside class="callout callout--caution"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">▲</span>Caution</p><div class="callout__body"><p><code>PythonObject(alloc=...)</code> will raise an exception if the provided Mojo object
+type had not previously been registered using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonModuleBuilder/#add_type" rel="noopener noreferrer"><code>PythonModuleBuilder.add_type()</code></a>.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="pythonobject-to-mojo-values"><code>PythonObject</code> to Mojo values<a aria-label="Link to PythonObject to Mojo values" class="h__link" href="#pythonobject-to-mojo-values"></a></h3>
+<p>Within any Mojo code that is handling a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python_object/PythonObject/" rel="noopener noreferrer"><code>PythonObject</code></a>, but
+especially within Mojo functions called from Python, it's common to expect an
+argument of a particular type.</p>
+<p>There are two ways in which a <code>PythonObject</code> can be turned into a native
+Mojo value:</p>
+<ul>
+<li class="">
+<p><strong>Converting</strong> a Python object into a newly constructed Mojo value that has
+the same logical value as the original Python object.
+This is handled by the <a class="ext" data-external="" href="https://mojolang.org/docs/std/python/conversions/ConvertibleFromPython/" rel="noopener noreferrer"><code>ConvertibleFromPython</code></a> trait.</p>
+</li>
+<li class="">
+<p><strong>Downcasting</strong> a Python object that holds a native Mojo value to a pointer
+to that inner value.
+This is handled by <a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python_object/PythonObject/#downcast_value_ptr" rel="noopener noreferrer"><code>PythonObject.downcast_value_ptr()</code></a>.</p>
+</li>
+</ul>
+<h4 class="h h--4" data-level="4" id="pythonobject-conversions"><code>PythonObject</code> conversions<a aria-label="Link to PythonObject conversions" class="h__link" href="#pythonobject-conversions"></a></h4>
+<p>Many Mojo types support conversion directly from equivalent Python types, via
+the <a class="ext" data-external="" href="https://mojolang.org/docs/std/python/conversions/ConvertibleFromPython/" rel="noopener noreferrer"><code>ConvertibleFromPython</code></a> trait:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Given a person, clone them and give them a different name.</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">create_person</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3">    name_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4">    age_obj<span class="tk-punctuation">:</span> PythonObject</span>
+<span class="cl" data-line="5"><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-comment"># These conversions will raise an exception if they fail</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> name <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span>name_obj<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> age <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>age_obj<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">return</span> PythonObject<span class="tk-punctuation">(</span>alloc<span class="tk-operator">=</span>Person<span class="tk-punctuation">(</span>name<span class="tk-punctuation">,</span> age<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Which could be called from Python using:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">person <span class="tk-operator">=</span> mojo_module<span class="tk-punctuation">.</span>create_person<span class="tk-punctuation">(</span><span class="tk-string">"John Smith"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Passing invalid arguments will result in a runtime argument error:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">person <span class="tk-operator">=</span> mojo_module<span class="tk-punctuation">.</span>create_person<span class="tk-punctuation">(</span><span class="tk-number">42</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h4 class="h h--4" data-level="4" id="pythonobject-downcasts"><code>PythonObject</code> downcasts<a aria-label="Link to PythonObject downcasts" class="h__link" href="#pythonobject-downcasts"></a></h4>
+<p>Downcasting from <code>PythonObject</code> values to the inner Mojo value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print_age</span><span class="tk-punctuation">(</span>person_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Raises if `obj` does not contain an instance of the Mojo `Person` type.</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> person <span class="tk-operator">=</span> person_obj<span class="tk-punctuation">.</span>downcast_value_ptr<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Person is"</span><span class="tk-punctuation">,</span> person<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>age<span class="tk-punctuation">,</span> <span class="tk-string">"years old"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Unsafe mutation via downcasting is also supported. It is up to the user to
+ensure that this mutable pointer does not alias any other pointers to the same
+object within Mojo:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">birthday</span><span class="tk-punctuation">(</span>person_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> person <span class="tk-operator">=</span> person_obj<span class="tk-punctuation">.</span>downcast_value_ptr<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4">    person<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>age <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+</code></pre></figure>
+<p>Entirely unchecked downcasting—which does no type checking—can be done using:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">get_person</span><span class="tk-punctuation">(</span>person_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> person <span class="tk-operator">=</span> person_obj<span class="tk-punctuation">.</span>unchecked_downcast_value_ptr<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Unchecked downcasting can be used to eliminate overhead when optimizing a tight
+inner loop with Mojo, and you've benchmarked and measured that type checking
+downcasts is a significant bottleneck.</p>
+<h3 class="h h--3" data-level="3" id="methods">Methods<a aria-label="Link to Methods" class="h__link" href="#methods"></a></h3>
+<p>When binding Mojo objects for use from Python, you can expose chosen methods to
+Python as well, using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonTypeBuilder/#def_method" rel="noopener noreferrer"><code>PythonTypeBuilder.def_method()</code></a>.</p>
+<p>Currently, Mojo methods being exposed to Python must be written with a
+modification compared to normal Mojo methods: they must be a <code>@staticmethod</code>
+that takes either <code>py_self: PythonObject</code> or <code>self_ptr: Pointer[Self]</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> PythonObject</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python<span class="tk-punctuation">.</span>bindings <span class="tk-keyword">import</span> PythonModuleBuilder</span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>os <span class="tk-keyword">import</span> abort</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">@export</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">PyInit_mojo_module</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> mb <span class="tk-operator">=</span> PythonModuleBuilder<span class="tk-punctuation">(</span><span class="tk-string">"mojo_module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="9">        _ <span class="tk-operator">=</span> mb<span class="tk-punctuation">.</span>add_type<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Person"</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="10"> <span class="tk-punctuation">.</span>def_method<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">.</span>get_name<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"get_name"</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="11"> <span class="tk-punctuation">.</span>def_method<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">.</span>set_age<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"set_age"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">return</span> mb<span class="tk-punctuation">.</span>finalize<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14">        abort<span class="tk-punctuation">(</span><span class="tk-string">"error creating Mojo module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"></span>
+<span class="cl" data-line="16"><span class="tk-keyword">struct</span> <span class="tk-class-name">Person</span><span class="tk-punctuation">(</span>Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="18"> <span class="tk-keyword">var</span> age<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="19"></span>
+<span class="cl hl" data-line="20"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl hl" data-line="21"> <span class="tk-keyword">def</span> <span class="tk-function">get_name</span><span class="tk-punctuation">(</span>py_self<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl hl" data-line="22"> <span class="tk-keyword">var</span> self_ptr <span class="tk-operator">=</span> py_self<span class="tk-punctuation">.</span>downcast_value_ptr<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="23"> <span class="tk-keyword">return</span> self_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>name</span>
+<span class="cl hl" data-line="24"></span>
+<span class="cl hl" data-line="25"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl hl" data-line="26"> <span class="tk-keyword">def</span> <span class="tk-function">set_age</span><span class="tk-punctuation">(</span></span>
+<span class="cl hl" data-line="27">        self_ptr<span class="tk-punctuation">:</span> Pointer<span class="tk-punctuation">[</span><span class="tk-keyword">mut</span><span class="tk-operator">=</span><span class="tk-boolean">True</span><span class="tk-punctuation">,</span> Self<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl hl" data-line="28">        new_age<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span></span>
+<span class="cl hl" data-line="29"> <span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl hl" data-line="30">        self_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>age <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>new_age<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="31"></span>
+<span class="cl" data-line="32"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="33">        t<span class="tk-string">"Person({self.name}, {self.age})"</span><span class="tk-punctuation">.</span>write_to<span class="tk-punctuation">(</span>writer<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Taking <code>py_self: PythonObject</code> allows access to the full <code>PythonObject</code>
+allocation that a Mojo object instance is stored inside of. Typically though,
+taking <code>self_ptr: Pointer[Self]</code> will minimize boilerplate in the common
+case that a method merely needs to access the fields of an object.</p>
+<p>Mojo methods called from Python are currently required to take non-standard self
+types due to limitations that will be lifted in future versions of Python Mojo
+bindings.</p>
+<h3 class="h h--3" data-level="3" id="static-methods">Static methods<a aria-label="Link to Static methods" class="h__link" href="#static-methods"></a></h3>
+<p>Python Mojo bindings supports exposing Python <code>@staticmethods</code>, bound using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonTypeBuilder/#def_staticmethod" rel="noopener noreferrer"><code>PythonTypeBuilder.def_staticmethod()</code></a>.
+A function declared using <code>def_staticmethod()</code> is callable as a static method on
+the type within Python, without needing an object instance.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> PythonObject</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python<span class="tk-punctuation">.</span>bindings <span class="tk-keyword">import</span> PythonModuleBuilder</span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>os <span class="tk-keyword">import</span> abort</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">@export</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">PyInit_mojo_module</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> mb <span class="tk-operator">=</span> PythonModuleBuilder<span class="tk-punctuation">(</span><span class="tk-string">"mojo_module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="9">        mb<span class="tk-punctuation">.</span>add_type<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Person"</span><span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="10"> <span class="tk-punctuation">.</span>def_staticmethod<span class="tk-punctuation">[</span>Person<span class="tk-punctuation">.</span>is_valid_age<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"is_valid_age"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">return</span> mb<span class="tk-punctuation">.</span>finalize<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13">        abort<span class="tk-punctuation">(</span><span class="tk-string">"error creating Mojo module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-keyword">struct</span> <span class="tk-class-name">Person</span><span class="tk-punctuation">(</span>Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="17"> <span class="tk-keyword">var</span> age<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="18"></span>
+<span class="cl hl" data-line="19"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl hl" data-line="20"> <span class="tk-keyword">def</span> <span class="tk-function">is_valid_age</span><span class="tk-punctuation">(</span>age_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl hl" data-line="21"> <span class="tk-keyword">var</span> age <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>age_obj<span class="tk-punctuation">)</span></span>
+<span class="cl hl" data-line="22"> <span class="tk-keyword">return</span> <span class="tk-number">0</span> <span class="tk-operator">&lt;=</span> age <span class="tk-operator">&lt;=</span> <span class="tk-number">130</span></span>
+<span class="cl" data-line="23"></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="25">        t<span class="tk-string">"Person({self.name}, {self.age})"</span><span class="tk-punctuation">.</span>write_to<span class="tk-punctuation">(</span>writer<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Calling a Mojo function bound as a static method looks like a typical Python
+static method call directly on the type object:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__file">main.py</span><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> mojo_module <span class="tk-keyword">import</span> Person</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>Person<span class="tk-punctuation">.</span>is_valid_age<span class="tk-punctuation">(</span><span class="tk-number">45</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Prints 'True'</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>Person<span class="tk-punctuation">.</span>is_valid_age<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Prints 'False'</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="keyword-arguments">Keyword arguments<a aria-label="Link to Keyword arguments" class="h__link" href="#keyword-arguments"></a></h3>
+<p><a href="../pages/08_functions.html#keyword-arguments">Keyword arguments in Mojo</a> come in
+two forms:</p>
+<ol>
+<li class="">Keyword-only arguments: <code>def foo(*, x: Int)</code>
+This is not currently supported in Python Mojo bindings.</li>
+<li class=""><a href="../pages/08_functions.html#variadic-keyword-arguments">Variadic keyword arguments</a>:
+<code>def foo(var **kwargs: Int)</code> This is supported in Python Mojo bindings when
+used in the unsugared form: <code>def foo(kwargs: StringDict)</code>. (The <code>**kwargs</code>
+syntax limitation will be removed in the future.)</li>
+</ol>
+<p>You can define Mojo functions that accept variadic keyword arguments using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/StringDict/" rel="noopener noreferrer"><code>StringDict[PythonObject]</code></a>
+as the last argument. A simple example looks like:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> mojo_module</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3">result <span class="tk-operator">=</span> mojo_module<span class="tk-punctuation">.</span>sum_kwargs_ints<span class="tk-punctuation">(</span>a<span class="tk-operator">=</span><span class="tk-number">10</span><span class="tk-punctuation">,</span> b<span class="tk-operator">=</span><span class="tk-number">20</span><span class="tk-punctuation">,</span> c<span class="tk-operator">=</span><span class="tk-number">30</span><span class="tk-punctuation">)</span> <span class="tk-comment"># returns 60</span></span>
+</code></pre></figure>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>collections <span class="tk-keyword">import</span> StringDict</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">sum_kwargs_ints</span><span class="tk-punctuation">(</span>kwargs<span class="tk-punctuation">:</span> StringDict<span class="tk-punctuation">[</span>PythonObject<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> total <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">for</span> entry <span class="tk-keyword">in</span> kwargs<span class="tk-punctuation">.</span>items<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">        total <span class="tk-operator">+=</span> Int<span class="tk-punctuation">(</span>entry<span class="tk-punctuation">.</span>value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> PythonObject<span class="tk-punctuation">(</span>total<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Keyword arguments are also supported following normal positional arguments.
+Additionally, getting specific keyword arguments is a dictionary lookup on the
+<code>StringDict</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>collections <span class="tk-keyword">import</span> StringDict</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">duration_in_seconds</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="4">    hours_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="5">    minutes_obj<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6">    kwargs<span class="tk-punctuation">:</span> StringDict<span class="tk-punctuation">[</span>PythonObject<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="7"><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> hours <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>hours_obj<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> minutes <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>minutes_obj<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> seconds <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>kwargs<span class="tk-punctuation">[</span><span class="tk-string">"seconds"</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">return</span> hours <span class="tk-operator">*</span> <span class="tk-number">3600</span> <span class="tk-operator">+</span> minutes <span class="tk-operator">*</span> <span class="tk-number">60</span> <span class="tk-operator">+</span> seconds</span>
+</code></pre></figure>
+<p>In this example, if a call to <code>duration_in_seconds()</code> is missing the required
+<code>"seconds"</code> named argument, a runtime exception will occur:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__file">main.py</span><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> mojo_module <span class="tk-keyword">import</span> duration_in_seconds</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-comment"># Pass hours and minutes, missing "seconds"</span></span>
+<span class="cl" data-line="4">duration_in_seconds<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">)</span> <span class="tk-comment"># ERROR: KeyError</span></span>
+</code></pre></figure>
+<p>Keyword arguments are supported when bindings top-level functions, methods, and
+static methods.</p>
+<h3 class="h h--3" data-level="3" id="variadic-arguments">Variadic arguments<a aria-label="Link to Variadic arguments" class="h__link" href="#variadic-arguments"></a></h3>
+<p>Python and Mojo variadic arguments are normally written using the following
+syntax:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>args<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>However, this syntax is not yet supported in Python/Mojo bindings, because
+functions bound using
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonModuleBuilder/#def_function" rel="noopener noreferrer"><code>def_function()</code></a>
+support only fixed-arity functions.</p>
+<p>As a workaround, you can expose Mojo functions that accept a variadic number of
+arguments to Python using the lower-level
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/bindings/PythonModuleBuilder/#def_py_function" rel="noopener noreferrer"><code>def_py_function()</code></a>
+interface, which leaves it to the user to validate the number of arguments
+provided:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@export</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">PyInit_mojo_module</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> b <span class="tk-operator">=</span> PythonModuleBuilder<span class="tk-punctuation">(</span><span class="tk-string">"mojo_module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">        b<span class="tk-punctuation">.</span>def_py_function<span class="tk-punctuation">[</span>count_args<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"count_args"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6">        b<span class="tk-punctuation">.</span>def_py_function<span class="tk-punctuation">[</span>sum_args<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"sum_args"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">        b<span class="tk-punctuation">.</span>def_py_function<span class="tk-punctuation">[</span>lookup<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"lookup"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">count_args</span><span class="tk-punctuation">(</span>py_self<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span> args_tuple<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">return</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>args_tuple<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-keyword">def</span> <span class="tk-function">sum_args</span><span class="tk-punctuation">(</span>py_self<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span> args_tuple<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">var</span> total <span class="tk-operator">=</span> args_tuple<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>args_tuple<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15">        total <span class="tk-operator">+=</span> args_tuple<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">return</span> total</span>
+<span class="cl" data-line="17"></span>
+<span class="cl" data-line="18"><span class="tk-keyword">def</span> <span class="tk-function">lookup</span><span class="tk-punctuation">(</span>py_self<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span> args_tuple<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>args_tuple<span class="tk-punctuation">)</span> <span class="tk-operator">!=</span> <span class="tk-number">2</span> <span class="tk-keyword">and</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>args_tuple<span class="tk-punctuation">)</span> <span class="tk-operator">!=</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"lookup() expects 2 or 3 arguments"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21"></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">var</span> collection <span class="tk-operator">=</span> args_tuple<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">var</span> key <span class="tk-operator">=</span> args_tuple<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="24"></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">return</span> collection<span class="tk-punctuation">[</span>key<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="28"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>args<span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="29"> <span class="tk-keyword">return</span> args_tuple<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="30"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="31"> <span class="tk-keyword">raise</span> e</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="strategies-for-porting-python-to-mojo">Strategies for porting Python to Mojo<a aria-label="Link to Strategies for porting Python to Mojo" class="h__link" href="#strategies-for-porting-python-to-mojo"></a></h2>
+<h3 class="h h--3" data-level="3" id="writing-pythonic-code-in-mojo">Writing Pythonic code in Mojo<a aria-label="Link to Writing Pythonic code in Mojo" class="h__link" href="#writing-pythonic-code-in-mojo"></a></h3>
+<p>In this approach to bindings, we embrace the flexibility of Python, and eschew
+trying to convert <code>PythonObject</code> arguments into the narrowly constrained,
+strongly-typed space of the Mojo type system, in favor of just writing some code
+and letting it raise an exception at runtime if we got something wrong.</p>
+<p>The flexibility of <code>PythonObject</code> enables a unique programming style, wherein
+Python code can be "ported" to Mojo with relatively few changes.</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">,</span> y<span class="tk-punctuation">,</span> z<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    x<span class="tk-punctuation">[</span>y<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-builtin">int</span><span class="tk-punctuation">(</span>z<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3">    x <span class="tk-operator">=</span> y <span class="tk-operator">+</span> z</span>
+</code></pre></figure>
+<p>Rule of thumb: Any Python builtin function should be accessible in Mojo using
+<code>Python.&lt;builtin&gt;()</code>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">,</span> z<span class="tk-punctuation">:</span> PythonObject<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> PythonObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    x<span class="tk-punctuation">[</span>y<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span><span class="tk-builtin">int</span><span class="tk-punctuation">(</span>z<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3">    x <span class="tk-operator">=</span> y <span class="tk-operator">+</span> z</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="building-mojo-extension-modules">Building Mojo extension modules<a aria-label="Link to Building Mojo extension modules" class="h__link" href="#building-mojo-extension-modules"></a></h2>
+<p>You can create and distribute your Mojo modules for Python in the following
+ways:</p>
+<ul>
+<li class="">
+<p>As source files, compiled on demand using the Python Mojo importer hook.</p>
+<p>The advantage of this approach is that it's easy to get started with, and
+keeps your project structure simple, while ensuring that your imported Mojo
+code is always up to date after you make an edit.</p>
+</li>
+<li class="">
+<p>As pre-built Python extension module <code>.so</code> dynamic libraries, compiled using:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo build mojo_module.mojo --emit shared-lib -o mojo_module.so</span>
+</code></pre></figure>
+<p>This has the advantage that you can specify any other necessary build options
+manually (optimization or debug flags, import paths, etc.), providing an
+"escape hatch" from the Mojo import hook abstraction for advanced users.</p>
+</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="known-limitations">Known limitations<a aria-label="Link to Known limitations" class="h__link" href="#known-limitations"></a></h2>
+<p>While we have big ambitions for Python to Mojo interoperability—our goal is for
+Mojo to be the best way to extend Python—this feature is still in early and
+active development, and there are some limitations to be aware of. These will
+be lifted over time.</p>
+<ul>
+<li class="">
+<p><strong>Keyword arguments syntax.</strong>
+Currently, Mojo functions called from Python only accept keyword arguments
+when using a trailing <code>kwargs: StringDict[PythonObject]</code> argument.
+Support for native <code>**kwargs</code> syntax will be added in the future.</p>
+</li>
+<li class="">
+<p><strong>Mojo package dependencies.</strong>
+Mojo code that has dependencies on packages other than the Mojo stdlib
+(like those in the ever-growing
+<a class="ext" data-external="" href="https://github.com/modular/modular-community" rel="noopener noreferrer">Modular Community</a> package
+channel) are currently only supported when building Mojo extension modules
+manually, as the Mojo import hook does not currently support a way to
+specify import paths for Mojo package dependencies.</p>
+</li>
+<li class="">
+<p><strong>Properties.</strong>
+Computed properties getter and setters are not currently supported.</p>
+</li>
+<li class="">
+<p><strong>Expected type conversions.</strong>
+A handful of Mojo standard library types can be constructed directly from
+equivalent Python builtin object types, by implementing the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/conversions/ConvertibleFromPython/" rel="noopener noreferrer"><code>ConvertibleFromPython</code></a> trait.
+However, many Mojo standard library types do not yet implement this trait,
+so may require manual conversion logic if needed.</p>
+</li>
+</ul>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/python/mojo-from-python/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/python/mojo-from-python/</a>, saved Thu, 01 Oct 2026 15:45:07 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/26_calling-python-from-mojo.html"><span class="pager__dir">← Previous</span><span class="pager__title">Calling Python from Mojo</span></a><a class="pager__link pager__link--next" href="../pages/28_c-foreign-function-interface.html"><span class="pager__dir">Next →</span><span class="pager__title">Using Mojo's C FFI to call C libraries</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#import-a-mojo-module-in-python">Import a Mojo module in Python</a></li><li class="rail__depth-2"><a href="#bindings-features">Bindings features</a></li><li class="rail__depth-2"><a href="#strategies-for-porting-python-to-mojo">Strategies for porting Python to Mojo</a></li><li class="rail__depth-2"><a href="#building-mojo-extension-modules">Building Mojo extension modules</a></li><li class="rail__depth-2"><a href="#known-limitations">Known limitations</a></li><li class="rail__depth-3"><a href="#how-it-works">How it works</a></li><li class="rail__depth-3"><a href="#the-abi-of-exported-functions">The abi of exported functions</a></li><li class="rail__depth-3"><a href="#binding-mojo-types">Binding Mojo types</a></li><li class="rail__depth-3"><a href="#constructing-mojo-objects-in-python">Constructing Mojo objects in Python</a></li><li class="rail__depth-3"><a href="#returning-mojo-objects-to-python">Returning Mojo objects to Python</a></li><li class="rail__depth-3"><a href="#pythonobject-to-mojo-values">PythonObject to Mojo values</a></li><li class="rail__depth-3"><a href="#methods">Methods</a></li><li class="rail__depth-3"><a href="#static-methods">Static methods</a></li><li class="rail__depth-3"><a href="#keyword-arguments">Keyword arguments</a></li><li class="rail__depth-3"><a href="#variadic-arguments">Variadic arguments</a></li><li class="rail__depth-3"><a href="#writing-pythonic-code-in-mojo">Writing Pythonic code in Mojo</a></li><li class="rail__depth-4"><a href="#pythonobject-conversions">PythonObject conversions</a></li><li class="rail__depth-4"><a href="#pythonobject-downcasts">PythonObject downcasts</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#import-a-mojo-module-in-python">Import a Mojo module in Python</a></li><li class="rail__depth-2"><a href="#bindings-features">Bindings features</a></li><li class="rail__depth-2"><a href="#strategies-for-porting-python-to-mojo">Strategies for porting Python to Mojo</a></li><li class="rail__depth-2"><a href="#building-mojo-extension-modules">Building Mojo extension modules</a></li><li class="rail__depth-2"><a href="#known-limitations">Known limitations</a></li><li class="rail__depth-3"><a href="#how-it-works">How it works</a></li><li class="rail__depth-3"><a href="#the-abi-of-exported-functions">The abi of exported functions</a></li><li class="rail__depth-3"><a href="#binding-mojo-types">Binding Mojo types</a></li><li class="rail__depth-3"><a href="#constructing-mojo-objects-in-python">Constructing Mojo objects in Python</a></li><li class="rail__depth-3"><a href="#returning-mojo-objects-to-python">Returning Mojo objects to Python</a></li><li class="rail__depth-3"><a href="#pythonobject-to-mojo-values">PythonObject to Mojo values</a></li><li class="rail__depth-3"><a href="#methods">Methods</a></li><li class="rail__depth-3"><a href="#static-methods">Static methods</a></li><li class="rail__depth-3"><a href="#keyword-arguments">Keyword arguments</a></li><li class="rail__depth-3"><a href="#variadic-arguments">Variadic arguments</a></li><li class="rail__depth-3"><a href="#writing-pythonic-code-in-mojo">Writing Pythonic code in Mojo</a></li><li class="rail__depth-4"><a href="#pythonobject-conversions">PythonObject conversions</a></li><li class="rail__depth-4"><a href="#pythonobject-downcasts">PythonObject downcasts</a></li></ol>
+<p class="rail__meta">Chapter 27 of 38 · Part IV, Memory &amp; Interop.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -167,7 +165,6 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="k1"><span class="sw"></span>kernel.mojo</div>
-        <div class="tab" data-lang="python" data-group="k1"><span class="sw"></span>kernel.py</div>
       </div>
       <div class="panes" data-group="k1">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — vector addition GPU kernel (Mojo 1.x / MAX 26.5)</span>
@@ -200,23 +197,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
         grid_dim=num_blocks, block_dim=BLOCK_SIZE,
     )
     ctx.synchronize()</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — CuPy equivalent</span>
-<span class="tok-kw">import</span> cupy <span class="tok-kw">as</span> cp
-
-n = <span class="tok-num">1_000_000</span>
-a = cp.random.rand(n, dtype=cp.float32)
-b = cp.random.rand(n, dtype=cp.float32)
-
-<span class="tok-com"># CuPy handles kernel launch automatically</span>
-c = a + b
-
-<span class="tok-com"># Or write a custom kernel with RawKernel:</span>
-kernel_code = <span class="tok-str">'extern "C" __global__ void vec_add(int n, float* a, float* b, float* c) { int tid = threadIdx.x + blockIdx.x * blockDim.x; if (tid &lt; n) c[tid] = a[tid] + b[tid]; }'</span>
-mod = cp.RawModule(code=kernel_code)
-kernel = mod.get_function(<span class="tok-str">'vec_add'</span>)
-kernel((n//<span class="tok-num">256</span>,), (<span class="tok-num">256</span>,), (n, a, b, c))</pre></div>
       </div>
     </div>
+
+    <p class="cap">In CuPy the elementwise case is <code class="inline">c = a + b</code> with no launch code at all, and the custom-kernel route means wrapping the same C source in <code class="inline">cp.RawModule(code=...).get_function('vec_add')</code> before passing <code class="inline">(n//256,), (256,)</code> as the grid and block. Here the kernel is an ordinary Mojo function and its launch sits in the same file.</p>
 
     <p>The Mojo kernel compiles to the same PTX (Parallel Thread Execution) instructions a hand-written CUDA kernel would — and <code class="inline">enqueue_function</code> type-checks the kernel's arguments at compile time, so a mismatched argument is a build error, not a runtime crash.</p>
   </section>
@@ -228,7 +212,6 @@ kernel((n//<span class="tok-num">256</span>,), (<span class="tok-num">256</span>
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="mm"><span class="sw"></span>matmul.mojo</div>
-        <div class="tab" data-lang="python" data-group="mm"><span class="sw"></span>matmul.py</div>
       </div>
       <div class="panes" data-group="mm">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — tiled matrix multiplication kernel</span>
@@ -252,7 +235,7 @@ kernel((n//<span class="tok-num">256</span>,), (<span class="tok-num">256</span>
     <span class="tok-kw">var</span> sum: Float32 = <span class="tok-num">0.0</span>
 
     <span class="tok-com"># Loop over tiles</span>
-    <span class="tok-kw">var</span> num_tiles = (K + TILE - <span class="tok-num">1</span>) # TILE
+    <span class="tok-kw">var</span> num_tiles = (K + TILE - <span class="tok-num">1</span>) // TILE
     <span class="tok-kw">for</span> t <span class="tok-kw">in</span> range(num_tiles):
         <span class="tok-com"># Load tile into shared memory</span>
         <span class="tok-kw">var</span> a_col = t * TILE + thread_idx.x
@@ -281,31 +264,15 @@ kernel((n//<span class="tok-num">256</span>,), (<span class="tok-num">256</span>
         C[row * N + col] = sum
 
 <span class="tok-com"># Launch: grid of tiles, block of TILE x TILE threads</span>
-<span class="tok-kw">var</span> grid = ((N + TILE - <span class="tok-num">1</span>) # TILE, (M + TILE - <span class="tok-num">1</span>) // TILE)
+<span class="tok-kw">var</span> grid = ((N + TILE - <span class="tok-num">1</span>) // TILE, (M + TILE - <span class="tok-num">1</span>) // TILE)
 ctx.enqueue_function[matmul_kernel](
     Int32(M), Int32(N), Int32(K), d_A, d_B, d_C,
     grid_dim=grid, block_dim=(TILE, TILE),
 )</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — CuPy / PyTorch (no custom kernel needed)</span>
-<span class="tok-kw">import</span> cupy <span class="tok-kw">as</span> cp
-<span class="tok-kw">import</span> torch
-
-M, N, K = <span class="tok-num">1024</span>, <span class="tok-num">1024</span>, <span class="tok-num">1024</span>
-
-<span class="tok-com"># CuPy — calls cuBLAS under the hood</span>
-A = cp.random.rand(M, K, dtype=cp.float32)
-B = cp.random.rand(K, N, dtype=cp.float32)
-C = A @ B  <span class="tok-com"># uses highly optimized cuBLAS GEMM</span>
-
-<span class="tok-com"># PyTorch — same thing</span>
-A = torch.randn(M, K, device=<span class="tok-str">'cuda'</span>)
-B = torch.randn(K, N, device=<span class="tok-str">'cuda'</span>)
-C = A @ B
-
-<span class="tok-com"># Custom kernels in PyTorch require Triton or CUDA extensions</span>
-<span class="tok-com"># Mojo gives you the same low-level control as CUDA</span></pre></div>
       </div>
     </div>
+
+    <p class="cap">From Python the same multiply is <code class="inline">C = A @ B</code> on CuPy device arrays, or <code class="inline">torch.randn(M, K, device='cuda')</code> followed by the same <code class="inline">@</code> — either way it dispatches to a vendor GEMM, which is the <code class="inline">cuBLAS</code> row in the table below. Reaching that last row's level of control in Python means Triton or a hand-written CUDA extension; in Mojo it is the kernel above.</p>
 
     <h3>Why tiled matmul is faster</h3>
     <p>Without tiling, each element of A is read from global memory K times (once per column of B). With 16x16 tiles, each element is read once into shared memory and reused 16 times. For a 1024x1024 matrix multiply, this reduces global memory reads from 2 billion to 128 million — a <b>16x reduction</b> in memory traffic.</p>

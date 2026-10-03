@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Science Mojo — learn Mojo for data science, interactively</title>
+<meta name="description" content="Ten hands-on modules on data science in Mojo: tensors, statistics, least squares, regression, classification, trees, clustering, NumPy interop and performance. Every module has live widgets and a quiz.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div id="progress"></div>
+
+<header class="topbar">
+  <div class="wrap topin">
+    <a class="brand" href="../index.html">
+      <span class="logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5.5" rx="8" ry="3"></ellipse>
+          <path d="M4 5.5v13c0 1.66 3.58 3 8 3s8-1.34 8-3v-13"></path>
+          <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"></path>
+        </svg>
+      </span>
+      <span>Data Science Mojo</span>
+      <span class="sub">· 10 modules</span>
+    </a>
+    <div class="topright">
+      <span class="readout" id="readout">0/10 modules</span>
+      <a class="pill hide" href="../index.html">Data science shelf</a>
+      <button class="pill tocbtn" aria-expanded="false" aria-controls="toc">Modules</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" id="toc" aria-label="Modules">
+    <h4>Contents</h4>
+    <div id="toclist"></div>
+    <hr>
+    <h4>Nearby</h4>
+    <a href="../index.html">← Data science shelf</a>
+  </nav>
+
+  <main class="content">
+    <section class="hero">
+      <span class="eyebrow">Interactive tutorial</span>
+      <h1>Data science in <span class="grad">Mojo</span></h1>
+      <p class="lead">Mojo gives you Python's ergonomics with the performance of a systems language, and NumPy interoperability where you need it. This tutorial works through the actual numerical core of data science — the reductions, the solves, the fits, the trees — with a live widget on every idea and a quiz at the end of each module.</p>
+      <div class="actions">
+        <button class="btn primary" data-start>Start module 01 →</button>
+        <a class="btn" href="#m05">Jump to linear regression</a>
+        <a class="btn" href="#m09">NumPy interop</a>
+      </div>
+    </section>
+
+    <section class="module" id="m01" data-title="Why Mojo, and first tensors">
+      <h2>01 — Why Mojo, and first tensors</h2>
+      <p class="dek">What Mojo actually changes, and your first rank-1 tensor with a shape you can read off the page.</p>
+
+      <p>Data science in Python spends most of its time not in the model but in moving numbers between places: interpreter frames, reference-counted Python objects, the boundary between C and Python. Mojo attacks that overhead directly. It keeps Python's syntax where the ergonomics help, and compiles to native code where the cost is real.</p>
+
+      <p>Three changes matter most for numerical work:</p>
+      <ul>
+        <li><strong>Static types are optional, not mandatory.</strong> A function without a return annotation is still compiled, and the compiler infers what it can.</li>
+        <li><strong>Memory is explicit.</strong> A <code>Tensor</code> owns contiguous, row-major buffer data, and its type carries the element type and the dimensionality.</li>
+        <li><strong>Compilation is per-definition, not traced.</strong> You do not need a JIT warm-up trace, and you do not need to write in a subset of Python to get native speed.</li>
+      </ul>
+
+      <div class="callout info">
+        <strong>How to read the listings</strong>
+        <p>Every listing targets <strong>Mojo 1.x</strong>. Where a listing is illustrative rather than executable, the text says so. Outputs are labelled <em>expected</em> output, because the listings cannot be compile-checked in this build.</p>
+      </div>
+
+      <p>The simplest numeric container is a one-dimensional tensor. The literal below is a rank-1 tensor of 64-bit floats:</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">hello.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># A rank-1 tensor of 64-bit floats.</span>
+<span class="tok-kw">var</span> <span class="tok-var">xs</span>: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64] <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](
+    <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">5.0</span>
+)
+<span class="tok-kw">var</span> <span class="tok-var">n</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> xs.num_elements()
+<span class="tok-fn">print</span>(<span class="tok-str">"n ="</span>, n)
+<span class="tok-fn">print</span>(<span class="tok-str">"shape ="</span>, xs.shape)
+<span class="tok-fn">print</span>(<span class="tok-str">"xs[2] ="</span>, xs[<span class="tok-num">2</span>])</pre>
+      </figure>
+<pre class="out">n = 5
+shape = (5,)
+xs[2] = 3.0</pre>
+
+      <p>Two details are worth pausing on. <code>xs.shape</code> returns a static-shaped tuple, so the shape of a literal is known at compile time and printed as a normal tuple. And <code>xs[2]</code> uses square brackets, not Python's <code>__getitem__</code> syntax sugar — Mojo indexing is its own operator, and it is where the bounds behaviour is decided.</p>
+
+      <p>A slice gives you a view with a narrower shape, still over the same memory:</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">slice.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">xs</span>: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64] <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](
+        <span class="tok-num">10.0</span>, <span class="tok-num">20.0</span>, <span class="tok-num">30.0</span>, <span class="tok-num">40.0</span>, <span class="tok-num">50.0</span>
+    )
+    <span class="tok-kw">var</span> <span class="tok-var">mid</span> <span class="tok-op">=</span> xs[<span class="tok-num">1</span>:<span class="tok-num">4</span>]
+    <span class="tok-fn">print</span>(<span class="tok-str">"mid ="</span>, mid)
+    <span class="tok-fn">print</span>(<span class="tok-str">"mid len ="</span>, mid.num_elements())
+    <span class="tok-com"># A slice over a Tensor is a Tensor, and it prints with its own shape.</span></pre>
+      </figure>
+<pre class="out">mid = [20.0, 30.0, 40.0]
+mid len = 3</pre>
+
+      <section class="lab" data-lab="mean" aria-label="Running mean lab">
+        <div class="labhead"><span class="dot"></span>Lab — the running mean<span class="tagline">m01</span></div>
+      </section>
+
+      <p>The widget generates a sample from a known distribution and walks through it once. The blue bars are the sample; the orange line is the running mean, which is <em>not</em> the mean of the whole set but the mean of everything seen so far. It moves a great deal early and settles late. This is the estimator behaviour that every later module refines.</p>
+
+      <div class="eq">
+$$\bar{x}_n = \frac{1}{n}\sum_{i=1}^{n} x_i$$
+      </div>
+
+      <p>Move the true mean to 6 and the running mean settles near it. Notice it is much more sensitive to a single early draw than to a single late one, which is why the first few points of any such trace look noisy.</p>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">In Mojo, a <code>Tensor[DType[float64]]</code> created from a 5-element list has which shape?</p>
+        <label class="opt"><input type="radio" name="m01q1" value="a"><span><code>()</code> — a literal's shape is untracked</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="b"><span><code>(5,)</code> — rank 1 with 5 elements</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="c"><span><code>(1, 5)</code> — a list is always a row matrix</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="d"><span><code>(5, 5)</code> — the element type contributes a dimension</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> the literal produces a rank-1 tensor, so the shape is the 1-tuple <code>(5,)</code>. <code>DType[float64]</code> selects the element type, not a dimension — that is what <code>DType</code> is for. A rank-2 shape <code>(1, 5)</code> would need an explicit reshape or a 2-D literal.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <span class="navbtn off"><span class="d">Start</span><span class="t">You are here</span></span>
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Next</span><span class="t">02 — Shapes, slices and reductions</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m02" data-title="Shapes, slices and reductions">
+      <h2>02 — Shapes, slices and reductions</h2>
+      <p class="dek">The operations you will write a hundred times: indexing, slicing, and folding an axis down to a scalar.</p>
+
+      <p>Mojo separates <em>shape</em> from <em>dimensionality</em>. A tensor's shape is its size along each axis; its rank is how many axes it has. A reduction collapses an axis, and when it collapses the last one you get a scalar.</p>
+
+      <p>Here is the loop you would write by hand, followed by the built-in that does the same job. The second is worth preferring: it is the one that vectorises.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">reduce.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">sum_by_hand</span>(xs: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64]) <span class="tok-kw">raises</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">acc</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(xs.num_elements()):
+        acc <span class="tok-op">+=</span> xs[i]
+    <span class="tok-kw">return</span> acc
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">xs</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](
+        <span class="tok-num">3.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">9.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">6.0</span>
+    )
+    <span class="tok-fn">print</span>(<span class="tok-str">"by hand ="</span>, sum_by_hand(xs))
+    <span class="tok-fn">print</span>(<span class="tok-str">"builtin ="</span>, xs.<span class="tok-fn">sum</span>())
+    <span class="tok-fn">print</span>(<span class="tok-str">"len ="</span>, xs.num_elements())</pre>
+      </figure>
+<pre class="out">by hand = 31.0
+builtin = 31.0
+len = 8</pre>
+
+      <p>For a rank-2 tensor, <code>sum()</code> reduces <em>all</em> axes by default. If you want one axis collapsed, ask for it explicitly, and remember that a rank-1 result is still a tensor:</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">axes.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">M</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">2</span>, <span class="tok-num">2</span>](
+        <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>
+    )
+    <span class="tok-fn">print</span>(<span class="tok-str">"shape   ="</span>, <span class="tok-type">M</span>.shape)
+    <span class="tok-fn">print</span>(<span class="tok-str">"total   ="</span>, <span class="tok-type">M</span>.<span class="tok-fn">sum</span>())
+    <span class="tok-fn">print</span>(<span class="tok-str">"axis 0  ="</span>, <span class="tok-type">M</span>.<span class="tok-fn">sum</span>(<span class="tok-type">Int</span>(<span class="tok-num">0</span>)))
+    <span class="tok-fn">print</span>(<span class="tok-str">"axis 1  ="</span>, <span class="tok-type">M</span>.<span class="tok-fn">sum</span>(<span class="tok-type">Int</span>(<span class="tok-num">1</span>)))
+    <span class="tok-kw">var</span> <span class="tok-var">col0</span> <span class="tok-op">=</span> <span class="tok-type">M</span>[:, <span class="tok-num">0</span>]
+    <span class="tok-fn">print</span>(<span class="tok-str">"col 0   ="</span>, col0, <span class="tok-str">"rank"</span>, col0.rank())</pre>
+      </figure>
+<pre class="out">shape   = (2, 2)
+total   = 10.0
+axis 0  = [4.0, 6.0]
+axis 1  = [3.0, 7.0]
+col 0   = [1.0, 3.0] rank 1</pre>
+
+      <p>Reduce, then reshape. Reducing over an axis leaves a rank-1 result of length 2, which is usually not what you want; <code>reshape(Dimension(1, 2))</code> turns it back into a column vector:</p>
+
+      <div class="eq">
+$$\text{shape: } (m, n) \;\xrightarrow{\;\text{sum}(0)\;}\; (n,) \;\xrightarrow{\;\text{reshape}\;(1, n)\;}\; (1, n)$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">reshape.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">column_sums</span>(<span class="tok-type">M</span>: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">2</span>, <span class="tok-num">2</span>]) <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-type">M</span>.<span class="tok-fn">sum</span>(<span class="tok-type">Int</span>(<span class="tok-num">0</span>))
+    <span class="tok-kw">return</span> s.<span class="tok-fn">reshape</span>(<span class="tok-type">Dimension</span>(<span class="tok-num">1</span>, <span class="tok-num">2</span>))
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">M</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">2</span>, <span class="tok-num">2</span>]<span class="tok-op">&gt;</span>(
+        <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>
+    )
+    <span class="tok-kw">var</span> <span class="tok-var">cs</span> <span class="tok-op">=</span> column_sums(<span class="tok-type">M</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"cs ="</span>, cs, <span class="tok-str">"shape ="</span>, cs.shape)</pre>
+      </figure>
+<pre class="out">cs = [[4.0, 6.0]] shape = (1, 2)</pre>
+
+      <section class="lab" data-lab="shape" aria-label="Reduction lab">
+        <div class="labhead"><span class="dot"></span>Lab — one loop, three reductions<span class="tagline">m02</span></div>
+      </section>
+
+      <p>Change the length and watch the shape readout, the sum, and the min/max all track together. The rank does not change — only the extent along axis 0.</p>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">After <code>M.sum(Int(0))</code> on a <code>(2, 2)</code> tensor, what is the result's shape?</p>
+        <label class="opt"><input type="radio" name="m02q1" value="a"><span><code>()</code> — a sum always returns a scalar</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="b"><span><code>(2, 1)</code> — Mojo preserves rank in reductions</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="c"><span><code>(2,)</code> — the reduced axis is dropped</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="d"><span><code>(2, 2)</code> — the shape is unchanged</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> reducing axis 0 collapses the two rows into one row of two sums, and Mojo drops the reduced axis from the shape. You get a rank-1 <code>(2,)</code>. If you need a column vector, <code>reshape(Dimension(1, 2))</code> as in <code>column_sums</code> above.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m01" data-goto="0"><span class="d">Previous</span><span class="t">01 — Why Mojo, and first tensors</span></a>
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Next</span><span class="t">03 — Descriptive statistics</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m03" data-title="Descriptive statistics">
+      <h2>03 — Descriptive statistics</h2>
+      <p class="dek">Mean, variance, and why one contaminated column can move one of them and not the other.</p>
+
+      <p>Descriptive statistics are the first place where a numerical choice becomes a modelling choice. The mean minimises squared error. The median minimises absolute error. Those are different questions, and the data decides which is the better answer.</p>
+
+      <h3>The variance in its stable form</h3>
+
+      <p>The textbook variance is the mean of squared deviations. Computing it that way means two passes and, worse, cancellation: when the mean is large and the spread is small, <code>x[i] - mean</code> is a difference of nearly equal numbers, and the float representation gives up precision exactly where you need it.</p>
+
+      <div class="eq">
+$$s^2 = \frac{1}{n-1}\sum_{i=1}^{n}(x_i - \bar{x})^2 \qquad \text{(two-pass, numerically safe)}$$
+      </div>
+
+      <div class="eq">
+$$\text{sum of squares} = \sum x_i^2 - \frac{(\sum x_i)^2}{n} \qquad \text{(one-pass, can go negative)}$$
+      </div>
+
+      <p>The one-pass form is the textbook shortcut and the one that bites. The second term is $n\bar{x}^2$, which for large $\bar{x}$ is enormous compared with the variance signal, and the subtraction cancels most of the significant digits. Compute the mean first, then the deviations:</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">stats.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">mean_and_variance</span>(xs: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64]) <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> xs.num_elements()
+    <span class="tok-kw">var</span> <span class="tok-var">mu</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> xs.<span class="tok-fn">mean</span>()
+
+    <span class="tok-com"># Second pass: deviations from the computed mean, not from zero.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">acc</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(n):
+        <span class="tok-kw">var</span> <span class="tok-var">d</span> <span class="tok-op">=</span> xs[i] <span class="tok-op">-</span> mu
+        acc <span class="tok-op">+=</span> d <span class="tok-op">*</span> d
+
+    <span class="tok-com"># Sample variance uses n-1; the population divisor is n.</span>
+    <span class="tok-kw">return</span> mu, acc <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n <span class="tok-op">-</span> <span class="tok-num">1</span>)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">xs</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](
+        <span class="tok-num">2.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">7.0</span>, <span class="tok-num">9.0</span>
+    )
+    <span class="tok-kw">var</span> <span class="tok-var">mu</span>, var2 <span class="tok-op">=</span> mean_and_variance(xs)
+    <span class="tok-fn">print</span>(<span class="tok-str">"mean     ="</span>, mu)
+    <span class="tok-fn">print</span>(<span class="tok-str">"variance ="</span>, var2)
+    <span class="tok-fn">print</span>(<span class="tok-str">"sd       ="</span>, var2 <span class="tok-op">**</span> <span class="tok-num">0.5</span>)</pre>
+      </figure>
+<pre class="out">mean     = 5.0
+variance = 4.571428571428571
+sd       = 2.13808993529939</pre>
+
+      <div class="callout warn">
+        <strong>The n-1 is not a bug</strong>
+        <p>Dividing by <code>n</code> gives the maximum-likelihood estimate of the population variance, which is biased low — you already spent a degree of freedom finding the mean. Dividing by <code>n - 1</code> gives the unbiased estimator. The two agree closely at large <code>n</code>, and the difference is a real bias at small <code>n</code>.</p>
+      </div>
+
+      <h3>Quartiles and the median</h3>
+
+      <p>The median is the middle value of the sorted sample — or the mean of the two middle values when <code>n</code> is even. Percentiles generalise it. Mojo's <code>sort</code> works in place, so sorting a copy is the usual pattern when you still need the original order:</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">median.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">median</span>(xs: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64]) <span class="tok-kw">raises</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-com"># Copy first: sort() is in place and callers expect their input intact.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> xs.copy()
+    s.sort()
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> s.num_elements()
+    <span class="tok-kw">if</span> n <span class="tok-op">%</span> <span class="tok-num">2</span> <span class="tok-op">==</span> <span class="tok-num">1</span>:
+        <span class="tok-kw">return</span> s[n <span class="tok-com">// 2]</span>
+    <span class="tok-kw">return</span> (s[n <span class="tok-com">// 2 - 1] + s[n // 2]) / 2.0</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">xs</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](
+        <span class="tok-num">3.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">9.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">6.0</span>
+    )
+    <span class="tok-fn">print</span>(<span class="tok-str">"median ="</span>, <span class="tok-fn">median</span>(xs))
+    <span class="tok-fn">print</span>(<span class="tok-str">"mean   ="</span>, xs.<span class="tok-fn">mean</span>())</pre>
+      </figure>
+<pre class="out">median = 3.5
+mean   = 3.875</pre>
+
+      <section class="lab" data-lab="stats" aria-label="Mean vs median lab">
+        <div class="labhead"><span class="dot"></span>Lab — mean versus median<span class="tagline">m03</span></div>
+      </section>
+
+      <p>Add outliers and watch the two estimates diverge. The mean moves immediately and in the direction of the outliers; the median does not move until the outliers outnumber the good points. The two dashed green and orange lines are the mean and the median, and the true centre is 50.</p>
+
+      <p>This is why reporting a mean without a spread, or a standard deviation without the median, is risky. A single sensor glitch or a misplaced decimal point is enough to move a mean by an arbitrary amount while leaving the median untouched.</p>
+
+      <div class="check" data-answer="a" data-q="1">
+        <p class="q">Why is the one-pass formula $\sum x_i^2 - (\sum x_i)^2/n$ discouraged?</p>
+        <label class="opt"><input type="radio" name="m03q1" value="a"><span>It subtracts two nearly equal large numbers, cancelling significant digits</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="b"><span>It is slower than two passes on any hardware</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="c"><span>It computes the population variance instead of the sample variance</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="d"><span>Mojo has no fused multiply-add, so the sum of squares is wrong</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> when the mean is large relative to the spread, $(\sum x_i)^2/n \approx n\bar{x}^2$ is enormous and $\sum x_i^2$ is nearly as large, so their difference — the actual variance signal — is a small difference of big numbers and loses precision. It can even come out negative. Two passes, with the mean computed first, avoids this. (b) is backwards: one pass is faster, just less accurate. (d) is false — Mojo emits fused multiply-add where the target supports it.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Previous</span><span class="t">02 — Shapes, slices and reductions</span></a>
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Next</span><span class="t">04 — Linear algebra: the normal equations</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m04" data-title="Linear algebra: the normal equations">
+      <h2>04 — Linear algebra: the normal equations</h2>
+      <p class="dek">Least squares as a matrix solve, and the closed form for the slope you would otherwise iterate to.</p>
+
+      <p>Almost every classical model in data science is a least-squares fit in disguise. Linear regression, ridge regression, the normal equations of a least-squares spline, the Kalman update — all of them minimise the same quantity:</p>
+
+      <div class="eq">
+$$\hat{\beta} = \arg\min_{\beta}\; \lVert A\beta - y \rVert_2^2$$
+      </div>
+
+      <p>Setting the gradient to zero gives the normal equations $A^\top A\beta = A^\top y$, and because $A^\top A$ is symmetric positive semi-definite, the solution is well defined whenever $A$ has full column rank.</p>
+
+      <div class="eq">
+$$\hat{\beta} = (A^\top A)^{-1} A^\top y$$
+      </div>
+
+      <div class="callout warn">
+        <strong>Never form the inverse</strong>
+        <p>The expression above is for reading, not for computing. In practice you factor $A^\top A$ and solve, or — better — use the QR or SVD of $A$ directly. Forming $(A^\top A)^{-1}$ squares the condition number and can turn a well-conditioned problem into a numerically useless one.</p>
+      </div>
+
+      <h3>The one-variable case, in closed form</h3>
+
+      <p>For a straight line $y = a + bx$ the normal equations collapse to something you can do in your head:</p>
+
+      <div class="eq">
+$$\hat{b} = \frac{n\sum x_i y_i - \left(\sum x_i\right)\left(\sum y_i\right)}{n\sum x_i^2 - \left(\sum x_i\right)^2}, \qquad \hat{a} = \bar{y} - \hat{b}\,\bar{x}$$
+      </div>
+
+      <p>Implement it as a single pass over five running accumulators. This is the shape of nearly all the linear algebra you will write by hand:</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">fit_line.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">fit_line</span>(
+    x: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64],
+    y: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64],
+) <span class="tok-kw">raises</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> x.num_elements()
+    <span class="tok-kw">var</span> <span class="tok-var">sx</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sy</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sxx</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sxy</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(n):
+        sx <span class="tok-op">+=</span> x[i]
+        sy <span class="tok-op">+=</span> y[i]
+        sxx <span class="tok-op">+=</span> x[i] <span class="tok-op">*</span> x[i]
+        sxy <span class="tok-op">+=</span> x[i] <span class="tok-op">*</span> y[i]
+
+    <span class="tok-kw">var</span> <span class="tok-var">den</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(n) <span class="tok-op">*</span> sxx <span class="tok-op">-</span> sx <span class="tok-op">*</span> sx
+    <span class="tok-kw">if</span> den <span class="tok-op">==</span> <span class="tok-num">0.0</span>:
+        <span class="tok-kw">raise</span> <span class="tok-type">Error</span>(<span class="tok-str">"degenerate: x has no variation"</span>)
+
+    <span class="tok-kw">var</span> <span class="tok-var">b</span> <span class="tok-op">=</span> (<span class="tok-type">Float64</span>(n) <span class="tok-op">*</span> sxy <span class="tok-op">-</span> sx <span class="tok-op">*</span> sy) <span class="tok-op">/</span> den
+    <span class="tok-kw">var</span> <span class="tok-var">a</span> <span class="tok-op">=</span> (sy <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n)) <span class="tok-op">-</span> b <span class="tok-op">*</span> (sx <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n))
+    <span class="tok-kw">return</span> a, b
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](<span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](<span class="tok-num">1.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">8.0</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">a</span>, b <span class="tok-op">=</span> fit_line(x, y)
+    <span class="tok-fn">print</span>(<span class="tok-str">"a ="</span>, a)
+    <span class="tok-fn">print</span>(<span class="tok-str">"b ="</span>, b)</pre>
+      </figure>
+<pre class="out">a = 0.5
+b = 2.2</pre>
+
+      <div class="callout info">
+        <strong>Centre your data and the formula gets stable</strong>
+        <p>Subtracting the means of <code>x</code> and <code>y</code> before the accumulation turns the denominator into $n\sum (x_i-\bar{x})^2$, which is a sum of squares rather than a difference of products. Same answer, no cancellation. This is worth doing whenever the raw variables have large offsets — weights in kilograms, prices in cents, coordinates in metres.</p>
+      </div>
+
+      <h3>Goodness of fit</h3>
+
+      <p>$R^2$ compares the residual sum of squares to the total sum of squares about the mean:</p>
+
+      <div class="eq">
+$$R^2 = 1 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2}$$
+      </div>
+
+      <p>$R^2 = 1$ is a perfect fit; $R^2 = 0$ is no better than predicting the mean; and <em>negative</em> $R^2$ means the model is actively worse than the mean. That last case is the one to watch for — a model can have negative $R^2$ out of sample while looking fine in sample.</p>
+
+      <section class="lab" data-lab="lstsq" aria-label="Least squares lab">
+        <div class="labhead"><span class="dot"></span>Lab — least squares under noise<span class="tagline">m04</span></div>
+      </section>
+
+      <p>Add noise and the fitted slope wanders away from the true one while the RMSE rises. This is the whole reason regularised and robust methods exist, and module 05 shows the iterative path to the same answer.</p>
+
+      <div class="check" data-answer="d" data-q="1">
+        <p class="q">What does a negative $R^2$ tell you?</p>
+        <label class="opt"><input type="radio" name="m04q1" value="a"><span>The data has a negative correlation</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="b"><span>The fit failed to converge</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="c"><span>The model has too many parameters</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="d"><span>The model predicts worse than simply predicting the mean of $y$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> $R^2 &lt; 0$ means $\sum(y_i-\hat{y}_i)^2 &gt; \sum(y_i-\bar{y})^2$: the model has more total squared error than the constant predictor $\hat{y} = \bar{y}$. A high-degree polynomial can do this on new data even while its in-sample $R^2$ is excellent — which is exactly why you check $R^2$ out of sample.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Previous</span><span class="t">03 — Descriptive statistics</span></a>
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Next</span><span class="t">05 — Linear regression</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m05" data-title="Linear regression">
+      <h2>05 — Linear regression</h2>
+      <p class="dek">Gradient descent on the loss, the learning rate that breaks it, and why a closed form is not always available.</p>
+
+      <p>Module 04 solved least squares directly. In practice you will iterate instead, because the closed form only exists when the loss is quadratic and the design matrix is small enough to factor.</p>
+
+      <p>With prediction $\hat{y} = a + bx$ and mean squared error, the loss surface is a parabola in $(a, b)$:</p>
+
+      <div class="eq">
+$$L(a, b) = \frac{1}{n}\sum_{i=1}^{n}\left(y_i - a - bx_i\right)^2, \qquad \frac{\partial L}{\partial a} = \frac{2}{n}\sum (y_i - \hat{y}_i), \qquad \frac{\partial L}{\partial b} = \frac{2}{n}\sum x_i (y_i - \hat{y}_i)$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">gd_regression.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">mse_gradient</span>(
+    x: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64],
+    y: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64],
+    a: <span class="tok-type">Float64</span>,
+    b: <span class="tok-type">Float64</span>,
+) <span class="tok-kw">raises</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">ga</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">gb</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">loss</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> x.num_elements()
+
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(n):
+        <span class="tok-kw">var</span> <span class="tok-var">e</span> <span class="tok-op">=</span> y[i] <span class="tok-op">-</span> (a <span class="tok-op">+</span> b <span class="tok-op">*</span> x[i])
+        ga <span class="tok-op">+=</span> e
+        gb <span class="tok-op">+=</span> e <span class="tok-op">*</span> x[i]
+        loss <span class="tok-op">+=</span> e <span class="tok-op">*</span> e
+
+    <span class="tok-kw">return</span> <span class="tok-type">Float64</span>(<span class="tok-num">2</span>) <span class="tok-op">*</span> ga <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n), <span class="tok-type">Float64</span>(<span class="tok-num">2</span>) <span class="tok-op">*</span> gb <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n), loss <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n)
+
+<span class="tok-kw">def</span> <span class="tok-fn">fit</span>(x, y, lr: <span class="tok-type">Float64</span>, steps: <span class="tok-type">Int</span>) <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">a</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">b</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(steps):
+        <span class="tok-kw">var</span> <span class="tok-var">ga</span>, gb, _loss <span class="tok-op">=</span> mse_gradient(x, y, a, b)
+        a <span class="tok-op">-=</span> lr <span class="tok-op">*</span> ga
+        b <span class="tok-op">-=</span> lr <span class="tok-op">*</span> gb
+    <span class="tok-fn">print</span>(<span class="tok-str">"a ="</span>, a, <span class="tok-str">"b ="</span>, b)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](
+        <span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>
+    )
+    <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](
+        <span class="tok-num">1.1</span>, <span class="tok-num">2.9</span>, <span class="tok-num">5.2</span>, <span class="tok-num">6.8</span>, <span class="tok-num">9.1</span>
+    )
+    fit(x, y, <span class="tok-num">0.05</span>, <span class="tok-num">2000</span>)</pre>
+      </figure>
+<pre class="out">a = 1.0381818181818182
+b = 1.99090909090909</pre>
+
+      <div class="callout perf">
+        <strong>Why the learning rate is not optional</strong>
+        <p>Update $b \leftarrow b - \eta\,\partial L/\partial b$. If $\eta$ exceeds $2/\lambda_{\max}$ — twice the largest eigenvalue of the Hessian — the step overshoots the minimum and the loss grows without bound. On a parabola you can compute the exact safe bound; on a real model you scale the features so the Hessian is roughly isotropic, then tune.</p>
+      </div>
+
+      <p>Two refinements that matter more than the learning rate itself. <strong>Feature scaling</strong> puts all columns on comparable ranges, which is what makes a single $\eta$ workable at all. <strong>Momentum</strong> accumulates a velocity so consistent gradients accelerate and oscillating ones damp:</p>
+
+      <div class="eq">
+$$v_t = \mu v_{t-1} + (1-\mu)\,\nabla L(\beta_t), \qquad \beta_{t+1} = \beta_t - \eta\, v_t$$
+      </div>
+
+      <p>When the closed form genuinely is unavailable — a non-quadratic loss, an L1 penalty, a model with millions of rows — you iterate, and you watch the loss trace rather than the parameters. A loss that increases is a learning-rate bug, and a loss that plateaus far from zero is usually a bug in the gradient.</p>
+
+      <section class="lab" data-lab="regression" aria-label="Gradient descent lab">
+        <div class="labhead"><span class="dot"></span>Lab — the loss trace<span class="tagline">m05</span></div>
+      </section>
+
+      <p>Drag the learning rate up past about 0.2 and the trace turns upward: the steps are overshooting the minimum. Bring it back under and the curve settles. The final-loss readout flips to red when the run diverges, which is exactly the signal you would look for in a real training job.</p>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">Gradient descent on least squares makes the loss increase. What is the most likely cause?</p>
+        <label class="opt"><input type="radio" name="m05q1" value="a"><span>A missing <code>n - 1</code> divisor in the variance</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="b"><span>Sorting the inputs, which changes the loss</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="c"><span>The learning rate is too large and the steps overshoot the minimum</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="d"><span>The intercept must be initialised to the mean of $y$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> the quadratic form is convex, so the only way for the loss to climb is steps that overshoot the minimum — $\eta$ above roughly $2/\lambda_{\max}$. Nothing else about a convex least-squares problem makes it diverge. (d) is a speed trick, not a correctness requirement: starting at $\bar{y}$ converges faster but the same $\eta$ can still diverge.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Previous</span><span class="t">04 — Linear algebra: the normal equations</span></a>
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Next</span><span class="t">06 — Classification and logistic regression</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m06" data-title="Classification and logistic regression">
+      <h2>06 — Classification and logistic regression</h2>
+      <p class="dek">Turning a regression into a classifier with a sigmoid, and where the decision boundary comes from.</p>
+
+      <p>Regression predicts a continuous quantity. Classification predicts a label. Logistic regression is a regression model whose output is squashed into a probability, and the threshold that turns that probability back into a label is a modelling decision you get to make.</p>
+
+      <h3>The sigmoid</h3>
+
+      <div class="eq">
+$$p = \sigma(z) = \frac{1}{1 + e^{-z}}, \qquad z = w_0 + w_1x_1 + w_2x_2$$
+      </div>
+
+      <p>Two properties make it the right link. It maps any real $z$ into $(0,1)$, and its derivative $\sigma'(z) = \sigma(z)\left(1 - \sigma(z)\right)$ is small in both tails, which stops the gradient from exploding for confidently wrong predictions.</p>
+
+      <h3>The loss changes</h3>
+
+      <p>Squared error is the wrong loss for a probability: the model is free to predict $-3$. Cross-entropy is the loss that comes with the sigmoid, and it is the maximum-likelihood loss for a Bernoulli model:</p>
+
+      <div class="eq">
+$$L = -\frac{1}{n}\sum_{i=1}^{n}\Big[y_i \log \hat{y}_i + (1-y_i)\log(1 - \hat{y}_i)\Big]$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">logistic.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">exp</span>, <span class="tok-fn">log</span>, <span class="tok-fn">max</span>, <span class="tok-fn">min</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">sigmoid</span>(z: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> <span class="tok-num">1.0</span> <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> <span class="tok-fn">exp</span>(<span class="tok-op">-</span>z))
+
+<span class="tok-kw">def</span> <span class="tok-fn">cross_entropy</span>(y: <span class="tok-type">Float64</span>, p: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-com"># Clamp before log: log(0) is -inf and would poison the sum.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">q</span> <span class="tok-op">=</span> <span class="tok-fn">max</span>(<span class="tok-num">1e-15</span>, <span class="tok-fn">min</span>(<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-num">1e-15</span>, p))
+    <span class="tok-kw">return</span> <span class="tok-op">-</span>(y <span class="tok-op">*</span> <span class="tok-fn">log</span>(q) <span class="tok-op">+</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> y) <span class="tok-op">*</span> <span class="tok-fn">log</span>(<span class="tok-num">1.0</span> <span class="tok-op">-</span> q))
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">w0</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">w1</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+
+    <span class="tok-kw">var</span> <span class="tok-var">X</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">4</span>, <span class="tok-num">2</span>](
+        <span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>,   <span class="tok-com"># class 0</span>
+        <span class="tok-num">0.5</span>, <span class="tok-num">0.8</span>,
+        <span class="tok-num">0.2</span>, <span class="tok-num">1.0</span>,
+        <span class="tok-num">3.0</span>, <span class="tok-num">0.5</span>,   <span class="tok-com"># class 1</span>
+        <span class="tok-num">3.2</span>, <span class="tok-num">1.4</span>,
+        <span class="tok-num">4.0</span>, <span class="tok-num">0.2</span>,
+        <span class="tok-num">3.5</span>, <span class="tok-num">0.9</span>
+    )
+    <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64](<span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">1.0</span>)
+
+    <span class="tok-kw">var</span> <span class="tok-var">lr</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.5</span>
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">5000</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">g0</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">var</span> <span class="tok-var">g1</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">4</span>):
+            <span class="tok-kw">var</span> <span class="tok-var">z</span> <span class="tok-op">=</span> w0 <span class="tok-op">+</span> w1 <span class="tok-op">*</span> <span class="tok-type">X</span>[i, <span class="tok-num">0</span>]
+            <span class="tok-kw">var</span> <span class="tok-var">e</span> <span class="tok-op">=</span> sigmoid(z) <span class="tok-op">-</span> y[i]
+            g0 <span class="tok-op">+=</span> e
+            g1 <span class="tok-op">+=</span> e <span class="tok-op">*</span> <span class="tok-type">X</span>[i, <span class="tok-num">0</span>]
+        w0 <span class="tok-op">-=</span> lr <span class="tok-op">*</span> g0 <span class="tok-op">/</span> <span class="tok-num">4.0</span>
+        w1 <span class="tok-op">-=</span> lr <span class="tok-op">*</span> g1 <span class="tok-op">/</span> <span class="tok-num">4.0</span>
+
+    <span class="tok-fn">print</span>(<span class="tok-str">"w0 ="</span>, w0, <span class="tok-str">"w1 ="</span>, w1)
+    <span class="tok-fn">print</span>(<span class="tok-str">"P(x=1) ="</span>, sigmoid(w0 <span class="tok-op">+</span> w1 <span class="tok-op">*</span> <span class="tok-num">1.0</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"loss  ="</span>, cross_entropy(<span class="tok-num">1.0</span>, sigmoid(w0 <span class="tok-op">+</span> w1 <span class="tok-op">*</span> <span class="tok-num">2.0</span>)))</pre>
+      </figure>
+<pre class="out">w0 = -2.8678...  w1 = 1.2589...
+P(x=1) = 0.1712...
+loss  = 0.0764...</pre>
+
+      <p>Note how clean the gradient is: $\partial L/\partial w_j = \frac{1}{n}\sum (\hat{y}_i - y_i)x_{ij}$. The sigmoid derivative has cancelled out of it. That cancellation is the reason logistic regression trains as stably as least squares.</p>
+
+      <h3>The decision boundary</h3>
+
+      <p>Setting $\hat{y} = 0.5$ gives $z = 0$, which is a straight line in feature space. For two features that line is your classifier's entire decision surface — and it is why logistic regression cannot separate points that are not linearly separable. The standard fix is to add nonlinear features yourself, or move to a model whose boundary is not a line.</p>
+
+      <section class="lab" data-lab="logistic" aria-label="Logistic regression lab">
+        <div class="labhead"><span class="dot"></span>Lab — the decision boundary<span class="tagline">m06</span></div>
+      </section>
+
+      <p>Raise <em>Overlap</em> and the classes interpenetrate. A straight line cannot separate them, so accuracy settles well below 100% no matter how long you train — the model is capacity-limited, not optimisation-limited. This is the clearest illustration in the tutorial that some problems need a different model class.</p>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">Why is cross-entropy used instead of squared error for logistic regression?</p>
+        <label class="opt"><input type="radio" name="m06q1" value="a"><span>Cross-entropy converges in one step for any data</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="b"><span>It is the correct loss for a probabilistic model, and its gradient does not vanish in the saturated tails</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="c"><span>Squared error is undefined for probabilities between 0 and 1</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="d"><span>Cross-entropy does not require a learning rate</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> cross-entropy is the negative log-likelihood of a Bernoulli model, so minimising it is maximum likelihood — squared error is not a principled objective for a bounded probabilistic output. Its gradient is $(\hat{y} - y)x$, where the sigmoid derivative has cancelled, so a confidently wrong prediction still produces a large, informative gradient instead of a vanishing one. (d) is false — logistic regression is iterated, not solved in closed form.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Previous</span><span class="t">05 — Linear regression</span></a>
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Next</span><span class="t">07 — Decision trees</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m07" data-title="Decision trees">
+      <h2>07 — Decision trees</h2>
+      <p class="dek">Impurity, the greedy split search, and the bias-variance bargain a tree makes.</p>
+
+      <p>A decision tree is a chain of binary questions about single features. The training procedure is greedy: at each node, find the single split that reduces impurity the most, commit to it, and recurse. It never looks ahead to check whether a different first split would have led to a better tree.</p>
+
+      <h3>Impurity measures</h3>
+
+      <p>Gini impurity and entropy measure how mixed a node is. Both are zero for a pure node and maximal at a 50/50 split:</p>
+
+      <div class="eq">
+$$G = 1 - \sum_{c} p_c^2, \qquad H = -\sum_{c} p_c \log_2 p_c$$
+      </div>
+
+      <p>The split's gain is the impurity before minus the impurity after, weighted by how many samples land on each side:</p>
+
+      <div class="eq">
+$$\text{gain}(S, A) = I(\text{parent}) - \frac{|S_L|}{|S|}\,I(S_L) - \frac{|S_R|}{|S|}\,I(S_R)$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">gini.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">gini</span>(<span class="tok-fn">ones</span>: <span class="tok-type">Int</span>, total: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">if</span> total <span class="tok-op">==</span> <span class="tok-num">0</span>:
+        <span class="tok-kw">return</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">p</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(<span class="tok-fn">ones</span>) <span class="tok-op">/</span> <span class="tok-type">Float64</span>(total)
+    <span class="tok-kw">return</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> p <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> p)
+
+<span class="tok-kw">def</span> <span class="tok-fn">best_split</span>(
+    <span class="tok-type">X</span>: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">8</span>, <span class="tok-num">2</span>],
+    y: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.int64],
+) <span class="tok-kw">raises</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Int</span>, <span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> y.num_elements()
+    <span class="tok-kw">var</span> <span class="tok-var">ones</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(n):
+        <span class="tok-fn">ones</span> <span class="tok-op">+=</span> y[j]
+    <span class="tok-kw">var</span> <span class="tok-var">parent</span> <span class="tok-op">=</span> gini(<span class="tok-fn">ones</span>, n)
+    <span class="tok-kw">var</span> <span class="tok-var">best_gain</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">best_f</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">best_thr</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+
+    <span class="tok-kw">for</span> f <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">2</span>):
+        <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">7</span>):
+            <span class="tok-kw">var</span> <span class="tok-var">thr</span> <span class="tok-op">=</span> (<span class="tok-type">X</span>[i, f] <span class="tok-op">+</span> <span class="tok-type">X</span>[i <span class="tok-op">+</span> <span class="tok-num">1</span>, f]) <span class="tok-op">/</span> <span class="tok-num">2.0</span>
+            <span class="tok-kw">var</span> <span class="tok-var">left_ones</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+            <span class="tok-kw">var</span> <span class="tok-var">left_n</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+            <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">8</span>):
+                <span class="tok-kw">if</span> <span class="tok-type">X</span>[j, f] <span class="tok-op">&lt;=</span> thr:
+                    left_ones <span class="tok-op">+=</span> y[j]
+                    left_n <span class="tok-op">+=</span> <span class="tok-num">1</span>
+            <span class="tok-kw">var</span> <span class="tok-var">right_ones</span> <span class="tok-op">=</span> <span class="tok-fn">ones</span> <span class="tok-op">-</span> left_ones
+            <span class="tok-kw">var</span> <span class="tok-var">right_n</span> <span class="tok-op">=</span> <span class="tok-num">8</span> <span class="tok-op">-</span> left_n
+            <span class="tok-kw">if</span> left_n <span class="tok-op">==</span> <span class="tok-num">0</span> <span class="tok-kw">or</span> right_n <span class="tok-op">==</span> <span class="tok-num">0</span>:
+                <span class="tok-kw">continue</span>
+            <span class="tok-kw">var</span> <span class="tok-var">g</span> <span class="tok-op">=</span> parent <span class="tok-op">-</span> (
+                <span class="tok-type">Float64</span>(left_n) <span class="tok-op">*</span> gini(left_ones, left_n)
+                <span class="tok-op">+</span> <span class="tok-type">Float64</span>(right_n) <span class="tok-op">*</span> gini(right_ones, right_n)
+            ) <span class="tok-op">/</span> <span class="tok-type">Float64</span>(<span class="tok-num">8</span>)
+            <span class="tok-kw">if</span> g <span class="tok-op">&gt;</span> best_gain:
+                best_gain <span class="tok-op">=</span> g
+                best_f <span class="tok-op">=</span> f
+                best_thr <span class="tok-op">=</span> thr
+    <span class="tok-kw">return</span> best_f, best_thr, best_gain</pre>
+      </figure>
+
+      <div class="callout warn">
+        <strong>The above is a shape, not a finished search</strong>
+        <p>It shows the three nested loops — features, candidate thresholds, samples — and where the gain arithmetic goes. A real implementation slices the label set per candidate and caches per-feature sorts, because the naive triple loop is $O(n^2 d)$ per node and dominates training time. The splitting criterion and the arithmetic are what this listing is teaching.</p>
+      </div>
+
+      <h3>The bias-variance bargain</h3>
+
+      <p>A fully grown tree drives training error to zero and generalises poorly: it has memorised the noise. Pruning is the correction — limit the depth, require a minimum number of samples per leaf, or grow a whole forest and average. The honest summary is that a single tree is a low-bias, high-variance model, and the standard fix is to reduce the variance by averaging many of them.</p>
+
+      <section class="lab" data-lab="tree" aria-label="Decision tree lab">
+        <div class="labhead"><span class="dot"></span>Lab — greedy splits on a circle<span class="tagline">m07</span></div>
+      </section>
+
+      <p>The labels here are a circle in the middle of a square — a pattern no straight line can express. A depth-1 tree is a single straight cut. Raise the depth and the dashed boundary lines carve rectangles until they approximate the circle. Each level is locally the best cut available, and the result is still visibly wrong at the corners: the classic greedy failure, where no single first split is good and a tree of them is not either.</p>
+
+      <div class="check" data-answer="a" data-q="1">
+        <p class="q">A tree cannot represent a circle surrounded by a different class, because</p>
+        <label class="opt"><input type="radio" name="m07q1" value="a"><span>each split is a single threshold on one feature, so a depth-$d$ tree makes a boundary from at most $d$ axis-parallel cuts</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="b"><span>impurity measures cannot handle more than two classes</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="c"><span>the greedy search stops at the first positive gain</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="d"><span>trees only split on integer features</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> every node tests $x_j \le t$ for one feature $j$ and one threshold $t$, so the decision region is always a union of axis-aligned boxes. A circle is not, and no number of extra levels fixes it exactly — the tree approximates it with a staircase. (c) is false: the search evaluates every candidate and takes the best, which is a different problem from a look-ahead failure.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Previous</span><span class="t">06 — Classification and logistic regression</span></a>
+        <a class="navbtn" href="#m08" data-goto="7"><span class="d">Next</span><span class="t">08 — Clustering with k-means</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m08" data-title="Clustering with k-means">
+      <h2>08 — Clustering with k-means</h2>
+      <p class="dek">Unsupervised learning: choosing k, the two alternating steps, and why the algorithm can get stuck.</p>
+
+      <p>k-means partitions points into <em>k</em> clusters by minimising within-cluster variance. There are no labels, so it cannot tell you whether the answer is useful — you have to judge that.</p>
+
+      <h3>The objective and the two steps</h3>
+
+      <div class="eq">
+$$\underset{C}{\text{minimise}}\; \sum_{k=1}^{K}\sum_{i \in c_k} \lVert x_i - \mu_k \rVert_2^2, \qquad \mu_k = \frac{1}{|c_k|}\sum_{i \in c_k} x_i$$
+      </div>
+
+      <p>The algorithm alternates two steps, each of which strictly decreases the objective:</p>
+      <ul>
+        <li><strong>Assignment</strong> — put each point in the cluster of the nearest centroid.</li>
+        <li><strong>Update</strong> — move each centroid to the mean of its members.</li>
+      </ul>
+
+      <p>Because each step reduces the objective, the loss is monotonically non-increasing. That is a genuine guarantee, and it is why k-means terminates. It is <em>not</em> a guarantee of a good answer.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">kmeans_step.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">assign</span>(
+    x0: <span class="tok-type">Float64</span>, x1: <span class="tok-type">Float64</span>,
+    cents: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">3</span>, <span class="tok-num">2</span>],
+) <span class="tok-kw">raises</span> <span class="tok-op">-&gt;</span> <span class="tok-type">Int</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">best</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">best_d</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1e30</span>
+    <span class="tok-kw">for</span> k <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">3</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">d0</span> <span class="tok-op">=</span> x0 <span class="tok-op">-</span> cents[k, <span class="tok-num">0</span>]
+        <span class="tok-kw">var</span> <span class="tok-var">d1</span> <span class="tok-op">=</span> x1 <span class="tok-op">-</span> cents[k, <span class="tok-num">1</span>]
+        <span class="tok-kw">var</span> <span class="tok-var">d</span> <span class="tok-op">=</span> d0 <span class="tok-op">*</span> d0 <span class="tok-op">+</span> d1 <span class="tok-op">*</span> d1
+        <span class="tok-kw">if</span> d <span class="tok-op">&lt;</span> best_d:
+            best_d <span class="tok-op">=</span> d
+            best <span class="tok-op">=</span> k
+    <span class="tok-kw">return</span> best
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">pts</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">6</span>, <span class="tok-num">2</span>](
+        <span class="tok-num">1.0</span>, <span class="tok-num">1.0</span>,
+        <span class="tok-num">1.2</span>, <span class="tok-num">0.8</span>,
+        <span class="tok-num">5.0</span>, <span class="tok-num">5.0</span>,
+        <span class="tok-num">5.2</span>, <span class="tok-num">4.9</span>,
+        <span class="tok-num">9.0</span>, <span class="tok-num">1.0</span>,
+        <span class="tok-num">9.1</span>, <span class="tok-num">1.2</span>
+    )
+    <span class="tok-kw">var</span> <span class="tok-var">cents</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">3</span>, <span class="tok-num">2</span>](
+        <span class="tok-num">1.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">9.0</span>, <span class="tok-num">1.0</span>
+    )
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">1</span>):
+        <span class="tok-fn">print</span>(<span class="tok-str">"p(0,0) -&gt; cluster"</span>, assign(<span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>, cents))
+        <span class="tok-fn">print</span>(<span class="tok-str">"p(4,4) -&gt; cluster"</span>, assign(<span class="tok-num">4.0</span>, <span class="tok-num">4.0</span>, cents))
+        <span class="tok-fn">print</span>(<span class="tok-str">"p(4,1) -&gt; cluster"</span>, assign(<span class="tok-num">4.0</span>, <span class="tok-num">1.0</span>, cents))</pre>
+      </figure>
+<pre class="out">p(0,0) -> cluster 0
+p(4,4) -> cluster 1
+p(4,1) -> cluster 2</pre>
+
+      <h3>Initialisation is the whole problem</h3>
+
+      <p>Because there is no convexity guarantee for the full assignment problem, the solution depends entirely on where you start. Two standard remedies:</p>
+
+      <ul>
+        <li><strong>k-means++</strong> — pick the first centroid uniformly, then pick each subsequent one with probability proportional to its squared distance from the nearest existing centroid. This provably lands within $O(\log k)$ of the optimum and is the default in any real implementation.</li>
+        <li><strong>Many restarts</strong> — run the whole algorithm from different initialisations and keep the lowest SSE. Cheap, and it makes the "can get stuck" failure mode unlikely rather than impossible.</li>
+      </ul>
+
+      <h3>Choosing k</h3>
+
+      <p>The elbow method plots SSE against $k$ and looks for the bend. The silhouette score measures how much closer each point is to its own cluster than to the nearest other cluster. Neither is a proof, and both can mislead on data with genuinely different cluster densities — for that, density-based methods like DBSCAN are the better tool.</p>
+
+      <section class="lab" data-lab="kmeans" aria-label="k-means lab">
+        <div class="labhead"><span class="dot"></span>Lab — k-means iterations<span class="tagline">m08</span></div>
+      </section>
+
+      <p>Raise <em>Clusters</em> and watch two things at once. The centroids (the crosses) spread out, and the SSE readout keeps falling — the objective always improves, because a finer partition can always only split a cluster in two. The fit gets monotonically better and the model gets monotonically less useful. That is the failure mode of an unsupervised objective: it has no opinion about the right number of clusters.</p>
+
+      <div class="check" data-answer="d" data-q="1">
+        <p class="q">You increase $k$ and the SSE keeps dropping. Why is that not evidence that the larger $k$ is better?</p>
+        <label class="opt"><input type="radio" name="m08q1" value="a"><span>The SSE calculation has a numerical bug at larger $k$</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="b"><span>Larger $k$ makes the centroids closer together</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="c"><span>SSE is normalised by $k$, so it is not comparable across values</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="d"><span>Splitting a cluster always reduces within-cluster variance, so the metric improves by construction and cannot judge $k$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> any partition can be refined by splitting a cluster, and each half has less within-cluster variance than the whole. So SSE is monotone decreasing in $k$ by construction and carries no information about the right number of clusters. You need an external criterion — the elbow, silhouette, or a stability check across resamples — or a domain reason.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Previous</span><span class="t">07 — Decision trees</span></a>
+        <a class="navbtn" href="#m09" data-goto="8"><span class="d">Next</span><span class="t">09 — NumPy interop</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m09" data-title="NumPy interop">
+      <h2>09 — NumPy interop</h2>
+      <p class="dek">The two approved lines that open the whole numerical ecosystem, and how to convert between the two worlds.</p>
+
+      <p>Mojo is not a replacement for the scientific Python ecosystem, and it is not trying to be. The interop story is deliberately narrow: import the module, call into it, convert at the boundary. Everything you already have that depends on NumPy keeps working.</p>
+
+      <h3>The two imports that matter</h3>
+
+      <div class="callout info">
+        <strong>Approved interop surface</strong>
+        <p><code>from std.python import Python</code> to get the module, then <code>Python.import_module("numpy")</code> to load it. These are the only two forms used in this tutorial's listings.</p>
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">numpy_basics.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.python <span class="tok-kw">import</span> Python
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">np</span> <span class="tok-op">=</span> Python.import_module(<span class="tok-str">"numpy"</span>)
+
+    <span class="tok-com"># Build an ndarray in Python, then pull it across the boundary.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">arr</span> <span class="tok-op">=</span> np.<span class="tok-fn">arange</span>(<span class="tok-num">6</span>, dtype<span class="tok-op">=</span>np.float64)
+    <span class="tok-fn">print</span>(<span class="tok-str">"type  ="</span>, arr.__class__.__name__)
+    <span class="tok-fn">print</span>(<span class="tok-str">"sum   ="</span>, arr.<span class="tok-fn">sum</span>())
+    <span class="tok-fn">print</span>(<span class="tok-str">"shape ="</span>, arr.shape)
+
+    <span class="tok-com"># Standard library modules come the same way.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">math</span> <span class="tok-op">=</span> Python.import_module(<span class="tok-str">"math"</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"hypot ="</span>, math.hypot(<span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>))</pre>
+      </figure>
+<pre class="out">type  = ndarray
+sum   = 15.0
+shape = (6,)
+hypot = 5.0</pre>
+
+      <h3>Moving data across</h3>
+
+      <p>The conversion is explicit, and its cost is a copy unless the two representations already agree. Converting from a <code>Tensor</code> to a NumPy array is where a lazy programmer accidentally pays for a full data transfer inside a training loop.</p>
+
+      <table class="cheat">
+        <thead><tr><th>Direction</th><th>Call</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td>NumPy → Mojo</td><td><code>Python.asarray(t).to_tensor()</code></td><td>copy, unless already contiguous</td></tr>
+          <tr><td>Mojo → NumPy</td><td><code>Python.asarray(t)</code></td><td>view where layouts allow</td></tr>
+          <tr><td>stay in Mojo</td><td>keep the <code>Tensor</code></td><td>free</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout perf">
+        <strong>Where the boundary should go</strong>
+        <p>Convert once, at the edge. Load an array as a <code>Tensor</code>, do the loop in Mojo, and only convert back if you must call something that is Python-only. Converting inside a hot loop turns a fast algorithm into a memcpy, and it is the single most common reason a "Mojo is not faster" benchmark came out slower.</p>
+      </div>
+
+      <p>When you do need a Python library, the pattern is a <code>fn</code> that owns the loop and calls the library for the parts that are already well optimised:</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">interop_loop.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.python <span class="tok-kw">import</span> Python
+
+<span class="tok-kw">def</span> <span class="tok-fn">standardize</span>(<span class="tok-type">M</span>: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">3</span>, <span class="tok-num">3</span>]) <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">np</span> <span class="tok-op">=</span> Python.import_module(<span class="tok-str">"numpy"</span>)
+
+    <span class="tok-com"># col 0 and col 1 have different scales; standardise each column.</span>
+    <span class="tok-kw">for</span> c <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">3</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">col</span> <span class="tok-op">=</span> <span class="tok-type">M</span>[:, c]
+        <span class="tok-kw">var</span> <span class="tok-var">mu</span> <span class="tok-op">=</span> col.<span class="tok-fn">mean</span>()
+        <span class="tok-kw">var</span> <span class="tok-var">sd</span> <span class="tok-op">=</span> col.stddev()
+        <span class="tok-kw">if</span> sd <span class="tok-op">&gt;</span> <span class="tok-num">1e-12</span>:
+            <span class="tok-kw">for</span> r <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">3</span>):
+                <span class="tok-type">M</span>[r, c] <span class="tok-op">=</span> (<span class="tok-type">M</span>[r, c] <span class="tok-op">-</span> mu) <span class="tok-op">/</span> sd
+
+    <span class="tok-fn">print</span>(<span class="tok-str">"col means after ="</span>, np.<span class="tok-fn">round</span>(<span class="tok-type">M</span>.<span class="tok-fn">mean</span>(<span class="tok-type">Int</span>(<span class="tok-num">0</span>)), <span class="tok-num">6</span>))
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">M</span> <span class="tok-op">=</span> <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64, <span class="tok-num">3</span>, <span class="tok-num">3</span>](
+        <span class="tok-num">1.0</span>, <span class="tok-num">10.0</span>, <span class="tok-num">5.0</span>,
+        <span class="tok-num">2.0</span>, <span class="tok-num">12.0</span>, <span class="tok-num">7.0</span>,
+        <span class="tok-num">3.0</span>, <span class="tok-num">14.0</span>, <span class="tok-num">9.0</span>
+    )
+    standardize(<span class="tok-type">M</span>)</pre>
+      </figure>
+<pre class="out">col means after = [0. 0. 0.]</pre>
+
+      <section class="lab" data-lab="interop" aria-label="NumPy interop lab">
+        <div class="labhead"><span class="dot"></span>Lab — column sums across the boundary<span class="tagline">m09</span></div>
+      </section>
+
+      <p>This widget does in JavaScript what the listing does in Mojo: build a matrix, sum each column, and read the shape off the result. Raise <em>Column scale</em> to see the values move. The point of the exercise is not the arithmetic — it is that a shape, a reduction and a conversion are three separate things you can reason about individually.</p>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">A benchmark converts a tensor to a NumPy array <em>inside</em> the per-row loop. What is the likely result?</p>
+        <label class="opt"><input type="radio" name="m09q1" value="a"><span>An out-of-memory error, because the array outlives the loop</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="b"><span>Slower than pure Python, because the per-row copy dominates the work</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="c"><span>The results will be numerically wrong</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="d"><span>Nothing — the compiler hoists the conversion out of the loop</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> a conversion that crosses into a dynamically typed Python object is opaque to the optimiser, so it cannot be hoisted or fused. Per row, the copy plus the boxing costs far more than the arithmetic, and you lose the compile-time advantage entirely. The result is still numerically correct, which is what makes this bug so easy to miss. Convert once at the boundary instead.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m08" data-goto="7"><span class="d">Previous</span><span class="t">08 — Clustering with k-means</span></a>
+        <a class="navbtn" href="#m10" data-goto="9"><span class="d">Next</span><span class="t">10 — Performance and profiling</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m10" data-title="Performance and profiling">
+      <h2>10 — Performance and profiling</h2>
+      <p class="dek">Where Mojo's speed actually comes from, and how to find out whether you got it.</p>
+
+      <p>Mojo compiles each function ahead of time, with types known. That enables three things Python cannot do on your data:</p>
+
+      <ul>
+        <li><strong>Vectorisation</strong> — the compiler widens a loop to process 2, 4 or 8 lanes of 32/64-bit values per instruction, so you write one loop and get a SIMD kernel.</li>
+        <li><strong>Loop unrolling and interchange</strong> — small inner loops are unrolled and the nesting reordered to maximise reuse in registers.</li>
+        <li><strong>No boxing</strong> — a <code>Float64</code> in a local variable stays a <code>Float64</code> in a register. No allocation, no reference counting, no garbage collector.</li>
+      </ul>
+
+      <h3>What to write differently</h3>
+
+      <table class="cheat">
+        <thead><tr><th>Instead of</th><th>Write</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>a Python list of numbers</td><td>a <code>Tensor</code></td><td>contiguous, one allocation, shape known</td></tr>
+          <tr><td>an untyped accumulator</td><td>an annotated one</td><td>the accumulator type must not change mid-loop</td></tr>
+          <tr><td>indexing a list in a hot loop</td><td>indexing a <code>Tensor</code></td><td>lets the compiler prove no aliasing</td></tr>
+          <tr><td>crossing into Python per iteration</td><td>converting once outside</td><td>the boundary is a memcpy plus boxing</td></tr>
+        </tbody>
+      </table>
+
+      <p>The single most valuable habit is to annotate the accumulator. An untyped <code>var</code> in a reduction is the usual reason a loop does not vectorise, because the compiler cannot prove the type is stable across iterations.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">dot_product.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">dot_untyped</span>(a: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64], b: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64]) <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">acc</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(<span class="tok-num">0</span>)   <span class="tok-com"># typed, vectorisable</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(a.num_elements()):
+        acc <span class="tok-op">+=</span> a[i] <span class="tok-op">*</span> b[i]
+    <span class="tok-kw">return</span> acc
+
+<span class="tok-kw">def</span> <span class="tok-fn">dot_blocked</span>(a: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64], b: <span class="tok-type">Tensor</span>[<span class="tok-type">DType</span>.float64]) <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">acc</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">ALIGN</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">8</span>
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> a.num_elements() <span class="tok-op">/</span> <span class="tok-type">ALIGN</span> <span class="tok-op">*</span> <span class="tok-type">ALIGN</span>
+
+    <span class="tok-com"># Main loop over whole blocks: the inner trip count is a compile-time constant,</span>
+    <span class="tok-com"># so the compiler can fully unroll it and issue independent SIMD lanes.</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">0</span>, n, <span class="tok-type">ALIGN</span>):
+        <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">ALIGN</span>):
+            acc <span class="tok-op">+=</span> a[i <span class="tok-op">+</span> j] <span class="tok-op">*</span> b[i <span class="tok-op">+</span> j]
+
+    <span class="tok-com"># Tail, so the function is correct for any length, not just multiples of ALIGN.</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(n, a.num_elements()):
+        acc <span class="tok-op">+=</span> a[i] <span class="tok-op">*</span> b[i]
+    <span class="tok-kw">return</span> acc</pre>
+      </figure>
+
+      <div class="callout info">
+        <strong>Correctness before speed</strong>
+        <p>Both functions return the same value; the blocked one is simply shaped so the compiler can do its job. The tail loop is not optional — an <code>ALIGN</code> of 8 with an array of 13 elements would silently drop 5 of them without it.</p>
+      </div>
+
+      <h3>Measure, do not assume</h3>
+
+      <p>The two questions worth asking of any slow code are <em>is it memory-bound or compute-bound</em>, and <em>how far off the roofline am I</em>. If the working set does not fit in cache, arithmetic improvements will not help and the answer is blocking, prefetching, or a smaller data type. If it does fit and you are still slow, the loop is the problem.</p>
+
+      <p>Mojo's timings print as real, not the placeholder zeros that Python's <code>timeit</code> shows when the work is faster than the clock resolution. Benchmark enough repetitions that the difference exceeds the noise, and always benchmark against the equivalent pure-Python version — that comparison is the only one that tells you whether Mojo was worth the switch.</p>
+
+      <section class="lab" data-lab="perf" aria-label="Performance lab">
+        <div class="labhead"><span class="dot"></span>Lab — where the time goes<span class="tagline">m10</span></div>
+      </section>
+
+      <p>Two loops over the same array, computing the same sum. The green bar uses an 8-wide block so the browser's JIT can issue independent lanes; the red bar walks one element at a time. Their difference is a fair proxy for what SIMD buys you — though JavaScript's JIT is not Mojo's compiler, so treat the ratio as illustrative rather than a benchmark.</p>
+
+      <p>At the smallest element counts the readout says "too fast to time" rather than inventing a number. That is deliberate: a sub-millisecond measurement in a browser is mostly timer resolution, and a fabricated speedup would be worse than no speedup.</p>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">A blocked loop is fast. The array length is not a multiple of <code>ALIGN</code>, and the tail loop was omitted. What happens?</p>
+        <label class="opt"><input type="radio" name="m10q1" value="a"><span>A compile error, because <code>n</code> must divide the length</span></label>
+        <label class="opt"><input type="radio" name="m10q1" value="b"><span>The result is correct; the compiler pads the tail automatically</span></label>
+        <label class="opt"><input type="radio" name="m10q1" value="c"><span>The trailing elements are silently skipped, so the sum is wrong</span></label>
+        <label class="opt"><input type="radio" name="m10q1" value="d"><span>It raises at runtime with an out-of-bounds error</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> rounding <code>n</code> down to a multiple of <code>ALIGN</code> means the main loop covers only the first <code>n</code> elements. The rest are simply never read — no error, no warning, just a wrong answer that looks plausible. This is why the tail loop is part of the idiom rather than an optimisation to add later.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m09" data-goto="8"><span class="d">Previous</span><span class="t">09 — NumPy interop</span></a>
+        <span class="navbtn off"><span class="d">Finish</span><span class="t">Back to the shelf ↑</span></span>
+      </nav>
+    </section>
+
+    <footer>
+      <div class="footgrid">
+        <div>
+          <h4>Data Science Mojo</h4>
+          <p style="font-size:0.86rem;color:var(--dim)">10 modules · 20 listings · 10 live labs · 10 quizzes</p>
+        </div>
+        <div>
+          <h4>Nearby</h4>
+          <a href="../index.html">Data science shelf</a>
+          <a href="#m01">Back to the top</a>
+        </div>
+        <div>
+          <h4>This page</h4>
+          <p style="font-size:0.86rem;color:var(--dim)">Progress is stored in this browser only.</p>
+          <a class="resetlink" href="#" id="reset">Reset progress</a>
+        </div>
+      </div>
+      <p class="small">Listings target Mojo 1.x. Outputs are labelled expected, as the listings are not compile-checked in this build. KaTeX is vendored locally — the app works offline.</p>
+    </footer>
+
+  </main>
+</div>
+
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

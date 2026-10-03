@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -367,19 +367,17 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn" data-tab="ch6-static-out">output</button>
       </div>
       <div class="tab-content active" id="ch6-static-mojo">
-        <pre><code>struct Logger:
-    def __init__(out self):
-        pass
+        <pre><span class="kw">struct</span> <span class="type">Logger</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">out</span> self):
+        <span class="kw">pass</span>
 
-    @staticmethod
-    def log_info(message: String):
-        print(&quot;Info:&quot;, message)
+    <span class="op">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">log_info</span>(message: <span class="type">String</span>):
+        <span class="fn">print</span>(<span class="str">"Info:"</span>, message)
 
-def main():
-    Logger.log_info(&quot;Called on type&quot;)
-    var l = Logger()
-    l.log_info(&quot;Called on instance&quot;)
-</code></pre>
+<span class="type">Logger</span>.<span class="fn">log_info</span>(<span class="str">"Called on type"</span>)
+<span class="kw">var</span> l = <span class="type">Logger</span>()
+l.<span class="fn">log_info</span>(<span class="str">"Called on instance"</span>)</pre>
       </div>
       <div class="tab-content" id="ch6-static-out">
         <pre>Info: Called on type
@@ -741,8 +739,7 @@ me.name = <span class="str">"John"</span>   <span class="cmt"># reinitialize the
         <button class="tab-btn active" data-tab="ch6-node-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch6-node-mojo">
-        <pre><span class="kw">from</span> std.memory <span class="kw">import</span> <span class="type">Layout</span>
-<span class="kw">struct</span> <span class="type">Node</span>[ElementType: <span class="type">ImplicitlyCopyable</span> &amp; <span class="type">Writable</span> &amp; <span class="type">Deinitable</span>](
+        <pre><span class="kw">struct</span> <span class="type">Node</span>[ElementType: <span class="type">ImplicitlyCopyable</span> &amp; <span class="type">Writable</span> &amp; <span class="type">Deinitable</span>](
     <span class="type">Movable</span>
 ):
     <span class="kw">comptime</span> NodePointer = <span class="type">Pointer</span>[<span class="type">Self</span>, <span class="type">MutUntrackedOrigin</span>]
@@ -751,7 +748,7 @@ me.name = <span class="str">"John"</span>   <span class="cmt"># reinitialize the
 
     <span class="op">@staticmethod</span>
     <span class="kw">def</span> <span class="fn">make_node</span>(value: <span class="type">Self</span>.ElementType) -&gt; <span class="type">Self</span>.NodePointer:
-        <span class="kw">var</span> node_ptr = <span class="fn">alloc</span>(<span class="type">Layout</span>[<span class="type">Self</span>](count=<span class="num">1</span>)).<span class="fn">unsafe_leak</span>()   <span class="cmt"># 1. allocate space</span>
+        <span class="kw">var</span> node_ptr = <span class="fn">alloc</span>[<span class="type">Self</span>](<span class="num">1</span>)        <span class="cmt"># 1. allocate space</span>
         node_ptr.<span class="fn">unsafe_write</span>(<span class="type">Self</span>(value))  <span class="cmt"># 2-3. init &amp; move in</span>
         <span class="kw">return</span> node_ptr                     <span class="cmt"># 4. return pointer</span>
 

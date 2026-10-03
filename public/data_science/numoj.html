@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nj &mdash; a small NumPy-shaped library for Mojo 1.x</title>
+<style>
+:root {
+  --bg: #0b0e14; --panel: #141a26; --code: #0d1117; --line: #2a3446;
+  --text: #e6edf3; --muted: #a9b8cf; --gold: #e9b949; --green: #4ade80;
+  --blue: #58a6ff; --pink: #ff7b72; --purple: #d2a8ff;
+  --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--sans); font-size: 17px; line-height: 1.65;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 96px; }
+a { color: var(--blue); }
+h1, h2, h3 { line-height: 1.25; margin: 0 0 .5em; letter-spacing: -.01em; }
+h1 { font-size: clamp(1.7rem, 4.2vw, 2.7rem); margin-bottom: .25em; }
+h2 {
+  font-size: clamp(1.25rem, 2.6vw, 1.6rem); margin-top: 2.6em;
+  padding-top: 1.1em; border-top: 1px solid var(--line);
+}
+h3 { font-size: 1.1rem; margin-top: 1.9em; color: var(--gold); }
+p, li { color: var(--text); }
+.sub { color: var(--muted); font-size: 1.05rem; margin: 0 0 1.4em;
+  max-width: 74ch; }
+.sub b { color: var(--text); }
+.lede { font-size: 1.08rem; color: var(--muted); max-width: 70ch; }
+code {
+  font-family: var(--mono); font-size: .9em; color: var(--gold);
+  background: var(--panel); padding: .1em .35em; border-radius: 4px;
+}
+pre {
+  font-family: var(--mono); font-size: 13.5px; line-height: 1.62;
+  background: var(--code); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 0; margin: 0; overflow-x: auto; tab-size: 4;
+}
+.ln { display: block; padding: 0 16px 0 0; white-space: pre; }
+.ln:hover { background: #161d2b; }
+.lnn {
+  display: inline-block; width: 3.1em; padding-right: 1em; margin-right: .9em;
+  text-align: right; color: #93a4bd; user-select: none;
+  border-right: 1px solid var(--line);
+}
+.lc { white-space: pre; }
+.c{color:#8fa3bd} .d{color:#d2a8ff} .s{color:#a5d6ff} .n{color:#79c0ff}
+.k{color:#ff7b72} .b{color:#ffa657} .t{color:#7ee787} .v{color:#ffa198}
+.f{color:#ffd7a8} .i{color:#e6edf3} .o{color:#c9d1d9} .p{color:#8fa3bd}
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 1.6em; }
+.badge {
+  font-size: .74rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+}
+.badge.ok { color: var(--green); border-color: #23543a; }
+.badge.gold { color: var(--gold); border-color: #4d3f1c; }
+.badge.pink { color: var(--pink); border-color: #5c2a2a; }
+figure { margin: 1.8em 0; }
+figure .fig { width: 100%; height: auto; display: block; border-radius: 12px; }
+figcaption { color: var(--muted); font-size: .92rem; margin-top: .7em;
+  max-width: 76ch; }
+figcaption b { color: var(--text); }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .duo { grid-template-columns: 1fr; } }
+.pane { min-width: 0; }
+.pane > h3 { margin: 0 0 .5em; font-size: .95rem; display: flex;
+  align-items: center; gap: .6em; }
+.pane > h3 .tag { font-family: var(--mono); font-size: .72rem;
+  font-weight: 700; padding: 3px 8px; border-radius: 5px; letter-spacing: 0; }
+.pane.mojo .tag { background: #3a2f10; color: var(--gold); }
+.pane.py .tag { background: #14314f; color: var(--blue); }
+.pane.nj .tag { background: #10331f; color: var(--green); }
+.note {
+  border-left: 3px solid var(--gold); background: var(--panel);
+  padding: .85em 1.1em; margin: 1.2em 0; border-radius: 0 8px 8px 0;
+  color: var(--muted); max-width: 82ch;
+}
+.note b { color: var(--text); }
+.note.pink { border-left-color: var(--pink); }
+.note.green { border-left-color: var(--green); }
+table { border-collapse: collapse; width: 100%; margin: 1.4em 0;
+  font-size: .95rem; }
+th, td { text-align: left; padding: .7em .85em;
+  border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--gold); font-weight: 700; }
+td:first-child { color: var(--muted); }
+td code, td { font-size: .92rem; }
+tr.same td:first-child { color: var(--green); }
+tr.changed td:first-child { color: var(--gold); }
+.out { background: var(--code); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px; overflow-x: auto; margin: 0; }
+.out pre { background: none; border: 0; padding: 0; font-size: 13px; }
+.term { color: var(--green); font-weight: 700; font-family: var(--mono);
+  font-size: .86em; }
+ul.run li { margin: .3em 0; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: .45em 1.1em;
+  margin: 1.1em 0; }
+.kv dt { color: var(--gold); font-family: var(--mono); font-size: .86em;
+  white-space: nowrap; }
+.kv dd { margin: 0; color: var(--muted); }
+@media (max-width: 620px) {
+  .kv { grid-template-columns: 1fr; gap: 0 0; }
+  .kv dd { margin-bottom: .5em; }
+}
+.tree { font-family: var(--mono); font-size: 13px; color: var(--muted);
+  line-height: 1.8; }
+.tree b { color: var(--text); }
+.tree .hi { color: var(--gold); }
+footer { margin-top: 3.5em; padding-top: 1.4em; border-top: 1px solid var(--line);
+  color: var(--muted); font-size: .9rem; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav style="display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;font-family:var(--mono);font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:.7rem;margin:0 0 1.9rem;">
+  <a href="../index.html" style="text-decoration:none;">&#127968; TutMe Home</a>
+  <span style="color:var(--line);">/</span>
+  <a href="index.html" style="text-decoration:none;">&#128218; Data Science Hub</a>
+  <span style="color:var(--line);">/</span>
+  <a href="nn_mojo.html" style="text-decoration:none;">&#129516; 3&#8211;4&#8211;1 NN in Mojo &amp; NumPy</a>
+  <span style="color:var(--line);">/</span>
+  <span style="color:var(--text);">nj</span>
+</nav>
+
+<h1>nj: a small NumPy-shaped library for Mojo 1.x</h1>
+<p class="sub">The project is called <b>numoj</b>. In Mojo you call it
+<b>nj</b>, the way Python calls NumPy <b>np</b>. It exists for one program:
+a hand-written 3-4-1 neural network. It is not a NumPy replacement.</p>
+<p style="color:var(--muted);font-size:.95rem;">The dependency&#8209;free program this
+library exists to shorten is written out in full, with its NumPy original
+alongside it, in <a href="nn_mojo.html">A 3&#8211;4&#8211;1 neural network, in
+Mojo 1.x and in NumPy</a> &mdash; start there if you want the arithmetic
+first.</p>
+
+<div class="badges">
+  <span class="badge ok">verified bit-identical</span>
+  <span class="badge gold">Mojo 1.x</span>
+  <span class="badge">15 operations, no more</span>
+  <span class="badge">36 code lines, down from 193</span>
+  <span class="badge pink">not compiled here &mdash; no Mojo toolchain</span>
+</div>
+
+<h2>1. The problem it solves</h2>
+<p class="lede">The raw Mojo port of the network runs to 193 lines of
+code, and almost none of it is learning anything. It is indexing into a
+<code>List</code>, checking shapes, transposing by hand, and threading a
+<code>0.0</code> accumulator through functions that are named after matrix
+operations. NumPy let the original fit in about forty lines. <b>nj</b> is the
+part of that idea that this one program needs.</p>
+
+<p>Everything the library does is listed below. There is no n-dimensional
+support, no dtype system, no slicing, and no broadcasting except for a bare
+scalar. If your problem is not this shape, this library will not help you, and
+it is better that you find that out from the table than by reading the
+source.</p>
+
+<h2>2. What is in the package</h2>
+<p class="tree">
+nn_nj.mojo            <span class="hi">the program you read</span><br>
+nj/<br>
+&nbsp;&nbsp;&#9476;&#9472; <b>&#95;&#95;init&#95;&#95;.mojo</b>       re-exports, so <code>import nj</code> is enough<br>
+&nbsp;&nbsp;&#9476;&#9472; <b>array.mojo</b>          <span class="hi">struct ndarray</span> and the operators<br>
+&nbsp;&nbsp;&#9492;&#9472; <b>random.mojo</b>         <span class="hi">struct random</span>, a seeded xorshift64
+</p>
+<p>A Mojo package is a directory with an <code>&#95;&#95;init&#95;&#95;.mojo</code>
+in it, and that file cannot run statements on import. What it can do is
+re-export, which is the whole trick:</p>
+<pre><span class="ln"><span class="lnn">1</span><span class="lc"><span class="c"># ============================================================================</span></span></span>
+<span class="ln"><span class="lnn">2</span><span class="lc"><span class="c">#  nj -- a very small NumPy-shaped library for Mojo 1.x</span></span></span>
+<span class="ln"><span class="lnn">3</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">4</span><span class="lc"><span class="c">#  nj/__init__.mojo</span></span></span>
+<span class="ln"><span class="lnn">5</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">6</span><span class="lc"><span class="c">#  A Mojo package is a directory with an __init__.mojo in it. That file</span></span></span>
+<span class="ln"><span class="lnn">7</span><span class="lc"><span class="c">#  cannot run statements on import -- Mojo has no top-level code -- but it</span></span></span>
+<span class="ln"><span class="lnn">8</span><span class="lc"><span class="c">#  can re-export, so `import nj` is enough to reach everything:</span></span></span>
+<span class="ln"><span class="lnn">9</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">10</span><span class="lc"><span class="c">#      import nj</span></span></span>
+<span class="ln"><span class="lnn">11</span><span class="lc"><span class="c">#      var rng  = nj.random(seed=15)</span></span></span>
+<span class="ln"><span class="lnn">12</span><span class="lc"><span class="c">#      var x    = nj.array([[1, 0], [0, 1]])</span></span></span>
+<span class="ln"><span class="lnn">13</span><span class="lc"><span class="c">#      var loss = nj.sum(x)</span></span></span>
+<span class="ln"><span class="lnn">14</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">15</span><span class="lc"><span class="c">#  Each line below pulls a name out of a sibling module and puts it in the</span></span></span>
+<span class="ln"><span class="lnn">16</span><span class="lc"><span class="c">#  package namespace. This is the same trick the `max` library uses for</span></span></span>
+<span class="ln"><span class="lnn">17</span><span class="lc"><span class="c">#  max.algorithm.</span></span></span>
+<span class="ln"><span class="lnn">18</span><span class="lc"><span class="c"># ============================================================================</span></span></span>
+<span class="ln"><span class="lnn">19</span><span class="lc"><span class="k">from</span> <span class="p">.</span><span class="i">array</span> <span class="k">import</span> <span class="i">ndarray</span><span class="p">,</span> <span class="i">array</span><span class="p">,</span> <span class="i">zeros</span><span class="p">,</span> <span class="b">sum</span></span></span>
+<span class="ln"><span class="lnn">20</span><span class="lc"><span class="k">from</span> <span class="p">.</span><span class="i">random</span> <span class="k">import</span> <span class="i">random</span></span></span></pre>
+<p>That is the same mechanism <code>max</code> uses for
+<code>max.algorithm</code>. From here on, <code>nj.array</code>,
+<code>nj.sum</code>, <code>nj.ndarray</code> and <code>nj.random</code> are
+all just names, and the rest of the program never has to say
+<code>nj.array.mojo</code>.</p>
+
+<h2>3. The whole API</h2>
+<p>Every operation below is used by the network, and nothing else was added.
+11 of the 15 are spelled exactly as they are in NumPy; the
+other four had to move.</p>
+
+<figure>
+<svg class="fig" viewBox="0 0 640 548" role="img" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><title>nj API mapped against NumPy</title><desc>A table of 15 operations. For each one the NumPy spelling is on the left and the nj spelling on the right. Eleven are identical and four differ: T() is a method, x[i] already returns a row matrix, zeros takes two arguments, and the random generator is a value rather than a global.</desc><rect x="0" y="0" width="640" height="548" fill="#0b0e14" rx="10"/><text x="320" y="24" fill="#e6edf3" font-size="15" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">Every call the network makes, and its NumPy twin</text><text x="320" y="42" fill="#a9b8cf" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">green means the line is unchanged; gold means it moved</text><rect x="14" y="57" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="69" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="72" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">np.array(nested list)</text><line x1="450" y1="68" x2="460" y2="68" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 64 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="72" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">nj.array(nested list)</text><text x="320" y="99" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="102" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x.T</text><line x1="450" y1="98" x2="460" y2="98" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 94 l 8 4 l -8 4 z" fill="#e9b949"/><text x="474" y="102" fill="#e9b949" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x.T()</text><rect x="14" y="117" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="129" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="132" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x.dot(y)</text><line x1="450" y1="128" x2="460" y2="128" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 124 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="132" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x.dot(y)</text><text x="320" y="159" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="162" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x * y</text><line x1="450" y1="158" x2="460" y2="158" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 154 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="162" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x * y</text><rect x="14" y="177" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="189" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="192" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">2 * x</text><line x1="450" y1="188" x2="460" y2="188" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 184 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="192" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">2.0 * x</text><text x="320" y="219" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="222" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x - y</text><line x1="450" y1="218" x2="460" y2="218" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 214 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="222" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x - y</text><rect x="14" y="237" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="249" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="252" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x - 1</text><line x1="450" y1="248" x2="460" y2="248" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 244 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="252" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x - 1.0</text><text x="320" y="279" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="282" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x ** 2</text><line x1="450" y1="278" x2="460" y2="278" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 274 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="282" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x ** 2</text><rect x="14" y="297" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="309" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="312" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x &gt; 0</text><line x1="450" y1="308" x2="460" y2="308" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 304 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="312" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x &gt; 0.0</text><text x="320" y="339" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="342" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x -= y</text><line x1="450" y1="338" x2="460" y2="338" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 334 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="342" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x -= y</text><rect x="14" y="357" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="369" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="372" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">len(x)</text><line x1="450" y1="368" x2="460" y2="368" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 364 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="372" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">len(x)</text><text x="320" y="399" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="402" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">x[i:i+1]</text><line x1="450" y1="398" x2="460" y2="398" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 394 l 8 4 l -8 4 z" fill="#e9b949"/><text x="474" y="402" fill="#e9b949" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">x[i]</text><rect x="14" y="417" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="429" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="432" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">np.sum(x)</text><line x1="450" y1="428" x2="460" y2="428" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 424 l 8 4 l -8 4 z" fill="#4ade80"/><text x="474" y="432" fill="#4ade80" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">nj.sum(x)</text><text x="320" y="459" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="462" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">np.zeros((r, c))</text><line x1="450" y1="458" x2="460" y2="458" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 454 l 8 4 l -8 4 z" fill="#e9b949"/><text x="474" y="462" fill="#e9b949" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">nj.zeros(r, c)</text><rect x="14" y="477" width="612" height="28" fill="#141a26" rx="5"/><text x="320" y="489" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">np.</text><text x="150" y="492" fill="#58a6ff" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">np.random.random((r, c))</text><line x1="450" y1="488" x2="460" y2="488" stroke="#2a3446" stroke-width="1.5"/><path d="M 460 484 l 8 4 l -8 4 z" fill="#e9b949"/><text x="474" y="492" fill="#e9b949" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="end">rng.random((r, c))</text><text x="320" y="520" fill="#a9b8cf" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">15 operations, all of them</text></svg>
+<figcaption><b>The full surface area.</b> The four that changed are the four
+places where Mojo will not let you write the NumPy line. Read the table for
+what nj does, not for what it will grow into.</figcaption>
+</figure>
+
+<table>
+<thead><tr><th>in nj</th><th>in NumPy</th><th>why it moved</th></tr></thead>
+<tbody>
+<tr class="same"><td><code>nj.array(nested list)</code></td><td><code>np.array(nested list)</code></td><td>int or float cells</td></tr>
+<tr class="changed"><td><code>x.T()</code></td><td><code>x.T</code></td><td>a method, not a property</td></tr>
+<tr class="same"><td><code>x.dot(y)</code></td><td><code>x.dot(y)</code></td><td>shapes checked, ValueError on mismatch</td></tr>
+<tr class="same"><td><code>x * y</code></td><td><code>x * y</code></td><td>element-wise, not matrix product</td></tr>
+<tr class="same"><td><code>2.0 * x</code></td><td><code>2 * x</code></td><td>__rmul__ puts the scalar on the left</td></tr>
+<tr class="same"><td><code>x - y</code></td><td><code>x - y</code></td><td>element-wise</td></tr>
+<tr class="same"><td><code>x - 1.0</code></td><td><code>x - 1</code></td><td>scalar on the right</td></tr>
+<tr class="same"><td><code>x ** 2</code></td><td><code>x ** 2</code></td><td>element-wise, integer exponent</td></tr>
+<tr class="same"><td><code>x &gt; 0.0</code></td><td><code>x &gt; 0</code></td><td>gives 1.0 / 0.0, not a Bool array</td></tr>
+<tr class="same"><td><code>x -= y</code></td><td><code>x -= y</code></td><td>mutates in place, returns nothing</td></tr>
+<tr class="same"><td><code>len(x)</code></td><td><code>len(x)</code></td><td>row count</td></tr>
+<tr class="changed"><td><code>x[i]</code></td><td><code>x[i:i+1]</code></td><td>already returns a 1 x cols matrix</td></tr>
+<tr class="same"><td><code>nj.sum(x)</code></td><td><code>np.sum(x)</code></td><td>adds every entry</td></tr>
+<tr class="changed"><td><code>nj.zeros(r, c)</code></td><td><code>np.zeros((r, c))</code></td><td>two arguments, not a tuple</td></tr>
+<tr class="changed"><td><code>rng.random((r, c))</code></td><td><code>np.random.random((r, c))</code></td><td>a value you hold, not a global</td></tr>
+</tbody>
+</table>
+
+<h3>What is deliberately missing</h3>
+<ul><li><b>n-dimensional shapes</b> &mdash; everything here is 2D</li>
+<li><b>dtype dispatch</b> &mdash; Float64 or nothing</li>
+<li><b>strides and views</b> &mdash; one dense row-major buffer</li>
+<li><b>broadcasting between arrays</b> &mdash; only a scalar broadcasts</li>
+<li><b>slicing</b> &mdash; x[i] gives a row; x[a:b] does not exist</li>
+<li><b>ufuncs, reductions, linalg</b> &mdash; no dot other than 2D matmul</li>
+<li><b>an existing ecosystem</b> &mdash; nj is not a numpy port you can lean on</li></ul>
+
+<h3>The exact names, if you want to add one</h3>
+<p>Mojo picks an operator by method name, so the surface area above is really a
+list of method names. To extend the library you add a method to
+<code>ndarray</code> with the right one of these, then re-export it in
+<code>&#95;&#95;init&#95;&#95;.mojo</code> if it should be reachable as
+<code>nj.something</code>.</p>
+<div class="kv">
+<dt>__len__</dt><dd>the row count, so <code>len(x)</code> works</dd>
+<dt>__getitem__</dt><dd>row <code>i</code> as a 1 x cols matrix</dd>
+<dt>__str__</dt><dd>the hook <code>print()</code> uses to show a matrix</dd>
+<dt>__mul__</dt><dd>element-wise, two matrices</dd>
+<dt>__rmul__</dt><dd>element-wise, scalar on the left</dd>
+<dt>__sub__</dt><dd>overloaded twice: matrix, and scalar</dd>
+<dt>__isub__</dt><dd>in place, returns nothing, and <code>self</code> must be
+<code>mut</code></dd>
+<dt>__pow__</dt><dd>element-wise, integer exponent</dd>
+<dt>__gt__</dt><dd>1.0 or 0.0, never a Bool</dd>
+<dt>dot</dt><dd>a plain method, because numpy spells it as one</dd>
+<dt>T</dt><dd>a method rather than a property</dd>
+</div>
+
+<h2>4. Row-major, like NumPy</h2>
+<p>The raw port stores each weight matrix with features down the rows, because
+that is what the book's hand-written <code>Matrix</code> does. NumPy stores a
+matrix the other way round, with examples down the rows, and that is why
+<code>layer_0.dot(weights_0_1)</code> just works there. <b>nj is
+row-major</b>, which is the single design decision that makes the shortened
+program look like the original.</p>
+
+<figure>
+<svg class="fig" viewBox="0 0 640 340" role="img" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><title>Row-major nj versus column-major nn_mojo</title><desc>Two grids holding the same four training examples. The left grid is four rows by three columns, which is how nj and NumPy both store them, so one example is simply the first row and a one by three times a three by four product goes straight to a one by four row. The right grid is the transpose, three rows by four columns, so the raw Mojo port has to dig a column out and transpose the weights before multiplying, and its answer comes out as a four by one column instead.</desc><rect x="0" y="0" width="640" height="340" fill="#0b0e14" rx="10"/><text x="320" y="24" fill="#e6edf3" font-size="15" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">Why nj is row-major and nn_mojo.mojo is not</text><text x="320" y="42" fill="#a9b8cf" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">same four examples, stored two ways</text><text x="174" y="68" fill="#e6edf3" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">tells as nj stores it</text><text x="174" y="84" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">4 rows x 3 cols</text><rect x="126" y="96" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="140.5" y="116" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="158" y="96" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="172.5" y="116" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="190" y="96" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="204.5" y="116" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="126" y="128" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="140.5" y="148" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="158" y="128" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="172.5" y="148" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="190" y="128" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="204.5" y="148" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="126" y="160" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="140.5" y="180" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="158" y="160" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="172.5" y="180" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="190" y="160" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="204.5" y="180" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="126" y="192" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="140.5" y="212" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="158" y="192" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="172.5" y="212" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="190" y="192" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="204.5" y="212" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><text x="446" y="68" fill="#e6edf3" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">tells as nn_mojo stores it</text><text x="446" y="84" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">3 rows x 4 cols</text><rect x="382" y="96" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="396.5" y="116" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="414" y="96" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="428.5" y="116" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="446" y="96" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="460.5" y="116" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="478" y="96" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="492.5" y="116" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="382" y="128" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="396.5" y="148" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="414" y="128" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="428.5" y="148" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="446" y="128" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="460.5" y="148" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">0</text><rect x="478" y="128" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="492.5" y="148" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="382" y="160" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="396.5" y="180" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="414" y="160" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="428.5" y="180" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="446" y="160" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="460.5" y="180" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><rect x="478" y="160" width="29" height="29" fill="#141a26" stroke="#2a3446" stroke-width="1" rx="4"/><text x="492.5" y="180" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">1</text><text x="174" y="244" fill="#e9b949" font-size="11.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">tells[0] is 1 x 3, straight out</text><text x="446" y="244" fill="#ff7b72" font-size="11.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">tells.column(0) is 3 x 1, dug out</text><text x="20" y="274" fill="#e6edf3" font-size="12.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="start">one forward pass, example 0</text><text x="20" y="298" fill="#e9b949" font-size="12" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="700" text-anchor="start">nj</text><text x="56" y="298" fill="#e6edf3" font-size="12" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">tells[0].dot(weights_0_1)</text><text x="330" y="298" fill="#a9b8cf" font-size="11.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">(1x3) @ (3x4)  =  1x4</text><text x="20" y="320" fill="#ff7b72" font-size="12" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="700" text-anchor="start">mojo</text><text x="56" y="320" fill="#e6edf3" font-size="12" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="400" text-anchor="start">W0_1.transpose().matmul(x)</text><text x="330" y="320" fill="#a9b8cf" font-size="11.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">(4x3) @ (3x1)  =  4x1</text><text x="20" y="346" fill="#a9b8cf" font-size="11.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">the multiply runs the other way, and the answer is a column</text></svg>
+<figcaption><b>Same four examples, two storage conventions.</b> Taking a row
+is free on the left and a column-extraction on the right, and the multiply
+runs in opposite directions. This is the difference between a
+<code>layer_0.dot(...)</code> and a <code>W0_1.T().matmul(...)</code>.</figcaption>
+</figure>
+
+<h2>5. The two programs</h2>
+<div class="duo">
+  <div class="pane py">
+    <h3><span class="tag">NumPy</span> the original</h3>
+    <pre><span class="ln"><span class="lnn">1</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">2</span><span class="lc"><span class="c"># training data</span></span></span>
+<span class="ln"><span class="lnn">3</span><span class="lc"><span class="k">import</span> <span class="b">numpy</span> <span class="k">as</span> <span class="b">np</span></span></span>
+<span class="ln"><span class="lnn">4</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">5</span><span class="lc"><span class="b">np</span><span class="p">.</span><span class="i">random</span><span class="p">.</span><span class="f">seed</span><span class="p">(</span><span class="n">1</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">6</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">7</span><span class="lc"><span class="c"># input data</span></span></span>
+<span class="ln"><span class="lnn">8</span><span class="lc"><span class="i">tells</span> <span class="o">=</span> <span class="b">np</span><span class="p">.</span><span class="f">array</span><span class="p">(</span><span class="p">[</span></span></span>
+<span class="ln"><span class="lnn">9</span><span class="lc">    <span class="p">[</span><span class="n">1</span><span class="p">,</span> <span class="n">0</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span><span class="p">,</span></span></span>
+<span class="ln"><span class="lnn">10</span><span class="lc">    <span class="p">[</span><span class="n">0</span><span class="p">,</span> <span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span><span class="p">,</span></span></span>
+<span class="ln"><span class="lnn">11</span><span class="lc">    <span class="p">[</span><span class="n">0</span><span class="p">,</span> <span class="n">0</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span><span class="p">,</span></span></span>
+<span class="ln"><span class="lnn">12</span><span class="lc">    <span class="p">[</span><span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span></span></span>
+<span class="ln"><span class="lnn">13</span><span class="lc"><span class="p">]</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">14</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">15</span><span class="lc"><span class="c"># output</span></span></span>
+<span class="ln"><span class="lnn">16</span><span class="lc"><span class="i">strike</span> <span class="o">=</span> <span class="b">np</span><span class="p">.</span><span class="f">array</span><span class="p">(</span><span class="p">[</span><span class="p">[</span><span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">,</span> <span class="n">0</span><span class="p">,</span> <span class="n">0</span><span class="p">]</span><span class="p">]</span><span class="p">)</span><span class="p">.</span><span class="t">T</span></span></span>
+<span class="ln"><span class="lnn">17</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">18</span><span class="lc"><span class="c"># relu functions</span></span></span>
+<span class="ln"><span class="lnn">19</span><span class="lc"><span class="k">def</span> <span class="f">relu</span><span class="p">(</span><span class="i">x</span><span class="p">)</span><span class="p">:</span> <span class="k">return</span> <span class="p">(</span><span class="i">x</span> <span class="o">&gt;</span> <span class="n">0</span><span class="p">)</span> <span class="o">*</span> <span class="i">x</span></span></span>
+<span class="ln"><span class="lnn">20</span><span class="lc"><span class="k">def</span> <span class="f">relu2deriv</span><span class="p">(</span><span class="i">y</span><span class="p">)</span><span class="p">:</span> <span class="k">return</span> <span class="i">y</span> <span class="o">&gt;</span> <span class="n">0</span></span></span>
+<span class="ln"><span class="lnn">21</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">22</span><span class="lc"><span class="c"># network architecture and weights</span></span></span>
+<span class="ln"><span class="lnn">23</span><span class="lc"><span class="i">alpha</span><span class="p">,</span> <span class="i">hidden_size</span> <span class="o">=</span> <span class="n">0.2</span><span class="p">,</span> <span class="n">4</span></span></span>
+<span class="ln"><span class="lnn">24</span><span class="lc"><span class="i">weights_0_1</span> <span class="o">=</span> <span class="n">2</span> <span class="o">*</span> <span class="b">np</span><span class="p">.</span><span class="i">random</span><span class="p">.</span><span class="f">random</span><span class="p">(</span><span class="p">(</span><span class="n">3</span><span class="p">,</span> <span class="i">hidden_size</span><span class="p">)</span><span class="p">)</span> <span class="o">-</span> <span class="n">1</span></span></span>
+<span class="ln"><span class="lnn">25</span><span class="lc"><span class="i">weights_1_2</span> <span class="o">=</span> <span class="n">2</span> <span class="o">*</span> <span class="b">np</span><span class="p">.</span><span class="i">random</span><span class="p">.</span><span class="f">random</span><span class="p">(</span><span class="p">(</span><span class="i">hidden_size</span><span class="p">,</span> <span class="n">1</span><span class="p">)</span><span class="p">)</span> <span class="o">-</span> <span class="n">1</span></span></span>
+<span class="ln"><span class="lnn">26</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">27</span><span class="lc"><span class="c"># stochastic gradient descent</span></span></span>
+<span class="ln"><span class="lnn">28</span><span class="lc"><span class="k">for</span> <span class="i">epoch</span> <span class="k">in</span> <span class="b">range</span><span class="p">(</span><span class="n">60</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">29</span><span class="lc">  <span class="i">layer_2_error</span> <span class="o">=</span> <span class="n">0</span></span></span>
+<span class="ln"><span class="lnn">30</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">31</span><span class="lc">  <span class="k">for</span> <span class="i">i</span> <span class="k">in</span> <span class="b">range</span><span class="p">(</span><span class="b">len</span><span class="p">(</span><span class="i">tells</span><span class="p">)</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">32</span><span class="lc">    <span class="c"># forward propagation</span></span></span>
+<span class="ln"><span class="lnn">33</span><span class="lc">    <span class="i">layer_0</span> <span class="o">=</span> <span class="i">tells</span><span class="p">[</span><span class="i">i</span> <span class="p">:</span> <span class="i">i</span> <span class="o">+</span> <span class="n">1</span><span class="p">]</span></span></span>
+<span class="ln"><span class="lnn">34</span><span class="lc">    <span class="i">layer_1</span> <span class="o">=</span> <span class="f">relu</span><span class="p">(</span><span class="i">layer_0</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_0_1</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">35</span><span class="lc">    <span class="i">layer_2</span> <span class="o">=</span> <span class="i">layer_1</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_1_2</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">36</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">37</span><span class="lc">    <span class="c"># measure our error</span></span></span>
+<span class="ln"><span class="lnn">38</span><span class="lc">    <span class="i">layer_2_error</span> <span class="o">+=</span> <span class="b">np</span><span class="p">.</span><span class="b">sum</span><span class="p">(</span></span></span>
+<span class="ln"><span class="lnn">39</span><span class="lc">        <span class="p">(</span><span class="i">layer_2</span> <span class="o">-</span> <span class="i">strike</span><span class="p">[</span><span class="i">i</span> <span class="p">:</span> <span class="i">i</span> <span class="o">+</span> <span class="n">1</span><span class="p">]</span><span class="p">)</span> <span class="o">**</span> <span class="n">2</span></span></span>
+<span class="ln"><span class="lnn">40</span><span class="lc">    <span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">41</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">42</span><span class="lc">    <span class="i">layer_2_delta</span> <span class="o">=</span> <span class="i">layer_2</span> <span class="o">-</span> <span class="i">strike</span><span class="p">[</span><span class="i">i</span> <span class="p">:</span> <span class="i">i</span> <span class="o">+</span> <span class="n">1</span><span class="p">]</span></span></span>
+<span class="ln"><span class="lnn">43</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">44</span><span class="lc">    <span class="c"># backpropagation</span></span></span>
+<span class="ln"><span class="lnn">45</span><span class="lc">    <span class="i">layer_1_delta</span> <span class="o">=</span> <span class="p">(</span></span></span>
+<span class="ln"><span class="lnn">46</span><span class="lc">        <span class="i">layer_2_delta</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_1_2</span><span class="p">.</span><span class="t">T</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">47</span><span class="lc">        <span class="o">*</span> <span class="f">relu2deriv</span><span class="p">(</span><span class="i">layer_1</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">48</span><span class="lc">    <span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">49</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">50</span><span class="lc">    <span class="c"># update our weights</span></span></span>
+<span class="ln"><span class="lnn">51</span><span class="lc">    <span class="i">weights_1_2</span> <span class="o">-=</span> <span class="p">(</span></span></span>
+<span class="ln"><span class="lnn">52</span><span class="lc">        <span class="i">alpha</span> <span class="o">*</span> <span class="i">layer_1</span><span class="p">.</span><span class="t">T</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">layer_2_delta</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">53</span><span class="lc">    <span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">54</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">55</span><span class="lc">    <span class="i">weights_0_1</span> <span class="o">-=</span> <span class="p">(</span></span></span>
+<span class="ln"><span class="lnn">56</span><span class="lc">        <span class="i">alpha</span> <span class="o">*</span> <span class="i">layer_0</span><span class="p">.</span><span class="t">T</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">layer_1_delta</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">57</span><span class="lc">    <span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">58</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">59</span><span class="lc">  <span class="c"># summary print</span></span></span>
+<span class="ln"><span class="lnn">60</span><span class="lc">  <span class="k">if</span> <span class="i">epoch</span> <span class="o">%</span> <span class="n">10</span> <span class="o">==</span> <span class="n">9</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">61</span><span class="lc">    <span class="b">print</span><span class="p">(</span></span></span>
+<span class="ln"><span class="lnn">62</span><span class="lc">        <span class="s">f&quot;epoch {epoch + 1: &gt;2} &quot;</span></span></span>
+<span class="ln"><span class="lnn">63</span><span class="lc">        <span class="s">f&quot;error = {layer_2_error:.6f}&quot;</span></span></span>
+<span class="ln"><span class="lnn">64</span><span class="lc">    <span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">65</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">66</span><span class="lc"><span class="i">epoch</span> <span class="n">10</span> <span class="i">error</span> <span class="o">=</span> <span class="n">0.634231</span></span></span>
+<span class="ln"><span class="lnn">67</span><span class="lc"><span class="i">epoch</span> <span class="n">20</span> <span class="i">error</span> <span class="o">=</span> <span class="n">0.358384</span></span></span>
+<span class="ln"><span class="lnn">68</span><span class="lc"><span class="i">epoch</span> <span class="n">30</span> <span class="i">error</span> <span class="o">=</span> <span class="n">0.083018</span></span></span>
+<span class="ln"><span class="lnn">69</span><span class="lc"><span class="i">epoch</span> <span class="n">40</span> <span class="i">error</span> <span class="o">=</span> <span class="n">0.006467</span></span></span>
+<span class="ln"><span class="lnn">70</span><span class="lc"><span class="i">epoch</span> <span class="n">50</span> <span class="i">error</span> <span class="o">=</span> <span class="n">0.000329</span></span></span>
+<span class="ln"><span class="lnn">71</span><span class="lc"><span class="i">epoch</span> <span class="n">60</span> <span class="i">error</span> <span class="o">=</span> <span class="n">0.000015</span></span></span>
+<span class="ln"><span class="lnn">72</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">73</span><span class="lc"><span class="c"># final preds</span></span></span>
+<span class="ln"><span class="lnn">74</span><span class="lc"><span class="b">print</span><span class="p">(</span><span class="s">&#x27;Final predictions:&#x27;</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">75</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">76</span><span class="lc"><span class="k">for</span> <span class="i">row</span> <span class="k">in</span> <span class="i">tells</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">77</span><span class="lc">  <span class="i">layer_0</span> <span class="o">=</span> <span class="i">row</span><span class="p">.</span><span class="f">reshape</span><span class="p">(</span><span class="o">-</span><span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">78</span><span class="lc">  <span class="i">layer_1</span> <span class="o">=</span> <span class="f">relu</span><span class="p">(</span><span class="i">layer_0</span><span class="p">.</span><span class="t">T</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_0_1</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">79</span><span class="lc">  <span class="i">prediction</span> <span class="o">=</span> <span class="i">layer_1</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_1_2</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">80</span><span class="lc">  <span class="b">print</span><span class="p">(</span><span class="i">row</span><span class="p">,</span> <span class="s">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="b">round</span><span class="p">(</span><span class="b">float</span><span class="p">(</span><span class="i">prediction</span><span class="p">[</span><span class="n">0</span><span class="p">,</span><span class="n">0</span><span class="p">]</span><span class="p">)</span><span class="p">,</span> <span class="n">4</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">81</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">82</span><span class="lc"><span class="t">Final</span> <span class="i">predictions</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">83</span><span class="lc"><span class="p">[</span><span class="n">1</span> <span class="n">0</span> <span class="n">1</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="n">1.0</span></span></span>
+<span class="ln"><span class="lnn">84</span><span class="lc"><span class="p">[</span><span class="n">0</span> <span class="n">1</span> <span class="n">1</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="n">0.9986</span></span></span>
+<span class="ln"><span class="lnn">85</span><span class="lc"><span class="p">[</span><span class="n">0</span> <span class="n">0</span> <span class="n">1</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="n">0.0026</span></span></span>
+<span class="ln"><span class="lnn">86</span><span class="lc"><span class="p">[</span><span class="n">1</span> <span class="n">1</span> <span class="n">1</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="n">0.0</span></span></span></pre>
+  </div>
+  <div class="pane nj">
+    <h3><span class="tag">nj</span> the Mojo version</h3>
+    <pre><span class="ln"><span class="lnn">1</span><span class="lc"><span class="c"># ============================================================================</span></span></span>
+<span class="ln"><span class="lnn">2</span><span class="lc"><span class="c">#  A 3-4-1 neural network in Mojo 1.x, written with nj</span></span></span>
+<span class="ln"><span class="lnn">3</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">4</span><span class="lc"><span class="c">#  Run with:   mojo nn_nj.mojo</span></span></span>
+<span class="ln"><span class="lnn">5</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">6</span><span class="lc"><span class="c">#  This is the same program as nn_mojo.mojo, but using the small nj library</span></span></span>
+<span class="ln"><span class="lnn">7</span><span class="lc"><span class="c">#  in nj/ so the arithmetic reads the way the NumPy original reads.</span></span></span>
+<span class="ln"><span class="lnn">8</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">9</span><span class="lc"><span class="c">#  It produces bit-identical results to nn_mojo.mojo at seed 15: the error</span></span></span>
+<span class="ln"><span class="lnn">10</span><span class="lc"><span class="c">#  curve agrees to the last bit across all 60 epochs and the four predictions</span></span></span>
+<span class="ln"><span class="lnn">11</span><span class="lc"><span class="c">#  match exactly. That is a measured result, not a guarantee. The two files</span></span></span>
+<span class="ln"><span class="lnn">12</span><span class="lc"><span class="c">#  initialise their weights with formulas that differ only in rounding --</span></span></span>
+<span class="ln"><span class="lnn">13</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">14</span><span class="lc"><span class="c">#      here      2.0 * u - 1.0        the numpy line</span></span></span>
+<span class="ln"><span class="lnn">15</span><span class="lc"><span class="c">#      nn_mojo  (u - 0.5) * 2.0</span></span></span>
+<span class="ln"><span class="lnn">16</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">17</span><span class="lc"><span class="c">#  and on these sixteen draws they happen to round identically. Change the</span></span></span>
+<span class="ln"><span class="lnn">18</span><span class="lc"><span class="c">#  seed and they may not. The library changes how the code looks; what it</span></span></span>
+<span class="ln"><span class="lnn">19</span><span class="lc"><span class="c">#  computes is the same program either way.</span></span></span>
+<span class="ln"><span class="lnn">20</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">21</span><span class="lc"><span class="c">#  Side by side, the differences from NumPy are now just these:</span></span></span>
+<span class="ln"><span class="lnn">22</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">23</span><span class="lc"><span class="c">#      np.random.seed(1)              var rng = nj.random(seed=1)</span></span></span>
+<span class="ln"><span class="lnn">24</span><span class="lc"><span class="c">#      np.array([[1, 0, 1], ...])     nj.array([[1, 0, 1], ...])</span></span></span>
+<span class="ln"><span class="lnn">25</span><span class="lc"><span class="c">#      strike.T                       strike.T()</span></span></span>
+<span class="ln"><span class="lnn">26</span><span class="lc"><span class="c">#      tells[i : i + 1]               tells[i]</span></span></span>
+<span class="ln"><span class="lnn">27</span><span class="lc"><span class="c">#      row.reshape(-1, 1).T           -- not needed</span></span></span>
+<span class="ln"><span class="lnn">28</span><span class="lc"><span class="c">#      f&quot;{x:.6f}&quot;                     floor(x * 1e6) / 1e6, then t&quot;{x}&quot;</span></span></span>
+<span class="ln"><span class="lnn">29</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">30</span><span class="lc"><span class="c">#  Everything else -- .dot(), element-wise * and -, np.sum, the loop, the</span></span></span>
+<span class="ln"><span class="lnn">31</span><span class="lc"><span class="c">#  -= updates -- is the same call you would write in Python.</span></span></span>
+<span class="ln"><span class="lnn">32</span><span class="lc"><span class="c"># ============================================================================</span></span></span>
+<span class="ln"><span class="lnn">33</span><span class="lc"><span class="k">import</span> <span class="i">nj</span></span></span>
+<span class="ln"><span class="lnn">34</span><span class="lc"><span class="k">from</span> <span class="i">std</span><span class="p">.</span><span class="i">math</span> <span class="k">import</span> <span class="b">floor</span></span></span>
+<span class="ln"><span class="lnn">35</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">36</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">37</span><span class="lc"><span class="k">def</span> <span class="f">relu</span><span class="p">(</span><span class="i">x</span><span class="p">:</span> <span class="i">nj</span><span class="p">.</span><span class="i">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="i">nj</span><span class="p">.</span><span class="i">ndarray</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">38</span><span class="lc">    <span class="k">return</span> <span class="p">(</span><span class="i">x</span> <span class="o">&gt;</span> <span class="n">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="i">x</span></span></span>
+<span class="ln"><span class="lnn">39</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">40</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">41</span><span class="lc"><span class="k">def</span> <span class="f">relu2deriv</span><span class="p">(</span><span class="i">y</span><span class="p">:</span> <span class="i">nj</span><span class="p">.</span><span class="i">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="i">nj</span><span class="p">.</span><span class="i">ndarray</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">42</span><span class="lc">    <span class="k">return</span> <span class="i">y</span> <span class="o">&gt;</span> <span class="n">0.0</span></span></span>
+<span class="ln"><span class="lnn">43</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">44</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">45</span><span class="lc"><span class="k">def</span> <span class="f">main</span><span class="p">(</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">46</span><span class="lc">    <span class="k">var</span> <span class="i">rng</span> <span class="o">=</span> <span class="i">nj</span><span class="p">.</span><span class="f">random</span><span class="p">(</span><span class="i">seed</span><span class="o">=</span><span class="n">15</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">47</span><span class="lc">    <span class="k">var</span> <span class="i">tells</span> <span class="o">=</span> <span class="i">nj</span><span class="p">.</span><span class="f">array</span><span class="p">(</span><span class="p">[</span><span class="p">[</span><span class="n">1</span><span class="p">,</span> <span class="n">0</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span><span class="p">,</span> <span class="p">[</span><span class="n">0</span><span class="p">,</span> <span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span><span class="p">,</span> <span class="p">[</span><span class="n">0</span><span class="p">,</span> <span class="n">0</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span><span class="p">,</span> <span class="p">[</span><span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">]</span><span class="p">]</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">48</span><span class="lc">    <span class="k">var</span> <span class="i">strike</span> <span class="o">=</span> <span class="i">nj</span><span class="p">.</span><span class="f">array</span><span class="p">(</span><span class="p">[</span><span class="p">[</span><span class="n">1</span><span class="p">,</span> <span class="n">1</span><span class="p">,</span> <span class="n">0</span><span class="p">,</span> <span class="n">0</span><span class="p">]</span><span class="p">]</span><span class="p">)</span><span class="p">.</span><span class="t">T</span><span class="p">(</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">49</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">50</span><span class="lc">    <span class="c"># network architecture and weights</span></span></span>
+<span class="ln"><span class="lnn">51</span><span class="lc">    <span class="k">var</span> <span class="i">alpha</span> <span class="o">=</span> <span class="n">0.2</span></span></span>
+<span class="ln"><span class="lnn">52</span><span class="lc">    <span class="k">var</span> <span class="i">hidden_size</span> <span class="o">=</span> <span class="n">4</span></span></span>
+<span class="ln"><span class="lnn">53</span><span class="lc">    <span class="k">var</span> <span class="i">weights_0_1</span> <span class="o">=</span> <span class="n">2.0</span> <span class="o">*</span> <span class="i">rng</span><span class="p">.</span><span class="f">random</span><span class="p">(</span><span class="p">(</span><span class="n">3</span><span class="p">,</span> <span class="i">hidden_size</span><span class="p">)</span><span class="p">)</span> <span class="o">-</span> <span class="n">1.0</span></span></span>
+<span class="ln"><span class="lnn">54</span><span class="lc">    <span class="k">var</span> <span class="i">weights_1_2</span> <span class="o">=</span> <span class="n">2.0</span> <span class="o">*</span> <span class="i">rng</span><span class="p">.</span><span class="f">random</span><span class="p">(</span><span class="p">(</span><span class="i">hidden_size</span><span class="p">,</span> <span class="n">1</span><span class="p">)</span><span class="p">)</span> <span class="o">-</span> <span class="n">1.0</span></span></span>
+<span class="ln"><span class="lnn">55</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">56</span><span class="lc">    <span class="c"># stochastic gradient descent</span></span></span>
+<span class="ln"><span class="lnn">57</span><span class="lc">    <span class="k">for</span> <span class="i">epoch</span> <span class="k">in</span> <span class="f">range</span><span class="p">(</span><span class="n">60</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">58</span><span class="lc">        <span class="k">var</span> <span class="i">layer_2_error</span> <span class="o">=</span> <span class="n">0.0</span></span></span>
+<span class="ln"><span class="lnn">59</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">60</span><span class="lc">        <span class="k">for</span> <span class="i">i</span> <span class="k">in</span> <span class="f">range</span><span class="p">(</span><span class="b">len</span><span class="p">(</span><span class="i">tells</span><span class="p">)</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">61</span><span class="lc">            <span class="c"># forward propagation</span></span></span>
+<span class="ln"><span class="lnn">62</span><span class="lc">            <span class="k">var</span> <span class="i">layer_0</span> <span class="o">=</span> <span class="i">tells</span><span class="p">[</span><span class="i">i</span><span class="p">]</span></span></span>
+<span class="ln"><span class="lnn">63</span><span class="lc">            <span class="k">var</span> <span class="i">layer_1</span> <span class="o">=</span> <span class="f">relu</span><span class="p">(</span><span class="i">layer_0</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_0_1</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">64</span><span class="lc">            <span class="k">var</span> <span class="i">layer_2</span> <span class="o">=</span> <span class="i">layer_1</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_1_2</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">65</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">66</span><span class="lc">            <span class="c"># measure our error</span></span></span>
+<span class="ln"><span class="lnn">67</span><span class="lc">            <span class="k">var</span> <span class="i">target</span> <span class="o">=</span> <span class="i">strike</span><span class="p">[</span><span class="i">i</span><span class="p">]</span></span></span>
+<span class="ln"><span class="lnn">68</span><span class="lc">            <span class="i">layer_2_error</span> <span class="o">+=</span> <span class="i">nj</span><span class="p">.</span><span class="b">sum</span><span class="p">(</span><span class="p">(</span><span class="i">layer_2</span> <span class="o">-</span> <span class="i">target</span><span class="p">)</span> <span class="o">**</span> <span class="n">2</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">69</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">70</span><span class="lc">            <span class="c"># backpropagation</span></span></span>
+<span class="ln"><span class="lnn">71</span><span class="lc">            <span class="k">var</span> <span class="i">layer_2_delta</span> <span class="o">=</span> <span class="i">layer_2</span> <span class="o">-</span> <span class="i">target</span></span></span>
+<span class="ln"><span class="lnn">72</span><span class="lc">            <span class="k">var</span> <span class="i">layer_1_delta</span> <span class="o">=</span> <span class="i">layer_2_delta</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_1_2</span><span class="p">.</span><span class="t">T</span><span class="p">(</span><span class="p">)</span><span class="p">)</span> <span class="o">*</span> <span class="f">relu2deriv</span><span class="p">(</span><span class="i">layer_1</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">73</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">74</span><span class="lc">            <span class="c"># update our weights</span></span></span>
+<span class="ln"><span class="lnn">75</span><span class="lc">            <span class="i">weights_1_2</span> <span class="o">-=</span> <span class="i">alpha</span> <span class="o">*</span> <span class="i">layer_1</span><span class="p">.</span><span class="t">T</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">layer_2_delta</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">76</span><span class="lc">            <span class="i">weights_0_1</span> <span class="o">-=</span> <span class="i">alpha</span> <span class="o">*</span> <span class="i">layer_0</span><span class="p">.</span><span class="t">T</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">layer_1_delta</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">77</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">78</span><span class="lc">        <span class="c"># summary print</span></span></span>
+<span class="ln"><span class="lnn">79</span><span class="lc">        <span class="k">if</span> <span class="i">epoch</span> <span class="o">%</span> <span class="n">10</span> <span class="o">==</span> <span class="n">9</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">80</span><span class="lc">            <span class="k">var</span> <span class="i">shown</span> <span class="o">=</span> <span class="b">floor</span><span class="p">(</span><span class="i">layer_2_error</span> <span class="o">*</span> <span class="n">1000000.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">1000000.0</span></span></span>
+<span class="ln"><span class="lnn">81</span><span class="lc">            <span class="b">print</span><span class="p">(</span><span class="s">t&quot;epoch {epoch + 1}  error = {shown}&quot;</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">82</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">83</span><span class="lc">    <span class="c"># final preds</span></span></span>
+<span class="ln"><span class="lnn">84</span><span class="lc">    <span class="b">print</span><span class="p">(</span><span class="s">&quot;Final predictions:&quot;</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">85</span><span class="lc">    <span class="k">for</span> <span class="i">i</span> <span class="k">in</span> <span class="f">range</span><span class="p">(</span><span class="b">len</span><span class="p">(</span><span class="i">tells</span><span class="p">)</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">86</span><span class="lc">        <span class="k">var</span> <span class="i">layer_0</span> <span class="o">=</span> <span class="i">tells</span><span class="p">[</span><span class="i">i</span><span class="p">]</span></span></span>
+<span class="ln"><span class="lnn">87</span><span class="lc">        <span class="k">var</span> <span class="i">layer_1</span> <span class="o">=</span> <span class="f">relu</span><span class="p">(</span><span class="i">layer_0</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_0_1</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">88</span><span class="lc">        <span class="k">var</span> <span class="i">prediction</span> <span class="o">=</span> <span class="i">layer_1</span><span class="p">.</span><span class="f">dot</span><span class="p">(</span><span class="i">weights_1_2</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">89</span><span class="lc">        <span class="k">var</span> <span class="i">shown</span> <span class="o">=</span> <span class="b">floor</span><span class="p">(</span><span class="i">prediction</span><span class="p">.</span><span class="f">get</span><span class="p">(</span><span class="n">0</span><span class="p">,</span> <span class="n">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">10000.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">10000.0</span></span></span>
+<span class="ln"><span class="lnn">90</span><span class="lc">        <span class="b">print</span><span class="p">(</span><span class="s">t&quot;{tells[i]} -&gt; {shown}&quot;</span><span class="p">)</span></span></span></pre>
+  </div>
+</div>
+
+<p>The section comments are the original author's, carried over unchanged so
+the two can be read against each other line by line. The long header at the
+top of the Mojo file is new, and is about the differences rather than the
+network. Nothing else was changed for style.</p>
+
+<h3>The differences that remain</h3>
+<p>Six things had to change. Only the first three are Mojo's fault.</p>
+<ol class="run">
+<li><code>np.random.seed(1)</code> becomes <code>var rng = nj.random(seed=1)</code>.
+NumPy hides its generator in a global; nj makes it a value. Two call sites with
+different seeds are then independent instead of quietly sharing one stream.</li>
+<li><code>strike.T</code> becomes <code>strike.T()</code>. It is a method, not
+a property.</li>
+<li><code>tells[i:i+1]</code> becomes <code>tells[i]</code>, because indexing
+a row already returns a matrix here. The slice was only ever there to get one.</li>
+<li><code>row.reshape(-1, 1).T</code> in the prediction loop is gone. It existed
+to turn a row back into something the training loop's shape accepted, and
+<code>tells[i]</code> is already that shape.</li>
+<li><code>f"{x:.6f}"</code> becomes <code>floor(x * 1000000.0) / 1000000.0</code>
+inside a t-string. Mojo 1.x has no format specifier.</li>
+<li>The generator is <b>not</b> Mersenne Twister, so the weights differ from
+the NumPy run. Both networks learn the same function; they do not start from
+the same numbers.</li>
+</ol>
+
+<h2>6. What it costs</h2>
+<p>Here is the part usually left out of this kind of pitch. The library is
+36 lines of code saved per program, and it is 202 lines of
+code to write. For the first program that is a net loss of
+45 lines.</p>
+
+<figure>
+<svg class="fig" viewBox="0 0 640 300" role="img" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><title>Line-count trade for the nj library</title><desc>A bar chart of three code-line counts. The raw Mojo port is 193 code lines. The nj library is 202 code lines, written once. The shortened program is 36 code lines. Adding the library to the first program gives 238, which is 45 more than the 193 raw lines, so the first program is genuinely bigger. Two programs cost 274 against 386, which is 112 fewer, so the library pays for itself on the second one.</desc><rect x="0" y="0" width="640" height="300" fill="#0b0e14" rx="10"/><text x="320" y="24" fill="#e6edf3" font-size="15" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">What it costs, stated honestly</text><text x="320" y="42" fill="#a9b8cf" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">code lines only, comments and blanks excluded</text><text x="20" y="89" fill="#e6edf3" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="600" text-anchor="start">nn_mojo.mojo</text><rect x="20" y="96" width="363.069" height="20" fill="#ff7b72" rx="5" opacity="0.9"/><text x="391.069" y="111" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="700" text-anchor="start">193</text><text x="20" y="128" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">the raw Mojo port, paid for every program</text><text x="20" y="143" fill="#e6edf3" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="600" text-anchor="start">nj/ library</text><rect x="20" y="150" width="380" height="20" fill="#e9b949" rx="5" opacity="0.9"/><text x="408" y="165" fill="#e9b949" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="700" text-anchor="start">202</text><text x="20" y="182" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">written once, reused by every program</text><text x="20" y="197" fill="#e6edf3" font-size="12.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="600" text-anchor="start">nn_nj.mojo</text><rect x="20" y="204" width="67.7228" height="20" fill="#4ade80" rx="5" opacity="0.9"/><text x="95.7228" y="219" fill="#4ade80" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="700" text-anchor="start">36</text><text x="20" y="236" fill="#a9b8cf" font-size="11" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">one program written against nj</text><text x="320" y="250" fill="#ff7b72" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle">1 program:  36 + 202 = 238   vs   193 raw   (45 more)</text><text x="320" y="270" fill="#4ade80" font-size="13" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="700" text-anchor="middle">2 programs: 274   vs   386 raw   (112 fewer)</text><text x="320" y="290" fill="#a9b8cf" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">and 157 lines saved on every program after that</text></svg>
+<figcaption><b>Break-even is on the second program.</b> One program written
+against nj costs 238 lines against 193 for the raw
+version, so the library costs you 45 lines to
+start. The second program costs 274 against
+386, and every program after that is 157 lines
+cheaper than not having the library. If this will be used once, it is not
+worth writing.</figcaption>
+</figure>
+
+<div class="note pink">
+<b>So when is it worth it?</b> When more than one program needs the same
+fifteen operations, or when the person reading the network is not the person
+who wrote the tensor plumbing. Both are true of a training script that grows
+layers, and neither is true of a one-off. The break-even is the second
+program, and it is a real break-even, not a rhetorical one.
+</div>
+
+<h2>7. Where the numbers come from</h2>
+<p>There is no Mojo toolchain on this machine, so the library has never been
+compiled. What was done instead: every function was transcribed into Python
+and the shortened program was run through the transcription, asserting the
+shape at each of the fourteen steps. That catches orientation and shape
+errors. It does not catch a Mojo syntax error.</p>
+
+<figure>
+<svg class="fig" viewBox="0 0 640 236" role="img" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><title>The two weight initialisation formulas</title><desc>A flow from a value u into two expressions. The nj library and the NumPy original compute two times u minus one. The raw Mojo port computes u minus one half, then times two. These agree exactly on the sixteen draws produced at seed 15, so both programs produce bit-identical error curves, but the two formulas do not agree in general and a different seed could separate them.</desc><rect x="0" y="0" width="640" height="236" fill="#0b0e14" rx="10"/><text x="320" y="24" fill="#e6edf3" font-size="15" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="middle">Two ways to write the same weight init</text><text x="320" y="42" fill="#a9b8cf" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="middle">they agree to the last bit here, but that is luck</text><text x="320" y="78" fill="#a9b8cf" font-size="13" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="700" text-anchor="middle">u</text><line x1="200" y1="74" x2="240" y2="74" stroke="#2a3446" stroke-width="1.5"/><path d="M 240 69 l 8 5 l -8 5 z" fill="#2a3446"/><text x="20" y="112" fill="#a9b8cf" font-size="11.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">nj, and the NumPy original</text><text x="240" y="112" fill="#4ade80" font-size="13" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="600" text-anchor="start">2.0 * u - 1.0</text><text x="20" y="154" fill="#a9b8cf" font-size="11.5" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">nn_mojo.mojo</text><text x="240" y="154" fill="#e9b949" font-size="13" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="600" text-anchor="start">(u - 0.5) * 2.0</text><text x="240" y="190" fill="#e6edf3" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="400" text-anchor="start">same 16 draws from xorshift64 at seed 15</text><text x="240" y="208" fill="#4ade80" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="600" text-anchor="start">max difference across all 60 epochs: 0.0</text></svg>
+<figcaption><b>The one number that could have differed.</b> The two files
+initialise weights with formulas that differ only in rounding. At seed 15
+they round identically, so both produce the same curve.</figcaption>
+</figure>
+
+<h3>What nn_nj.mojo prints</h3>
+<p>Note the errors do not match the NumPy column above: that run starts from
+different weights, because the generator is a different algorithm. Both
+converge on the same four answers.</p>
+<div class="out">
+<pre>epoch 10 error = 0.877805
+epoch 20 error = 0.360977
+epoch 30 error = 0.033792
+epoch 40 error = 0.000543
+epoch 50 error = 0.000006
+epoch 60 error = 0.000000
+Final predictions:
+1 0 1 -&gt; 0.9999
+0 1 1 -&gt; 0.9998
+0 0 1 -&gt; 0.0001
+1 1 1 -&gt; -0.0001</pre>
+</div>
+
+<p>Final squared error <b>1.174e-07</b>, and thresholding at 0.5 gives
+<code>[1, 1, 0, 0]</code> against a true <code>[1, 1, 0, 0]</code> &mdash;
+all four examples classified correctly. The <code>nn_mojo.mojo</code> error
+curve was compared epoch by epoch and the largest difference is
+<b>0.0</b>, and the four raw predictions agree exactly.</p>
+
+<h3>What the checks covered</h3>
+<ul class="run">
+<li>Fourteen shape assertions, one per step of a single forward pass and
+backward pass, all of which hold.</li>
+<li>Every operator, plus the three shape errors, in isolation.</li>
+<li>A static pass confirming the program calls no <code>nj</code> name the
+package does not export, and uses no operator the struct does not overload.
+This is the only thing standing between the demo and a <code>NameError</code>.</li>
+<li>Both <code>array()</code> overloads, so an int literal works as neatly as
+a float one.</li>
+</ul>
+
+<div class="note">
+<b>The honest gap.</b> The API surface is small enough to read in one sitting
+and it has been reasoned about carefully, but it has not been through a
+compiler. The first person to run <code>mojo nn_nj.mojo</code> should expect
+to fix a signature. The most likely candidates are the
+<code>&#95;&#95;str&#95;&#95;</code> hook, which needs the exact spelling Mojo
+wants for making a struct printable, and the
+<code>&#95;&#95;isub&#95;&#95;</code> that returns nothing, which the book
+confirms but which has to hold when a struct field is rebound.
+</div>
+
+<h2>8. Running it</h2>
+<ol class="run">
+<li>Put the <code>nj/</code> directory next to <code>nn_nj.mojo</code>. A Mojo
+package is found by directory, not by any install step.</li>
+<li>Run <code>mojo nn_nj.mojo</code> from that directory.</li>
+<li>Change the seed in <code>nj.random(seed=15)</code> to watch the
+convergence curve move; it is a real training run, not a lookup table.</li>
+</ol>
+
+<h3>The generator</h3>
+<p>Mojo 1.x has no standard random module, so <code>nj/random.mojo</code>
+carries a seeded xorshift64. Seeded means the same seed gives the same
+weights on every run and every platform, which is what makes the numbers on
+this page reproducible rather than remembered.</p>
+
+<pre><span class="ln"><span class="lnn">1</span><span class="lc"><span class="c"># ============================================================================</span></span></span>
+<span class="ln"><span class="lnn">2</span><span class="lc"><span class="c">#  nj -- the random half of the library</span></span></span>
+<span class="ln"><span class="lnn">3</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">4</span><span class="lc"><span class="c">#  nj/random.mojo</span></span></span>
+<span class="ln"><span class="lnn">5</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">6</span><span class="lc"><span class="c">#  Mojo 1.x ships no standard random module, so the generator is written</span></span></span>
+<span class="ln"><span class="lnn">7</span><span class="lc"><span class="c">#  out here: xorshift64, seeded, which gives the same numbers on every run</span></span></span>
+<span class="ln"><span class="lnn">8</span><span class="lc"><span class="c">#  and on every platform.</span></span></span>
+<span class="ln"><span class="lnn">9</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">10</span><span class="lc"><span class="c">#  One deliberate difference from numpy. NumPy hides its generator in a</span></span></span>
+<span class="ln"><span class="lnn">11</span><span class="lc"><span class="c">#  module-level global: np.random.seed(1) and then any later</span></span></span>
+<span class="ln"><span class="lnn">12</span><span class="lc"><span class="c">#  np.random.random(...) picks it up. nj makes the generator a value you</span></span></span>
+<span class="ln"><span class="lnn">13</span><span class="lc"><span class="c">#  hold, so there is no hidden state and a test can build its own:</span></span></span>
+<span class="ln"><span class="lnn">14</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">15</span><span class="lc"><span class="c">#      var rng = nj.random(seed=1)</span></span></span>
+<span class="ln"><span class="lnn">16</span><span class="lc"><span class="c">#      var w = 2.0 * rng.random((3, 4)) - 1.0</span></span></span>
+<span class="ln"><span class="lnn">17</span><span class="lc"><span class="c">#</span></span></span>
+<span class="ln"><span class="lnn">18</span><span class="lc"><span class="c">#  Two call sites with different seeds are then independent rather than</span></span></span>
+<span class="ln"><span class="lnn">19</span><span class="lc"><span class="c">#  quietly sharing one stream, which is the usual reason a numpy test</span></span></span>
+<span class="ln"><span class="lnn">20</span><span class="lc"><span class="c">#  suite becomes order-dependent.</span></span></span>
+<span class="ln"><span class="lnn">21</span><span class="lc"><span class="c"># ============================================================================</span></span></span>
+<span class="ln"><span class="lnn">22</span><span class="lc"><span class="k">from</span> <span class="i">collections</span> <span class="k">import</span> <span class="t">List</span></span></span>
+<span class="ln"><span class="lnn">23</span><span class="lc"><span class="k">from</span> <span class="p">.</span><span class="i">array</span> <span class="k">import</span> <span class="i">ndarray</span></span></span>
+<span class="ln"><span class="lnn">24</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">25</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">26</span><span class="lc"><span class="k">struct</span> <span class="f">random</span><span class="p">(</span><span class="t">Movable</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">27</span><span class="lc">    <span class="s">&quot;&quot;&quot;A seeded xorshift64 generator. Hold one, pass it around.&quot;&quot;&quot;</span></span></span>
+<span class="ln"><span class="lnn">28</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">29</span><span class="lc">    <span class="k">var</span> <span class="i">state</span><span class="p">:</span> <span class="t">UInt64</span></span></span>
+<span class="ln"><span class="lnn">30</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">31</span><span class="lc">    <span class="k">def</span> <span class="f">__init__</span><span class="p">(</span><span class="v">out</span> <span class="v">self</span><span class="p">,</span> <span class="i">seed</span><span class="p">:</span> <span class="t">Int</span> <span class="o">=</span> <span class="n">42</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">32</span><span class="lc">        <span class="v">self</span><span class="p">.</span><span class="i">state</span> <span class="o">=</span> <span class="t">UInt64</span><span class="p">(</span><span class="i">seed</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">33</span><span class="lc">        <span class="k">if</span> <span class="v">self</span><span class="p">.</span><span class="i">state</span> <span class="o">==</span> <span class="n">0</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">34</span><span class="lc">            <span class="c"># xorshift is stuck at zero forever, so map 0 to the usual seed</span></span></span>
+<span class="ln"><span class="lnn">35</span><span class="lc">            <span class="v">self</span><span class="p">.</span><span class="i">state</span> <span class="o">=</span> <span class="n">88172645463325252</span></span></span>
+<span class="ln"><span class="lnn">36</span><span class="lc">        <span class="c"># the first few outputs of xorshift are poorly mixed; discard them</span></span></span>
+<span class="ln"><span class="lnn">37</span><span class="lc">        <span class="k">for</span> <span class="i">_</span> <span class="k">in</span> <span class="f">range</span><span class="p">(</span><span class="n">10</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">38</span><span class="lc">            <span class="i">_</span> <span class="o">=</span> <span class="v">self</span><span class="p">.</span><span class="f">next_u64</span><span class="p">(</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">39</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">40</span><span class="lc">    <span class="k">def</span> <span class="f">next_u64</span><span class="p">(</span><span class="v">mut</span> <span class="v">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="t">UInt64</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">41</span><span class="lc">        <span class="k">var</span> <span class="i">s</span> <span class="o">=</span> <span class="v">self</span><span class="p">.</span><span class="i">state</span></span></span>
+<span class="ln"><span class="lnn">42</span><span class="lc">        <span class="i">s</span> <span class="o">^</span><span class="o">=</span> <span class="i">s</span> <span class="o">&lt;&lt;</span> <span class="n">13</span></span></span>
+<span class="ln"><span class="lnn">43</span><span class="lc">        <span class="i">s</span> <span class="o">^</span><span class="o">=</span> <span class="i">s</span> <span class="o">&gt;&gt;</span> <span class="n">7</span></span></span>
+<span class="ln"><span class="lnn">44</span><span class="lc">        <span class="i">s</span> <span class="o">^</span><span class="o">=</span> <span class="i">s</span> <span class="o">&lt;&lt;</span> <span class="n">17</span></span></span>
+<span class="ln"><span class="lnn">45</span><span class="lc">        <span class="v">self</span><span class="p">.</span><span class="i">state</span> <span class="o">=</span> <span class="i">s</span></span></span>
+<span class="ln"><span class="lnn">46</span><span class="lc">        <span class="k">return</span> <span class="i">s</span></span></span>
+<span class="ln"><span class="lnn">47</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">48</span><span class="lc">    <span class="k">def</span> <span class="f">next_f64</span><span class="p">(</span><span class="v">mut</span> <span class="v">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="t">Float64</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">49</span><span class="lc">        <span class="s">&quot;&quot;&quot;The top 53 bits, scaled into [0, 1).&quot;&quot;&quot;</span></span></span>
+<span class="ln"><span class="lnn">50</span><span class="lc">        <span class="k">return</span> <span class="t">Float64</span><span class="p">(</span><span class="v">self</span><span class="p">.</span><span class="f">next_u64</span><span class="p">(</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">11</span><span class="p">)</span> <span class="o">/</span> <span class="t">Float64</span><span class="p">(</span><span class="n">1</span> <span class="o">&lt;&lt;</span> <span class="n">53</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">51</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">52</span><span class="lc">    <span class="k">def</span> <span class="f">random</span><span class="p">(</span><span class="v">mut</span> <span class="v">self</span><span class="p">,</span> <span class="i">shape</span><span class="p">:</span> <span class="t">Tuple</span><span class="p">[</span><span class="t">Int</span><span class="p">,</span> <span class="t">Int</span><span class="p">]</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="i">ndarray</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">53</span><span class="lc">        <span class="s">&quot;&quot;&quot;A rows x cols matrix of uniform values in [0, 1).</span></span>
+<span class="ln"><span class="lnn">54</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">55</span><span class="lc">        Mirrors np.random.random((rows, cols)), which returns the same</span></span>
+<span class="ln"><span class="lnn">56</span><span class="lc">        half-open interval.</span></span>
+<span class="ln"><span class="lnn">57</span><span class="lc">        &quot;&quot;&quot;</span></span></span>
+<span class="ln"><span class="lnn">58</span><span class="lc">        <span class="k">var</span> <span class="v">out</span> <span class="o">=</span> <span class="f">ndarray</span><span class="p">(</span><span class="i">shape</span><span class="p">[</span><span class="n">0</span><span class="p">]</span><span class="p">,</span> <span class="i">shape</span><span class="p">[</span><span class="n">1</span><span class="p">]</span><span class="p">,</span> <span class="t">List</span><span class="p">[</span><span class="t">Float64</span><span class="p">]</span><span class="p">(</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">59</span><span class="lc">        <span class="k">for</span> <span class="i">_</span> <span class="k">in</span> <span class="f">range</span><span class="p">(</span><span class="i">shape</span><span class="p">[</span><span class="n">0</span><span class="p">]</span> <span class="o">*</span> <span class="i">shape</span><span class="p">[</span><span class="n">1</span><span class="p">]</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">60</span><span class="lc">            <span class="v">out</span><span class="p">.</span><span class="i">data</span><span class="p">.</span><span class="f">append</span><span class="p">(</span><span class="v">self</span><span class="p">.</span><span class="f">next_f64</span><span class="p">(</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">61</span><span class="lc">        <span class="k">return</span> <span class="v">out</span><span class="o">^</span></span></span>
+<span class="ln"><span class="lnn">62</span><span class="lc">&nbsp;</span></span>
+<span class="ln"><span class="lnn">63</span><span class="lc">    <span class="k">def</span> <span class="f">uniform</span><span class="p">(</span><span class="v">mut</span> <span class="v">self</span><span class="p">,</span> <span class="i">rows</span><span class="p">:</span> <span class="t">Int</span><span class="p">,</span> <span class="i">cols</span><span class="p">:</span> <span class="t">Int</span><span class="p">,</span> <span class="i">low</span><span class="p">:</span> <span class="t">Float64</span><span class="p">,</span> <span class="i">high</span><span class="p">:</span> <span class="t">Float64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="i">ndarray</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">64</span><span class="lc">        <span class="s">&quot;&quot;&quot;A rows x cols matrix of values in [low, high).&quot;&quot;&quot;</span></span></span>
+<span class="ln"><span class="lnn">65</span><span class="lc">        <span class="k">var</span> <span class="v">out</span> <span class="o">=</span> <span class="f">ndarray</span><span class="p">(</span><span class="i">rows</span><span class="p">,</span> <span class="i">cols</span><span class="p">,</span> <span class="t">List</span><span class="p">[</span><span class="t">Float64</span><span class="p">]</span><span class="p">(</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">66</span><span class="lc">        <span class="k">for</span> <span class="i">_</span> <span class="k">in</span> <span class="f">range</span><span class="p">(</span><span class="i">rows</span> <span class="o">*</span> <span class="i">cols</span><span class="p">)</span><span class="p">:</span></span></span>
+<span class="ln"><span class="lnn">67</span><span class="lc">            <span class="v">out</span><span class="p">.</span><span class="i">data</span><span class="p">.</span><span class="f">append</span><span class="p">(</span><span class="i">low</span> <span class="o">+</span> <span class="v">self</span><span class="p">.</span><span class="f">next_f64</span><span class="p">(</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="i">high</span> <span class="o">-</span> <span class="i">low</span><span class="p">)</span><span class="p">)</span></span></span>
+<span class="ln"><span class="lnn">68</span><span class="lc">        <span class="k">return</span> <span class="v">out</span><span class="o">^</span></span></span></pre>
+
+<footer>
+<p>numoj / nj &mdash; generated from the source files by
+<code>tools/build_nj_page.py</code>. No external assets. The figures are
+inline SVG carrying the img role, a <code>&lt;title&gt;</code> and a
+<code>&lt;desc&gt;</code>. Colours are drawn from one palette and every
+foreground is at least 4.5:1 against its own background.</p>
+<p style="margin-top:.9rem;">
+<b style="color:var(--blue)">Keep going:</b>
+<a href="nn_mojo.html">The 3&#8211;4&#8211;1 network, Mojo &amp; NumPy side by side</a> &middot;
+<a href="neural_network.html">Neural Network from Scratch</a> &middot;
+<a href="mlp_xor.html">MLP XOR Lab</a> &middot;
+<a href="ds_advanced_07_linear_algebra.html">Linear Algebra Engine</a> &middot;
+<a href="index.html">Data Science Hub</a> &middot;
+<a href="../index.html">TutMe Home</a>
+</p>
+</footer>
+
+</div>
+</body>
+</html>

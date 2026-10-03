@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Traits · Mojo v1 The Language Manual</title>
+<meta name="description" content="Contracts between types and the code that uses them.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part III · Abstraction &amp; Values</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part III</span><span class="sep">/</span><span>Abstraction &amp; Values</span><span class="sep">/</span><span class="num">16</span></nav><h1>Traits</h1>
+<p class="dek">Contracts between types and the code that uses them.</p><p class="byline">Chapter 16 · 1,844 words · 18 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/traits/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Traits define contracts between types and the code that use them. Those
+contracts describe behavior, such as the methods a type must provide, as
+well as related (<em>associated</em>) types and constants. When a type conforms
+to a trait, the compiler verifies that it satisfies every requirement,
+allowing code to <em>rely</em> on the trait's interface.</p>
+<p>Traits are Mojo's pathway to polymorphism. They let you write code that
+works across many types without depending on implementation details that
+fall outside the contract. They're especially important for parameterized
+types and functions, which let you write code that works across many
+concrete types. By constraining a parameterized type to one or more
+traits, you give the compiler the information it needs to reason about the
+type and verify the code is safe and correct.</p>
+<p>Imagine you're writing code that works with many brands of sensors. Each
+sensor has its own implementation. They all know how to produce a
+reading, a run-time value such as a deflection angle. They also report a
+standard error range, a compile-time constant specific to that device.</p>
+<p>Each sensor also declares a measurement <em>type</em> that determines how the
+reading is interpreted. Some sensors measure angles, others distance or
+pressure. Your code shouldn't care how a particular sensor works or how it
+represents its measurements. An angle measurement, for example, might use
+degrees, radians, or gradians. It only needs to know that every sensor
+provides the operations and information it depends on.</p>
+<p>Traits express those requirements as a single contract. Instead of writing
+a function for each sensor type, you write one function against the trait,
+and any conforming type can use it. Mojo verifies that every required
+method, associated type, and compile-time value is present, so your code
+can use them without runtime overhead or capability checks.</p>
+<p>Traits are a foundation of Mojo code reuse. You write code in terms of
+what a trait requires rather than enumerating concrete types. That keeps
+your code flexible while preserving compile-time correctness.</p>
+<h2 class="h h--2" data-level="2" id="defining-traits">Defining traits<a aria-label="Link to Defining traits" class="h__link" href="#defining-traits"></a></h2>
+<p>Traits let the compiler reason about a type's shape and capabilities: its
+methods, associated types, and compile-time values. Declare a trait with
+the <code>trait</code> keyword, followed by a name and a block of requirements:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> DeflectionSensing<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">fetch_reading</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>The three dots mark <code>fetch_reading()</code> as required. <code>DeflectionSensing</code>
+doesn't say how a type produces a value, only that a conforming type must
+be able to.</p>
+<h3 class="h h--3" data-level="3" id="domain-specific-behavior">Domain-specific behavior<a aria-label="Link to Domain-specific behavior" class="h__link" href="#domain-specific-behavior"></a></h3>
+<p>A trait can provide a default implementation based on the information it
+knows about conforming types. The default implementation can call other
+required methods, but it can't call methods that aren't part of the
+trait's contract.</p>
+<p>Default methods are a good fit for domain-specific behavior that can be
+expressed in terms of the trait's requirements. For example,
+<code>within_tolerance()</code> validates a sensor's current reading:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> DeflectionSensing<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">fetch_reading</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> absolute_tolerance<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">0.05</span> <span class="tk-comment"># This is made up for this example</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">within_tolerance</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> <span class="tk-builtin">abs</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>fetch_reading<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-operator">&lt;=</span> Self<span class="tk-punctuation">.</span>absolute_tolerance</span>
+</code></pre></figure>
+<p>Conforming types inherit default implementations and can override them.</p>
+<p>Mojo doesn't provide a way to call a default implementation from an
+override.</p>
+<h3 class="h h--3" data-level="3" id="refining-other-traits">Refining other traits<a aria-label="Link to Refining other traits" class="h__link" href="#refining-other-traits"></a></h3>
+<p>A trait can refine another trait, meaning that it inherits every
+requirement from the refined trait while adding new ones. For example,
+<code>CalibratableDeflectionSensing</code> does everything <code>DeflectionSensing</code> does,
+but also requires a <code>calibrate()</code> method:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> CalibratableDeflectionSensing<span class="tk-punctuation">(</span>DeflectionSensing<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">calibrate</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">struct</span> <span class="tk-class-name">EddyCurrentSensor</span><span class="tk-punctuation">(</span>CalibratableDeflectionSensing<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">fetch_reading</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># its implementation</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">calibrate</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># its implementation</span></span>
+</code></pre></figure>
+<p>A conforming <code>EddyCurrentSensor</code> must implement <code>calibrate()</code>, while also
+meeting every requirement of <code>DeflectionSensing</code>. It inherits the default
+implementation of <code>within_tolerance()</code>, which calls <code>fetch_reading()</code> and
+uses the <code>absolute_tolerance</code> constant.</p>
+<h2 class="h h--2" data-level="2" id="the-trait-contract">The trait contract<a aria-label="Link to The trait contract" class="h__link" href="#the-trait-contract"></a></h2>
+<p>A trait contract consists of methods and three kinds of compile-time
+members: associated types, required compile-time values, and shared
+compile-time constants.</p>
+<p>Methods can be required or provided. Required methods must be implemented
+by every conforming type. Provided methods include a default
+implementation that conforming types can override.</p>
+<p>Compile-time members either require each conforming type to provide its
+own value or define a value shared by every conforming type.</p>
+<ul>
+<li class="">
+<p><em>Required methods</em> use the <code>...</code> ellipsis in their body. Every
+conforming type must implement them.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> Loggable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">log</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> message<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><em>Provided methods</em> are implemented in the trait. Conforming types can
+override them. Even a default no-op implementation is a valid provided
+method.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> Pausable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">pause</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">pass</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><em>Associated types</em> require conforming types to declare a subordinate
+type. They're most commonly used in collections, where a parameterized
+collection declares an element type.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> Container<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    associatedtype Element<span class="tk-punctuation">:</span> Movable</span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><em>Required compile-time values</em> must be defined by every conforming type.
+They're often used for values that vary across implementations.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> Pausable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> max_pause_seconds<span class="tk-punctuation">:</span> Float64</span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><em>Shared compile-time constants</em> are defined by the trait and shared by
+every conforming type.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> DeflectionSensing<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> absolute_tolerance<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">0.05</span></span>
+</code></pre></figure>
+</li>
+</ul>
+<p>A trait that declares none of these elements is called a <em>marker trait</em>.
+It doesn't require any methods, associated types, or compile-time values.
+Instead, it marks a conforming type as having a particular property or
+capability.</p>
+<h2 class="h h--2" data-level="2" id="conforming-to-a-trait">Conforming to a trait<a aria-label="Link to Conforming to a trait" class="h__link" href="#conforming-to-a-trait"></a></h2>
+<p>A struct conforms to a trait by listing it in parentheses after the
+struct name and implementing its required methods:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">CapacitiveSensor</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> DeflectionSensing<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">def</span> <span class="tk-function">fetch_reading</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># Not a very good sensor, but a simple example.</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> Float64<span class="tk-punctuation">(</span><span class="tk-number">21.5</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>If a struct claims to conform to <code>DeflectionSensing</code> but doesn't implement
+<code>fetch_reading()</code>, it won't compile. At compile time, Mojo verifies that
+<code>CapacitiveSensor</code> satisfies every <code>DeflectionSensing</code> requirement,
+including its methods and comptime elements.</p>
+<p>Traits don't use duck typing. A struct that implements <code>fetch_reading()</code>
+but doesn't declare <code>DeflectionSensing</code> isn't a conforming type.</p>
+<h3 class="h h--3" data-level="3" id="required-comptime-members">Required comptime members<a aria-label="Link to Required comptime members" class="h__link" href="#required-comptime-members"></a></h3>
+<p>Define required comptime values directly on the conforming type with
+<code>comptime name = value</code>. For example, if <code>Pausable</code> requires a
+<code>max_pause_seconds</code> value, you'd declare it like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Timer</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> Pausable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">comptime</span> max_pause_seconds<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">30.0</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">pause</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Paused"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="parameterizing-functions-and-types-with-traits">Parameterizing functions and types with traits<a aria-label="Link to Parameterizing functions and types with traits" class="h__link" href="#parameterizing-functions-and-types-with-traits"></a></h2>
+<p>With the <code>DeflectionSensing</code> trait, you can build types for specific
+sensors, such as <code>CapacitiveSensor</code> or <code>EddyCurrentSensor</code>.</p>
+<p>By conforming to the trait, each type implements all required methods and
+comptime members. This shared contract lets you write a single function
+that works with any of them:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> averaged_poll<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    SensorType<span class="tk-punctuation">:</span> DeflectionSensing<span class="tk-punctuation">,</span> <span class="tk-operator">//</span> <span class="tk-comment"># infer-only</span></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>sensor<span class="tk-punctuation">:</span> SensorType<span class="tk-punctuation">,</span> samples<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> total<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">0.0</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">for</span> _ <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>samples<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">        total <span class="tk-operator">+=</span> sensor<span class="tk-punctuation">.</span>fetch_reading<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> total <span class="tk-operator">/</span> Float64<span class="tk-punctuation">(</span>samples<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Since every sensor conforms to <code>DeflectionSensing</code>, the compiler knows
+that <code>fetch_reading()</code> is available:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> sensor <span class="tk-operator">=</span> CapacitiveSensor<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> average_reading <span class="tk-operator">=</span> averaged_poll<span class="tk-punctuation">(</span>sensor<span class="tk-punctuation">,</span> <span class="tk-number">10</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Average reading:"</span><span class="tk-punctuation">,</span> average_reading<span class="tk-punctuation">)</span> <span class="tk-comment"># Fixed to 21.5 for the example</span></span>
+</code></pre></figure>
+<p>The call site doesn't use square brackets because the compiler infers
+<code>SensorType</code> from the argument.</p>
+<p>Use the <code>Some[]</code> shorthand when you don't need to name the type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">averaged_poll_2</span><span class="tk-punctuation">(</span>sensor<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>DeflectionSensing<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> samples<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> total<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">0.0</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">for</span> _ <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>samples<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4">        total <span class="tk-operator">+=</span> sensor<span class="tk-punctuation">.</span>fetch_reading<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> total <span class="tk-operator">/</span> Float64<span class="tk-punctuation">(</span>samples<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Use the named form when you need to refer to the type again, for example
+to require two arguments of the <em>same</em> conforming type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> compare_readings<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    SensorType<span class="tk-punctuation">:</span> DeflectionSensing</span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> SensorType<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> SensorType<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> a<span class="tk-punctuation">.</span>fetch_reading<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span> b<span class="tk-punctuation">.</span>fetch_reading<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="combining-traits">Combining traits<a aria-label="Link to Combining traits" class="h__link" href="#combining-traits"></a></h2>
+<p>A parameter can require more than one trait. Use an ampersand (<code>&amp;</code>) to
+combine them. Any type passed to the parameter must conform to every
+trait in the combination.</p>
+<p>For example, you could define a <code>Loggable</code> trait and require that a sensor
+conform to both <code>DeflectionSensing</code> and <code>Loggable</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> Loggable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">log</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> message<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> poll_and_log<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> DeflectionSensing <span class="tk-operator">&amp;</span> Loggable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>sensor<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>sensor<span class="tk-punctuation">.</span>fetch_reading<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">    sensor<span class="tk-punctuation">.</span>log<span class="tk-punctuation">(</span><span class="tk-string">"Polling sensor"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Refinement and composition solve different problems. Use refinement when
+one trait naturally extends another and that relationship should always
+hold. Use composition when a function or type needs multiple independent
+capabilities.</p>
+<h3 class="h h--3" data-level="3" id="reusing-trait-compositions">Reusing trait compositions<a aria-label="Link to Reusing trait compositions" class="h__link" href="#reusing-trait-compositions"></a></h3>
+<p>If you reuse the same combination in multiple places, give it a name with
+a <code>comptime</code> declaration:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> SensorLike <span class="tk-operator">=</span> DeflectionSensing <span class="tk-operator">&amp;</span> Loggable</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">struct</span> <span class="tk-class-name">SmartSensor</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> SensorLike<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">fetch_reading</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> <span class="tk-number">18.2</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">log</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> message<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"reading logged"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>SensorLike</code> isn't a new trait. It's shorthand for
+<code>DeflectionSensing &amp; Loggable</code>. Any type that conforms to both traits
+automatically satisfies <code>SensorLike</code>; there's nothing extra to declare.</p>
+<h2 class="h h--2" data-level="2" id="default-implementations">Default implementations<a aria-label="Link to Default implementations" class="h__link" href="#default-implementations"></a></h2>
+<p>A trait can provide a working implementation instead of just requiring
+one:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> DefaultLoggable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">log</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> message<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"reading logged"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">struct</span> <span class="tk-class-name">BasicSensor</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> DefaultLoggable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">pass</span></span>
+</code></pre></figure>
+<p><code>BasicSensor</code> conforms without implementing <code>log()</code>. It inherits the
+trait's implementation, but any conforming type can override it by
+providing its own <code>log()</code>.</p>
+<p>Default implementations can conflict. If a type conforms to two traits
+that both provide the same method, Mojo won't choose between them:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> PowerCycle<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">restart</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Restarting via power cycle"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">trait</span> Rebootable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">restart</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Restarting via soft reboot"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">struct</span> <span class="tk-class-name">Gateway</span><span class="tk-punctuation">(</span>PowerCycle<span class="tk-punctuation">,</span> Rebootable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">pass</span></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># Error: conflicting default implementations for restart().</span></span>
+</code></pre></figure>
+<p>Resolve the conflict by implementing <code>restart()</code> on <code>Gateway</code>. Your
+implementation overrides both defaults.</p>
+<h2 class="h h--2" data-level="2" id="things-to-know">Things to know<a aria-label="Link to Things to know" class="h__link" href="#things-to-know"></a></h2>
+<p><strong>You can't add traits to existing types.</strong> Conformance is declared where
+a type is defined. You can't retroactively make <code>Float64</code>, <code>Int</code>, or any
+other type you don't own conform to a new trait.</p>
+<p><strong>Conformance is explicit.</strong> A struct that happens to implement
+<code>fetch_reading()</code> doesn't conform to <code>DeflectionSensing</code> unless it
+declares the trait. Mojo checks declared conformance, not just matching
+method names.</p>
+<p><strong>Traits are all or nothing.</strong> A conforming type must satisfy every
+requirement, either by implementing it directly or by inheriting a
+default implementation. There's no partial conformance.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/traits/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/traits/</a>, saved Thu, 01 Oct 2026 15:41:06 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/15_self-referential-structs.html"><span class="pager__dir">← Previous</span><span class="pager__title">Self-referential structs</span></a><a class="pager__link pager__link--next" href="../pages/17_parameterized-declarations.html"><span class="pager__dir">Next →</span><span class="pager__title">Parameterized declarations</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#defining-traits">Defining traits</a></li><li class="rail__depth-2"><a href="#the-trait-contract">The trait contract</a></li><li class="rail__depth-2"><a href="#conforming-to-a-trait">Conforming to a trait</a></li><li class="rail__depth-2"><a href="#parameterizing-functions-and-types-with-traits">Parameterizing functions and types with traits</a></li><li class="rail__depth-2"><a href="#combining-traits">Combining traits</a></li><li class="rail__depth-2"><a href="#default-implementations">Default implementations</a></li><li class="rail__depth-2"><a href="#things-to-know">Things to know</a></li><li class="rail__depth-3"><a href="#domain-specific-behavior">Domain-specific behavior</a></li><li class="rail__depth-3"><a href="#refining-other-traits">Refining other traits</a></li><li class="rail__depth-3"><a href="#required-comptime-members">Required comptime members</a></li><li class="rail__depth-3"><a href="#reusing-trait-compositions">Reusing trait compositions</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#defining-traits">Defining traits</a></li><li class="rail__depth-2"><a href="#the-trait-contract">The trait contract</a></li><li class="rail__depth-2"><a href="#conforming-to-a-trait">Conforming to a trait</a></li><li class="rail__depth-2"><a href="#parameterizing-functions-and-types-with-traits">Parameterizing functions and types with traits</a></li><li class="rail__depth-2"><a href="#combining-traits">Combining traits</a></li><li class="rail__depth-2"><a href="#default-implementations">Default implementations</a></li><li class="rail__depth-2"><a href="#things-to-know">Things to know</a></li><li class="rail__depth-3"><a href="#domain-specific-behavior">Domain-specific behavior</a></li><li class="rail__depth-3"><a href="#refining-other-traits">Refining other traits</a></li><li class="rail__depth-3"><a href="#required-comptime-members">Required comptime members</a></li><li class="rail__depth-3"><a href="#reusing-trait-compositions">Reusing trait compositions</a></li></ol>
+<p class="rail__meta">Chapter 16 of 38 · Part III, Abstraction &amp; Values.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

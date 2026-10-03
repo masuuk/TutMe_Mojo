@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -168,11 +168,6 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
       <li>A <strong>parameter</strong> is a compile-time variable that becomes a runtime constant: <code class="inline">repeat[count: Int](msg: String)</code>. The compiler generates a specialized version of the function for each unique parameter value used.</li>
     </ul>
 
-    <div class="info-box warning-box">
-      <strong>⚠️ Deprecation Notice:</strong>
-      <p>The <code class="inline">fn</code> keyword is deprecated as of Mojo v26.2. Use <code class="inline">def</code> for all function declarations — <code class="inline">fn</code> will be removed in a future release. Older tutorials full of <code class="inline">fn</code> predate this change.</p>
-    </div>
-
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
       <p>Mnemonic: <strong>s</strong>quare brackets = <strong>s</strong>tatic (compile time); <strong>p</strong>arentheses = passed at runtime. You'll use this constantly in Chapter 8.</p>
@@ -248,13 +243,11 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn active" data-tab="ch4-pow-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch4-pow-mojo">
-        <pre><code>def my_pow(base: Int, exp: Int = 2) -&gt; Int:
-    return base ** exp
+        <pre><span class="kw">def</span> <span class="fn">my_pow</span>(base: <span class="type">Int</span>, exp: <span class="type">Int</span> = <span class="num">2</span>) -&gt; <span class="type">Int</span>:
+    <span class="kw">return</span> base ** exp
 
-def main():
-    var x = my_pow(3)              # Uses default exp=2 → 9
-    var y = my_pow(exp=3, base=2)  # Keywords, any order → 8
-</code></pre>
+<span class="kw">var</span> x = <span class="fn">my_pow</span>(<span class="num">3</span>)              <span class="cmt"># Uses default exp=2 → 9</span>
+<span class="kw">var</span> y = <span class="fn">my_pow</span>(exp=<span class="num">3</span>, base=<span class="num">2</span>)  <span class="cmt"># Keywords, any order → 8</span></pre>
       </div>
     </div>
 
@@ -340,15 +333,23 @@ def main():
       <div class="tab-content active" id="ch4-het-mojo">
         <pre><span class="kw">def</span> <span class="fn">count_many_things</span>[*ArgTypes: <span class="type">Intable</span>](*args: *ArgTypes) -&gt; <span class="type">Int</span>:
     <span class="kw">var</span> total = <span class="num">0</span>
-    <span class="kw">comptime for</span> i <span class="kw">in</span> <span class="fn">range</span>(args.<span class="f<pre><code>def count_many_things[*ArgTypes: Intable](*args: *ArgTypes) -&gt; Int:
-    var total = 0
-    comptime for i in range(args.__len__()):
-        total += Int(args[i])
-    return total
+    <span class="kw">comptime for</span> i <span class="kw">in</span> <span class="fn">range</span>(args.<span class="fn">__len__</span>()):
+        total += <span class="type">Int</span>(args[i])
+    <span class="kw">return</span> total
 
-def main():
-    print(count_many_things(5, 11.7, 12))   # 28
-</code></pre>ive" data-tab="ch4-kw-mojo">Mojo</button>
+<span class="fn">print</span>(<span class="fn">count_many_things</span>(<span class="num">5</span>, <span class="num">11.7</span>, <span class="num">12</span>))   <span class="cmt"># 28</span></pre>
+      </div>
+      <div class="tab-content" id="ch4-het-out">
+        <pre>28</pre>
+      </div>
+    </div>
+
+    <p>Callers never pass the type list — Mojo builds <code class="inline">ArgTypes</code> from the actual call.</p>
+
+    <h3>Variadic keyword arguments</h3>
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch4-kw-mojo">Mojo</button>
         <button class="tab-btn" data-tab="ch4-kw-out">output</button>
       </div>
       <div class="tab-content active" id="ch4-kw-mojo">
@@ -364,20 +365,22 @@ y = 8</pre>
       </div>
     </div>
 
-    <p>Limits worth knowing: kwargs require the <code class="inline">var</code> convention, all must share one <code class="inline">Copyable</code> type, dictionary unpacking (<code class="inline">f(**d)</code>) isn't su<pre><code>def print_nicely(var **kwargs: Int):
-    for item in kwargs.items():
-        print(item.key, &quot;=&quot;, item.value)
+    <p>Limits worth knowing: kwargs require the <code class="inline">var</code> convention, all must share one <code class="inline">Copyable</code> type, dictionary unpacking (<code class="inline">f(**d)</code>) isn't supported yet, and neither are variadic keyword parameters.</p>
+  </section>
 
-def main():
-    print_nicely(a=7, y=8)
-</code></pre>ass="tab-content active" id="ch4-add-mojo">
+  <section id="overloads">
+    <h2>5. Overloaded Functions</h2>
+    <p>Because every declaration specifies exact types, supporting multiple types means writing multiple versions — overloading:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch4-add-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch4-add-mojo">
         <pre><span class="kw">def</span> <span class="fn">add</span>(x: <span class="type">Int</span>, y: <span class="type">Int</span>) -&gt; <span class="type">Int</span>:
     <span class="kw">return</span> x + y
 
-<span class="kw">def</span> <span class="fn">add</span>(x: <spa<pre><code>def main():
-    a = 7
-    y = 8
-</code></pre>/span>, y: <span class="type">String</span>) -&gt; <span class="type">String</span>:
+<span class="kw">def</span> <span class="fn">add</span>(x: <span class="type">String</span>, y: <span class="type">String</span>) -&gt; <span class="type">String</span>:
     <span class="kw">return</span> x + y
 
 <span class="fn">print</span>(<span class="fn">add</span>(<span class="num">1</span>, <span class="num">2</span>))            <span class="cmt"># 3</span>
@@ -385,16 +388,18 @@ def main():
       </div>
     </div>
 
-    <p>When resolving a call, the compiler considers argument count/position/keywords, argument and parameter types, argument conventions, instance-vs-static method, and whether constructors are <code class="inline">@implicit</co<pre><code>def add(x: Int, y: Int) -&gt; Int:
-    return x + y
+    <p>When resolving a call, the compiler considers argument count/position/keywords, argument and parameter types, argument conventions, instance-vs-static method, and whether constructors are <code class="inline">@implicit</code>. Candidates are filtered in this precedence order:</p>
+    <ol>
+      <li>Fewest implicit conversions required</li>
+      <li>No variadic arguments preferred</li>
+      <li>No variadic parameters preferred</li>
+      <li>Shorter parameter signature preferred</li>
+      <li>Non-<code class="inline">@staticmethod</code> preferred</li>
+    </ol>
 
-def add(x: String, y: String) -&gt; String:
-    return x + y
-
-def main():
-    print(add(1, 2))            # 3
-    print(add(&quot;mo&quot;, &quot;jo&quot;))       # mojo
-</code></pre>ype you want.</p>
+    <div class="info-box warning-box">
+      <strong>⚠️ Watch Out:</strong>
+      <p>The compiler does <strong>not</strong> look at return type or the <code class="inline">raises</code> effect when resolving overloads. Two functions differing only in those are duplicate definitions and get rejected. If a call is genuinely ambiguous, disambiguate by explicitly constructing the argument type you want.</p>
     </div>
 
     <div class="info-box tip-box">
@@ -425,20 +430,20 @@ def main():
         <button class="tab-btn active" data-tab="ch4-named-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch4-named-mojo">
-        <pre><code>struct ImmovableObject:
-    var name: String
-    def __init__(out self, name: String):
-        self.name = name
+        <pre><span class="kw">struct</span> <span class="type">ImmovableObject</span>:
+    <span class="kw">var</span> name: <span class="type">String</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">out</span> self, name: <span class="type">String</span>):
+        self.name = name^
 
-# Build directly in the caller's storage — no move/copy needed
-def create_immovable_object(name: String, out obj: ImmovableObject):
-    obj = ImmovableObject(name)
-    obj.name += &quot;!&quot;
-    # obj is implicitly returned if no return statement runs
+<span class="cmt"># Build directly in the caller's storage — no move/copy needed</span>
+<span class="kw">def</span> <span class="fn">create_immovable_object</span>(name: <span class="type">String</span>, <span class="kw">out</span> obj: <span class="type">ImmovableObject</span>):
+    obj = <span class="type">ImmovableObject</span>(name^)
+    obj.name += <span class="str">"!"</span>
+    <span class="cmt"># obj is implicitly returned if no return statement runs</span>
 
-def main():
-    var my_obj = create_immovable_object(&quot;Blob&quot;)
-    print(my_obj.name)   # Blob!</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> my_obj = <span class="fn">create_immovable_object</span>(<span class="str">"Blob"</span>)
+    <span class="fn">print</span>(my_obj.name)   <span class="cmt"># Blob!</span></pre>
       </div>
     </div>
 
@@ -492,7 +497,7 @@ def main():
     <table class="cheat">
       <thead><tr><th>Feature</th><th>Syntax</th><th>Notes</th></tr></thead>
       <tbody>
-        <tr><td>Declaration</td><td><code>def name() -&gt; T:</code></td><td><code>fn</code> is deprecated since v26.2</td></tr>
+        <tr><td>Declaration</td><td><code>def name() -&gt; T:</code></td><td>Annotated declarations compile ahead of the call</td></tr>
         <tr><td>Compile-time parameter</td><td><code>def f[count: Int](...)</code></td><td>Specialized per unique value</td></tr>
         <tr><td>Runtime argument</td><td><code>def f(x: Int)</code></td><td>Type required</td></tr>
         <tr><td>Mutable argument</td><td><code>def f(mut x: Int)</code></td><td>Default is immutable</td></tr>

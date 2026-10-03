@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -121,10 +119,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="load1"><span class="sw"></span>load.mojo</div>
-        <div class="tab" data-lang="python" data-group="load1"><span class="sw"></span>load.py</div>
       </div>
       <div class="panes" data-group="load1">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">import</span> sys
+<span class="tok-kw">from</span> collections <span class="tok-kw">import</span> Dict, Optional
 
 <span class="tok-com"># Mojo — loading CSV with buffered I/O and SIMD parsing</span>
 <span class="tok-kw">def</span> <span class="tok-fn">load_csv</span>(path: String) -&gt; <span class="tok-ty">Dict</span>[String, <span class="tok-ty">List</span>[Float64]]:
@@ -150,22 +148,9 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
 <span class="tok-com"># Usage</span>
 <span class="tok-kw">var</span> data = load_csv(<span class="tok-str">"sensors.csv"</span>)
 print(<span class="tok-str">f"Loaded {len(data['temperature'])} rows"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — pandas loading</span>
-<span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-
-<span class="tok-kw">def</span> <span class="tok-fn">load_csv</span>(path: str) -&gt; pd.DataFrame:
-    <span class="tok-kw">return</span> pd.read_csv(path)
-
-data = load_csv(<span class="tok-str">"sensors.csv"</span>)
-<span class="tok-fn">print</span>(<span class="tok-fn">f</span><span class="tok-str">"Loaded {len(data)} rows"</span>)
-
-<span class="tok-com"># The same operation, but pandas:</span>
-<span class="tok-com"># - Parses every cell into a Python object</span>
-<span class="tok-com"># - Stores strings as PyObject pointers</span>
-<span class="tok-com"># - Uses 60-80 bytes per float instead of 8</span></pre></div>
       </div>
     </div>
-    <p class="cap">Mojo's approach avoids per-element heap allocation — values are stored contiguously in memory, enabling SIMD-accelerated operations downstream.</p>
+    <p class="cap">Mojo's approach avoids per-element heap allocation — values are stored contiguously in memory, enabling SIMD-accelerated operations downstream. The whole of the <code class="inline">pd.read_csv(path)</code> one-liner is what those lines buy: the same table, without a <code class="inline">PyObject</code> per cell.</p>
 
     <h3>Why Mojo is faster than Python here</h3>
     <p>Python's pandas stores each column as a NumPy array of Python objects. A <code class="inline">float64</code> in pandas actually costs 60-80 bytes because it's wrapped in a <code class="inline">PyObject</code> header. Mojo stores raw <code class="inline">Float64</code> values — 8 bytes each, no wrapping, no indirection. This means Mojo uses <b>8-10x less memory</b> for the same dataset, which in turn means more data fits in CPU cache, which means SIMD operations can stream through it without stalling.</p>
@@ -183,7 +168,6 @@ data = load_csv(<span class="tok-str">"sensors.csv"</span>)
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="stream"><span class="sw"></span>stream.mojo</div>
-        <div class="tab" data-lang="python" data-group="stream"><span class="sw"></span>stream.py</div>
       </div>
       <div class="panes" data-group="stream">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — streaming pipeline with chunk processing</span>
@@ -229,21 +213,10 @@ data = load_csv(<span class="tok-str">"sensors.csv"</span>)
 <span class="tok-kw">var</span> pipe = <span class="tok-ty">StreamingPipeline</span>(chunk_size=<span class="tok-num">50_000</span>)
 <span class="tok-kw">var</span> result = pipe.run(<span class="tok-str">"huge_dataset.csv"</span>)
 print(<span class="tok-str">f"Result: {result}"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — chunked pandas reading</span>
-<span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-
-<span class="tok-kw">def</span> <span class="tok-fn">stream_process</span>(path: str, chunk_size: int = <span class="tok-num">10_000</span>):
-    grand_total = <span class="tok-num">0.0</span>
-    <span class="tok-kw">for</span> chunk <span class="tok-kw">in</span> pd.read_csv(path, chunksize=chunk_size):
-        grand_total += (chunk[<span class="tok-str">'value'</span>] * <span class="tok-num">0.001</span>).sum()
-    <span class="tok-kw">return</span> grand_total
-
-result = stream_process(<span class="tok-str">"huge_dataset.csv"</span>)
-
-<span class="tok-com"># Pandas chunks are still Python objects — each cell</span>
-<span class="tok-cast">is</span> a heap-allocated PyObject wrapper.</pre></div>
       </div>
     </div>
+
+    <p class="cap">The pandas route to the same shape is <code class="inline">pd.read_csv(path, chunksize=chunk_size)</code> iterated in a <code class="inline">for</code> loop — identical control flow, except every chunk is still a DataFrame of Python objects rather than a flat <code class="inline">List</code>[Float64].</p>
 
     <p>The Mojo streaming approach gives you control over memory usage at the cost of writing a loop. For most data science work, this is exactly the tradeoff you want: you can process datasets of any size on a machine with limited RAM by choosing a chunk size that fits.</p>
 
@@ -265,11 +238,10 @@ result = stream_process(<span class="tok-str">"huge_dataset.csv"</span>)
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="clean"><span class="sw"></span>clean.mojo</div>
-        <div class="tab" data-lang="python" data-group="clean"><span class="sw"></span>clean.py</div>
       </div>
       <div class="panes" data-group="clean">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — data cleaning with SIMD-accelerated operations</span>
-<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt, isnan
+<span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt, isnan
 
 <span class="tok-kw">struct</span> <span class="tok-ty">DataCleaner</span>:
     <span class="tok-kw">var</span> mean: Float64
@@ -321,30 +293,10 @@ result = stream_process(<span class="tok-str">"huge_dataset.csv"</span>)
 <span class="tok-kw">var</span> raw = [<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">1000.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">5.0</span>]
 <span class="tok-kw">var</span> cleaned = <span class="tok-ty">DataCleaner</span>.clip_outliers(raw)
 <span class="tok-com"># cleaned == [1.0, 2.0, 3.0, 3.0, 4.0, 5.0]</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — pandas cleaning</span>
-<span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-df = pd.read_csv(<span class="tok-str">"sensors.csv"</span>)
-
-<span class="tok-com"># Impute missing values with mean</span>
-df[<span class="tok-str">'temperature'</span>].fillna(df[<span class="tok-str">'temperature'</span>].mean(), inplace=<span class="tok-num">True</span>)
-
-<span class="tok-com"># Z-score normalization</span>
-mean = df[<span class="tok-str">'temperature'</span>].mean()
-std = df[<span class="tok-str">'temperature'</span>].std()
-df[<span class="tok-str">'temp_norm'</span>] = (df[<span class="tok-str">'temperature'</span>] - mean) / std
-
-<span class="tok-com"># Clip outliers</span>
-df[<span class="tok-str">'temp_clipped'</span>] = df[<span class="tok-str">'temperature'</span>].clip(
-    lower=mean - <span class="tok-num">3</span>*std,
-    upper=mean + <span class="tok-num">3</span>*std
-)
-
-<span class="tok-com"># Each operation creates a new Python object per cell</span>
-<span class="tok-com"># Vectorized in C under the hood, but object overhead remains</span></pre></div>
       </div>
     </div>
+
+    <p class="cap">pandas spells the same three steps as chained column expressions — <code class="inline">fillna(df['temperature'].mean())</code>, a <code class="inline">(x - mean) / std</code> assignment, and <code class="inline">.clip(lower=mean - 3*std, upper=mean + 3*std)</code> — each one vectorised in C, each one building a new object per cell.</p>
 
     <div class="callout">
       <span class="lbl">🔥 Mojo advantage</span>
@@ -359,7 +311,6 @@ df[<span class="tok-str">'temp_clipped'</span>] = df[<span class="tok-str">'temp
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="batch"><span class="sw"></span>batch.mojo</div>
-        <div class="tab" data-lang="python" data-group="batch"><span class="sw"></span>batch.py</div>
       </div>
       <div class="panes" data-group="batch">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — batch iterator for training data</span>
@@ -422,27 +373,14 @@ df[<span class="tok-str">'temp_clipped'</span>] = df[<span class="tok-str">'temp
 <span class="tok-kw">while</span> batches.has_next():
     <span class="tok-kw">var</span> (bx, by) = batches.next_batch(n_features=<span class="tok-num">3</span>)
     print(<span class="tok-str">f"Batch: {bx}, Labels: {by}"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — DataLoader from torch</span>
-<span class="tok-kw">import</span> torch
-<span class="tok-kw">from</span> torch.utils.data <span class="tok-kw">import</span> DataLoader, TensorDataset
-
-X = torch.randn(<span class="tok-num">1000</span>, <span class="tok-num">10</span>)
-y = torch.randint(<span class="tok-num">0</span>, <span class="tok-num">2</span>, (<span class="tok-num">1000</span>,))
-
-dataset = TensorDataset(X, y)
-loader = DataLoader(dataset, batch_size=<span class="tok-num">32</span>, shuffle=<span class="tok-num">True</span>)
-
-<span class="tok-kw">for</span> batch_x, batch_y <span class="tok-kw">in</span> loader:
-    <span class="tok-cast">pass</span>  <span class="tok-com"># train on batch</span>
-
-<span class="tok-com"># Convenient but tied to PyTorch's memory model</span>
-<span class="tok-com"># Cannot interop with Mojo kernels without copying</span></pre></div>
       </div>
     </div>
 
+    <p class="cap">PyTorch's version of the same walk is <code class="inline">TensorDataset(X, y)</code> handed to a <code class="inline">DataLoader(dataset, batch_size=32, shuffle=True)</code>, which yields exactly these <code class="inline">(batch_x, batch_y)</code> pairs. Convenient, but bound to PyTorch's memory model — the batches cannot reach a Mojo kernel without a copy first.</p>
+
     <div class="callout">
       <span class="lbl">🎨 Design tip</span>
-      <p>The <code class="inline">BatchIterator</code> pattern is language-agnostic — the same struct works in Python and Mojo. What changes is the performance: Mojo's <code class="inline">List</code>[Float64] is a flat array of 8-byte values, so batch slicing is a <code class="inline">memcpy</code> with no object creation overhead.</p>
+      <p>The <code class="inline">BatchIterator</code> pattern is language-agnostic — the same struct shape is what a Python class would hold too, which is why <code class="inline">DataLoader</code> looks so familiar. What changes is the performance: Mojo's <code class="inline">List</code>[Float64] is a flat array of 8-byte values, so batch slicing is a <code class="inline">memcpy</code> with no object creation overhead.</p>
     </div>
   </section>
 

@@ -52,7 +52,7 @@
             --bg: #141221;
             --surface: #1d1a2e;
             --text: #e8e4f8;
-            --text-secondary: #a89fc9;
+            --text-secondary: #ffe4a3;
             --border: #322c4a;
             --accent: #a78bfa;
             --accent-light: #2c2547;
@@ -1368,21 +1368,20 @@ ages[<span class="string">"Lin"</span>] = <span class="number">32</span>        
                 by index. A <code>score</code> counter ticks up on each match. Extend it later
                 by swapping the hard-coded guesses for real user input.
             </p>
-            <div class="code-block"><pre><code>def main():
-    var questions: List[String] = [
-        &quot;2 + 2 = ?&quot;, &quot;4 * 3 = ?&quot;,
-    ]
-    var answers: List[Int] = [4, 12]
-    var guesses: List[Int] = [4, 10]
-    var score = 0
-    for i in range(len(questions)):
-        if guesses[i] == answers[i]:
-            score += 1
-            print(questions[i], &quot;-&gt; correct&quot;)
-        else:
-            print(questions[i], &quot;-&gt; missed&quot;)
-    print(&quot;score:&quot;, score, &quot;of&quot;, len(questions))   # 1 of 2
-</code></pre></div>
+            <div class="code-block"><pre><code><span class="keyword">var</span> questions: <span class="type">List</span>[<span class="type">String</span>] = [
+    <span class="string">"2 + 2 = ?"</span>, <span class="string">"4 * 3 = ?"</span>,
+]
+<span class="keyword">var</span> answers: <span class="type">List</span>[<span class="type">Int</span>] = [<span class="number">4</span>, <span class="number">12</span>]
+<span class="keyword">var</span> guesses: <span class="type">List</span>[<span class="type">Int</span>] = [<span class="number">4</span>, <span class="number">10</span>]
+
+<span class="keyword">var</span> score = <span class="number">0</span>
+<span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="func">len</span>(questions)):
+    <span class="keyword">if</span> guesses[i] == answers[i]:
+        score += <span class="number">1</span>
+        <span class="keyword">print</span>(questions[i], <span class="string">"-&gt; correct"</span>)
+    <span class="keyword">else</span>:
+        <span class="keyword">print</span>(questions[i], <span class="string">"-&gt; missed"</span>)
+<span class="keyword">print</span>(<span class="string">"score:"</span>, score, <span class="string">"of"</span>, <span class="func">len</span>(questions))   <span class="comment"># 1 of 2</span></code></pre></div>
         </details>
 
         <details>
@@ -1514,16 +1513,16 @@ ages[<span class="string">"Lin"</span>] = <span class="number">32</span>        
                 <code>numpy</code> for the math. Keep the data on the Python side — moving
                 whole frames into Mojo goes beyond this book.
             </p>
-            <div class="code-block"><pre><code>from std.python import Python
+            <div class="code-block"><pre><code><span class="keyword">from</span> std.python <span class="keyword">import</span> Python
 
-def main() raises:
-    var pd = Python.import_module(&quot;pandas&quot;)
-    var df = pd.read_csv(&quot;grades.csv&quot;)
-    print(df.head())
+<span class="keyword">def</span> <span class="func">main</span>():
+    <span class="keyword">var</span> pd = <span class="type">Python</span>.import_module(<span class="string">"pandas"</span>)
+    <span class="keyword">var</span> df = pd.read_csv(<span class="string">"grades.csv"</span>)
+    <span class="keyword">print</span>(df.head())
 
-    var np = Python.import_module(&quot;numpy&quot;)
-    var scores = df[&quot;score&quot;].to_list()
-    print(&quot;mean:&quot;, np.mean(scores))</code></pre></div>
+    <span class="keyword">var</span> np = <span class="type">Python</span>.import_module(<span class="string">"numpy"</span>)
+    <span class="keyword">var</span> scores = df[<span class="string">"score"</span>].to_list()
+    <span class="keyword">print</span>(<span class="string">"mean:"</span>, np.mean(scores))</code></pre></div>
         </details>
 
         <p>

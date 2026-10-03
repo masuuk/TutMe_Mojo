@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -199,7 +199,8 @@ footer a:hover{text-decoration:underline}
 <header>
 <div class="hero">
 <a class="backlink" href="../../index.html">&larr; TutMe🔥 Learning Hub</a><br>
-<a class="backlink" href="../index.html">&larr; Praxis shelf</a>
+<a class="backlink" href="../index.html">&larr; Praxis shelf</a><br>
+<a class="backlink" href="../../applications/geomatics/geo_computations.html">Geomatics Computations tutorial</a>
 <div><span class="badge">GEOMATICS &bull; PRAXIS &bull; PROGRESSIVE DRILLS</span></div>
 <h1>Geodetic ↔ ECEF</h1>
 <p class="subtitle">Learn by doing. Start with the WGS84 eccentricity and progressively move toward the prime-vertical radius, full geodetic→ECEF conversion and the inverse longitude.</p>
@@ -259,11 +260,11 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">2</span>Level 2 — Latitude in Radians</h2>
 <div class="meta"><span class="tag">Beginner+</span><span class="tag">Trig</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
-<pre><code>from std.math import pi, sin
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">radians</span>, <span class="fn">sin</span>
 
-def main():
-    var lat = 45.0 * pi / 180.0
-    print(sin(lat))</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> lat = <span class="fn">radians</span>(45.0)
+    <span class="fn">print</span>(<span class="fn">sin</span>(lat))</code></pre>
 <textarea id="a2" placeholder="Write the output or answer here..." onkeydown="onKey(event,2,'0.70710678')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(2,'0.70710678')">Check Answer</button>
@@ -271,11 +272,11 @@ def main():
 <button class="ghost" id="hintbtn2" onclick="showHint(2)" style="display:none">💡 Hint</button>
 <span class="attempts" id="att2"></span>
 </div>
-<div id="h2" class="hint">Trig functions want radians, and this line converts the degree value first (<code>π/180</code>). Now ask what sin of a 45° angle equals, to full precision.</div>
+<div id="h2" class="hint">Trig functions want radians, and <code>radians()</code> converts the degree value first. Now ask what sin of a 45° angle equals, to full precision.</div>
 <div id="f2" class="feedback"></div>
 <div id="s2" class="solution">
 <strong>Solution</strong>
-<pre><code>0.7071067811865475</code></pre>
+<pre><code>0.7071067811865476</code></pre>
 <p>Trig functions take radians: sin(45°) = √2/2 ≈ 0.7071. Surveying code converts degrees to radians at the boundary once, then works in radians.</p>
 </div>
 </section>
@@ -284,14 +285,14 @@ def main():
 <h2><span class="lvl-check">3</span>Level 3 — The Prime-Vertical Radius</h2>
 <div class="meta"><span class="tag">Intermediate</span><span class="tag">N</span></div>
 <p><strong>Challenge:</strong> What is N at latitude 45° on WGS84 (rounded to 2 decimals)?</p>
-<pre><code>from std.math import pi, sin, sqrt
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">sqrt</span>, <span class="fn">radians</span>, <span class="fn">sin</span>
 
-def main():
-    var a = 6378137.0
-    var e2 = 0.0066943799901413165
-    var lat = 45.0 * pi / 180.0
-    var N = a / sqrt(1.0 - e2 * sin(lat) * sin(lat))
-    print(N)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> a = 6378137.0
+    <span class="kw">var</span> e2 = 0.0066943799901413165
+    <span class="kw">var</span> lat = <span class="fn">radians</span>(45.0)
+    <span class="kw">var</span> N = a / <span class="fn">sqrt</span>(1.0 - e2 * <span class="fn">sin</span>(lat) * <span class="fn">sin</span>(lat))
+    <span class="fn">print</span>(N)</code></pre>
 <textarea id="a3" placeholder="Write the output or answer here..." onkeydown="onKey(event,3,'6388838.29')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(3,'6388838.29')">Check Answer</button>
@@ -312,17 +313,17 @@ def main():
 <h2><span class="lvl-check">4</span>Level 4 — Sanity Check at the Equator</h2>
 <div class="meta"><span class="tag">Intermediate+</span><span class="tag">ECEF</span></div>
 <p><strong>Challenge:</strong> What is X for a point at (0°, 0°, h = 0)?</p>
-<pre><code>from std.math import cos, pi, sin, sqrt
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">cos</span>, <span class="fn">radians</span>, <span class="fn">sin</span>, <span class="fn">sqrt</span>
 
-def main():
-    var a = 6378137.0
-    var e2 = 0.0066943799901413165
-    var lat = 0.0 * pi / 180.0
-    var lon = 0.0 * pi / 180.0
-    var h = 0.0
-    var N = a / sqrt(1.0 - e2 * sin(lat) * sin(lat))
-    var x = (N + h) * cos(lat) * cos(lon)
-    print(x)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> a = 6378137.0
+    <span class="kw">var</span> e2 = 0.0066943799901413165
+    <span class="kw">var</span> lat = <span class="fn">radians</span>(0.0)
+    <span class="kw">var</span> lon = <span class="fn">radians</span>(0.0)
+    <span class="kw">var</span> h = 0.0
+    <span class="kw">var</span> N = a / <span class="fn">sqrt</span>(1.0 - e2 * <span class="fn">sin</span>(lat) * <span class="fn">sin</span>(lat))
+    <span class="kw">var</span> x = (N + h) * <span class="fn">cos</span>(lat) * <span class="fn">cos</span>(lon)
+    <span class="fn">print</span>(x)</code></pre>
 <textarea id="a4" placeholder="Write the output or answer here..." onkeydown="onKey(event,4,'6378137')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(4,'6378137')">Check Answer</button>
@@ -343,18 +344,18 @@ def main():
 <h2><span class="lvl-check">5</span>Level 5 — Full Forward Conversion</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">ECEF</span></div>
 <p><strong>Challenge:</strong> Convert (45°, 8°, 500 m) to ECEF. Predict the three printed lines, one per coordinate.</p>
-<pre><code>from std.math import cos, pi, sin, sqrt
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">cos</span>, <span class="fn">radians</span>, <span class="fn">sin</span>, <span class="fn">sqrt</span>
 
-def main():
-    var a = 6378137.0
-    var e2 = 0.0066943799901413165
-    var lat = 45.0 * pi / 180.0
-    var lon = 8.0 * pi / 180.0
-    var h = 500.0
-    var N = a / sqrt(1.0 - e2 * sin(lat) * sin(lat))
-    print((N + h) * cos(lat) * cos(lon))
-    print((N + h) * cos(lat) * sin(lon))
-    print((N * (1.0 - e2) + h) * sin(lat))</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> a = 6378137.0
+    <span class="kw">var</span> e2 = 0.0066943799901413165
+    <span class="kw">var</span> lat = <span class="fn">radians</span>(45.0)
+    <span class="kw">var</span> lon = <span class="fn">radians</span>(8.0)
+    <span class="kw">var</span> h = 500.0
+    <span class="kw">var</span> N = a / <span class="fn">sqrt</span>(1.0 - e2 * <span class="fn">sin</span>(lat) * <span class="fn">sin</span>(lat))
+    <span class="fn">print</span>((N + h) * <span class="fn">cos</span>(lat) * <span class="fn">cos</span>(lon))
+    <span class="fn">print</span>((N + h) * <span class="fn">cos</span>(lat) * <span class="fn">sin</span>(lon))
+    <span class="fn">print</span>((N * (1.0 - e2) + h) * <span class="fn">sin</span>(lat))</code></pre>
 <textarea id="a5" placeholder="Write the output or answer here..." onkeydown="onKey(event,5,'4473976.1076\n628776.3366\n4487701.9623')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(5,'4473976.1076\n628776.3366\n4487701.9623')">Check Answer</button>
@@ -368,7 +369,7 @@ def main():
 <strong>Solution</strong>
 <pre><code>4473976.107595565
 628776.336600037
-4487701.962256513</code></pre>
+4487701.962256514</code></pre>
 <p>X ≈ 4,473,976.11, Y ≈ 628,776.34, Z ≈ 4,487,701.96 (metres). Y is tiny because the point is only 8° of longitude east of the X-axis; Z is huge because it is 45° of latitude north.</p>
 </div>
 </section>
@@ -377,13 +378,13 @@ def main():
 <h2><span class="lvl-check">6</span>Level 6 — Expert Challenge</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Code Reasoning Modification</span></div>
 <p><strong>Challenge:</strong> Complete the inverse step: recover the longitude from the Level-5 X and Y by assigning lon. The needed identity is λ = atan2(Y, X). What is printed (converted to degrees)?</p>
-<pre><code>from std.math import atan2
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">atan2</span>
 
-def main():
-    var x = 4473976.107595565
-    var y = 628776.336600037
-    var lon = 0.0                # your line
-    print(lon * (180.0 / 3.141592653589793))</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> x = 4473976.107595565
+    <span class="kw">var</span> y = 628776.336600037
+    <span class="kw">var</span> lon = 0.0                <span class="cm"># your line</span>
+    <span class="fn">print</span>(lon * (180.0 / 3.141592653589793))</code></pre>
 <textarea id="a6" placeholder="Write the output or answer here..." onkeydown="onKey(event,6,'8')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(6,'8')">Check Answer</button>
@@ -425,7 +426,10 @@ def main():
 
 <footer>
 Geomatics Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_11_amort.html">&larr; Previous: Amortisation &amp; the Level Payment</a><br><a href="prog_13_simplex.html">Next: Simplex over the Feasible Region &rarr;</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a><br><a href="../../applications/geomatics/geo_computations.html#gnss">Theory: Geomatics Computations</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="prog_11_amort.html">← Previous</a> <a href="progressive.html">All 13 drills</a> <a href="prog_13_simplex.html">Next drill →</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a> &middot; <a href="../../applications/geomatics/geo_computations.html">Geomatics Computations</a>
 </footer>
 
 <script>

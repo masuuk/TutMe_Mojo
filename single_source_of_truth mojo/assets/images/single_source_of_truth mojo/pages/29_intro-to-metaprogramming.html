@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Intro to metaprogramming · Mojo v1 The Language Manual</title>
+<meta name="description" content="Why Mojo runs part of your program before you do.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part V · Compile-Time Programming</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part V</span><span class="sep">/</span><span>Compile-Time Programming</span><span class="sep">/</span><span class="num">29</span></nav><h1>Intro to metaprogramming</h1>
+<p class="dek">Why Mojo runs part of your program before you do.</p><p class="byline">Chapter 29 · 317 words · <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Many languages have facilities for <em>metaprogramming</em>: writing code
+that generates or modifies code. Python has facilities for dynamic
+metaprogramming: features like decorators, metaclasses, and many more. These
+features make Python very flexible and productive, but since they're dynamic,
+they come with run-time overhead. Other languages have static or compile-time
+metaprogramming features, like C preprocessor macros and C++ templates. These
+can be limiting and hard to use.</p>
+<p>Mojo's compile-time metaprogramming system uses the same language as run-time
+programs, so you don't have to learn a new language—just a few new features.
+The primary features you'll need to learn are:</p>
+<ul>
+<li class="">Compile-time statements and expressions</li>
+<li class="">Parameters</li>
+<li class="">Traits</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="compile-time-statements-and-expressions">Compile-time statements and expressions<a aria-label="Link to Compile-time statements and expressions" class="h__link" href="#compile-time-statements-and-expressions"></a></h2>
+<p>The <code>comptime</code> keyword identifies a statement or expression that needs to be
+evaluated at compile time. For example, the <code>comptime</code> keyword is used to
+declare compile-time constant values and to introduce compile-time conditionals
+and loops. For information on compile-time assignments and control flow, see
+<a href="../pages/30_compile-time-evaluation.html">Compile-time evaluation</a>.</p>
+<h2 class="h h--2" data-level="2" id="parameters-and-generics">Parameters<a aria-label="Link to Parameters" class="h__link" href="#parameters-and-generics"></a></h2>
+<p>Functions and structs can be <em>parameterized</em> with compile-time parameters,
+allowing you to define a container that holds different data types, or a matrix
+multiplication algorithm that's parameterized by the matrix dimensions.
+Compile-time parameters are similar to C++ template parameters or Rust generic
+parameters. At compile time, Mojo <em>specializes</em> parameterized code to make
+<em>concrete</em> versions—that is, it replaces parameters with constant values.</p>
+<p>For example, a matrix multiplication function parameterized on its matrix
+dimensions can be specialized at compile time to select the most efficient
+algorithm based on those dimensions. For information on parameterization, see
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/" rel="noopener noreferrer">Parameters</a>.</p>
+<h2 class="h h--2" data-level="2" id="traits-and-generics">Traits<a aria-label="Link to Traits" class="h__link" href="#traits-and-generics"></a></h2>
+<p>Type-parameterized functions and structs work across many types. For example,
+a list might hold <code>Int</code>, <code>Float32</code>, or <code>String</code> values. Type-parameterized
+code needs to know what operations those types support.</p>
+<p>A <em>trait</em> defines a set of behaviors that types provide. Instead of
+pre-selecting specific types, a parameterized sort function can just require
+<code>Comparable</code>. For more information, see <a href="../pages/16_traits.html">traits</a> and
+<a href="../pages/17_parameterized-declarations.html">parameterized declarations</a>.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/metaprogramming/</a>, saved Thu, 01 Oct 2026 15:39:46 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/28_c-foreign-function-interface.html"><span class="pager__dir">← Previous</span><span class="pager__title">Using Mojo's C FFI to call C libraries</span></a><a class="pager__link pager__link--next" href="../pages/30_compile-time-evaluation.html"><span class="pager__dir">Next →</span><span class="pager__title">Compile-time evaluation</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#compile-time-statements-and-expressions">Compile-time statements and expressions</a></li><li class="rail__depth-2"><a href="#parameters-and-generics">Parameters</a></li><li class="rail__depth-2"><a href="#traits-and-generics">Traits</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#compile-time-statements-and-expressions">Compile-time statements and expressions</a></li><li class="rail__depth-2"><a href="#parameters-and-generics">Parameters</a></li><li class="rail__depth-2"><a href="#traits-and-generics">Traits</a></li></ol>
+<p class="rail__meta">Chapter 29 of 38 · Part V, Compile-Time Programming.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

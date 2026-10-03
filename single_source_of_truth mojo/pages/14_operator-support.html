@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Add operator support to custom types · Mojo v1 The Language Manual</title>
+<meta name="description" content="Implementing dunder methods and the full protocol.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part III · Abstraction &amp; Values</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part III</span><span class="sep">/</span><span>Abstraction &amp; Values</span><span class="sep">/</span><span class="num">14</span></nav><h1>Add operator support to custom types</h1>
+<p class="dek">Implementing dunder methods and the full protocol.</p><p class="byline">Chapter 14 · 2,514 words · 20 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/structs/operator-support/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Each Mojo operator maps to a set of dunder methods you can add to your
+struct implementation. These methods let you use operator syntax instead of
+calling methods directly.</p>
+<p>Knowing your operators and their related methods opens the full suite of
+operator syntax to your custom structs.</p>
+<h2 class="h h--2" data-level="2" id="forward-reverse-and-in-place-methods">Forward, reverse, and in-place methods<a aria-label="Link to Forward, reverse, and in-place methods" class="h__link" href="#forward-reverse-and-in-place-methods"></a></h2>
+<p>Each binary operator uses up to three method forms. For example,
+consider the addition <code>a + b</code>:</p>
+<ul>
+<li class=""><strong>Forward</strong>: Mojo tries <code>a.__add__(b)</code> first.</li>
+<li class=""><strong>Reverse</strong>: If the forward method doesn't exist or can't handle <code>b</code>'s
+type, Mojo falls back to <code>b.__radd__(a)</code>.</li>
+<li class=""><strong>In-place</strong>: For <code>a += b</code>, Mojo calls <code>a.__iadd__(b)</code>.</li>
+</ul>
+<p>Reversed methods exist for mixed-type expressions where the
+left operand doesn't know about the right operand's type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a <span class="tk-operator">+</span> <span class="tk-number">5</span> <span class="tk-comment"># calls a.__add__(5)</span></span>
+<span class="cl" data-line="2"><span class="tk-number">5</span> <span class="tk-operator">+</span> a    <span class="tk-comment"># Int doesn't know your type, falls back</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># to a.__radd__(5)</span></span>
+<span class="cl" data-line="4">a <span class="tk-operator">+=</span> <span class="tk-number">5</span> <span class="tk-comment"># calls a.__iadd__(5)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="unary-operators">Unary operators<a aria-label="Link to Unary operators" class="h__link" href="#unary-operators"></a></h2>
+<p>A unary operator returns the original value if unchanged, or a new value
+representing the result. For example, <code>-x</code> uses the unary negation operator:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyInt</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">__neg__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>value<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>If <code>x</code> is a <code>MyInt</code>, then <code>-x</code> returns a new instance with its <code>value</code>
+field negated.</p>
+<h2 class="h h--2" data-level="2" id="comparison-operators-and-traits">Comparison operators and traits<a aria-label="Link to Comparison operators and traits" class="h__link" href="#comparison-operators-and-traits"></a></h2>
+<p>Operators do not require that you conform your types to traits. However,
+there are benefits to doing so.</p>
+<p>The <code>Comparable</code> trait provides defaults for <code>&lt;=</code>, <code>&gt;</code>, and <code>&gt;=</code>. You just
+implement <code>__lt__()</code> and <code>__eq__()</code>.</p>
+<p>Similarly, the <code>Equatable</code> trait provides defaults for <code>__eq__()</code> and
+<code>__ne__()</code> when all fields are <code>Equatable</code>.</p>
+<p>For types without a natural ordering (like complex numbers), only implement
+<code>Equatable</code>, and not <code>Comparable</code>.</p>
+<h2 class="h h--2" data-level="2" id="subscript-operators">Subscript operators<a aria-label="Link to Subscript operators" class="h__link" href="#subscript-operators"></a></h2>
+<p>Implement <code>__getitem__()</code> for reads and <code>__setitem__()</code> for writes. Both
+subscripting methods accept variadic arguments for multi-dimensional
+indexing.</p>
+<p>For a simple one-dimensional collection, you unlock subscripting with a
+simple index:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MySeq</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> idx<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> T<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">__setitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> idx<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>For multi-dimensional collections, make use of variadics or multiple index
+arguments:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Grid</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Fixed two dimensions</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> T<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Arbitrary dimensions</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-operator">*</span>indices<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> T<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>Custom subscripts can support slicing as well as indices, such as
+<code>obj[1:5]</code>. Implement <code>__getitem__()</code> with a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/builtin_slice/Slice/" rel="noopener noreferrer"><code>Slice</code></a> parameter instead of
+<code>Int</code>.</p>
+<p>Each <code>Slice</code> has three optional fields: <code>start</code>, <code>end</code>, and <code>step</code>. You
+normalize these by calling <code>indices()</code>. Pass your type's size. This returns
+a triplet of values representing the span adjusted to your extent,
+resolving omitted values or negative indices into non-negative positions:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MySeq</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> size<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> span<span class="tk-punctuation">:</span> Slice<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> start<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> end<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> step<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="8">        start<span class="tk-punctuation">,</span> end<span class="tk-punctuation">,</span> step <span class="tk-operator">=</span> span<span class="tk-punctuation">.</span>indices<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>size<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="walkthrough-build-a-complex-type">Walkthrough: Build a <code>Complex</code> type<a aria-label="Link to Walkthrough: Build a Complex type" class="h__link" href="#walkthrough-build-a-complex-type"></a></h2>
+<p>The next sections incrementally build a <code>Complex</code> struct.
+This example demonstrates every category of operator implementation.</p>
+<p>In this walk-through, you'll work with unary operators, binary operators
+with same-type and mixed-type operands, reversed methods, in-place
+assignment, equality comparison, Boolean conversion, and subscript access.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>The standard library includes
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/complex/complex/ComplexSIMD/" rel="noopener noreferrer"><code>ComplexSIMD</code></a>,
+a parameterized complex number type with basic arithmetic
+support. The <code>Complex</code> type in this example is independent
+and not based on <code>ComplexSIMD</code>.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="create-the-base-type">Create the base type<a aria-label="Link to Create the base type" class="h__link" href="#create-the-base-type"></a></h2>
+<p>A complex number holds real and imaginary parts, stored in the
+real <code>re</code> and imaginary <code>im</code> fields:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>math <span class="tk-keyword">import</span> sqrt</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">struct</span> <span class="tk-class-name">Complex</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="5">    Boolable<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6">    Equatable<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="7">    TrivialRegisterPassable<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="8">    Writable<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="9"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> re<span class="tk-punctuation">:</span> Float64</span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> im<span class="tk-punctuation">:</span> Float64</span>
+</code></pre></figure>
+<ul>
+<li class="">Conforming to <code>TrivialRegisterPassable</code> gives you value semantics
+without needing to write special lifecycle methods.</li>
+<li class=""><code>Equatable</code> lets you compare two instances, and <code>Writable</code> produces
+output for <code>print()</code> statements.</li>
+<li class=""><code>Boolable</code> lets you use a <code>Complex</code> value in a Boolean context, such as
+an <code>if</code> condition.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="convenience-initializer">Convenience initializer<a aria-label="Link to Convenience initializer" class="h__link" href="#convenience-initializer"></a></h3>
+<p>Adding a convenience initializer lets you create instances using
+only the real part of your number:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> re<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">=</span> re</span>
+<span class="cl" data-line="3"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">=</span> <span class="tk-number">0.0</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="make-your-type-printable">Make your type printable<a aria-label="Link to Make your type printable" class="h__link" href="#make-your-type-printable"></a></h2>
+<p>Implementing <code>Writable</code> lets you use <code>print()</code> and <code>String()</code> directly.
+This custom implementation provides parentheses and separate real and
+imaginary output.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Struct method</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">"("</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">&lt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">" - "</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">" + "</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8">    writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">"i)"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You can also implement <code>write_repr_to()</code> to define the value's
+<em>representation</em>—the developer-facing form returned by <code>repr()</code>. This
+implementation produces a string that mirrors how you'd construct the value
+in code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Struct method</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">write_repr_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    t<span class="tk-string">"Complex(re = {self.re}, im = {self.im})"</span><span class="tk-punctuation">.</span>write_to<span class="tk-punctuation">(</span>writer<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> c <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-number">3.14</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">2.72</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (3.14 - 2.72i)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">repr</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Complex(re = 3.14, im = -2.72)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="add-unary-operator-support">Add unary operator support<a aria-label="Link to Add unary operator support" class="h__link" href="#add-unary-operator-support"></a></h2>
+<p><code>+c</code> returns the value unchanged. <code>-c</code> negates both
+components:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># methods</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">__pos__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">__neg__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re<span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-keyword">var</span> c <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1.2</span><span class="tk-punctuation">,</span> <span class="tk-number">6.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-operator">+</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (-1.2 + 6.5i)</span></span>
+<span class="cl" data-line="12"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (1.2 - 6.5i)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="support-binary-arithmetic">Support binary arithmetic<a aria-label="Link to Support binary arithmetic" class="h__link" href="#support-binary-arithmetic"></a></h2>
+<p>Add addition, subtraction, multiplication, and division between
+two <code>Complex</code> values with dunders. Each form returns a new <code>Complex</code>
+instance:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">__add__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">+</span> rhs<span class="tk-punctuation">.</span>re<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">+</span> rhs<span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">__sub__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">-</span> rhs<span class="tk-punctuation">.</span>re<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">-</span> rhs<span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">__mul__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="9"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re <span class="tk-operator">-</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="10"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im <span class="tk-operator">+</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="11"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">def</span> <span class="tk-function">__truediv__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">var</span> denom <span class="tk-operator">=</span> rhs<span class="tk-punctuation">.</span>squared_norm<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="16"> <span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re <span class="tk-operator">+</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> denom<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="17"> <span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re <span class="tk-operator">-</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> denom<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="18"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">def</span> <span class="tk-function">squared_norm</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">+</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im</span>
+<span class="cl" data-line="22"></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">def</span> <span class="tk-function">norm</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">return</span> sqrt<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>squared_norm<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> c1 <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1.2</span><span class="tk-punctuation">,</span> <span class="tk-number">6.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> c2 <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-number">3.14</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">2.72</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c1 <span class="tk-operator">+</span> c2<span class="tk-punctuation">)</span> <span class="tk-comment"># (1.94 + 3.78i)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c1 <span class="tk-operator">*</span> c2<span class="tk-punctuation">)</span> <span class="tk-comment"># (13.91 + 23.67i)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="add-mixed-type-arithmetic-with-reversed-methods">Add mixed-type arithmetic with reversed methods<a aria-label="Link to Add mixed-type arithmetic with reversed methods" class="h__link" href="#add-mixed-type-arithmetic-with-reversed-methods"></a></h2>
+<p>To support expressions like <code>2.5 + c</code> where <code>Float64</code> is on
+the left, you need both overloaded forward methods and
+reversed methods. Without <code>__radd__()</code>, <code>2.5 + c</code> would fail
+because <code>Float64</code> doesn't know about <code>Complex</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-comment"># Forward: Complex + Float64</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">__add__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">+</span> rhs<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Reversed: Float64 + Complex</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">__radd__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> lhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">+</span> lhs<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">__sub__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">-</span> rhs<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">def</span> <span class="tk-function">__rsub__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> lhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span>lhs <span class="tk-operator">-</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re<span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">def</span> <span class="tk-function">__mul__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">def</span> <span class="tk-function">__rmul__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> lhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span>lhs <span class="tk-operator">*</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re<span class="tk-punctuation">,</span> lhs <span class="tk-operator">*</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="20"></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">def</span> <span class="tk-function">__truediv__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">/</span> rhs<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">/</span> rhs<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="23"></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">def</span> <span class="tk-function">__rtruediv__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> lhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">var</span> denom <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>squared_norm<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">return</span> Self<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="27"> <span class="tk-punctuation">(</span>lhs <span class="tk-operator">*</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> denom<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="28"> <span class="tk-punctuation">(</span><span class="tk-operator">-</span>lhs <span class="tk-operator">*</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> denom<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="29"> <span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Now both orderings work:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> c <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1.2</span><span class="tk-punctuation">,</span> <span class="tk-number">6.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c <span class="tk-operator">+</span> <span class="tk-number">2.5</span><span class="tk-punctuation">)</span> <span class="tk-comment"># (1.3 + 6.5i)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">2.5</span> <span class="tk-operator">+</span> c<span class="tk-punctuation">)</span> <span class="tk-comment"># (1.3 + 6.5i)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">2.5</span> <span class="tk-operator">*</span> c<span class="tk-punctuation">)</span> <span class="tk-comment"># (-3.0 + 16.25i)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="allow-in-place-assignment">Allow in-place assignment<a aria-label="Link to Allow in-place assignment" class="h__link" href="#allow-in-place-assignment"></a></h3>
+<p>In-place methods modify <code>self</code> directly instead of returning
+a new value. You can overload for both <code>Complex</code> and
+<code>Float64</code> operands:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">__iadd__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">+=</span> rhs<span class="tk-punctuation">.</span>re</span>
+<span class="cl" data-line="3"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">+=</span> rhs<span class="tk-punctuation">.</span>im</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">__iadd__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">+=</span> rhs</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> <span class="tk-function">__isub__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">-=</span> rhs<span class="tk-punctuation">.</span>re</span>
+<span class="cl" data-line="10"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">-=</span> rhs<span class="tk-punctuation">.</span>im</span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">def</span> <span class="tk-function">__isub__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">-=</span> rhs</span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">def</span> <span class="tk-function">__imul__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> new_re <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re <span class="tk-operator">-</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im</span>
+<span class="cl" data-line="17"> <span class="tk-keyword">var</span> new_im <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im <span class="tk-operator">+</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re</span>
+<span class="cl" data-line="18"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">=</span> new_re</span>
+<span class="cl" data-line="19"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">=</span> new_im</span>
+<span class="cl" data-line="20"></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">def</span> <span class="tk-function">__imul__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="22"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*=</span> rhs</span>
+<span class="cl" data-line="23"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*=</span> rhs</span>
+<span class="cl" data-line="24"></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">def</span> <span class="tk-function">__itruediv__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">var</span> denom <span class="tk-operator">=</span> rhs<span class="tk-punctuation">.</span>squared_norm<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">var</span> new_re <span class="tk-operator">=</span> <span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re <span class="tk-operator">+</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> denom</span>
+<span class="cl" data-line="28"> <span class="tk-keyword">var</span> new_im <span class="tk-operator">=</span> <span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>re <span class="tk-operator">-</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">*</span> rhs<span class="tk-punctuation">.</span>im<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> denom</span>
+<span class="cl" data-line="29"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">=</span> new_re</span>
+<span class="cl" data-line="30"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">=</span> new_im</span>
+<span class="cl" data-line="31"></span>
+<span class="cl" data-line="32"> <span class="tk-keyword">def</span> <span class="tk-function">__itruediv__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="33"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">/=</span> rhs</span>
+<span class="cl" data-line="34"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">/=</span> rhs</span>
+<span class="cl" data-line="35"></span>
+<span class="cl" data-line="36"><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="37"></span>
+<span class="cl" data-line="38"><span class="tk-keyword">var</span> c <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1.0</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">1.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="39">c <span class="tk-operator">+=</span> Complex<span class="tk-punctuation">(</span><span class="tk-number">0.5</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">0.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="40"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (-0.5 - 1.5i)</span></span>
+<span class="cl" data-line="41">c <span class="tk-operator">+=</span> <span class="tk-number">2.75</span></span>
+<span class="cl" data-line="42"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (2.25 - 1.5i)</span></span>
+<span class="cl" data-line="43">c <span class="tk-operator">*=</span> <span class="tk-number">0.75</span></span>
+<span class="cl" data-line="44"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (1.6875 - 1.125i)</span></span>
+<span class="cl" data-line="45">c <span class="tk-operator">/=</span> <span class="tk-number">2.0</span></span>
+<span class="cl" data-line="46"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (0.84375 - 0.5625i)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="support-type-equality-checks">Support type equality checks<a aria-label="Link to Support type equality checks" class="h__link" href="#support-type-equality-checks"></a></h2>
+<p>Complex numbers have no natural ordering, so <code>Complex</code> conforms to
+<code>Equatable</code> (not <code>Comparable</code>). This gives you <code>==</code> and <code>!=</code> without implying
+that one complex number is "less than" another.</p>
+<p>You don't need to implement <code>__eq__()</code> or <code>__ne__()</code> yourself—implement them
+only when a type needs equality semantics that differ from a memberwise field
+comparison. <code>Equatable</code> supplies a default <code>__eq__()</code> that uses compile-time
+reflection to compare every field, and a default <code>__ne__()</code> that returns the
+inverse of <code>__eq__()</code>. A <code>Complex</code> is equal to another exactly when both fields
+match, so the reflection-based default is exactly the behavior you want. (Bear
+in mind that, because a floating-point <code>NaN</code> never equals itself, a <code>Complex</code>
+holding a <code>NaN</code> won't equal itself either.)</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> c1 <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1.2</span><span class="tk-punctuation">,</span> <span class="tk-number">6.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> c2 <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1.2</span><span class="tk-punctuation">,</span> <span class="tk-number">6.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> c3 <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-number">3.14</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">2.72</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c1 <span class="tk-operator">==</span> c2<span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c1 <span class="tk-operator">!=</span> c3<span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="support-use-in-boolean-contexts">Support use in Boolean contexts<a aria-label="Link to Support use in Boolean contexts" class="h__link" href="#support-use-in-boolean-contexts"></a></h2>
+<p>Conforming to <code>Boolable</code> and implementing <code>__bool__()</code> lets you use a
+<code>Complex</code> value directly in a Boolean context, such as an <code>if</code> condition or a
+call to <code>Bool()</code>. Mojo treats a built-in numeric value as "true" when it's
+nonzero, so a natural definition treats a complex number as "true" when either
+component is nonzero:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">__bool__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">!=</span> <span class="tk-number">0.0</span> <span class="tk-keyword">or</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">!=</span> <span class="tk-number">0.0</span></span>
+</code></pre></figure>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> c1 <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-number">0.0</span><span class="tk-punctuation">,</span> <span class="tk-number">0.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> c2 <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1.2</span><span class="tk-punctuation">,</span> <span class="tk-number">6.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>Bool<span class="tk-punctuation">(</span>c1<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>Bool<span class="tk-punctuation">(</span>c2<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">if</span> c2<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"c2 is nonzero"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># c2 is nonzero</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="unlock-subscript-access">Unlock subscript access<a aria-label="Link to Unlock subscript access" class="h__link" href="#unlock-subscript-access"></a></h2>
+<p>The get and set item dunders allow you to index content within
+your type. For this example, the real part of the complex number
+is index 0, and index 1 returns the imaginary component:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> idx<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> idx <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> idx <span class="tk-operator">==</span> <span class="tk-number">1</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">raise</span> <span class="tk-string">"index out of bounds"</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> <span class="tk-function">__setitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> idx<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">if</span> idx <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>re <span class="tk-operator">=</span> value</span>
+<span class="cl" data-line="11"> <span class="tk-keyword">elif</span> idx <span class="tk-operator">==</span> <span class="tk-number">1</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>im <span class="tk-operator">=</span> value</span>
+<span class="cl" data-line="13"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">raise</span> <span class="tk-string">"index out of bounds"</span></span>
+<span class="cl" data-line="15"></span>
+<span class="cl" data-line="16"><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="17"></span>
+<span class="cl" data-line="18"><span class="tk-keyword">var</span> c <span class="tk-operator">=</span> Complex<span class="tk-punctuation">(</span><span class="tk-number">3.14</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> c<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 3.14 0.0</span></span>
+<span class="cl" data-line="20">c<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">42.0</span></span>
+<span class="cl" data-line="21"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># (3.14 + 42.0i)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="every-operator-one-walkthrough">Every operator, one walkthrough<a aria-label="Link to Every operator, one walkthrough" class="h__link" href="#every-operator-one-walkthrough"></a></h2>
+<p>This example walked you through every Mojo operator from simple arithmetic
+to comparisons to subscripting.</p>
+<p>Implementing the right dunders and/or conforming to the right traits enables
+you to use operator syntax for nearly any custom type.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/structs/operator-support/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/structs/operator-support/</a>, saved Thu, 01 Oct 2026 15:36:24 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/13_mojo-structs.html"><span class="pager__dir">← Previous</span><span class="pager__title">Mojo structs</span></a><a class="pager__link pager__link--next" href="../pages/15_self-referential-structs.html"><span class="pager__dir">Next →</span><span class="pager__title">Self-referential structs</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#forward-reverse-and-in-place-methods">Forward, reverse, and in-place methods</a></li><li class="rail__depth-2"><a href="#unary-operators">Unary operators</a></li><li class="rail__depth-2"><a href="#comparison-operators-and-traits">Comparison operators and traits</a></li><li class="rail__depth-2"><a href="#subscript-operators">Subscript operators</a></li><li class="rail__depth-2"><a href="#walkthrough-build-a-complex-type">Walkthrough: Build a Complex type</a></li><li class="rail__depth-2"><a href="#create-the-base-type">Create the base type</a></li><li class="rail__depth-2"><a href="#make-your-type-printable">Make your type printable</a></li><li class="rail__depth-2"><a href="#add-unary-operator-support">Add unary operator support</a></li><li class="rail__depth-2"><a href="#support-binary-arithmetic">Support binary arithmetic</a></li><li class="rail__depth-2"><a href="#add-mixed-type-arithmetic-with-reversed-methods">Add mixed-type arithmetic with reversed methods</a></li><li class="rail__depth-2"><a href="#support-type-equality-checks">Support type equality checks</a></li><li class="rail__depth-2"><a href="#support-use-in-boolean-contexts">Support use in Boolean contexts</a></li><li class="rail__depth-2"><a href="#unlock-subscript-access">Unlock subscript access</a></li><li class="rail__depth-2"><a href="#every-operator-one-walkthrough">Every operator, one walkthrough</a></li><li class="rail__depth-3"><a href="#convenience-initializer">Convenience initializer</a></li><li class="rail__depth-3"><a href="#allow-in-place-assignment">Allow in-place assignment</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#forward-reverse-and-in-place-methods">Forward, reverse, and in-place methods</a></li><li class="rail__depth-2"><a href="#unary-operators">Unary operators</a></li><li class="rail__depth-2"><a href="#comparison-operators-and-traits">Comparison operators and traits</a></li><li class="rail__depth-2"><a href="#subscript-operators">Subscript operators</a></li><li class="rail__depth-2"><a href="#walkthrough-build-a-complex-type">Walkthrough: Build a Complex type</a></li><li class="rail__depth-2"><a href="#create-the-base-type">Create the base type</a></li><li class="rail__depth-2"><a href="#make-your-type-printable">Make your type printable</a></li><li class="rail__depth-2"><a href="#add-unary-operator-support">Add unary operator support</a></li><li class="rail__depth-2"><a href="#support-binary-arithmetic">Support binary arithmetic</a></li><li class="rail__depth-2"><a href="#add-mixed-type-arithmetic-with-reversed-methods">Add mixed-type arithmetic with reversed methods</a></li><li class="rail__depth-2"><a href="#support-type-equality-checks">Support type equality checks</a></li><li class="rail__depth-2"><a href="#support-use-in-boolean-contexts">Support use in Boolean contexts</a></li><li class="rail__depth-2"><a href="#unlock-subscript-access">Unlock subscript access</a></li><li class="rail__depth-2"><a href="#every-operator-one-walkthrough">Every operator, one walkthrough</a></li><li class="rail__depth-3"><a href="#convenience-initializer">Convenience initializer</a></li><li class="rail__depth-3"><a href="#allow-in-place-assignment">Allow in-place assignment</a></li></ol>
+<p class="rail__meta">Chapter 14 of 38 · Part III, Abstraction &amp; Values.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

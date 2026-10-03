@@ -339,15 +339,13 @@
         pre.ide .tok-cls { color: #6fd8c8; }
         pre.ide .tok-blt { color: #6fc9ff; }
 
-        /* side-by-side language labels: Python reference vs Mojo 1.x port */
-        pre.ide.py { border-left: 3px solid #a5d6ff; }
+        /* language label for the Mojo 1.x panes */
         pre.ide.mojo { border-left: 3px solid #4fc1ff; background: linear-gradient(135deg, #16202e, #1e293b); }
-        pre.ide.py::before, pre.ide.mojo::before {
+        pre.ide.mojo::before {
             display: block; font-size: .66rem; letter-spacing: .14em; text-transform: uppercase;
             font-family: Consolas, Menlo, monospace; margin-bottom: 8px; color: #cbd5e1;
+            content: "mojo 1.x — native port"; color: #4fc1ff;
         }
-        pre.ide.py::before { content: "python — reference"; }
-        pre.ide.mojo::before { content: "mojo 1.0 — native port"; color: #4fc1ff; }
 
         .table-container {
             overflow-x: auto;
@@ -540,9 +538,9 @@
         <a href="../../index.html" style="color:#fff;font-weight:700;text-decoration:none;">📚 TutMe</a>
         <a href="../index.html" style="color:#9fd3ff;text-decoration:none;">🧩 Applications lessons</a>
         <a href="index.html" style="color:#9fd3ff;text-decoration:none;">🌐 Geomatics</a>
+        <a href="geo_computations.html" style="color:#9fd3ff;text-decoration:none;">Geomatics Computations</a>
         <a href="../../index.html" style="color:#9fd3ff;text-decoration:none;">🏠 Home</a>
-        <a href="geo_computations.html" style="color:#9fd3ff;text-decoration:none;margin-left:auto;border:1px solid rgba(159,211,255,0.4);border-radius:999px;padding:4px 14px;">🧮 Mojo Computations</a>
-        <a href="gnss_surveying.html" style="color:#9fd3ff;text-decoration:none;border:1px solid rgba(159,211,255,0.4);border-radius:999px;padding:4px 14px;">← Part 1: GNSS Surveying</a>
+        <a href="gnss_surveying.html" style="color:#9fd3ff;text-decoration:none;margin-left:auto;border:1px solid rgba(159,211,255,0.4);border-radius:999px;padding:4px 14px;">← Part 1: GNSS Surveying</a>
     </nav>
 
     <div class="container">
@@ -550,7 +548,8 @@
         <header>
             <h1>THE KARNEY-KRUGER EQUATIONS</h1>
             <div class="subtitle">Part 2 · Transverse Mercator Projection — Mathematical Derivation, Conformal Mapping Theory, and Practice</div>
-            <div class="author">Continues <a href="gnss_surveying.html" style="color:#9fd3ff;">Part 1 — GNSS Surveying: Frames, Transformations, Site Calibration, Georeferencing</a> · <a href="geo_computations.html" style="color:#9fd3ff;">Mojo Computations Lab</a></div>
+            <div class="author">Continues <a href="gnss_surveying.html" style="color:#9fd3ff;">Part 1 — GNSS Surveying: Frames, Transformations, Site Calibration, Georeferencing</a></div>
+            <div class="author">For the coordinate, traverse, least-squares and transformation computations used here, see <a href="geo_computations.html" style="color:#9fd3ff;">Geomatics Computations &amp; Adjustment Mathematics</a>.</div>
         </header>
 
         <div class="toc">
@@ -566,8 +565,8 @@
                 <li><a href="#s8">8. Clenshaw Summation</a></li>
                 <li><a href="#s9">9. Complete Formula Reference</a></li>
                 <li><a href="#s10">10. Southern African Grid Constants</a></li>
-                <li><a href="#s13">11. Python &amp; Mojo Implementation</a></li>
-                <li><a href="#s15">12. Self-Check</a></li>
+                <li><a href="#s11">11. Mojo Implementation</a></li>
+                <li><a href="#s12">12. Self-Check</a></li>
             </ul>
         </div>
 
@@ -577,7 +576,7 @@
 
             <p>The <strong>Karney-Krüger equations</strong> are the most accurate formulation of the Transverse Mercator projection in geodesy: <strong>nanometer-level round trips</strong> within 3900 km of the central meridian. The projection maps the ellipsoid onto a cylinder tangent along a central meridian; scale distortion grows with distance from it, and the challenge is modeling that distortion accurately without sacrificing speed.</p>
 
-            <p style="max-width:78ch;"><strong>Where Part 1 ended.</strong> The first part of this course, <a href="gnss_surveying.html">GNSS Surveying</a>, carried a survey from GNSS observations through geodetic and ECEF frames, Helmert transformations, site calibration and georeferencing to a quality-controlled workflow — treating the map projection as a single entry in a transformation-selection table. This part opens that entry: the complete theory, constants and code behind every UTM and LO grid coordinate a surveyor meets. For the shorter code-first companion that ties the two parts together, see <a href="geo_computations.html">Geomatics Computations in Mojo</a>.</p>
+            <p style="max-width:78ch;"><strong>Where Part 1 ended.</strong> The first part of this course, <a href="gnss_surveying.html">GNSS Surveying</a>, carried a survey from GNSS observations through geodetic and ECEF frames, Helmert transformations, site calibration and georeferencing to a quality-controlled workflow — treating the map projection as a single entry in a transformation-selection table. This part opens that entry: the complete theory, constants and code behind every UTM and LO grid coordinate a surveyor meets.</p>
 
             <div class="key-insight">
                 Karney's key innovation was expanding the series in the <strong>third flattening n</strong> (≈ 1/297) instead of eccentricity squared e² (≈ 1/150), producing approximately 4× faster convergence and enabling unprecedented accuracy.
@@ -591,12 +590,6 @@
             </div>
 
             <p>Watch the 4× factor appear term by term:</p>
-            <pre class="ide py"><code>f = 1 / 298.257223563                 # WGS84
-e2, n = 2 * f - f * f, f / (2 - f)
-
-for k in range(1, 6):
-    print(f"term {k}:  e²^k / n^k = {e2**k / n**k:.3f}")
-# term 1: 3.984   term 2: 15.87   term 3: 63.2   term 4: 251.8   term 5: 1002.6</code></pre>
 
             <pre class="ide mojo"><code>def main():
     var f = 1.0 / 298.257223563
@@ -634,21 +627,8 @@ for k in range(1, 6):
                 <p><strong>Semi-minor axis:</strong> $b = a(1 - f) = a\sqrt{1 - e^2}$</p>
             </div>
 
-            <pre class="ide py"><code># WGS84 derived parameters — every later series is driven by these four numbers
-a, f = 6378137.0, 1 / 298.257223563
-
-e2  = 2 * f - f * f          # first eccentricity squared
-ep2 = e2 / (1 - e2)          # second eccentricity squared
-n   = f / (2 - f)            # third flattening — Krüger's expansion variable
-b   = a * (1 - f)            # semi-minor axis
-
-print(f"e²  = {e2:.8f}")     # 0.00669438
-print(f"e'² = {ep2:.6f}")    # 0.082094
-print(f"n   = {n:.8f}")      # 0.00167922
-print(f"b   = {b:.4f} m")    # 6356752.3142 m</code></pre>
-
             <p>The same four constants, typed and compiled in Mojo 1.x:</p>
-            <pre class="ide mojo"><code>from std.math import sqrt
+            <pre class="ide mojo">from std.math import sqrt
 
 def main():
     var a = 6378137.0                # WGS84 semi-major axis (m)
@@ -660,14 +640,14 @@ def main():
     print("e²  =", e2)               # 0.006694380022903
     print("e'² =", ep2)              # 0.0820944737957
     print("n   =", n)                # 0.001679220386384
-    print("b   =", b, "m")           # 6356752.314245 m</code></pre>
+    print("b   =", b, "m")           # 6356752.314245 m</pre>
 
             <div class="note">
                 <p><strong>🌍 For Southern Africa:</strong> the Clarke 1880 ellipsoid (formerly used in South Africa and Zimbabwe) has $a = 6,378,249.145 \text{ m}$ and $f = 1/293.465$. Always verify which ellipsoid your survey data references!</p>
             </div>
 
             <div class="note">
-                <p><strong>Cross-reference:</strong> the frame chain built on this ellipsoid — geodetic ⇄ ECEF ⇄ local ENU, implemented in Python and Mojo 1.x — is <a href="gnss_surveying.html#frames">Chapter 1 of Part 1</a>. This part continues the chain one step further: from the ellipsoid down to the projected grid.</p>
+                <p><strong>Cross-reference:</strong> the frame chain built on this ellipsoid — geodetic ⇄ ECEF ⇄ local ENU, implemented in Mojo 1.x — is <a href="gnss_surveying.html#frames">Chapter 1 of Part 1</a>. This part continues the chain one step further: from the ellipsoid down to the projected grid.</p>
             </div>
 
             <h2>2.2 The Transverse Mercator / UTM System</h2>
@@ -684,7 +664,7 @@ def main():
             </div>
 
             <div class="note">
-                <p><strong>Cross-reference:</strong> in <a href="gnss_surveying.html#transforms">Part 1, Chapter 2</a> this projection is the "Geographic ↔ projected coordinates" row of the transformation-selection table, and in the eight-step surveying workflow it is <a href="gnss_surveying.html#workflow">step 04 — Transform</a>, between establishing the reference frame and site localisation. The compact planar-coordinate bridge is <a href="geo_computations.html#coordinates">Geomatics Computations &sect;3</a>.</p>
+                <p><strong>Cross-reference:</strong> in <a href="gnss_surveying.html#transforms">Part 1, Chapter 2</a> this projection is the "Geographic ↔ projected coordinates" row of the transformation-selection table, and in the eight-step surveying workflow it is <a href="gnss_surveying.html#workflow">step 04 — Transform</a>, between establishing the reference frame and site localisation.</p>
             </div>
         </section>
 
@@ -735,35 +715,8 @@ def main():
             </div>
 
             <p>The forward series with the full order-6 coefficients (Engsager &amp; Poder / GeographicLib) — this is the form every practical implementation uses:</p>
-            <pre class="ide py"><code>import math
 
-def conformal_latitude(phi, n):
-    """Geodetic -> conformal latitude (radians), n-series, order 6."""
-    n2 = n*n; n3 = n2*n; n4 = n3*n; n5 = n4*n; n6 = n5*n
-    c = [
-        -2*n + 2*n2/3 + 4*n3/3 - 82*n4/45 + 32*n5/45 + 4642*n6/4725,
-         5*n2/3 - 16*n3/15 - 13*n4/9 + 904*n5/315 - 1522*n6/945,
-        -26*n3/15 + 34*n4/21 + 8*n5/5 - 12686*n6/2835,
-         1237*n4/630 - 12*n5/5 - 24832*n6/14175,
-        -734*n5/315 + 109598*n6/31185,
-         444337*n6/155925,
-    ]
-    return phi + sum(c[j] * math.sin(2 * (j + 1) * phi) for j in range(6))
-
-def inverse_conformal_latitude(chi, n):
-    """Conformal -> geodetic latitude by iteration (dχ/dφ ≈ 1, so 3 passes suffice)."""
-    phi = chi
-    for _ in range(3):
-        phi -= conformal_latitude(phi, n) - chi
-    return phi
-
-n = (1 / 298.257223563) / (2 - 1 / 298.257223563)     # WGS84 third flattening
-phi = math.radians(-17.829)                           # Harare's latitude
-chi = conformal_latitude(phi, n)
-print(math.degrees(chi))                              # -17.8275589...  (χ sits slightly north of φ)
-print(math.degrees(inverse_conformal_latitude(chi, n)))  # -17.829  (round-trips exactly)</code></pre>
-
-            <p>The same two functions in Mojo 1.x — plain <code>Float64</code> arithmetic, no objects, ready to <code>parallelize</code> over a batch of stations:</p>
+            <p>As Mojo 1.x — plain <code>Float64</code> arithmetic, no objects, ready to <code>parallelize</code> over a batch of stations:</p>
             <pre class="ide mojo"><code>from std.math import sin, radians, degrees
 
 def conformal_latitude(phi: Float64, n: Float64) -> Float64:
@@ -837,24 +790,9 @@ def main():
                 <p><strong>Errata:</strong> earlier editions of this book printed α₁ = 0.0008520443958, α₂ = −0.0000363288925, … — and an α table that actually contained the <em>β</em> (inverse) series. Those values disagree with the GeographicLib order-6 series used here; the table above (and the code below) reproduces the verified coefficients to the last digit.</p>
             </div>
 
-            <p>The recursive Python you can trust — it produces exactly the table above:</p>
-            <pre class="ide py"><code>def krueger_alpha(n):
-    n2 = n*n; n3 = n2*n; n4 = n3*n; n5 = n4*n; n6 = n5*n
-    return [
-        n/2 - 2*n2/3 + 5*n3/16 + 41*n4/180 - 127*n5/288 + 7891*n6/37800,
-        13*n2/48 - 3*n3/5 + 557*n4/1440 + 281*n5/630 - 1983433*n6/1935360,
-        61*n3/240 - 103*n4/140 + 15061*n5/26880 + 167603*n6/181440,
-        49561*n4/161280 - 179*n5/168 + 6601661*n6/7257600,
-        34729*n5/80640 - 3418889*n6/1995840,
-        212378941*n6/319334400,
-    ]
+            <p>The recursive definition you can trust — it produces exactly the table above:</p>
 
-n = (1 / 298.257223563) / (2 - 1 / 298.257223563)
-for j, a in enumerate(krueger_alpha(n), start=1):
-    print(f"α{j} = {a:.10e}")
-# α1 = 8.3773182062e-04   α2 = 7.6085277736e-07   α3 = 1.1976455033e-09 ...</code></pre>
-
-            <p>And the Mojo 1.x port — six scalars, no allocation, ideal inside a batch forward projection:</p>
+            <p>Six scalars, no allocation, ideal inside a batch forward projection:</p>
             <pre class="ide mojo"><code>from std.math import sin, cos, sinh, cosh
 
 struct Alpha:
@@ -902,31 +840,9 @@ def main():
                 <p>$$\beta_4 = \frac{4397}{161280}n^4 - \frac{11}{504}n^5 + \cdots$$</p>
             </div>
 
-            <p>Round-trip proof in Python — apply the α series, then the β series, and land back on the starting coordinate to machine precision:</p>
-            <pre class="ide py"><code>import cmath
+            <p>Round-trip proof — apply the α series, then the β series, and land back on the starting coordinate to machine precision:</p>
 
-def krueger_beta(n):
-    n2 = n*n; n3 = n2*n; n4 = n3*n; n5 = n4*n; n6 = n5*n
-    return [
-        n/2 - 2*n2/3 + 37*n3/96 - n4/360 - 81*n5/512 + 96199*n6/604800,
-        n2/48 + n3/15 - 437*n4/1440 + 46*n5/105 - 1118711*n6/3870720,
-        17*n3/480 - 37*n4/840 - 209*n5/4480 + 5569*n6/90720,
-        4397*n4/161280 - 11*n5/504 + 830251*n6/7257600,
-        4583*n5/161280 - 108847*n6/3991680,
-        20648693*n6/638668800,
-    ]
-
-n = (1 / 298.257223563) / (2 - 1 / 298.257223563)
-alpha, beta = krueger_alpha(n), krueger_beta(n)
-
-zp = complex(0.15, 0.20)                                       # sample conformal-sphere point
-z = zp + sum(a * cmath.sin(2 * (j + 1) * zp) for j, a in enumerate(alpha))     # forward
-back = z - sum(b * cmath.sin(2 * (j + 1) * z) for j, b in enumerate(beta))    # inverse
-
-print(f"β1 = {beta[0]:.10e}")                                  # 8.3773216406e-04
-print(f"round-trip error = {abs(back - zp):.2e}")              # ~3e-17 — machine precision</code></pre>
-
-            <p>The Mojo port with the complex arithmetic written out explicitly — Mojo has no <code>cmath</code>, so the complex sine becomes its real/imaginary pair, exactly the shape a SIMD-batched projection loop uses:</p>
+            <p>The complex arithmetic is written out explicitly — Mojo has no <code>cmath</code>, so the complex sine becomes its real/imaginary pair, exactly the shape a SIMD-batched projection loop uses:</p>
             <pre class="ide mojo"><code>from std.math import sqrt, sin, cos, sinh, cosh
 
 def complex_sin(x: Float64, y: Float64) -> (Float64, Float64):
@@ -1026,47 +942,7 @@ def roundtrip_error(xp: Float64, yp: Float64, n: Float64) -> Float64:
 
             <p>Newton's method inverting the α-series with an <em>analytic</em> derivative — the same structure a full (φ, λ) inverse uses, visible in four lines. The derivative of $z = z_p + \sum_j \alpha_j \sin(2j\,z_p)$ is $1 + \sum_j 2j\,\alpha_j \cos(2j\,z_p)$:</p>
 
-            <pre class="ide py"><code>import cmath
-
-def krueger_alpha(n):
-    n2 = n*n; n3 = n2*n; n4 = n3*n; n5 = n4*n; n6 = n5*n
-    return [
-        n/2 - 2*n2/3 + 5*n3/16 + 41*n4/180 - 127*n5/288 + 7891*n6/37800,
-        13*n2/48 - 3*n3/5 + 557*n4/1440 + 281*n5/630 - 1983433*n6/1935360,
-        61*n3/240 - 103*n4/140 + 15061*n5/26880 + 167603*n6/181440,
-        49561*n4/161280 - 179*n5/168 + 6601661*n6/7257600,
-        34729*n5/80640 - 3418889*n6/1995840,
-        212378941*n6/319334400,
-    ]
-
-def forward_z(zp, alpha):
-    return zp + sum(a * cmath.sin(2 * (j + 1) * zp)
-                    for j, a in enumerate(alpha))
-
-def dforward_dzp(zp, alpha):
-    return 1 + sum(2 * (j + 1) * a * cmath.cos(2 * (j + 1) * zp)
-                   for j, a in enumerate(alpha))
-
-def invert_z_newton(z, alpha, tol=1e-15, max_iter=10):
-    """Given z, recover zp: Newton with analytic derivative (quadratic)."""
-    zp = z - sum(a * cmath.sin(2 * (j + 1) * z)     # β-series first guess
-                 for j, a in enumerate(alpha))
-    for i in range(max_iter):
-        step = (forward_z(zp, alpha) - z) / dforward_dzp(zp, alpha)
-        zp -= step
-        if abs(step) < tol:
-            return zp, i + 1                        # 2–3 iterations in zone
-    return zp, max_iter
-
-n = (1 / 298.257223563) / (2 - 1 / 298.257223563)
-alpha = krueger_alpha(n)
-zp0 = complex(0.15, 0.20)
-z = forward_z(zp0, alpha)
-zp, iters = invert_z_newton(z, alpha)
-print(f"recovered in {iters} iterations, error = {abs(zp - zp0):.2e}")
-# 2 iterations, error ~1e-17 — quadratic convergence in action</code></pre>
-
-            <p>The Mojo 1.x port — the complex arithmetic written as explicit real/imaginary pairs, exactly the shape a batch inverse uses when it runs over millions of points:</p>
+            <p>The complex arithmetic is written as explicit real/imaginary pairs, exactly the shape a batch inverse uses when it runs over millions of points:</p>
 
             <pre class="ide mojo"><code>from std.math import sin, cos, sqrt, sinh, cosh
 
@@ -1140,27 +1016,11 @@ def invert_z_newton(zx: Float64, zy: Float64,
                 <p><strong>Cost:</strong> $m$ multiply-adds instead of $m$ trig calls — microseconds per point, which is what makes the nanometer formulation practical at LiDAR scale.</p>
             </div>
 
-            <pre class="ide py"><code>import math
+            <p>Two scalars and one loop; this is the innermost kernel of the whole projection, and the compiler turns it into a dependency-free chain of FMAs:</p>
 
-def clenshaw_cos(c, theta):
-    """Sum(c[j] * cos(j*theta)) via Clenshaw — no per-term trig."""
-    y2 = y1 = 0.0
-    two_cos = 2 * math.cos(theta)
-    for ck in reversed(c):
-        y2, y1 = y1, two_cos * y1 - y2 + ck
-    return c[0] + y1 * math.cos(theta) - y2
+            <pre class="ide mojo">from std.math import cos
 
-# check against the naive sum
-theta = 0.37
-c = [1.0, 0.5, 0.25, 0.125, 0.0625]
-print(clenshaw_cos(c, theta),
-      sum(cj * math.cos(j * theta) for j, cj in enumerate(c)))  # identical</code></pre>
-
-            <p>The Mojo 1.x port — two scalars and one loop; this is the innermost kernel of the whole projection, and the compiler turns it into a dependency-free chain of FMAs:</p>
-
-            <pre class="ide mojo"><code>from std.math import cos
-
-def clenshaw_cos(c: List[Float64], theta: Float64) -> Float64:
+def clenshaw_cos(c: List[Float64], theta: Float64) -&gt; Float64:
     var y2 = 0.0
     var y1 = 0.0
     var two_cos = 2.0 * cos(theta)
@@ -1170,8 +1030,8 @@ def clenshaw_cos(c: List[Float64], theta: Float64) -> Float64:
         y1 = t
     return c[0] + y1 * cos(theta) - y2
 
-# swap cos -> sin for the sine series; GeographicLib's TransverseMercator
-# evaluates the Krüger α/β sums with exactly this recurrence.</code></pre>
+# swap cos -&gt; sin for the sine series; GeographicLib's TransverseMercator
+# evaluates the Krüger α/β sums with exactly this recurrence.</pre>
         </section>
 
         <!-- 9. Formula Reference -->
@@ -1210,19 +1070,6 @@ def clenshaw_cos(c: List[Float64], theta: Float64) -> Float64:
                 <p><strong>Cape / LO belts (Clarke 1880, Arc 1950):</strong> 2°-wide belts on odd meridians (LO 19 … LO 31), $k_0 = 1.0$, <em>no</em> false easting or northing — true origin, S+/W+ axes. Belt edges stay within 1 part in 10,000 scale distortion.</p>
             </div>
 
-            <pre class="ide py"><code># The constants that define the two worlds:
-WGS84 = dict(a=6378137.0,        f=1/298.257223563,  # UTM
-             k0=0.9996, fe=500_000.0, orientation="N+/E+")
-CLARKE1880 = dict(a=6378249.145, f=1/293.465,        # Arc 1950 / LO belts
-                  k0=1.0, fe=0.0,        orientation="S+/W+")
-
-def utm_cm(zone):        # UTM central meridian (degrees E)
-    return (zone - 1) * 6 + 3
-
-# LO belts: odd central meridians — pick the nearest odd to your longitude
-def lo_belt(lon):
-    return f"LO {2 * round(lon / 2) + 1}"</code></pre>
-
             <pre class="ide mojo"><code>struct Grid:
     var a: Float64;  var f: Float64      # ellipsoid
     var k0: Float64; var fe: Float64     # scale at CM, false easting
@@ -1238,52 +1085,15 @@ def main():
             <p class="small" style="color:#64748b;">Worked transforms for both systems (Harare → UTM 36S and → LO 31) are in §11.4; the LO 31 example includes the S/W axis flip.</p>
         </section>
 
-        <!-- 13. Python -->
-        <section id="s13">
-            <h1>11. 🐍 Python &amp; ⚡ Mojo 1.x Implementation</h1>
+        <!-- 11. Implementation -->
+        <section id="s11">
+            <h1>11. 📭 Mojo Implementation</h1>
 
-            <p style="max-width:70ch;">Every implementation below appears twice: the Python reference first, then the same computation as a Mojo 1.x port. The geodesy itself is Float64-heavy, loop-heavy and branch-light — exactly Mojo's comfort zone — so the forward equations port natively, while GeographicLib and pandas ride across the zero-overhead interop bridge. Read the Python to check the math; read the Mojo to learn the language. The same dual-language convention — and the Mojo 1.x syntax notes (<code>comptime</code>, <code>mut</code>, <code>@fieldwise_init</code>, <code>std.</code> imports) — runs through <a href="gnss_surveying.html">Part 1 of the course</a>.</p>
+            <p style="max-width:70ch;">Every implementation below is written in Mojo 1.x. The geodesy itself is Float64-heavy, loop-heavy and branch-light — exactly Mojo's comfort zone — so the forward equations compile natively, while GeographicLib and pandas ride across the zero-overhead interop bridge. Where a series is naturally complex, the real and imaginary parts are carried as an explicit <code>(Float64, Float64)</code> pair rather than a complex type. The Mojo 1.x syntax notes (<code>comptime</code>, <code>mut</code>, <code>@fieldwise_init</code>, <code>std.</code> imports) run through <a href="gnss_surveying.html">Part 1 of the course</a> as well.</p>
 
             <h2>11.1 Basic Forward Transformation (Harare example)</h2>
 
-            <pre class="ide py"><code>import math
-
-# WGS84 ellipsoid parameters
-a = 6378137.0
-f = 1 / 298.257223563
-e2 = 2 * f - f**2
-e = math.sqrt(e2)
-
-def conformal_latitude(phi):
-    sin_phi = math.sin(phi)
-    return math.atan2(
-        math.sqrt(1 - e2) * sin_phi,
-        math.cos(phi)
-    ) - e * math.atanh(e * sin_phi)
-
-def forward_tm(phi, lambda_, lambda0, k0=0.9996):
-    dlambda = lambda_ - lambda0
-    chi = conformal_latitude(phi)
-    n = f / (2 - f)
-    N0 = a / math.sqrt(1 - e2)
-    sin_chi, cos_chi = math.sin(chi), math.cos(chi)
-    sinh_xi = math.sinh(dlambda * cos_chi)
-    cosh_xi = math.cosh(dlambda * cos_chi)
-    x = k0 * N0 * ( (n/2) * sin_chi * cosh_xi
-                  + (n**2/8) * math.sin(2*chi) * sinh_xi
-                  + (n**3/48) * math.sin(3*chi) * cosh_xi )
-    y = k0 * N0 * ( (n/2) * cos_chi * sinh_xi
-                  + (n**2/8) * math.cos(2*chi) * cosh_xi )
-    return x, y
-
-# Harare, Zimbabwe -> UTM Zone 36S (CM 33E)
-phi = math.radians(-17.8252)
-lon = math.radians(31.0335)
-lambda0 = math.radians(33)
-E, N = forward_tm(phi, lon, lambda0)
-print(f"Easting: {E:.3f} m, Northing: {N:.3f} m")</code></pre>
-
-            <p style="max-width:70ch;">The Mojo 1.x port is line-for-line the same mathematics — typed <code>Float64</code> end to end, so the ellipsoid constants can't silently degrade to single precision and the trig pipeline compiles to straight-line SIMD code:</p>
+            <p style="max-width:70ch;">The mathematics stays exactly the same, but typed <code>Float64</code> end to end, so the ellipsoid constants can't silently degrade to single precision and the trig pipeline compiles to straight-line SIMD code:</p>
 
             <pre class="ide mojo"><code>from std.math import sqrt, sin, cos, atan2, atanh, sinh, cosh, radians
 
@@ -1323,27 +1133,15 @@ def main():
 
             <p>For production use, GeographicLib provides a rigorously convergent implementation (install via <code>pip install geographiclib</code> or <code>uv pip install geographiclib</code>):</p>
 
-            <pre class="ide py"><code>from geographiclib.transverse_mercator import TransverseMercator
-
-tm = TransverseMercator(6378137, 1/298.257223563, k0=0.9996)
-
-# Forward: (lon0, lat, lon) -> (x, y, k, conv)
-x, y, k, conv = tm.Forward(0, 40.0, 6.0)
-
-# Reverse (round-trip check)
-res = tm.Reverse(0, x, y)
-lat_inv, lon_inv = res[1], res[2]
-print(f"E: {x:.3f} m, N: {y:.3f} m, k: {k:.6f}, conv: {conv:.4f}°")</code></pre>
-
             <p style="max-width:70ch;">Mojo 1.x reaches the same rigor through the interop bridge — GeographicLib's convergent series stays Python-side, while everything you wrap around the call (migration batches, grid sweeps, QC checks) compiles natively:</p>
 
-            <pre class="ide mojo"><code>from python import Python
+            <pre class="ide mojo">from std.python import Python
 
 def main() raises:
     var tm_mod = Python.import_module("geographiclib.transverse_mercator")
     var tm = tm_mod.TransverseMercator(6378137, 1 / 298.257223563, k0=0.9996)
 
-    var res = tm.Forward(0, 40.0, 6.0)     # (lon0, lat, lon) -> x, y, k, conv
+    var res = tm.Forward(0, 40.0, 6.0)     # (lon0, lat, lon) -&gt; x, y, k, conv
     var x = res[0]
     var y = res[1]
     var k = res[2]
@@ -1351,28 +1149,13 @@ def main() raises:
 
     var back = tm.Reverse(0, x, y)         # round-trip check
     print("E:", x, "m  N:", y, "m  k:", k, "conv:", conv)
-    print("reverse lat/lon:", back[1], back[2])</code></pre>
+    print("reverse lat/lon:", back[1], back[2])</pre>
 
             <h2>11.3 Batch GIS Processing</h2>
 
-            <pre class="ide py"><code>import pandas as pd
-from geographiclib.transverse_mercator import TransverseMercator
+            <p style="max-width:70ch;">The Mojo 1.x driver keeps pandas for the CSV plumbing but owns the point loop — and this is the honest division of labor: at survey datasets of a few thousand points pandas is fine either way; at LiDAR scale (millions of points) you drop pandas, call the native <code>forward_tm</code> from §11.1 over a flat coordinate buffer, <code>parallelize</code> across cores, and the whole migration finishes in milliseconds:</p>
 
-def batch_transform_csv(input_csv, output_csv):
-    tm = TransverseMercator(6378137, 1/298.257223563, k0=0.9996)
-    df = pd.read_csv(input_csv)
-
-    def transform_point(row):
-        x, y, k, conv = tm.Forward(0, row['lat'], row['lon'])
-        return pd.Series({'easting': x, 'northing': y, 'scale': k})
-
-    df = pd.concat([df, df.apply(transform_point, axis=1)], axis=1)
-    df.to_csv(output_csv, index=False)
-    print(f"Transformed {len(df)} points.")</code></pre>
-
-            <p style="max-width:70ch;">The Mojo 1.x driver keeps pandas for the CSV plumbing but owns the point loop — and this is the honest division of labor: at survey datasets of a few thousand points pandas is fine either way; at LiDAR scale (millions of points) you drop pandas, call the native <code>forward_tm</code> from §11.1 over a <code>Tensor</code> of coordinates, <code>parallelize</code> across cores, and the whole migration finishes in milliseconds:</p>
-
-            <pre class="ide mojo"><code>from python import Python
+            <pre class="ide mojo">from std.python import Python
 
 def batch_transform_csv(input_csv: String, output_csv: String) raises:
     var pd = Python.import_module("pandas")
@@ -1387,25 +1170,13 @@ def batch_transform_csv(input_csv: String, output_csv: String) raises:
         df.at[i, "easting"] = res[0]
         df.at[i, "northing"] = res[1]
     df.to_csv(output_csv, index=False)
-    print("Transformed", n, "points.")</code></pre>
+    print("Transformed", n, "points.")</pre>
 
             <h2>11.4 Zimbabwe LO 31 (South-Oriented)</h2>
 
-            <pre class="ide py"><code>from geographiclib.transverse_mercator import TransverseMercator
+            <p style="max-width:70ch;">For the LO31 transform — the Clarke 1880 constants and the South/West flip are ordinary typed values, and the national benchmark table becomes a compiled loop:</p>
 
-def transform_to_zimbabwe_lo31(lat, lon):
-    # Clarke 1880 (Modified) for Arc 1950: a=6378249.145, f=1/293.465
-    tm = TransverseMercator(6378249.145, 1/293.465, k0=1.0)
-    x, y, k, conv = tm.Forward(31.0, lat, lon)
-    southings, westings = x, y   # flip to South/West convention
-    return southings, westings, k
-
-s, w, k = transform_to_zimbabwe_lo31(-17.829, 31.027)  # Harare
-print(f"Harare LO31 -> South: {s:.3f} m, West: {w:.3f} m")</code></pre>
-
-            <p style="max-width:70ch;">The same LO31 transform from Mojo 1.x — the Clarke 1880 constants and the South/West flip are ordinary typed values, and the national benchmark table becomes a compiled loop:</p>
-
-            <pre class="ide mojo"><code>from python import Python
+            <pre class="ide mojo"><code>from std.python import Python
 
 def transform_to_zimbabwe_lo31(lat: Float64, lon: Float64) raises:
     var tm_mod = Python.import_module("geographiclib.transverse_mercator")
@@ -1420,7 +1191,7 @@ def main() raises:
         </section>
 
         <!-- 12. Self-Check -->
-        <section id="s15">
+        <section id="s12">
             <h1>12. ✅ Self-Check</h1>
             <div class="card">
                 <ol style="margin-left: 20px;">
@@ -1429,13 +1200,13 @@ def main() raises:
                     <li>Why does the β series invert the α series, and why does the round trip close to ~3 × 10⁻¹⁷ (§4.4)? What does machine precision mean in meters on the ground?</li>
                     <li>Implement the Clenshaw recurrence (§8) and show it matches the naive cosine sum to Float64 precision. Time both at m = 6 over 10⁶ points.</li>
                     <li>Run the Newton inverse (§6) from progressively worse initial guesses and record the iteration count — verify quadratic convergence |eᵢ₊₁| ≈ C|eᵢ|².</li>
-                    <li>Port the forward transform (§11.1) to Mojo, batch it over a Tensor of 10⁶ points with <code>@parallelize</code>, and benchmark against the pandas loop (§11.3).</li>
+                    <li>Batch the forward transform (§11.1) over a flat buffer of 10⁶ points with <code>@parallelize</code>, and benchmark against the pandas loop (§11.3).</li>
                     <li>Transform Harare (−17.829, 31.027) to UTM 36S and to LO 31 (§11.4); explain the S/W axis flip and why the two answers use different ellipsoids.</li>
                 </ol>
             </div>
 
             <div class="note">
-                <p><strong>Where next:</strong> with the projection mastered, return to <a href="gnss_surveying.html">Part 1 — GNSS Surveying</a> to see it take its place in the full field-to-office pipeline: site-calibration residuals, georeferencing QC and RMSE reporting in <a href="gnss_surveying.html#workflow">Chapter 6</a>. For the focused Mojo implementation lab, continue with <a href="geo_computations.html">Geomatics Computations</a> and its <a href="geo_computations.html#practice">practice problems</a>. The two parts and the lab together form one continuous surveying course.</p>
+                <p><strong>Where next:</strong> with the projection mastered, return to <a href="gnss_surveying.html">Part 1 — GNSS Surveying</a> to see it take its place in the full field-to-office pipeline: site-calibration residuals, georeferencing QC and RMSE reporting in <a href="gnss_surveying.html#workflow">Chapter 6</a>. The two parts together form one continuous surveying course.</p>
             </div>
         </section>
 
@@ -1498,6 +1269,143 @@ def main() raises:
         })();
     </script>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body>
 
 </html>

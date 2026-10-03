@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Packaging · Mojo v1 The Language Manual</title>
+<meta name="description" content="Publishing a Mojo package to a package index.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part VI · Projects &amp; Tooling</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part VI</span><span class="sep">/</span><span>Projects &amp; Tooling</span><span class="sep">/</span><span class="num">35</span></nav><h1>Packaging</h1>
+<p class="dek">Publishing a Mojo package to a package index.</p><p class="byline">Chapter 35 · 1,333 words · 10 code blocks · <a class="ext" href="https://mojolang.org/docs/tools/packaging/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>This page explains how to turn your Mojo project into a distributable conda
+package using rattler-build.</p>
+<p>You can distribute your conda package on any conda-compatible package index,
+such as <a class="ext" data-external="" href="https://prefix.dev/" rel="noopener noreferrer">prefix.dev</a>, <a class="ext" data-external="" href="https://anaconda.org/" rel="noopener noreferrer">anaconda.org</a>,
+or an S3 bucket. For the most visibility, we recommend sharing your package in
+the <a class="ext" data-external="" href="https://prefix.dev/channels/modular-community" rel="noopener noreferrer">modular-community channel</a>
+on prefix.dev, as described below.</p>
+<h2 class="h h--2" data-level="2" id="how-it-works">How it works<a aria-label="Link to How it works" class="h__link" href="#how-it-works"></a></h2>
+<p><em>rattler-build</em> is a tool that turns your source code into a conda package.
+You give it a <em>recipe</em>—a YAML file named <code>recipe.yaml</code>—and it does the
+rest: fetches your source, compiles it in an isolated environment, runs your
+tests, and writes out a <code>.conda</code> file ready to upload to a package index.</p>
+<p>The recipe is a declarative description of your package that specifies:</p>
+<ul>
+<li class="">The source code location (a git commit or tarball URL)</li>
+<li class="">The build process (a <code>mojo precompile</code> command)</li>
+<li class="">Package dependencies</li>
+<li class="">Test commands to verify the build</li>
+</ul>
+<p>The complete packaging process is:</p>
+<ol>
+<li class="">Create a <code>recipe.yaml</code> that specifies your package details.</li>
+<li class="">Run <code>rattler-build</code> to create a <code>.conda</code> package.</li>
+<li class="">Share the package in a public package index.</li>
+</ol>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>If you want to distribute your package in the modular-community channel, you
+only need to merge your <code>recipe.yaml</code> file into the <a class="ext" data-external="" href="https://github.com/modular/modular-community" rel="noopener noreferrer">modular-community
+repository</a> (the repo handles
+steps 2 and 3).</p></div></aside>
+<p>Then you and other users can install your package with <code>pixi</code> or other conda
+package managers by adding the appropriate conda channel to your project
+manifest file (<code>pixi.toml</code>).</p>
+<h2 class="h h--2" data-level="2" id="install-rattler-build">Install rattler-build<a aria-label="Link to Install rattler-build" class="h__link" href="#install-rattler-build"></a></h2>
+<p>We recommend using <a class="ext" data-external="" href="https://pixi.sh/latest/" rel="noopener noreferrer">Pixi</a> to install <code>rattler-build</code>:</p>
+<ol>
+<li class="">
+<p>If you don't have it, install <code>pixi</code> with this command:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-function">curl</span> -fsSL https://pixi.sh/install.sh <span class="tk-operator">|</span> <span class="tk-function">sh</span></span>
+</code></pre></figure>
+<p>Then restart your terminal for the changes to take effect.</p>
+</li>
+<li class="">
+<p>Now install <code>rattler-build</code> globally:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">pixi global <span class="tk-function">install</span> rattler-build</span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>Verify the installation:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">rattler-build --version</span>
+</code></pre></figure>
+</li>
+</ol>
+<h2 class="h h--2" data-level="2" id="write-your-recipe-file">Write your recipe file<a aria-label="Link to Write your recipe file" class="h__link" href="#write-your-recipe-file"></a></h2>
+<p>The recipe is the heart of the packaging process and is defined in a YAML file
+named <code>recipe.yaml</code>.</p>
+<p>By convention, store your recipe in your project root at
+<code>conda.recipe/recipe.yaml</code>. <code>rattler-build</code> looks there by default, and it's
+the location expected by the GitHub Action
+(<a class="ext" data-external="" href="https://github.com/prefix-dev/rattler-build-action" rel="noopener noreferrer">rattler-build-action</a>).
+For example:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">my-mojo-lib/</span>
+<span class="cl" data-line="2">├── src/</span>
+<span class="cl" data-line="3">│   └── my_mojo_lib/</span>
+<span class="cl" data-line="4">│       ├── __init__.mojo</span>
+<span class="cl" data-line="5">│       └── utils.mojo</span>
+<span class="cl" data-line="6">├── test.mojo</span>
+<span class="cl" data-line="7">├── conda.recipe/</span>
+<span class="cl" data-line="8">│   └── recipe.yaml</span>
+<span class="cl" data-line="9">├── LICENSE</span>
+<span class="cl" data-line="10">└── README.md</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="the-minimal-recipe-file">The minimal recipe file<a aria-label="Link to The minimal recipe file" class="h__link" href="#the-minimal-recipe-file"></a></h3>
+<p>This section covers the most important recipe fields for Mojo packages.
+For details about all available recipe fields, see the <a class="ext" data-external="" href="https://rattler-build.prefix.dev/latest/reference/recipe_file/" rel="noopener noreferrer">rattler-build recipe
+reference</a>.</p>
+<p>You can copy this template to begin building your <code>recipe.yaml</code> file:</p>
+<figure class="cb" data-lang="yaml"><figcaption class="cb__bar"><span class="cb__file">recipe.yaml</span><span class="cb__lang">YAML</span><span class="cb__spacer"></span><button aria-label="Copy YAML code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-atrule">context</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-atrule">version</span><span class="tk-punctuation">:</span> <span class="tk-string">"0.1.0"</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-atrule">package</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-atrule">name</span><span class="tk-punctuation">:</span> my<span class="tk-punctuation">-</span>mojo<span class="tk-punctuation">-</span>lib</span>
+<span class="cl" data-line="6"> <span class="tk-atrule">version</span><span class="tk-punctuation">:</span> $<span class="tk-punctuation">{</span><span class="tk-punctuation">{</span> version <span class="tk-punctuation">}</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-atrule">source</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-punctuation">-</span> <span class="tk-atrule">git</span><span class="tk-punctuation">:</span> https<span class="tk-punctuation">:</span>//github.com/yourname/my<span class="tk-punctuation">-</span>mojo<span class="tk-punctuation">-</span>lib.git</span>
+<span class="cl" data-line="10"> <span class="tk-atrule">rev</span><span class="tk-punctuation">:</span> a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2</span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-atrule">build</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-atrule">number</span><span class="tk-punctuation">:</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="14"> <span class="tk-atrule">script</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-punctuation">-</span> mojo precompile src/my_mojo_lib <span class="tk-punctuation">-</span>o $<span class="tk-punctuation">{</span><span class="tk-punctuation">{</span> PREFIX <span class="tk-punctuation">}</span><span class="tk-punctuation">}</span>/lib/mojo/my_mojo_lib.mojoc</span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17"><span class="tk-atrule">requirements</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="18"> <span class="tk-atrule">build</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-punctuation">-</span> mojo<span class="tk-punctuation">-</span>compiler =25.5.0</span>
+<span class="cl" data-line="20"> <span class="tk-atrule">host</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="21"> <span class="tk-punctuation">-</span> mojo<span class="tk-punctuation">-</span>compiler =25.5.0</span>
+<span class="cl" data-line="22"> <span class="tk-atrule">run</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="23"> <span class="tk-punctuation">-</span> $<span class="tk-punctuation">{</span><span class="tk-punctuation">{</span> pin_compatible('mojo<span class="tk-punctuation">-</span>compiler') <span class="tk-punctuation">}</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="24"></span>
+<span class="cl" data-line="25"><span class="tk-atrule">tests</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="26"> <span class="tk-punctuation">-</span> <span class="tk-atrule">script</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="27"> <span class="tk-punctuation">-</span> <span class="tk-atrule">if</span><span class="tk-punctuation">:</span> unix</span>
+<span class="cl" data-line="28"> <span class="tk-atrule">then</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="29"> <span class="tk-punctuation">-</span> mojo run test.mojo</span>
+<span class="cl" data-line="30"> <span class="tk-atrule">files</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="31"> <span class="tk-atrule">recipe</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="32"> <span class="tk-punctuation">-</span> test.mojo</span>
+<span class="cl" data-line="33"></span>
+<span class="cl" data-line="34"><span class="tk-atrule">about</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="35"> <span class="tk-atrule">homepage</span><span class="tk-punctuation">:</span> https<span class="tk-punctuation">:</span>//github.com/yourname/my<span class="tk-punctuation">-</span>mojo<span class="tk-punctuation">-</span>lib</span>
+<span class="cl" data-line="36"> <span class="tk-atrule">repository</span><span class="tk-punctuation">:</span> https<span class="tk-punctuation">:</span>//github.com/yourname/my<span class="tk-punctuation">-</span>mojo<span class="tk-punctuation">-</span>lib</span>
+<span class="cl" data-line="37"> <span class="tk-atrule">license</span><span class="tk-punctuation">:</span> MIT</span>
+<span class="cl" data-line="38"> <span class="tk-atrule">license_file</span><span class="tk-punctuation">:</span> LICENSE</span>
+<span class="cl" data-line="39"> <span class="tk-atrule">summary</span><span class="tk-punctuation">:</span> A short one<span class="tk-punctuation">-</span>line description of what your library does.</span>
+<span class="cl" data-line="40"></span>
+<span class="cl" data-line="41"><span class="tk-atrule">extra</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="42"> <span class="tk-atrule">maintainers</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="43"> <span class="tk-punctuation">-</span> yourname</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="recipe-tips">Recipe tips<a aria-label="Link to Recipe tips" class="h__link" href="#recipe-tips"></a></h3>
+<p>Here are a few things that are particularly important for Mojo packages.</p>
+<h4 class="h h--4" data-level="4" id="use-a-full-commit-sha-as-the-source-revision">Use a full commit SHA as the source revision<a aria-label="Link to Use a full commit SHA as the source revision" class="h__link" href="#use-a-full-commit-sha-as-the-source-revision"></a></h4>
+<p>The <code>source.rev</code> field should be a full 40-character git commit SHA rather than
+a branch name or tag. This makes the build reproducible—anyone who builds from
+the same recipe gets the exact same source code.</p>
+<h4 class="h h--4" data-level="4" id="set-the-build-number">Set the build number<a aria-label="Link to Set the build number" class="h__link" href="#set-the-build-number"></a></h4>
+<p>Start <code>build.number</code> at <code>0</code>. If you need to rebuild the same version of your
+library (such as to pick up a new Mojo compiler release), increment
+<code>build.number</code> rather than changing the version. Reset it to <code>0</code> when you bump
+the version.</p>
+<h4 class="h h--4" data-level="4" id="specify-the-install-location">Specify the install location<a aria-label="Link to Specify the install location" class="h__link" href="#specify-the-install-location"></a></h4>
+<p>In the above recipe, look at the <code>mojo precompile</code> command in the <code>build.script</code>
+section. It's important that this command outputs the <code>.mojoc</code> file into
+<code>$PREFIX/lib/mojo/</code>, because this path is what makes the package
+auto-discoverable by the Mojo compiler.</p>
+<p>When <code>rattler-build</code> runs your build script, it sets a <code>$PREFIX</code> environment
+variable pointing to the root of an isolated installation directory. Any files
+your script places under <code>$PREFIX</code> become part of the conda package—a file
+written to <code>$PREFIX/lib/mojo/foo.mojoc</code> during the build is extracted into your
+actual environment when you run <code>pixi add foo</code>. Think of <code>$PREFIX</code> as a
+stand-in for wherever your environment lives on your machine.</p>
+<h4 class="h h--4" data-level="4" id="pin-the-mojo-compiler-version">Pin the Mojo compiler version<a aria-label="Link to Pin the Mojo compiler version" class="h__link" href="#pin-the-mojo-compiler-version"></a></h4>
+<p>Precompiled Mojo files compile against a specific compiler version and might not
+be compatible with other versions. The required <code>mojo-compiler</code> version must be
+specified in the <code>requirements.build</code> section of your recipe, which must conform
+to the
+<a class="ext" data-external="" href="https://docs.conda.io/projects/conda/en/latest/user-guide/concepts/pkg-specs.html#package-match-specifications" rel="noopener noreferrer">conda package match syntax</a>.</p>
+<p>The <code>pin_compatible('mojo-compiler')</code> function
+in <code>requirements.run</code> generates a version constraint based on whichever version
+is resolved at build time, preventing your package from silently running
+against an incompatible runtime.</p>
+<h2 class="h h--2" data-level="2" id="build-the-package">Build the package<a aria-label="Link to Build the package" class="h__link" href="#build-the-package"></a></h2>
+<p>With your recipe file in hand, you can build the package using <code>rattler-build</code>
+from your project root:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">rattler-build build <span class="tk-punctuation">\</span></span>
+<span class="cl" data-line="2">  --recipe conda.recipe/recipe.yaml <span class="tk-punctuation">\</span></span>
+<span class="cl" data-line="3">  -c conda-forge <span class="tk-punctuation">\</span></span>
+<span class="cl" data-line="4">  -c https://conda.modular.com/max <span class="tk-punctuation">\</span></span>
+<span class="cl" data-line="5">  -c https://repo.prefix.dev/modular-community</span>
+</code></pre></figure>
+<p>The <code>-c</code> flags specify which conda channels to search for dependencies (in
+priority order). You need:</p>
+<ul>
+<li class=""><code>conda-forge</code> for general tooling</li>
+<li class=""><code>https://conda.modular.com/max</code> for <code>mojo-compiler</code> and <code>max</code></li>
+<li class=""><code>https://repo.prefix.dev/modular-community</code> if you depend on other
+community Mojo packages</li>
+</ul>
+<p>When you run <code>rattler-build build</code>, it:</p>
+<ol>
+<li class="">Creates an isolated build environment</li>
+<li class="">Fetches your source code</li>
+<li class="">Runs your build script to compile the <code>.mojoc</code> file</li>
+<li class="">Bundles the result into a <code>.conda</code> archive</li>
+<li class="">Runs your test commands to verify the package works</li>
+</ol>
+<p>The output file appears in an <code>output/</code> directory, for example:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">output/</span>
+<span class="cl" data-line="2">└── linux-64/</span>
+<span class="cl" data-line="3">    └── my-mojo-lib-0.3.0-h1a2b3c4_0.conda</span>
+</code></pre></figure>
+<p>The hash in the filename (<code>h1a2b3c4</code>) is derived from the build configuration
+and is managed automatically by rattler-build.</p>
+<h2 class="h h--2" data-level="2" id="debug-a-failed-build">Debug a failed build<a aria-label="Link to Debug a failed build" class="h__link" href="#debug-a-failed-build"></a></h2>
+<p>If the build fails, open a debug shell to investigate interactively:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">rattler-build debug shell</span>
+</code></pre></figure>
+<p>This gives you a shell with all environment variables set (<code>$PREFIX</code>,
+<code>$SRC_DIR</code>, etc.) and the build environment activated, so you can run your
+build commands to find the problem.</p>
+<p>For more details, see the <a class="ext" data-external="" href="https://rattler-build.prefix.dev/latest/debugging_builds/" rel="noopener noreferrer">rattler-build debugging
+guide</a>.</p>
+<h2 class="h h--2" data-level="2" id="publish-to-a-package-index">Publish to a package index<a aria-label="Link to Publish to a package index" class="h__link" href="#publish-to-a-package-index"></a></h2>
+<p>Once you have a built <code>.conda</code> file, you can upload it to any compatible host,
+such as <a class="ext" data-external="" href="https://prefix.dev/" rel="noopener noreferrer">prefix.dev</a>, <a class="ext" data-external="" href="https://anaconda.org/" rel="noopener noreferrer">anaconda.org</a>,
+or an AWS S3 bucket. For the most visibility, add your package to the
+<a class="ext" data-external="" href="https://prefix.dev/channels/modular-community" rel="noopener noreferrer">modular-community channel</a>
+(hosted on prefix.dev), as described below.</p>
+<h3 class="h h--3" data-level="3" id="publish-to-the-modular-community-channel">Publish to the modular-community channel<a aria-label="Link to Publish to the modular-community channel" class="h__link" href="#publish-to-the-modular-community-channel"></a></h3>
+<p>To publish your package on the <a class="ext" data-external="" href="https://prefix.dev/channels/modular-community" rel="noopener noreferrer">modular-community
+channel</a>, open a pull
+request to the <a class="ext" data-external="" href="https://github.com/modular/modular-community" rel="noopener noreferrer">modular-community GitHub
+repo</a> to add your package's
+<code>recipe.yaml</code> file. The repo automatically builds and hosts all the packages
+based on the recipes in the repo.</p>
+<p>Your <code>recipe.yaml</code> is the same file described above. Just add it to a new
+directory that matches your package name:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">modular-community/</span>
+<span class="cl" data-line="2">└── recipes/</span>
+<span class="cl" data-line="3">    └── my-mojo-lib/</span>
+<span class="cl" data-line="4">        └── recipe.yaml</span>
+</code></pre></figure>
+<p>Once published to the channel, you can install your package with <code>pixi</code> by
+adding the <code>https://repo.prefix.dev/modular-community</code> channel to your
+project manifest:</p>
+<figure class="cb" data-lang="toml"><figcaption class="cb__bar"><span class="cb__file">pixi.toml</span><span class="cb__lang">TOML</span><span class="cb__spacer"></span><button aria-label="Copy TOML code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">[</span><span class="tk-class-name">workspace</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-property">channels</span> <span class="tk-punctuation">=</span> <span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="3"> <span class="tk-string">"https://conda.modular.com/max-nightly"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4"> <span class="tk-string">"https://repo.prefix.dev/modular-community"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="5"> <span class="tk-string">"conda-forge"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6"><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>If your package includes Python or any language other than Mojo, you must enable
+<a class="ext" data-external="" href="https://docs.github.com/en/code-security/code-scanning/enabling-code-scanning/configuring-default-setup-for-code-scanning" rel="noopener noreferrer">CodeQL scanning</a>
+on your source repository and add the badge to your README.</p></div></aside>
+<p>For more details, see the
+<a class="ext" data-external="" href="https://github.com/modular/modular-community?tab=readme-ov-file#modular-community-channel" rel="noopener noreferrer">modular-community README</a>.</p>
+<h3 class="h h--3" data-level="3" id="update-your-package">Update your package<a aria-label="Link to Update your package" class="h__link" href="#update-your-package"></a></h3>
+<p>When you release a new version of your library:</p>
+<ol>
+<li class="">Update <code>context.version</code> in your recipe.</li>
+<li class="">Update <code>source.rev</code> to the new commit SHA (or update the tarball URL and
+SHA256).</li>
+<li class="">Reset <code>build.number</code> to <code>0</code>.</li>
+<li class="">Open a new PR to modular-community (if you've already published it there).</li>
+</ol>
+<p>If you're republishing the same version (for example, to support a new Mojo
+compiler release), increment <code>build.number</code> instead of changing the version.</p>
+<h2 class="h h--2" data-level="2" id="useful-links">Useful links<a aria-label="Link to Useful links" class="h__link" href="#useful-links"></a></h2>
+<ul>
+<li class=""><a class="ext" data-external="" href="https://github.com/modular/modular-community" rel="noopener noreferrer">modular-community repository</a></li>
+<li class=""><a class="ext" data-external="" href="https://rattler-build.prefix.dev/latest/reference/recipe_file/" rel="noopener noreferrer">rattler-build recipe reference</a></li>
+</ul>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/tools/packaging/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/tools/packaging/</a>, saved Thu, 01 Oct 2026 15:47:22 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/34_modules-and-packages.html"><span class="pager__dir">← Previous</span><span class="pager__title">Modules and packages</span></a><a class="pager__link pager__link--next" href="../pages/36_jupyter-notebooks.html"><span class="pager__dir">Next →</span><span class="pager__title">Jupyter notebooks</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#how-it-works">How it works</a></li><li class="rail__depth-2"><a href="#install-rattler-build">Install rattler-build</a></li><li class="rail__depth-2"><a href="#write-your-recipe-file">Write your recipe file</a></li><li class="rail__depth-2"><a href="#build-the-package">Build the package</a></li><li class="rail__depth-2"><a href="#debug-a-failed-build">Debug a failed build</a></li><li class="rail__depth-2"><a href="#publish-to-a-package-index">Publish to a package index</a></li><li class="rail__depth-2"><a href="#useful-links">Useful links</a></li><li class="rail__depth-3"><a href="#the-minimal-recipe-file">The minimal recipe file</a></li><li class="rail__depth-3"><a href="#recipe-tips">Recipe tips</a></li><li class="rail__depth-3"><a href="#publish-to-the-modular-community-channel">Publish to the modular-community channel</a></li><li class="rail__depth-3"><a href="#update-your-package">Update your package</a></li><li class="rail__depth-4"><a href="#use-a-full-commit-sha-as-the-source-revision">Use a full commit SHA as the source revision</a></li><li class="rail__depth-4"><a href="#set-the-build-number">Set the build number</a></li><li class="rail__depth-4"><a href="#specify-the-install-location">Specify the install location</a></li><li class="rail__depth-4"><a href="#pin-the-mojo-compiler-version">Pin the Mojo compiler version</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#how-it-works">How it works</a></li><li class="rail__depth-2"><a href="#install-rattler-build">Install rattler-build</a></li><li class="rail__depth-2"><a href="#write-your-recipe-file">Write your recipe file</a></li><li class="rail__depth-2"><a href="#build-the-package">Build the package</a></li><li class="rail__depth-2"><a href="#debug-a-failed-build">Debug a failed build</a></li><li class="rail__depth-2"><a href="#publish-to-a-package-index">Publish to a package index</a></li><li class="rail__depth-2"><a href="#useful-links">Useful links</a></li><li class="rail__depth-3"><a href="#the-minimal-recipe-file">The minimal recipe file</a></li><li class="rail__depth-3"><a href="#recipe-tips">Recipe tips</a></li><li class="rail__depth-3"><a href="#publish-to-the-modular-community-channel">Publish to the modular-community channel</a></li><li class="rail__depth-3"><a href="#update-your-package">Update your package</a></li><li class="rail__depth-4"><a href="#use-a-full-commit-sha-as-the-source-revision">Use a full commit SHA as the source revision</a></li><li class="rail__depth-4"><a href="#set-the-build-number">Set the build number</a></li><li class="rail__depth-4"><a href="#specify-the-install-location">Specify the install location</a></li><li class="rail__depth-4"><a href="#pin-the-mojo-compiler-version">Pin the Mojo compiler version</a></li></ol>
+<p class="rail__meta">Chapter 35 of 38 · Part VI, Projects &amp; Tooling.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

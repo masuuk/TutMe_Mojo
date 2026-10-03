@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -66,7 +65,6 @@ code.inline{
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -166,16 +164,12 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
   </section>
 
   <section id="taste">
-    <h2>A first taste: the same function, two ways</h2>
-    <p>Let's ground this in something concrete before going further. Below is a small "standardize a vector" routine — subtract the mean, divide by the standard deviation, the kind of thing that appears in nearly every ML preprocessing step — written idiomatically in Python and Mojo.</p>
+    <h2>A first taste: the whole function, in one file</h2>
+    <p>Let's ground this in something concrete before going further. Below is a small "standardize a vector" routine — subtract the mean, divide by the standard deviation, the kind of thing that appears in nearly every ML preprocessing step.</p>
 
-    <div class="demo">
-      <div class="tabbar">
-        <div class="tab active" data-lang="mojo" data-group="standardize"><span class="sw"></span>standardize.mojo</div>
-        <div class="tab" data-lang="python" data-group="standardize"><span class="sw"></span>standardize.py</div>
-      </div>
-      <div class="panes" data-group="standardize">
-        <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
+    <div class="code-block">
+      <div class="head">standardize.mojo</div>
+      <pre><span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt
 
 <span class="tok-kw">def</span> <span class="tok-fn">standardize</span>(values: List[Float64]) -&gt; List[Float64]:
     <span class="tok-kw">var</span> n = Float64(len(values))
@@ -192,27 +186,14 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <span class="tok-kw">var</span> out = List[Float64]()
     <span class="tok-kw">for</span> v <span class="tok-kw">in</span> values:
         out.append((v - mean) / std)
-    <span class="tok-kw">return</span> out</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-kw">import</span> statistics
-
-<span class="tok-kw">def</span> <span class="tok-fn">standardize</span>(values: list[float]) -&gt; list[float]:
-    mean = statistics.fmean(values)
-    std = statistics.pstdev(values)
-    <span class="tok-kw">return</span> [(v - mean) / std <span class="tok-kw">for</span> v <span class="tok-kw">in</span> values]
-
-<span class="tok-com"># the vectorized, "actually fast" version most people reach for:</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">standardize_np</span>(values: np.ndarray) -&gt; np.ndarray:
-    <span class="tok-kw">return</span> (values - values.mean()) / values.std()</pre></div>
-      </div>
+    <span class="tok-kw">return</span> out</pre>
     </div>
-    <p class="cap">Two files, one algorithm. Click a tab to switch.</p>
+    <p class="cap">One file, no vectorized rewrite required.</p>
 
     <p>A few things worth noticing immediately:</p>
     <ul>
       <li><b>Mojo's hand-written loop compiles to tight machine code.</b> It needs no NumPy escape hatch to be fast — the hand-written loop <i>is</i> the fast path, which is the entire point.</li>
-      <li><b>The Python version needs a second, vectorized rewrite</b> (<code class="inline">standardize_np</code>) to be competitive. That rewrite is exactly the "two-language" tax this chapter opened with — except here it's hidden inside one file instead of two.</li>
+      <li><b>The Python version needs a second, vectorized rewrite</b> &mdash; the same function again, this time delegating to <code class="inline">(values - values.mean()) / values.std()</code> over a NumPy array &mdash; to be competitive. That rewrite is exactly the "two-language" tax this chapter opened with, except here it's hidden inside one file instead of two.</li>
       <li><b>Mojo's syntax reads like Python with the volume turned up</b>: one <code class="inline">def</code> keyword with optional strict typing, explicit types on parameters and return values, and <code class="inline">var</code> for local bindings.</li>
     </ul>
   </section>
@@ -228,14 +209,14 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
 
     <div class="code-block">
       <div class="head">a quick preview — borrowing in Mojo looks like this</div>
-      <pre><code>def print_length(values: List[Float64]):
-    # default convention: read-only borrow, no copy
-    print(&quot;length =&quot;, len(values))
+      <pre><span class="tok-kw">def</span> <span class="tok-fn">print_length</span>(values: List[Float64]):
+    <span class="tok-com"># default convention: read-only borrow, no copy</span>
+    print(<span class="tok-str">"length ="</span>, len(values))
 
-def main():
-    var data: List[Float64] = [1.0, 2.0, 3.0]
-    print_length(data)       # read-only, still usable below
-    print(len(data))         # fine — ownership never left `main`</code></pre>
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> data = List[Float64](<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>)
+    print_length(data)       <span class="tok-com"># read-only, still usable below</span>
+    print(len(data))         <span class="tok-com"># fine — ownership never left `main`</span></pre>
     </div>
     <p>We'll go much deeper on this in Chapter 4. For now, the key idea is that you can hand a value to another function for reading without giving up ownership of it — and the compiler checks all of that for you.</p>
 

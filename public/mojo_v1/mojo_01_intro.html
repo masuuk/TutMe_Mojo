@@ -15,7 +15,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -321,7 +321,7 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <tr>
           <td>Functions</td>
           <td><code>def main():</code></td>
-          <td><code>def</code> is the way. The old <code>fn</code> keyword is deprecated as of v26.2.</td>
+          <td><code>def</code> is the way.</td>
         </tr>
         <tr>
           <td>Variables</td>
@@ -348,7 +348,7 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
-      <p>Older articles and tutorials show <code>fn</code> functions, <code>let</code> bindings, and <code>inout self</code> constructors. That syntax predates 1.0: <code>fn</code> is deprecated, <code>let</code> has been removed, and constructors now read <code>def __init__(out self)</code>. This book teaches the current language exclusively.</p>
+      <p>When a constructor takes ownership of <code>self</code>, it receives it as <code>out self</code> — so it reads <code>def __init__(out self)</code>, not <code>inout self</code>. This book teaches the current language exclusively.</p>
     </div>
   </section>
 

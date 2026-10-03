@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Python interoperability · Mojo v1 The Language Manual</title>
+<meta name="description" content="The shape of the boundary between Mojo and Python.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part IV · Memory &amp; Interop</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part IV</span><span class="sep">/</span><span>Memory &amp; Interop</span><span class="sep">/</span><span class="num">24</span></nav><h1>Python interoperability</h1>
+<p class="dek">The shape of the boundary between Mojo and Python.</p><p class="byline">Chapter 24 · 286 words · <a class="ext" href="https://mojolang.org/docs/manual/python/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Not only does Mojo use a Pythonic syntax, our plan is to provide full
+compatibility with the Python ecosystem. There are two types of compatibility
+(or interoperability) that we support:</p>
+<ul>
+<li class="">
+<p><a href="../pages/26_calling-python-from-mojo.html">Calling Python from Mojo</a>:</p>
+<p>You can import existing Python modules and use them in a Mojo program. This
+is 100% compatible because we use the CPython runtime without modification
+for full compatibility with existing Python libraries. You can construct
+Python objects and call Python functions directly from Mojo, using the
+CPython interpreter as a dynamic library (shown as <code>libpython.dylib</code> in
+figure 1).</p>
+</li>
+<li class="">
+<p><a href="../pages/27_calling-mojo-from-python.html">Calling Mojo from Python</a>:</p>
+<p>You can extend your Python code with high-performance Mojo code (or
+incrementally migrate Python code to Mojo). Because Mojo is a compiled
+language, we can't directly "evaluate" Mojo code from Python. Instead, you
+must declare which Mojo functions and types are available to be called from
+Python (declare the "bindings"), and then you can import them in your Python
+code (shown as <code>mojo_module</code> in figure 1) just like any other module—there's
+no extra compilation step.</p>
+</li>
+</ul>
+<figure class="fig"><div class="fig__frame"><div class="fig__media"><img alt="A simplified look at how a Mojo program calls into Python and a Python program calls into a Mojo module." class="fig__img fig__img--light" decoding="async" loading="lazy" src="../assets/images/python-interop-e7ab6838e7bdecafb63a7d9a27753d3b.png"/><img alt="" aria-hidden="true" class="fig__img fig__img--dark" decoding="async" loading="lazy" src="../assets/images/python-interop-dark-032dd3342c4a54274dd60ed452302478.png"/></div></div><figcaption class="fig__caption"><b>Figure 1.</b> A simplified look at how a Mojo program calls
+into Python and a Python program calls into a Mojo module.</figcaption></figure>
+<p>By embracing both directions of language interoperability, you can choose
+how to use Mojo with Python in a way that works best for your use case.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Python requirement</p><div class="callout__body"><p>Mojo itself doesn't require Python. To use the Mojo ↔ Python
+interoperability features described in this section, you need
+Python 3.10–3.14.</p></div></aside>
+<p><strong>To learn more about bridging Python ↔ Mojo, continue reading</strong>:</p>
+<div><a href="../pages/26_calling-python-from-mojo.html"><div><p>Calling Python from Mojo</p><div>How to import Python modules and use them in Mojo code</div></div></a><a href="../pages/27_calling-mojo-from-python.html"><div><p>Calling Mojo from Python</p><div>How to import Mojo modules and use them in Python code</div></div></a></div>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/python/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/python/</a>, saved Thu, 01 Oct 2026 15:41:58 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/23_using-pointers.html"><span class="pager__dir">← Previous</span><span class="pager__title">Using pointers</span></a><a class="pager__link pager__link--next" href="../pages/25_python-types.html"><span class="pager__dir">Next →</span><span class="pager__title">Python types</span></a></nav>
+</article>
+
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

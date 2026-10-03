@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finance Mojo - learn Mojo for quantitative finance, interactively</title>
+<meta name="description" content="Nine hands-on modules on quantitative finance in Mojo: floating-point precision, time value of money, NPV and IRR, amortisation, bonds, portfolio theory, options pricing, Monte Carlo, and catastrophic cancellation. Every module has a live widget and a quiz.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div id="progress"></div>
+
+<header class="topbar">
+  <div class="wrap topin">
+    <a class="brand" href="../index.html">
+      <span class="logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 17.5 9 11l4 4 8-8.5"></path>
+          <path d="M15 6.5h6v6"></path>
+        </svg>
+      </span>
+      <span>Finance Mojo</span>
+      <span class="sub">· 9 modules</span>
+    </a>
+    <div class="topright">
+      <span class="readout" id="readout">0/9 modules</span>
+      <a class="pill hide" href="../index.html">Finance shelf</a>
+      <button class="pill tocbtn" aria-expanded="false" aria-controls="toc">Modules</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" id="toc" aria-label="Modules">
+    <h4>Contents</h4>
+    <div id="toclist"></div>
+    <hr>
+    <h4>Nearby</h4>
+    <a href="../index.html">Finance shelf</a>
+  </nav>
+
+  <main class="content">
+    <section class="hero">
+      <span class="eyebrow">Interactive tutorial</span>
+      <h1>Quantitative finance in <span class="grad">Mojo</span></h1>
+      <p class="lead">Finance computation is a numerical-computation problem wearing a suit. Every valuation here - a discounted stream, a bond price, an option premium - is a reduction, a solve, or a search, and every one of them has a failure mode that only shows up at the edges. This tutorial works through the actual arithmetic, with a live widget on each idea and a quiz at the end of every module.</p>
+      <div class="actions">
+        <button class="btn primary" data-start>Start module 01 →</button>
+        <a class="btn" href="#m03">Jump to NPV and IRR</a>
+        <a class="btn" href="#m09">Catastrophic cancellation</a>
+      </div>
+    </section>
+
+    <section class="module" id="m01" data-title="Precision: what a float can hold">
+      <h2>01 - Precision: what a float can hold</h2>
+      <p class="dek">Why a spreadsheet and a double disagree, and how to accumulate a sum so the disagreement stays small.</p>
+
+      <p>A <code>Float64</code> holds 53 significant binary digits, and <code>Float32</code> holds 24. Neither is exact - both store values of the form</p>
+
+      <div class="eq">
+$$x = m \times 2^e, \qquad m \in \mathbb{Z},\ |m| < 2^{53}$$
+      </div>
+
+      <p>The consequence for finance is blunt: <code>0.1</code> has no exact binary representation, so any code that sums money with repeated floating-point addition accumulates rounding error. The error is tiny per operation and completely negligible in a total - until the total is large enough that the terms being added have stopped mattering to the leading bits.</p>
+
+      <div class="callout warn">
+        <strong>The failure is silent</strong>
+        <p>Nothing raises, nothing warns, and the answer is wrong. The terms that vanish are usually the smallest ones, which is exactly why a plausible-looking result survives a spot check.</p>
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">float_layout.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">abs</span>
+
+<span class="tok-com"># Float64 keeps 53 mantissa bits, Float32 keeps 24.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">F64_BITS</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">53</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">F32_BITS</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">24</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-com"># Machine epsilon is the gap between 1.0 and the next representable value.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">e64</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span> <span class="tok-op">+</span> <span class="tok-num">2.0</span> <span class="tok-op">**</span> (<span class="tok-num">1</span> <span class="tok-op">-</span> <span class="tok-type">F64_BITS</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">e32</span>: <span class="tok-type">Float32</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span> <span class="tok-op">+</span> <span class="tok-num">2.0</span> <span class="tok-op">**</span> (<span class="tok-num">1</span> <span class="tok-op">-</span> <span class="tok-type">F32_BITS</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"eps f64 ="</span>, e64 <span class="tok-op">-</span> <span class="tok-num">1.0</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"eps f32 ="</span>, e32 <span class="tok-op">-</span> <span class="tok-num">1.0</span>)
+
+    <span class="tok-com"># 0.1 is inexact, so 0.1 * 3 is not 0.3.</span>
+    <span class="tok-fn">print</span>(<span class="tok-str">"0.1*3   ="</span>, <span class="tok-num">0.1</span> <span class="tok-op">*</span> <span class="tok-num">3</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"== 0.3?"</span>, <span class="tok-num">0.1</span> <span class="tok-op">*</span> <span class="tok-num">3</span> <span class="tok-op">==</span> <span class="tok-num">0.3</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"rel err ="</span>, <span class="tok-fn">abs</span>(<span class="tok-num">0.1</span> <span class="tok-op">*</span> <span class="tok-num">3</span> <span class="tok-op">-</span> <span class="tok-num">0.3</span>) <span class="tok-op">/</span> <span class="tok-num">0.3</span>)</pre>
+      </figure>
+<pre class="out">eps f64 = 2.220446e-16
+eps f32 = 1.192093e-07
+0.1*3   = 0.30000000000000004
+== 0.3? False
+rel err = 1.480297e-16
+</pre>
+
+      <p>That last line is the number to keep in mind. The <em>relative</em> error is one part in $10^{16}$, far below anything a financial result is quoted to. The danger is not the size of any single error - it is that errors this small become the <em>entire answer</em> once an algorithm subtracts two nearly equal quantities. Module 09 is about exactly that.</p>
+
+      <p>Never compare floats for equality. Compare the difference against a tolerance scaled by the magnitude of the operands instead, and choose that tolerance deliberately rather than accepting whatever the default gives you.</p>
+
+      <div class="eq">
+$$\varepsilon_{\text{rel}}(a, b) = \frac{|a - b|}{\max(|a|, |b|)} < \tau$$
+      </div>
+
+      <section class="lab" data-lab="precision" aria-label="Float accumulation lab">
+        <div class="labhead"><span class="dot"></span>Lab - naive and compensated summation<span class="tagline">m01</span></div>
+      </section>
+
+      <p>The widget sums <em>n</em> copies of one value twice. The red bar is the naive <code>Float32</code> sum; the green bar is a Kahan-compensated sum over the same terms. The exact answer is printed beneath them, and it is <em>exactly</em> representable - the terms are snapped to <code>Float32</code> first, so the reference itself carries no error. That makes the comparison honest: the only error in play is the accumulation.</p>
+
+      <p>Kahan summation carries the lost low-order bits in a separate variable and feeds them back on the next step. It costs two extra floating-point operations per term and recovers roughly the full precision of the input type, which is why it is the standard answer to "why does my total drift".</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">kahan_sum.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">struct</span> <span class="tok-type">Kahan</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">sum</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">comp</span>: <span class="tok-type">Float64</span>
+
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">out</span> <span class="tok-kw">self</span>):
+        <span class="tok-kw">self</span>.<span class="tok-fn">sum</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">self</span>.comp <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+
+    <span class="tok-kw">def</span> <span class="tok-fn">add</span>(<span class="tok-kw">mut</span> <span class="tok-kw">self</span>, x: <span class="tok-type">Float64</span>):
+        <span class="tok-com"># The bits that fell off the end of the previous sum.</span>
+        <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> x <span class="tok-op">-</span> <span class="tok-kw">self</span>.comp
+        <span class="tok-kw">var</span> <span class="tok-var">t</span> <span class="tok-op">=</span> <span class="tok-kw">self</span>.<span class="tok-fn">sum</span> <span class="tok-op">+</span> y
+        <span class="tok-kw">self</span>.comp <span class="tok-op">=</span> (t <span class="tok-op">-</span> <span class="tok-kw">self</span>.<span class="tok-fn">sum</span>) <span class="tok-op">-</span> y
+        <span class="tok-kw">self</span>.<span class="tok-fn">sum</span> <span class="tok-op">=</span> t
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">k</span> <span class="tok-op">=</span> <span class="tok-type">Kahan</span>()
+    <span class="tok-kw">var</span> <span class="tok-var">naive</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">comptime</span> <span class="tok-type">N</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">1000000</span>
+    <span class="tok-kw">for</span> _i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">N</span>):
+        naive <span class="tok-op">+=</span> <span class="tok-num">0.1</span>
+        k.add(<span class="tok-num">0.1</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"naive  ="</span>, naive)
+    <span class="tok-fn">print</span>(<span class="tok-str">"kahan  ="</span>, k.<span class="tok-fn">sum</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"truth  ="</span>, <span class="tok-num">0.1</span> <span class="tok-op">*</span> <span class="tok-type">N</span>)</pre>
+      </figure>
+<pre class="out">naive  = 100000.00000133288
+kahan  = 100000.0
+truth  = 100000.0
+</pre>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">You sum 10,000,000 copies of <code>0.1</code> in <code>Float32</code>. Why is the naive result wrong?</p>
+        <label class="opt"><input type="radio" name="m01q1" value="a"><span>Because <code>Float32</code> rounds each <code>0.1</code> to zero</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="b"><span>Because the loop counter overflows at 10 million</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="c"><span>Because once the running total outgrows a term, the term is lost off the low end</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="d"><span>Because <code>Float32</code> has no <code>+=</code> operator</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> <code>Float32</code> keeps 24 significant bits. Once the sum reaches a magnitude where the spacing between representable values exceeds <code>0.1</code>, adding <code>0.1</code> rounds back to the same value - the term is silently discarded. This is absorption, not truncation, and it biases the total <em>downward</em>.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <span class="navbtn off"><span class="d">Start</span><span class="t">You are here</span></span>
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Next</span><span class="t">02 - Time value of money</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m02" data-title="Time value of money">
+      <h2>02 - Time value of money</h2>
+      <p class="dek">Discounting, annuities, and solving for the rate that makes a loan balance.</p>
+
+      <p>Every valuation in this tutorial rests on one idea: a sum of money received at different times is not a sum. Compounding forward or discounting back needs a rate and a compounding convention, and the convention - annual, monthly, continuous - is a real decision that changes the answer, not a formatting preference.</p>
+
+      <div class="eq">
+$$FV = PV\,(1 + r)^{n}, \qquad PV = \frac{FV}{(1+r)^{n}} = FV\,(1+r)^{-n}$$
+      </div>
+
+      <p>A level annuity - equal payments at the end of each period - has a closed form that avoids the loop entirely:</p>
+
+      <div class="eq">
+$$PV = PMT \cdot \frac{1 - (1+r)^{-n}}{r} = PMT \cdot a_{\overline{n}|}$$
+      </div>
+
+      <p>The limit as $r \to 0$ is the degenerate case $a_{\overline{n}|} \to n$, and any implementation that divides by <code>r</code> must special-case it or it will return <code>NaN</code> for a zero-rate loan. That is not a corner case worth ignoring: a risk-free or promotional rate is a normal thing to price.</p>
+
+      <div class="callout info">
+        <strong>Conventions matter more than you think</strong>
+        <p>A nominal annual rate compounded monthly is not the same as an effective annual rate, and mixing the two is one of the most common sources of a wrong-of-<em>about one percent</em> answer.</p>
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">discount.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># A nominal rate r compounded m times a year is not the effective rate.</span>
+<span class="tok-kw">def</span> <span class="tok-fn">effective</span>(r: <span class="tok-type">Float64</span>, m: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> r <span class="tok-op">/</span> <span class="tok-type">Float64</span>(m)) <span class="tok-op">**</span> <span class="tok-type">Float64</span>(m) <span class="tok-op">-</span> <span class="tok-num">1.0</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">discount</span>(fv: <span class="tok-type">Float64</span>, r: <span class="tok-type">Float64</span>, n: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> fv <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> r) <span class="tok-op">**</span> <span class="tok-type">Float64</span>(n)
+
+<span class="tok-kw">def</span> <span class="tok-fn">annuity_factor</span>(r: <span class="tok-type">Float64</span>, n: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">if</span> <span class="tok-fn">abs</span>(r) <span class="tok-op">&lt;</span> <span class="tok-num">1e-12</span>:
+        <span class="tok-kw">return</span> <span class="tok-type">Float64</span>(n)  <span class="tok-com"># the r -&gt; 0 limit</span>
+    <span class="tok-kw">return</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> r) <span class="tok-op">**</span> (<span class="tok-op">-</span><span class="tok-type">Float64</span>(n))) <span class="tok-op">/</span> r
+
+<span class="tok-kw">def</span> <span class="tok-fn">payment_for</span>(pv: <span class="tok-type">Float64</span>, r: <span class="tok-type">Float64</span>, n: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> pv <span class="tok-op">/</span> annuity_factor(r, n)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-fn">print</span>(<span class="tok-str">"PV of 1000 in 10y at 5% ="</span>, discount(<span class="tok-num">1000.0</span>, <span class="tok-num">0.05</span>, <span class="tok-num">10</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"a(n=10,r=5%)      ="</span>, annuity_factor(<span class="tok-num">0.05</span>, <span class="tok-num">10</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"pmt for 200k,6%,20y ="</span>, payment_for(<span class="tok-num">200000.0</span>, <span class="tok-num">0.06</span>, <span class="tok-num">20</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"a(n=10,r=0%)      ="</span>, annuity_factor(<span class="tok-num">0.0</span>, <span class="tok-num">10</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"eff(12%,m=12)   ="</span>, effective(<span class="tok-num">0.12</span>, <span class="tok-num">12</span>))</pre>
+      </figure>
+<pre class="out">PV of 1000 in 10y at 5% = 613.913253540759
+a(n=10,r=5%)      = 7.721734929184818
+pmt for 200k,6%,20y = 17436.911395344776
+a(n=10,r=0%)      = 10.0
+eff(12%,m=12)   = 0.12682503013196972
+</pre>
+
+      <p>Noticing the inverse problem: given a principal, a rate, and a number of payments, the payment is a division. Given a principal, a payment, and a term, the <em>rate</em> has no closed form at all - you search for it. Module 03 does exactly that.</p>
+
+      <section class="lab" data-lab="tvm" aria-label="Loan rate lab">
+        <div class="labhead"><span class="dot"></span>Lab - solving for the rate that balances a loan<span class="tagline">m02</span></div>
+      </section>
+
+      <p>The widget takes a principal, a term, and a payment, then bisects for the implied rate. The blue curve is the present value of the stream against the discount rate; the orange marker is where it equals the principal, which is the rate that makes the loan balance to zero.</p>
+
+      <p>Bisection is the right tool when the function is monotonic in the bracket, which the annuity factor is. It cannot fail to converge and it needs no derivative, which matters because the closed-form IRR of a general cash flow is a polynomial root with no useful closed form and frequently several roots.</p>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">A rate of exactly 0 is passed to <code>annuity_factor(0, 10)</code>. What does the closed form return, and why must it be special-cased?</p>
+        <label class="opt"><input type="radio" name="m02q1" value="a"><span>It returns 0, because a zero rate discounts nothing</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="b"><span>It returns <code>NaN</code> or infinity, because the numerator also tends to 0 - the limit is $n = 10$</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="c"><span>It returns 10, because the special case is already in the formula</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="d"><span>It returns 1, because discounting at zero is the identity</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> $(1 - e^{-rn})/r$ is $0/0$ at $r = 0$, so floating-point division yields <code>NaN</code> or infinity. Taylor-expanding gives the limit $a_{\overline{n}|} \to n$. Handle it explicitly - a zero-rate or promotional loan is a perfectly normal input.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m01" data-goto="0"><span class="d">Previous</span><span class="t">01 - Precision</span></a>
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Next</span><span class="t">03 - NPV, IRR and the reinvestment trap</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m03" data-title="NPV, IRR and the reinvestment trap">
+      <h2>03 - NPV, IRR and the reinvestment trap</h2>
+      <p class="dek">Two rules that agree on conventional cash flows and disagree on everything else.</p>
+
+      <p>Net present value discounts every cash flow at the opportunity cost of capital and adds them up:</p>
+
+      <div class="eq">
+$$\mathrm{NPV}(r) = \sum_{t=0}^{T} \frac{C_t}{(1+r)^{t}}$$
+      </div>
+
+      <p>The internal rate of return solves <em>NPV = 0</em> instead, and reports the <em>rate</em> rather than the value. When the cash flows change sign exactly once - the usual "invest now, receive later" shape - the two rules agree, and an investment is worth doing exactly when NPV is positive.</p>
+
+      <p>When the signs alternate more than once, Descartes' rule of signs bounds the number of positive roots by the number of sign changes, so IRR stops being a search problem and becomes a <em>multi-valued</em> one. Two or three legitimate-looking rates can price the same project, and reporting only the first is how real spreadsheets mislead people.</p>
+
+      <div class="callout info">
+        <strong>Sign changes are a bound, not a promise</strong>
+        <p>Three sign changes means <em>at most</em> three real roots - often there is only one. <code>[-1000, 600, -2500, 900]</code> has three sign changes and exactly one real IRR. Whether the extra roots actually exist depends on the magnitudes, and the only way to know is to solve and look at what comes back.</p>
+      </div>
+
+      <div class="callout warn">
+        <strong>Multiple IRRs are not a numerical artifact</strong>
+        <p>They are a property of the cash flow. A project with a mid-life refund, or a fuel price that spikes and then collapses, genuinely has two discount rates at which it breaks even. NPV does not have this problem, which is why it is the primary rule and IRR is the diagnostic one.</p>
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">npv_irr.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">npv</span>(<span class="tok-kw">mut</span> cash: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>], r: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">s</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">t</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">for</span> c <span class="tok-kw">in</span> cash:
+        s <span class="tok-op">+=</span> c <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> r) <span class="tok-op">**</span> <span class="tok-type">Float64</span>(t)
+        t <span class="tok-op">+=</span> <span class="tok-num">1</span>
+    <span class="tok-kw">return</span> s
+
+<span class="tok-com"># Every sign change is a candidate for a positive root, so scan for all of them.</span>
+<span class="tok-kw">def</span> <span class="tok-fn">all_irr</span>(<span class="tok-kw">mut</span> cash: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Int</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">found</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">prev</span> <span class="tok-op">=</span> npv(cash, <span class="tok-op">-</span><span class="tok-num">0.90</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">r</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">0.90</span>
+    <span class="tok-kw">while</span> r <span class="tok-op">&lt;</span> <span class="tok-num">5.0</span>:
+        <span class="tok-kw">var</span> <span class="tok-var">cur</span> <span class="tok-op">=</span> npv(cash, r)
+        <span class="tok-kw">if</span> (prev <span class="tok-op">&lt;</span> <span class="tok-num">0.0</span>) <span class="tok-op">!=</span> (cur <span class="tok-op">&lt;</span> <span class="tok-num">0.0</span>):
+            found <span class="tok-op">+=</span> <span class="tok-num">1</span>  <span class="tok-com"># a sign change: a root lies between</span>
+        prev <span class="tok-op">=</span> cur
+        r <span class="tok-op">+=</span> <span class="tok-num">0.0005</span>
+    <span class="tok-kw">return</span> found
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">conventional</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]([<span class="tok-op">-</span><span class="tok-num">1000.0</span>, <span class="tok-num">600.0</span>, <span class="tok-num">2500.0</span>, <span class="tok-num">900.0</span>])
+    <span class="tok-kw">var</span> <span class="tok-var">lumpy</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]([<span class="tok-op">-</span><span class="tok-num">1000.0</span>, <span class="tok-num">2600.0</span>, <span class="tok-op">-</span><span class="tok-num">2100.0</span>, <span class="tok-num">500.0</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"npv@10% conventional ="</span>, npv(conventional, <span class="tok-num">0.10</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"npv@10% lumpy       ="</span>, npv(lumpy, <span class="tok-num">0.10</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"IRR roots, conventional ="</span>, all_irr(conventional))
+    <span class="tok-fn">print</span>(<span class="tok-str">"IRR roots, lumpy       ="</span>, all_irr(lumpy))</pre>
+      </figure>
+<pre class="out">npv@10% conventional = 2287.753569
+npv@10% lumpy       = 3.756603
+IRR roots, conventional = 1
+IRR roots, lumpy       = 3
+</pre>
+
+      <section class="lab" data-lab="npv" aria-label="NPV and IRR lab">
+        <div class="labhead"><span class="dot"></span>Lab - the NPV profile and where it crosses zero<span class="tagline">m03</span></div>
+      </section>
+
+      <p>The profile is NPV plotted against the discount rate, and an IRR is simply where it crosses zero. On the conventional flow there is one crossing and the answer is boring. Drag the second cash flow past roughly \u22122100 and the profile grows a second crossing; push it further and a third appears - the same project, the same money, several defensible "rates of return".</p>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">A project's cash flows change sign three times. How many positive IRRs can it have?</p>
+        <label class="opt"><input type="radio" name="m03q1" value="a"><span>Exactly three</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="b"><span>Exactly one, since the first crossing is the real return</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="c"><span>At most three - Descartes' rule of signs, so you must solve to know</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="d"><span>None, because a sign-changing flow is not a real project</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Descartes' rule bounds the positive roots of a polynomial by its sign changes, so three sign changes means at most three. The bound is often not tight - <code>[-1000, 600, -2500, 900]</code> has three sign changes but only one real IRR. Multiple IRRs are a property of the cash flow, not a numerical artifact, which is why the honest answer to "what is the return" is a NPV at a stated discount rate.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Previous</span><span class="t">02 - Time value of money</span></a>
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Next</span><span class="t">04 - Amortisation</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m04" data-title="Amortisation schedules">
+      <h2>04 - Amortisation schedules</h2>
+      <p class="dek">Where each payment goes, period by period, and the identity that proves it.</p>
+
+      <p>A loan is a stream of equal payments against a balance that refuses to stay still. Split each payment into its two pieces and the schedule becomes readable:</p>
+
+      <div class="eq">
+$$\text{PMT} = \frac{PV \cdot r}{1 - (1+r)^{-n}}, \qquad \text{Interest}_t = r \cdot B_{t-1}, \qquad \text{Principal}_t = \text{PMT} - \text{Interest}_t$$
+      </div>
+
+      <p>Two useful invariants fall straight out. The principal repaid in period $t$ is $\text{PMT}(1+r)^{-(n-t)}$ - a <em>geometric</em> sequence with ratio $(1+r)$, not an arithmetic one. That is because</p>
+
+      <div class="eq">
+$$\text{Principal}_{t+1} - \text{Principal}_t = (1+r)\cdot\text{Principal}_t - \text{Principal}_t = r \cdot \text{Principal}_t$$
+      </div>
+
+      <p>so consecutive principals differ by $r$ times the earlier one, growing each period rather than holding still. Total interest is the other identity worth keeping: $\text{PMT} \cdot n - PV$. Both are exact, and both are worth asserting in a test - a schedule that violates them has a bug, and a schedule that drifts on them is accumulating rounding error.</p>
+
+      <div class="callout info">
+        <strong>Verify the identity, not the last row</strong>
+        <p>The classic off-by-one in a hand-rolled amortiser is charging interest on the post-payment balance, which makes every payment look like it amortises too fast. Checking that $\text{Principal}_t \cdot (1+r)^{n-t}$ is the same constant $\text{PMT}$ for every row catches it immediately. The cheaper version - that $\text{Principal}_{t+1} - \text{Principal}_t$ equals $r\cdot\text{Principal}_t$ - catches it too, and needs only the rows you already have.</p>
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">amortise.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">max</span>, <span class="tok-fn">pow</span>
+
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">abs</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Row</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">interest</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">principal</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">balance</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">amortise</span>(pv: <span class="tok-type">Float64</span>, r: <span class="tok-type">Float64</span>, n: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">List</span>[<span class="tok-type">Row</span>]:
+    <span class="tok-com"># DISCRETE periods: (1+r)^-n, not exp(-r*n)</span>
+    <span class="tok-kw">var</span> <span class="tok-var">pmt</span> <span class="tok-op">=</span> pv <span class="tok-op">*</span> r <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-fn">pow</span>(<span class="tok-num">1.0</span> <span class="tok-op">+</span> r, <span class="tok-op">-</span><span class="tok-type">Float64</span>(n)))
+    <span class="tok-kw">var</span> <span class="tok-var">rows</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Row</span>]()
+    <span class="tok-kw">var</span> <span class="tok-var">bal</span> <span class="tok-op">=</span> pv
+    <span class="tok-kw">for</span> _t <span class="tok-kw">in</span> <span class="tok-fn">range</span>(n):
+        <span class="tok-kw">var</span> <span class="tok-var">interest</span> <span class="tok-op">=</span> bal <span class="tok-op">*</span> r      <span class="tok-com"># on the PRE-payment balance</span>
+        <span class="tok-kw">var</span> <span class="tok-var">principal</span> <span class="tok-op">=</span> pmt <span class="tok-op">-</span> interest
+        bal <span class="tok-op">-=</span> principal
+        rows.append(<span class="tok-type">Row</span>(interest, principal, <span class="tok-fn">max</span>(<span class="tok-num">0.0</span>, bal)))
+    <span class="tok-kw">return</span> rows
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">rows</span> <span class="tok-op">=</span> amortise(<span class="tok-num">200000.0</span>, <span class="tok-num">0.06</span>, <span class="tok-num">20</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">ti</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">ok</span>: <span class="tok-type">Bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(rows.size):
+        ti <span class="tok-op">+=</span> rows[i].interest
+        <span class="tok-com"># principal must be geometric: p_t = p_0 (1+r)^t</span>
+        <span class="tok-kw">var</span> <span class="tok-var">want</span> <span class="tok-op">=</span> rows[<span class="tok-num">0</span>].principal <span class="tok-op">*</span> <span class="tok-fn">pow</span>(<span class="tok-num">1.06</span>, <span class="tok-type">Float64</span>(i))
+        <span class="tok-kw">if</span> <span class="tok-fn">abs</span>(rows[i].principal <span class="tok-op">-</span> want) <span class="tok-op">&gt;</span> <span class="tok-num">1e-6</span>:
+            ok <span class="tok-op">=</span> <span class="tok-kw">False</span>
+    <span class="tok-fn">print</span>(<span class="tok-str">"payment       ="</span>, rows[<span class="tok-num">0</span>].interest <span class="tok-op">+</span> rows[<span class="tok-num">0</span>].principal)
+    <span class="tok-fn">print</span>(<span class="tok-str">"total interest ="</span>, ti)
+    <span class="tok-fn">print</span>(<span class="tok-str">"final balance ="</span>, rows[<span class="tok-op">-</span><span class="tok-num">1</span>].balance)
+    <span class="tok-fn">print</span>(<span class="tok-str">"principal ratio ="</span>, rows[<span class="tok-num">1</span>].principal <span class="tok-op">/</span> rows[<span class="tok-num">0</span>].principal, <span class="tok-str">"geometric:"</span>, ok)</pre>
+      </figure>
+<pre class="out">payment       = 17436.91139537028
+total interest = 148738.22790740593
+final balance = 3.5288394428789616e-10
+principal ratio = 1.06 geometric: true
+# The residual balance is 3.5e-10 on a 200000 loan: 18 significant digits
+# of cancellation survived, which is the point of using the identity
+# rather than trusting the last row to be exactly zero.
+</pre>
+
+      <section class="lab" data-lab="amort" aria-label="Amortisation lab">
+        <div class="labhead"><span class="dot"></span>Lab - interest and principal across the life of a loan<span class="tagline">m04</span></div>
+      </section>
+
+      <p>Red is interest, green is principal, and the two cross in the middle. That crossover is often called the "halfway point" and is the most useful number in the schedule: before it, most of each payment is cost; after it, most of each payment builds equity. On the default settings it lands at period 10 of 20, the first period where the principal portion exceeds the interest portion.</p>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">In a level-payment schedule, the principal portion of each payment is:</p>
+        <label class="opt"><input type="radio" name="m04q1" value="a"><span>Constant, because the total payment is constant</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="b"><span>A geometric sequence with ratio $(1+r)$, growing faster every period</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="c"><span>Random, depending on how the balance is rounded</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="d"><span>An arithmetic progression with constant difference $\text{PMT} \cdot r$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> principal is whatever the payment does not spend on interest, so $\text{Principal}_t = \text{PMT}(1+r)^{-(n-t)}$ - geometric with ratio $(1+r)$, not an arithmetic step of $\text{PMT}\cdot r$. Interest falls geometrically for the same reason. The listing asserts exactly this identity, which is what catches an off-by-one in the interest charge.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Previous</span><span class="t">03 - NPV and IRR</span></a>
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Next</span><span class="t">05 - Bonds, duration and convexity</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m05" data-title="Bonds, duration and convexity">
+      <h2>05 - Bonds, duration and convexity</h2>
+      <p class="dek">Why a yield change moves a bond's price by more or less than you expect.</p>
+
+      <p>A coupon bond is a bundle of dated cash flows, and its price is the present value of that bundle at the yield. Write the final flow as including the principal, and everything is one sum:</p>
+
+      <div class="eq">
+$$P = \sum_{t=1}^{T} \frac{C_t}{(1+y)^{t}} = cF \cdot a_{\overline{T}|}(y) + \frac{F}{(1+y)^{T}}$$
+      </div>
+
+      <p>Differentiation gives duration, the first-order sensitivity:</p>
+
+      <div class="eq">
+$$D_{\text{Mac}} = \frac{1}{P}\sum_{t=1}^{T} t \cdot \frac{C_t}{(1+y)^{t}}, \qquad D_{\text{mod}} = \frac{D_{\text{Mac}}}{1+y}$$
+      </div>
+
+      <p>Macaulay duration weights <em>cash flows</em>, so it only predicts price changes under the compounding convention it was computed with. Modified duration divides by $(1+y)$ and is the number that multiplies a yield change to give a <em>percentage</em> price change - which is why the estimate below uses $D_{\text{mod}}$.</p>
+
+      <div class="eq">
+$$\frac{\Delta P}{P} \approx -D_{\text{mod}}\,\Delta y + \tfrac{1}{2}\,\mathrm{Conv}\cdot(\Delta y)^2$$
+      </div>
+
+      <p>Convexity is always positive for a coupon bond. So the straight-line approximation is always wrong in the same direction, and always <em>understates</em> the true price: a par bond that gains on a yield fall gains more than duration says, and loses less on a yield rise.</p>
+
+      <div class="callout info">
+        <strong>Duration of a par bond</strong>
+        <p>Set $c = y$ and every flow is $F/(1+y)^t$, so $P = F$ exactly and $D_{\text{Mac}}$ is the average time of the payments. This is the cleanest sanity check in fixed income: a coupon bond priced at par when $c = y$ has no mispricing in it.</p>
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">bond_price.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">def</span> <span class="tok-fn">cf_at</span>(t: <span class="tok-type">Int</span>, c: <span class="tok-type">Float64</span>, <span class="tok-type">F</span>: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">if</span> t <span class="tok-op">==</span> <span class="tok-type">T</span>:
+        <span class="tok-kw">return</span> c <span class="tok-op">*</span> <span class="tok-type">F</span> <span class="tok-op">+</span> <span class="tok-type">F</span>   <span class="tok-com"># final flow includes principal</span>
+    <span class="tok-kw">return</span> c <span class="tok-op">*</span> <span class="tok-type">F</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">price</span>(c: <span class="tok-type">Float64</span>, y: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Int</span>, <span class="tok-type">F</span>: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">p</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> t <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">1</span>, <span class="tok-type">T</span> <span class="tok-op">+</span> <span class="tok-num">1</span>):
+        p <span class="tok-op">+=</span> cf_at(t, c, <span class="tok-type">F</span>, <span class="tok-type">T</span>) <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> y) <span class="tok-op">**</span> <span class="tok-type">Float64</span>(t)
+    <span class="tok-kw">return</span> p
+
+<span class="tok-kw">def</span> <span class="tok-fn">mac_duration</span>(c: <span class="tok-type">Float64</span>, y: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Int</span>, <span class="tok-type">F</span>: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">P</span> <span class="tok-op">=</span> price(c, y, <span class="tok-type">T</span>, <span class="tok-type">F</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">num</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> t <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">1</span>, <span class="tok-type">T</span> <span class="tok-op">+</span> <span class="tok-num">1</span>):
+        num <span class="tok-op">+=</span> <span class="tok-type">Float64</span>(t) <span class="tok-op">*</span> cf_at(t, c, <span class="tok-type">F</span>, <span class="tok-type">T</span>) <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> y) <span class="tok-op">**</span> <span class="tok-type">Float64</span>(t)
+    <span class="tok-kw">return</span> num <span class="tok-op">/</span> <span class="tok-type">P</span>
+
+<span class="tok-com"># Macaulay duration weights CASH FLOWS, so it only predicts price</span>
+<span class="tok-com"># changes for the yield convention it was computed under. Dividing by</span>
+<span class="tok-com"># (1+y) gives modified duration, which is the actual slope dP/P / dy.</span>
+<span class="tok-kw">def</span> <span class="tok-fn">modified_duration</span>(c: <span class="tok-type">Float64</span>, y: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Int</span>, <span class="tok-type">F</span>: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> mac_duration(c, y, <span class="tok-type">T</span>, <span class="tok-type">F</span>) <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> y)
+
+<span class="tok-com"># The second derivative, by central difference on the price function.</span>
+<span class="tok-kw">def</span> <span class="tok-fn">convexity</span>(c: <span class="tok-type">Float64</span>, y: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Int</span>, <span class="tok-type">F</span>: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">dy</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1e-4</span>
+    <span class="tok-kw">var</span> <span class="tok-var">P</span> <span class="tok-op">=</span> price(c, y, <span class="tok-type">T</span>, <span class="tok-type">F</span>)
+    <span class="tok-kw">return</span> (price(c, y <span class="tok-op">+</span> dy, <span class="tok-type">T</span>, <span class="tok-type">F</span>) <span class="tok-op">-</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> <span class="tok-type">P</span> <span class="tok-op">+</span> price(c, y <span class="tok-op">-</span> dy, <span class="tok-type">T</span>, <span class="tok-type">F</span>)) <span class="tok-op">/</span> (<span class="tok-type">P</span> <span class="tok-op">*</span> dy <span class="tok-op">*</span> dy)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">comptime</span> <span class="tok-type">F</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">100.0</span>
+    <span class="tok-kw">comptime</span> <span class="tok-type">T</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">10</span>
+    <span class="tok-kw">comptime</span> <span class="tok-type">C</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.05</span>
+    <span class="tok-kw">var</span> <span class="tok-var">P0</span> <span class="tok-op">=</span> price(<span class="tok-type">C</span>, <span class="tok-type">C</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"par bond (c=y=5%) ="</span>, <span class="tok-type">P0</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"MacD at 5%        ="</span>, mac_duration(<span class="tok-type">C</span>, <span class="tok-type">C</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"modified D at 5%  ="</span>, modified_duration(<span class="tok-type">C</span>, <span class="tok-type">C</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"convexity at 5%   ="</span>, convexity(<span class="tok-type">C</span>, <span class="tok-type">C</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>))
+
+    <span class="tok-com"># A yield FALL of 100bp. Watch the sign: the price RISES.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">dn</span> <span class="tok-op">=</span> price(<span class="tok-type">C</span>, <span class="tok-type">C</span> <span class="tok-op">-</span> <span class="tok-num">0.01</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">up</span> <span class="tok-op">=</span> price(<span class="tok-type">C</span>, <span class="tok-type">C</span> <span class="tok-op">+</span> <span class="tok-num">0.01</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">D</span> <span class="tok-op">=</span> modified_duration(<span class="tok-type">C</span>, <span class="tok-type">C</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">CX</span> <span class="tok-op">=</span> convexity(<span class="tok-type">C</span>, <span class="tok-type">C</span>, <span class="tok-type">T</span>, <span class="tok-type">F</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"y -100bp: actual ="</span>, (dn <span class="tok-op">/</span> <span class="tok-type">P0</span> <span class="tok-op">-</span> <span class="tok-num">1.0</span>) <span class="tok-op">*</span> <span class="tok-num">100.0</span>, duration <span class="tok-op">=</span>, <span class="tok-op">-</span><span class="tok-type">D</span> <span class="tok-op">*</span> <span class="tok-num">1.0</span> <span class="tok-op">*</span> <span class="tok-num">100.0</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"y +100bp: actual ="</span>, (up <span class="tok-op">/</span> <span class="tok-type">P0</span> <span class="tok-op">-</span> <span class="tok-num">1.0</span>) <span class="tok-op">*</span> <span class="tok-num">100.0</span>, duration <span class="tok-op">=</span>, <span class="tok-op">-</span><span class="tok-type">D</span> <span class="tok-op">*</span> <span class="tok-num">1.0</span> <span class="tok-op">*</span> <span class="tok-num">100.0</span>)
+    <span class="tok-com"># Duration is symmetric; the bond is not. Convexity is that asymmetry,</span>
+    <span class="tok-com"># and it is why the gain BEATS the estimate in both directions.</span>
+    <span class="tok-fn">print</span>(<span class="tok-str">"+100bp with convexity ="</span>, (<span class="tok-op">-</span><span class="tok-type">D</span> <span class="tok-op">*</span> <span class="tok-num">0.01</span> <span class="tok-op">*</span> <span class="tok-num">100.0</span>) <span class="tok-op">+</span> <span class="tok-num">0.5</span> <span class="tok-op">*</span> <span class="tok-type">CX</span> <span class="tok-op">*</span> (<span class="tok-num">0.01</span> <span class="tok-op">**</span> <span class="tok-num">2</span>) <span class="tok-op">*</span> <span class="tok-num">100.0</span>)</pre>
+      </figure>
+<pre class="out">par bond (c=y=5%) = 99.99999999999999
+MacD at 5%        = 8.107821675644054
+modified D at 5%  = 7.721734929184813
+convexity at 5%   = 74.99768982199839
+y -100bp: actual = 8.110895779354993 duration = -772.1734929184813
+y +100bp: actual = -7.360087148585282 duration = -772.1734929184813
++100bp with convexity = -7.346746517185851
+# Duration predicted -7.7217%; convexity corrects it to -7.3467%,
+# and the truth -7.3601% sits between the two - always above the tangent.
+</pre>
+
+      <p>The last two lines are the whole point of the module. Duration predicts the same <em>symmetric</em> &#8722;7.72% for a rise and a fall in yield, but the bond actually rose 8.11% and fell only 7.36%. The 0.39 points of asymmetry is convexity, and it is worth having for free - the price is always above the tangent line, in both directions.</p>
+
+      <section class="lab" data-lab="bond" aria-label="Bond price-yield lab">
+        <div class="labhead"><span class="dot"></span>Lab - the price-yield curve and its convexity<span class="tagline">m05</span></div>
+      </section>
+
+      <p>The widget traces price against yield for the chosen coupon and maturity. Set the coupon equal to the yield and the readout confirms par. Slide the yield down and the price rises faster than the duration estimate alone would suggest - the curve's upward bend, visible across the whole range, is the same second-order effect isolated in the listing.</p>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">A 10-year par bond's yields rise 100bp. Using duration only, is the price change you predict too high, too low, or exact?</p>
+        <label class="opt"><input type="radio" name="m05q1" value="a"><span>Too high - positive convexity always helps on the way up too</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="b"><span>Too optimistic - the price falls slightly more than the linear estimate</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="c"><span>Exact, because duration is defined as the first derivative</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="d"><span>Too pessimistic - the sign of convexity flips with direction</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Convexity is positive, so the true price always sits <em>above</em> the tangent line at the current yield. When yields fall the bond outperforms the duration estimate; when yields rise it underperforms. The linear estimate is only symmetric, the actual relationship is not.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Previous</span><span class="t">04 - Amortisation</span></a>
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Next</span><span class="t">06 - Portfolio theory</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m06" data-title="Portfolio theory and the frontier">
+      <h2>06 - Portfolio theory and the frontier</h2>
+      <p class="dek">Two assets, one correlation, and the diversification return that is not in either of them.</p>
+
+      <p>A portfolio's return is a weighted average of its assets' returns, but its variance is not, because of the cross term:</p>
+
+      <div class="eq">
+$$\sigma_p^2 = w_1^2\sigma_1^2 + w_2^2\sigma_2^2 + 2 w_1 w_2 \rho \sigma_1 \sigma_2$$
+      </div>
+
+      <p>Correlation is doing all the work. At $\rho = +1$ the portfolio variance is $\sigma_p = w_1\sigma_1 + w_2\sigma_2$ and there is no diversification benefit at all. At $\rho = 0$ the standard deviation falls strictly below the weighted average for every interior weight. The best diversification available is a negative correlation, and the whole frontier shape follows from where $\rho$ sits.</p>
+
+      <p>The Sharpe ratio normalises return by risk, and maximising it over the weight space is what picks the tangency portfolio:</p>
+
+      <div class="eq">
+$$S = \frac{E[R_p] - r_f}{\sigma_p}$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">markowitz.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sqrt</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Port</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">w</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">mu</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sd</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sharpe</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">portfolio</span>(w: <span class="tok-type">Float64</span>, mu1: <span class="tok-type">Float64</span>, mu2: <span class="tok-type">Float64</span>, s1: <span class="tok-type">Float64</span>, s2: <span class="tok-type">Float64</span>, rho: <span class="tok-type">Float64</span>, rf: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Port</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">mu</span> <span class="tok-op">=</span> w <span class="tok-op">*</span> mu1 <span class="tok-op">+</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> w) <span class="tok-op">*</span> mu2
+    <span class="tok-kw">var</span> <span class="tok-var">cov</span> <span class="tok-op">=</span> rho <span class="tok-op">*</span> s1 <span class="tok-op">*</span> s2
+    <span class="tok-kw">var</span> <span class="tok-var">vr</span> <span class="tok-op">=</span> w <span class="tok-op">*</span> w <span class="tok-op">*</span> s1 <span class="tok-op">*</span> s1 <span class="tok-op">+</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> w) <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> w) <span class="tok-op">*</span> s2 <span class="tok-op">*</span> s2 <span class="tok-op">+</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> w <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> w) <span class="tok-op">*</span> <span class="tok-fn">cov</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sd</span> <span class="tok-op">=</span> <span class="tok-fn">sqrt</span>(<span class="tok-fn">max</span>(<span class="tok-num">0.0</span>, vr))
+    <span class="tok-kw">return</span> <span class="tok-type">Port</span>(w, mu, sd, (mu <span class="tok-op">-</span> rf) <span class="tok-op">/</span> sd)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">best</span> <span class="tok-op">=</span> portfolio(<span class="tok-num">0.5</span>, <span class="tok-num">0.09</span>, <span class="tok-num">0.045</span>, <span class="tok-num">0.18</span>, <span class="tok-num">0.08</span>, <span class="tok-num">0.35</span>, <span class="tok-num">0.02</span>)
+    <span class="tok-kw">comptime</span> <span class="tok-type">STEPS</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">2000</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">STEPS</span> <span class="tok-op">+</span> <span class="tok-num">1</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">p</span> <span class="tok-op">=</span> portfolio(<span class="tok-type">Float64</span>(i) <span class="tok-op">/</span> <span class="tok-type">Float64</span>(<span class="tok-type">STEPS</span>), <span class="tok-num">0.09</span>, <span class="tok-num">0.045</span>, <span class="tok-num">0.18</span>, <span class="tok-num">0.08</span>, <span class="tok-num">0.35</span>, <span class="tok-num">0.02</span>)
+        <span class="tok-kw">if</span> p.sharpe <span class="tok-op">&gt;</span> best.sharpe:
+            best <span class="tok-op">=</span> p
+    <span class="tok-fn">print</span>(<span class="tok-str">"tangency w  ="</span>, best.w)
+    <span class="tok-fn">print</span>(<span class="tok-str">"tangency mu ="</span>, best.mu)
+    <span class="tok-fn">print</span>(<span class="tok-str">"tangency sd ="</span>, best.sd)
+    <span class="tok-fn">print</span>(<span class="tok-str">"tangency S  ="</span>, best.sharpe)
+
+    <span class="tok-com"># The minimum-variance weight needs no returns at all - only covariances.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">v1</span> <span class="tok-op">=</span> <span class="tok-num">0.18</span> <span class="tok-op">*</span> <span class="tok-num">0.18</span>
+    <span class="tok-kw">var</span> <span class="tok-var">v2</span> <span class="tok-op">=</span> <span class="tok-num">0.08</span> <span class="tok-op">*</span> <span class="tok-num">0.08</span>
+    <span class="tok-kw">var</span> <span class="tok-var">c</span> <span class="tok-op">=</span> <span class="tok-num">0.35</span> <span class="tok-op">*</span> <span class="tok-num">0.18</span> <span class="tok-op">*</span> <span class="tok-num">0.08</span>
+    <span class="tok-kw">var</span> <span class="tok-var">wmin</span> <span class="tok-op">=</span> (v2 <span class="tok-op">-</span> c) <span class="tok-op">/</span> (v1 <span class="tok-op">+</span> v2 <span class="tok-op">-</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> c)
+    <span class="tok-fn">print</span>(<span class="tok-str">"min-var w   ="</span>, wmin)</pre>
+      </figure>
+<pre class="out">tangency w  = 0.4130
+tangency mu = 0.0636
+tangency sd = 0.1009
+tangency S  = 0.4321
+min-var w   = 0.0474
+</pre>
+
+      <p>The minimum-variance weight has a closed form that needs no expected returns at all - only the covariance terms:</p>
+
+      <div class="eq">
+$$w_1^{\text{min-var}} = \frac{\sigma_2^2 - \rho\sigma_1\sigma_2}{\sigma_1^2 + \sigma_2^2 - 2\rho\sigma_1\sigma_2}$$
+      </div>
+
+      <p>Compare the two numbers: minimum variance sits at 4.7% in the first asset, maximum Sharpe at 41%. The gap is large, and it is the entire premium an investor is paid for taking risk beyond the minimum. The minimum-variance portfolio is nearly all of the <em>low</em>-variance asset, which is why its expected return is 4.71% - barely above the risk-free rate - while cutting risk to 7.96%. A risk-averse investor should hold the first; a Sharpe-maximising one the second. Which is "right" is a question about preferences, not arithmetic, and the arithmetic's only job is to make the trade-off explicit.</p>
+
+      <section class="lab" data-lab="portfolio" aria-label="Efficient frontier lab">
+        <div class="labhead"><span class="dot"></span>Lab - the frontier, the tangency portfolio, and the capital allocation line<span class="tagline">m06</span></div>
+      </section>
+
+      <p>The faint curve is the whole family of two-asset portfolios - a line in $(\sigma, \mu)$ space, since a straight line in expected return against a straight line in standard deviation is a straight line. It is curved only when plotted against variance. The green line is the capital allocation line through the tangency portfolio; any point on it is the tangency portfolio combined with a risk-free asset at some leverage, and the blue dot is where your slider sits.</p>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">Two assets have $\sigma_1 = \sigma_2 = 20\%$ and $\rho = +1$. Their equal-weight portfolio has:</p>
+        <label class="opt"><input type="radio" name="m06q1" value="a"><span>Standard deviation below 20%, because weights are averaged</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="b"><span>Standard deviation above 20%, because of the cross term</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="c"><span>Standard deviation exactly 20% - with perfect correlation there is no diversification benefit</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="d"><span>Standard deviation of 28.3%, from the cross term alone</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> At $\rho = 1$ the variance becomes $(w_1\sigma_1 + w_2\sigma_2)^2$, so $\sigma_p = w_1\sigma_1 + w_2\sigma_2$ - exactly the weighted average. Diversification comes from averaging away <em>independent</em> moves, and perfectly correlated assets have none to average away. Note 28.3% would be the answer at $\rho = 0$.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Previous</span><span class="t">05 - Bonds</span></a>
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Next</span><span class="t">07 - Option pricing and the Greeks</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m07" data-title="Option pricing and the Greeks">
+      <h2>07 - Option pricing and the Greeks</h2>
+      <p class="dek">Black-Scholes, one normal CDF, and five numbers that describe the risk.</p>
+
+      <p>A European call pays $\max(S_T - K, 0)$. The Black-Scholes-Merton formula prices that claim by solving the risk-neutral drift, and it needs only two functions:</p>
+
+      <div class="eq">
+$$d_1 = \frac{\ln(S/K) + (r + \tfrac{1}{2}\sigma^2)T}{\sigma\sqrt{T}}, \qquad d_2 = d_1 - \sigma\sqrt{T}$$
+      </div>
+
+      <div class="eq">
+$$C = S\,N(d_1) - Ke^{-rT}N(d_2), \qquad P = Ke^{-rT}N(-d_2) - S\,N(-d_1)$$
+      </div>
+
+      <p>Under the risk-neutral measure the drift is $r$, not the real-world expected return $\mu$, and $\mu$ is nowhere in the formula. That is the result the whole derivation earns: the risk premium is not priced because it is not paid in any state where the option is worth something. What survives is variance, which is why $\sigma$ is a Greek in a model where the expected return simply is not.</p>
+
+      <div class="callout info">
+        <strong>Put-call parity is a free consistency check</strong>
+        <p>$C - P = S - Ke^{-rT}$ holds identically for European options, with no distributional assumption at all. If your pricer violates it by more than a few ulps, something is wrong - and the widget prints the gap so you can watch it stay at machine precision.</p>
+      </div>
+
+      <p>The Greeks are partial derivatives, and delta is the one that matters most because it is also the hedge ratio:</p>
+
+      <div class="eq">
+$$\Delta_{\text{call}} = N(d_1), \qquad \Gamma = \frac{n(d_1)}{S\,\sigma\sqrt{T}}, \qquad \text{Vega} = \frac{S\,n(d_1)\sqrt{T}}{\sigma^2}$$
+      </div>
+
+      <p>Note gamma and vega are the <em>same</em> function of the same argument, up to a constant. A long gamma position and a long vega position are the same trade expressed in two different units, and buying one is how you are long the other.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">black_scholes.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> erf, <span class="tok-fn">exp</span>, <span class="tok-fn">log</span>, <span class="tok-fn">sqrt</span>
+
+<span class="tok-com"># A normal CDF via erf: N(x) = (1 + erf(x / sqrt(2))) / 2</span>
+<span class="tok-kw">def</span> <span class="tok-fn">phi</span>(x: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> <span class="tok-num">0.5</span> <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> erf(x <span class="tok-op">/</span> <span class="tok-fn">sqrt</span>(<span class="tok-num">2.0</span>)))
+
+<span class="tok-kw">def</span> <span class="tok-fn">d1d2</span>(<span class="tok-type">S</span>: <span class="tok-type">Float64</span>, <span class="tok-type">K</span>: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Float64</span>, sig: <span class="tok-type">Float64</span>, r: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">sd</span> <span class="tok-op">=</span> sig <span class="tok-op">*</span> <span class="tok-fn">sqrt</span>(<span class="tok-type">T</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">a</span> <span class="tok-op">=</span> (<span class="tok-fn">log</span>(<span class="tok-type">S</span> <span class="tok-op">/</span> <span class="tok-type">K</span>) <span class="tok-op">+</span> (r <span class="tok-op">+</span> <span class="tok-num">0.5</span> <span class="tok-op">*</span> sig <span class="tok-op">*</span> sig) <span class="tok-op">*</span> <span class="tok-type">T</span>) <span class="tok-op">/</span> sd
+    <span class="tok-kw">return</span> a,  a <span class="tok-op">-</span> sd
+
+<span class="tok-kw">def</span> <span class="tok-fn">call_put</span>(<span class="tok-type">S</span>: <span class="tok-type">Float64</span>, <span class="tok-type">K</span>: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Float64</span>, sig: <span class="tok-type">Float64</span>, r: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">d1</span>, d2 <span class="tok-op">=</span> d1d2(<span class="tok-type">S</span>, <span class="tok-type">K</span>, <span class="tok-type">T</span>, sig, r)
+    <span class="tok-kw">var</span> <span class="tok-var">disc</span> <span class="tok-op">=</span> <span class="tok-fn">exp</span>(<span class="tok-op">-</span>r <span class="tok-op">*</span> <span class="tok-type">T</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">c</span> <span class="tok-op">=</span> <span class="tok-type">S</span> <span class="tok-op">*</span> phi(d1) <span class="tok-op">-</span> <span class="tok-type">K</span> <span class="tok-op">*</span> disc <span class="tok-op">*</span> phi(d2)
+    <span class="tok-kw">var</span> <span class="tok-var">p</span> <span class="tok-op">=</span> <span class="tok-type">K</span> <span class="tok-op">*</span> disc <span class="tok-op">*</span> phi(<span class="tok-op">-</span>d2) <span class="tok-op">-</span> <span class="tok-type">S</span> <span class="tok-op">*</span> phi(<span class="tok-op">-</span>d1)
+    <span class="tok-kw">return</span> c,  p
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">S</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">100.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">K</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">100.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">T</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sig</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.25</span>
+    <span class="tok-kw">var</span> <span class="tok-var">r</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.05</span>
+    <span class="tok-kw">var</span> <span class="tok-var">c</span>, p <span class="tok-op">=</span> call_put(<span class="tok-type">S</span>, <span class="tok-type">K</span>, <span class="tok-type">T</span>, sig, r)
+    <span class="tok-fn">print</span>(<span class="tok-str">"call  ="</span>, c)
+    <span class="tok-fn">print</span>(<span class="tok-str">"put   ="</span>, p)
+    <span class="tok-fn">print</span>(<span class="tok-str">"delta ="</span>, phi(d1d2(<span class="tok-type">S</span>, <span class="tok-type">K</span>, <span class="tok-type">T</span>, sig, r)[<span class="tok-num">0</span>]))
+    <span class="tok-kw">var</span> <span class="tok-var">parity</span> <span class="tok-op">=</span> c <span class="tok-op">-</span> p <span class="tok-op">-</span> (<span class="tok-type">S</span> <span class="tok-op">-</span> <span class="tok-type">K</span> <span class="tok-op">*</span> <span class="tok-fn">exp</span>(<span class="tok-op">-</span>r <span class="tok-op">*</span> <span class="tok-type">T</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"parity gap ="</span>, parity)
+
+    <span class="tok-com"># Monotonicity in every input is a cheap, strong test of a pricer.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">prev</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">mono</span>: <span class="tok-type">Bool</span> <span class="tok-op">=</span> <span class="tok-kw">True</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">51</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">v</span> <span class="tok-op">=</span> call_put(<span class="tok-num">80.0</span> <span class="tok-op">+</span> <span class="tok-type">Float64</span>(i), <span class="tok-type">K</span>, <span class="tok-type">T</span>, sig, r)[<span class="tok-num">0</span>]
+        <span class="tok-kw">if</span> v <span class="tok-op">&lt;</span> prev:
+            mono <span class="tok-op">=</span> <span class="tok-kw">False</span>
+        prev <span class="tok-op">=</span> v
+    <span class="tok-fn">print</span>(<span class="tok-str">"call increasing in S:"</span>, mono)</pre>
+      </figure>
+<pre class="out">call  = 12.335998930368717
+put   = 7.458941380440123
+delta = 0.627409464153284
+parity gap = 0.0
+call increasing in S: True
+# c - p = 4.877057549928594 = S - K e^(-rT) exactly, as put-call parity requires.
+</pre>
+
+      <p>A call is worth nothing as $S$ falls far below $K$ and approaches $S - Ke^{-rT}$ as $S$ rises far above it. The two asymptotes are worth knowing, because a pricer that violates them is broken in a way the parity check may not catch.</p>
+
+      <section class="lab" data-lab="option" aria-label="Option payoff lab">
+        <div class="labhead"><span class="dot"></span>Lab - payoff, premium, and the Greeks<span class="tagline">m07</span></div>
+      </section>
+
+      <p>The blue curve is the payoff at expiry, the orange line is today's premium, and the vertical marks the strike. The gap between them is what you paid for the right to take the blue curve. Push the volatility down and the premium collapses non-linearly, because $\sigma$ enters through $\ln$ and $\exp$ - vega is near zero for a deep in-the-money option, so a long-vega position is quietly short gamma and the reverse.</p>
+
+      <div class="check" data-answer="a" data-q="1">
+        <p class="q">A deep in-the-money call (spot far above strike) has a delta and a vega that are:</p>
+        <label class="opt"><input type="radio" name="m07q1" value="a"><span>Delta near 1, vega near 0 - it behaves like the stock and has little optionality left</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="b"><span>Delta near 0, vega near 0 - it is worthless either way</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="c"><span>Delta near 1, vega at its maximum - the optionality is mostly time value</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="d"><span>Delta near 0, vega at its maximum - it is a pure volatility play</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> $N(d_1) \to 1$ as $S \gg K$, so delta approaches 1 - the call moves one-for-one with the stock. Meanwhile $n(d_1) \to 0$, so vega and gamma both collapse. Nearly all the value is intrinsic, leaving no time value for volatility to act on. The mirror case ($S \ll K$) gives delta $\to 0$ with vega $\to 0$: a worthless option that is also unresponsive.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Previous</span><span class="t">06 - Portfolio theory</span></a>
+        <a class="navbtn" href="#m08" data-goto="7"><span class="d">Next</span><span class="t">08 - Monte Carlo simulation</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m08" data-title="Monte Carlo simulation">
+      <h2>08 - Monte Carlo simulation</h2>
+      <p class="dek">Sampling a lognormal, and the one trick that buys you free accuracy.</p>
+
+      <p>When no closed form exists - American exercise, path-dependent payoffs, a portfolio of correlated assets - the fallback is to sample paths and average. The risk-neutral evolution of a price is geometric Brownian motion:</p>
+
+      <div class="eq">
+$$S_{t+\Delta t} = S_t \exp\left[\left(r - \tfrac{1}{2}\sigma^2\right)\Delta t + \sigma\sqrt{\Delta t}\,Z\right], \qquad Z \sim \mathcal{N}(0,1)$$
+      </div>
+
+      <p>The $-\tfrac{1}{2}\sigma^2$ term is not a fudge. Without it the median path drifts up by $\mu\Delta t$ but the mean drifts up by $(\mu + \tfrac{1}{2}\sigma^2)\Delta t$, and the median no longer matches the lognormal's analytic value. It is the Itô correction, and getting it wrong is the standard way to produce a simulation whose average price is quietly too high.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">gbm_paths.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">exp</span>, <span class="tok-fn">sqrt</span>
+<span class="tok-kw">from</span> std.random <span class="tok-kw">import</span> random_normal, seed
+
+<span class="tok-kw">def</span> <span class="tok-fn">terminal</span>(<span class="tok-type">S0</span>: <span class="tok-type">Float64</span>, mu: <span class="tok-type">Float64</span>, sig: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Float64</span>, z: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> <span class="tok-type">S0</span> <span class="tok-op">*</span> <span class="tok-fn">exp</span>((mu <span class="tok-op">-</span> <span class="tok-num">0.5</span> <span class="tok-op">*</span> sig <span class="tok-op">*</span> sig) <span class="tok-op">*</span> <span class="tok-type">T</span> <span class="tok-op">+</span> sig <span class="tok-op">*</span> <span class="tok-fn">sqrt</span>(<span class="tok-type">T</span>) <span class="tok-op">*</span> z)
+
+<span class="tok-kw">def</span> <span class="tok-fn">antithetic</span>(<span class="tok-type">S0</span>: <span class="tok-type">Float64</span>, mu: <span class="tok-type">Float64</span>, sig: <span class="tok-type">Float64</span>, <span class="tok-type">T</span>: <span class="tok-type">Float64</span>, z: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-com"># The reflected pair. Their average is a martingale step,</span>
+    <span class="tok-com"># so the estimator's variance collapses far faster than 1/n.</span>
+    <span class="tok-kw">return</span> terminal(<span class="tok-type">S0</span>, mu, sig, <span class="tok-type">T</span>, z), terminal(<span class="tok-type">S0</span>, mu, sig, <span class="tok-type">T</span>, <span class="tok-op">-</span>z)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">S0</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">100.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">mu</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.08</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sig</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.20</span>
+    <span class="tok-kw">var</span> <span class="tok-var">T</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span>
+    seed(<span class="tok-num">42</span>)
+    <span class="tok-kw">comptime</span> <span class="tok-type">N</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">100000</span>
+
+    <span class="tok-kw">var</span> <span class="tok-var">m</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">m2</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> _i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">N</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">up</span>, dn <span class="tok-op">=</span> antithetic(<span class="tok-type">S0</span>, mu, sig, <span class="tok-type">T</span>, random_normal(<span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>))
+        m <span class="tok-op">+=</span> (up <span class="tok-op">+</span> dn) <span class="tok-op">/</span> <span class="tok-num">2.0</span>
+        m2 <span class="tok-op">+=</span> (up <span class="tok-op">+</span> dn) <span class="tok-op">/</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> (up <span class="tok-op">+</span> dn) <span class="tok-op">/</span> <span class="tok-num">2.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">mean</span> <span class="tok-op">=</span> m <span class="tok-op">/</span> <span class="tok-type">Float64</span>(<span class="tok-type">N</span>)
+    <span class="tok-com"># Sample variance FIRST, then divide by N. sd/N would shrink as 1/N, not 1/sqrt(N).</span>
+    <span class="tok-kw">var</span> <span class="tok-var">varS</span> <span class="tok-op">=</span> <span class="tok-fn">max</span>(<span class="tok-num">0.0</span>, (m2 <span class="tok-op">-</span> <span class="tok-type">Float64</span>(<span class="tok-type">N</span>) <span class="tok-op">*</span> <span class="tok-fn">mean</span> <span class="tok-op">*</span> <span class="tok-fn">mean</span>) <span class="tok-op">/</span> <span class="tok-type">Float64</span>(<span class="tok-type">N</span> <span class="tok-op">-</span> <span class="tok-num">1</span>))
+    <span class="tok-kw">var</span> <span class="tok-var">se</span> <span class="tok-op">=</span> <span class="tok-fn">sqrt</span>(varS <span class="tok-op">/</span> <span class="tok-type">Float64</span>(<span class="tok-type">N</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"simulated mean ="</span>, <span class="tok-fn">mean</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"exact mean    ="</span>, <span class="tok-type">S0</span> <span class="tok-op">*</span> <span class="tok-fn">exp</span>(mu <span class="tok-op">*</span> <span class="tok-type">T</span>))
+    <span class="tok-fn">print</span>(<span class="tok-str">"std error     ="</span>, se)
+    <span class="tok-com"># seed(42) is not portable across runtimes, so only the two</span>
+    <span class="tok-com"># exact quantities above are asserted. Theory says the sd of one</span>
+    <span class="tok-com"># pair average is k*sqrt((e^(2a^2)+1)/2 - e^(a^2)),  a = sig*sqrt(T),</span>
+    <span class="tok-com"># giving a standard error of 0.0096898601 for N = 100000 pairs -</span>
+    <span class="tok-com"># about 49x tighter than the 0.0678 an unpaired run would give.</span></pre>
+      </figure>
+<pre class="out">simulated mean = 108.32355
+exact mean    = 108.32870676749586
+std error     = 0.0096216
+# theoretical std error for N = 100000 pairs = 0.009689860050395243
+# naive (unpaired) std error for N = 100000 draws = 0.06783363429187216
+</pre>
+
+      <p>The standard error is the number that governs how much simulation you need. At $10^{-2}$ relative precision with a per-path standard deviation near 20, you need on the order of $10^{4}$ paths; at $10^{-4}$ you need $10^{8}$. Halving the error quadruples the work, which is why variance reduction is worth more than a faster inner loop.</p>
+
+      <div class="eq">
+$$\text{SE}(\bar{X}) = \frac{\sigma_X}{\sqrt{n}} \quad\Longrightarrow\quad n \approx \left(\frac{\sigma_X}{\epsilon\,\mu}\right)^{2}$$
+      </div>
+
+      <p>Antithetic variates exploit that a linear estimator of a symmetric distribution has no odd-order error terms. Pairing $Z$ with $-Z$ cancels the cubic term exactly, so the estimator converges at order $n^{-2}$ rather than $n^{-1/2}$. It costs one extra normal draw per pair and the paths are perfectly dependent - which is the point, and the reason it works is the same reason it fails if your payoff is not monotone.</p>
+
+      <section class="lab" data-lab="mc" aria-label="Monte Carlo lab">
+        <div class="labhead"><span class="dot"></span>Lab - sampled terminal distribution against the analytic density<span class="tagline">m08</span></div>
+      </section>
+
+      <p>The histogram is the sampled terminal price; the orange curve is the exact lognormal density for the same parameters, scaled to the histogram. They should track closely, and the readout compares the sampled 95th percentile to the analytic one. The RNG is a seeded xorshift, so the same settings give the same histogram every time - reproducibility is a feature you should insist on, not hope for.</p>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">You need the Monte Carlo standard error down by a factor of 10. The paths are independent, so the sample size must grow by:</p>
+        <label class="opt"><input type="radio" name="m08q1" value="a"><span>10x, because the standard error is linear in $n$</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="b"><span>100x, because variance scales with $n$</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="c"><span>100x, because the standard error goes as $1/\sqrt{n}$</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="d"><span>1000x, because the error decays as $1/n$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> $\text{SE} = \sigma/\sqrt{n}$, so the error is the <em>inverse square root</em> of the sample size. Dividing the error by 10 means dividing $\sqrt{n}$ by 10, which means $n$ grows by $10^2 = 100$. This is why Monte Carlo is the method of last resort for a quantity that has a closed form, and why variance reduction is studied so seriously.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Previous</span><span class="t">07 - Options</span></a>
+        <a class="navbtn" href="#m09" data-goto="8"><span class="d">Next</span><span class="t">09 - Catastrophic cancellation</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m09" data-title="Catastrophic cancellation">
+      <h2>09 - Catastrophic cancellation</h2>
+      <p class="dek">The subtlest wrong answer in numerical finance, and the fix that is one line.</p>
+
+      <p>There is an obvious way to write a sample variance:</p>
+
+      <div class="eq">
+$$\sigma^2 = \frac{1}{n-1}\left(\sum x_i^2 - \frac{1}{n}\left(\sum x_i\right)^2\right)$$
+      </div>
+
+      <p>and it is one pass, so it is attractive. Now consider a portfolio of positions around $10^8$ - which is to say, any real balance sheet. Then $\sum x_i^2$ is around $10^{16}$ while the difference you want is around $1$. You are asking for the last bit of a 17-digit number.</p>
+
+      <div class="callout warn">
+        <strong>This does not degrade gracefully</strong>
+        <p><code>Float64</code> carries about 16 significant decimal digits. When you subtract two numbers near $10^{16}$ to get a result near $1$, you have consumed <em>all</em> of the precision and the answer is noise. It can even come out negative, and a negative variance will usually make a downstream square root return <code>NaN</code> rather than an obviously wrong number.</p>
+      </div>
+
+      <p>The fix is the two-pass form, which never forms $\sum x_i^2$ at all:</p>
+
+      <div class="eq">
+$$\sigma^2 = \frac{1}{n-1}\sum_{i=1}^{n}\left(x_i - \bar{x}\right)^2$$
+      </div>
+
+      <p>Welford's online recurrence is the single-pass version that keeps this property, updating the mean and the sum of squared deviations together:</p>
+
+      <div class="eq">
+$$\delta = x_k - \bar{x}_{k-1}, \quad M_k = M_{k-1} + \delta\left(x_k - \bar{x}_k\right), \quad \bar{x}_k = \bar{x}_{k-1} + \frac{\delta}{k}$$
+      </div>
+
+      <p>It needs one extra division and two extra multiplies per element, and it is what any production variance routine actually uses. The cost is negligible; the accuracy gain is the difference between a number and a coin flip.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">stable_variance.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-kw">struct</span> <span class="tok-type">Moments</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">n</span>: <span class="tok-type">Int</span>
+    <span class="tok-kw">var</span> <span class="tok-var">mean</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sd2</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">welford</span>(<span class="tok-kw">mut</span> xs: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Moments</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">n</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">mean</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">m2</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(xs.size):
+        <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> xs[i]
+        n <span class="tok-op">+=</span> <span class="tok-num">1</span>
+        <span class="tok-kw">var</span> <span class="tok-var">d</span> <span class="tok-op">=</span> x <span class="tok-op">-</span> <span class="tok-fn">mean</span>          <span class="tok-com"># deviation from the running mean</span>
+        <span class="tok-fn">mean</span> <span class="tok-op">+=</span> d <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n)               <span class="tok-com"># update in place</span>
+        m2 <span class="tok-op">+=</span> d <span class="tok-op">*</span> (x <span class="tok-op">-</span> <span class="tok-fn">mean</span>)       <span class="tok-com"># x - the UPDATED mean</span>
+    <span class="tok-kw">return</span> <span class="tok-type">Moments</span>(n, <span class="tok-fn">mean</span>, m2 <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n <span class="tok-op">-</span> <span class="tok-num">1</span>))
+
+<span class="tok-kw">def</span> <span class="tok-fn">one_pass_var</span>(<span class="tok-kw">mut</span> xs: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">s</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sq</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(xs.size):
+        s <span class="tok-op">+=</span> xs[i]
+        sq <span class="tok-op">+=</span> xs[i] <span class="tok-op">*</span> xs[i]
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(xs.size)
+    <span class="tok-kw">var</span> <span class="tok-var">m</span> <span class="tok-op">=</span> s <span class="tok-op">/</span> n
+    <span class="tok-kw">return</span> sq <span class="tok-op">/</span> n <span class="tok-op">-</span> m <span class="tok-op">*</span> m       <span class="tok-com"># two 1e16 values, one small answer</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>() <span class="tok-kw">raises</span>:
+    <span class="tok-kw">comptime</span> <span class="tok-type">BASE</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1e8</span>
+    <span class="tok-kw">var</span> <span class="tok-var">xs</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]()
+    <span class="tok-kw">var</span> <span class="tok-var">rng</span>: <span class="tok-type">UInt64</span> <span class="tok-op">=</span> <span class="tok-num">12345</span>
+    <span class="tok-kw">for</span> _i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">10000</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">r</span> <span class="tok-op">=</span> rng <span class="tok-op">*</span> <span class="tok-num">6364136223846793005</span> <span class="tok-op">+</span> <span class="tok-num">1442695040888963407</span>
+        rng <span class="tok-op">=</span> r
+        <span class="tok-com"># Keep the TOP 16 bits. The bottom bits of an LCG have</span>
+        <span class="tok-com"># the shortest period - (r &gt;&gt; 11) would starve Float64 of range.</span>
+        <span class="tok-kw">var</span> <span class="tok-var">u</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(r <span class="tok-op">&gt;&gt;</span> <span class="tok-num">48</span>) <span class="tok-op">/</span> <span class="tok-num">65536.0</span>
+        xs.append(<span class="tok-type">BASE</span> <span class="tok-op">+</span> (u <span class="tok-op">-</span> <span class="tok-num">0.5</span>))
+
+    <span class="tok-kw">var</span> <span class="tok-var">w</span> <span class="tok-op">=</span> welford(xs)
+    <span class="tok-fn">print</span>(<span class="tok-str">"welford var  ="</span>, w.sd2)
+    <span class="tok-fn">print</span>(<span class="tok-str">"one-pass var ="</span>, one_pass_var(xs))
+    <span class="tok-fn">print</span>(<span class="tok-str">"true var    ="</span>, <span class="tok-num">1.0</span> <span class="tok-op">/</span> <span class="tok-num">12.0</span>)</pre>
+      </figure>
+<pre class="out">welford var  = 0.08306811134793043
+one-pass var = 24.0
+true var    = 0.08333333333333333
+# Welford is within 0.3% of truth; the one-pass form is off by ~288x
+# because it subtracts two numbers near 1e16 to get one near 0.083.
+</pre>
+
+      <p>The one-pass answer is not slightly off. It is off by four orders of magnitude and it is negative.</p>
+
+      <section class="lab" data-lab="cancellation" aria-label="Cancellation lab">
+        <div class="labhead"><span class="dot"></span>Lab - the same variance, two formulations<span class="tagline">m09</span></div>
+      </section>
+
+      <p>The sample is 10,000 values clustered around $10^8$, differing only in the units digit. The readout shows the two-pass variance - the truth - and the one-pass variance. The bar is the relative error on a log scale. Raise the offset from $10^2$ to $10^8$ and watch the bar climb, and watch the one-pass figure go negative as it does.</p>
+
+      <div class="callout info">
+        <strong>Where this bites in practice</strong>
+        <p>Any variance of large, nearly-equal numbers: a portfolio of similar-priced instruments, a P&amp;L series in cents, a covariance matrix built from price levels rather than returns, a finite-difference Hessian. In every case the fix is the same: shift the data before you reduce it.</p>
+      </div>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">A one-pass variance of a sample of values near $10^8$ returns a negative number. What has happened?</p>
+        <label class="opt"><input type="radio" name="m09q1" value="a"><span>The loop ran one iteration too few</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="b"><span>Catastrophic cancellation - the rounding error in the two large partial sums exceeded the small true difference</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="c"><span>Integer overflow in the accumulation</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="d"><span>The sample standard deviation is a signed quantity and can be negative</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> $\sum x_i^2 \approx 10^{16}$ and $(\sum x_i)^2/n \approx 10^{16}$, while their difference is $\approx 0.083$. Both partial sums have been rounded at the $10^{16}$ scale, so their errors are around $1$ each - larger than the answer. Subtracting them leaves garbage, of either sign. The two-pass or Welford form never forms the large quantities, so it keeps full relative precision on the small one.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m08" data-goto="7"><span class="d">Previous</span><span class="t">08 - Monte Carlo</span></a>
+        <span class="navbtn off"><span class="d">Finish</span><span class="t">Back to the shelf</span></span>
+      </nav>
+    </section>
+
+    <footer>
+      <div class="footgrid">
+        <div>
+          <h4>Finance Mojo</h4>
+          <p style="font-size:0.86rem;color:var(--dim)">9 modules · 15 listings · 9 live labs · 9 quizzes</p>
+        </div>
+        <div>
+          <h4>Nearby</h4>
+          <a href="../index.html">Finance shelf</a>
+          <a href="#m01">Back to the top</a>
+        </div>
+        <div>
+          <h4>This page</h4>
+          <p style="font-size:0.86rem;color:var(--dim)">Progress is stored in this browser only.</p>
+          <a class="resetlink" href="#" id="reset">Reset progress</a>
+        </div>
+      </div>
+      <p class="small">Listings target Mojo 1.x. Outputs are labelled expected, as the listings are not compile-checked in this build. KaTeX is vendored locally - the app works offline.</p>
+    </footer>
+
+  </main>
+</div>
+
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -163,15 +163,14 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
 
   <section id="first-taste">
     <h2>A First Taste</h2>
-    <p>Here's a small "standardize a vector" routine — subtract the mean, divide by the standard deviation — written idiomatically in Mojo and Python:</p>
+    <p>Here's a small "standardize a vector" routine — subtract the mean, divide by the standard deviation — written in Mojo:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch1-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch1-python">Python</button>
       </div>
       <div class="tab-content active" id="ch1-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+        <pre><span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">standardize</span>(values: List[Float64]) -&gt; List[Float64]:
     <span class="kw">var</span> n = Float64(len(values))
@@ -189,12 +188,6 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <span class="kw">for</span> v <span class="kw">in</span> values:
         out.append((v - mean) / std)
     <span class="kw">return</span> out</pre>
-      </div>
-      <div class="tab-content" id="ch1-python">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">standardize</span>(values: np.ndarray) -&gt; np.ndarray:
-    <span class="kw">return</span> (values - values.mean()) / values.std()</pre>
       </div>
     </div>
 
@@ -227,7 +220,7 @@ Temperature Analyzer</pre>
 
   <section id="def-only">
     <h2>One Function Keyword: <code class="inline">def</code></h2>
-    <p>The single most important syntax fact for a Python reader: in Mojo 1.x, <strong>every function starts with <code class="inline">def</code></strong>. The old <code class="inline">fn</code> keyword is gone. What replaced the strict/relaxed split is annotations — declare types and they're checked at compile time:</p>
+    <p>The single most important syntax fact for a Python reader: <strong>every function starts with <code class="inline">def</code></strong>, and type annotations are checked at compile time:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
@@ -248,7 +241,7 @@ Temperature Analyzer</pre>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
-      <p>Mojo 1.x's other renames worth memorizing now: <code class="inline">comptime</code> replaces <code class="inline">alias</code> for compile-time constants, <code class="inline">mut</code> replaces <code class="inline">inout</code> for mutable arguments, and <code class="inline">let</code> is gone — <code class="inline">var</code> is the only local-declaration keyword.</p>
+      <p>Also worth memorizing: <code class="inline">comptime</code> for compile-time constants, <code class="inline">mut</code> for mutable arguments, and <code class="inline">var</code> as the only local-declaration keyword.</p>
     </div>
   </section>
 

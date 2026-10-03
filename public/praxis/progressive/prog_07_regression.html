@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -355,22 +355,22 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">6</span>Level 6 — Expert Challenge</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Code Reasoning Modification</span></div>
 <p><strong>Challenge:</strong> Complete the two marked lines so the program fits and prints the prediction for x = 5 from the data (1,2), (3,6). What is the final printed value?</p>
-<pre><code>from std.collections import List
+<pre><code><span class="kw">from</span> std.collections <span class="kw">import</span> <span class="tp">List</span>
 
-def main():
-    var xs: List[Float64] = [1.0, 3.0]
-    var ys: List[Float64] = [2.0, 6.0]
-    var xbar = 2.0
-    var ybar = 4.0
-    var sxy = 0.0
-    var sxx = 0.0
-    for i in range(len(xs)):
-        var dx = xs[i] - xbar
-        sxy += dx * (ys[i] - ybar)   # your line 1
-        sxx += dx * dx               # your line 2
-    var b = sxy / sxx
-    var a = ybar - b * xbar
-    print(a + b * 5.0)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> xs = <span class="tp">List</span>[<span class="tp">Float64</span>](1.0, 3.0)
+    <span class="kw">var</span> ys = <span class="tp">List</span>[<span class="tp">Float64</span>](2.0, 6.0)
+    <span class="kw">var</span> xbar = 2.0
+    <span class="kw">var</span> ybar = 4.0
+    <span class="kw">var</span> sxy = 0.0
+    <span class="kw">var</span> sxx = 0.0
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(xs)):
+        <span class="kw">var</span> dx = xs[i] - xbar
+        sxy += dx * (ys[i] - ybar)   <span class="cm"># your line 1</span>
+        sxx += dx * dx               <span class="cm"># your line 2</span>
+    <span class="kw">var</span> b = sxy / sxx
+    <span class="kw">var</span> a = ybar - b * xbar
+    <span class="fn">print</span>(a + b * 5.0)</code></pre>
 <textarea id="a6" placeholder="Write the output or answer here..." onkeydown="onKey(event,6,'10')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(6,'10')">Check Answer</button>
@@ -417,7 +417,10 @@ def main():
 
 <footer>
 Data Science Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_06_simd.html">&larr; Previous: SIMD Vector Arithmetic</a><br><a href="prog_08_npv.html">Next: Discounting, NPV &amp; the Annuity &rarr;</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="prog_06_simd.html">← Previous</a> <a href="progressive.html">All 13 drills</a> <a href="prog_08_npv.html">Next drill →</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a>
 </footer>
 
 <script>

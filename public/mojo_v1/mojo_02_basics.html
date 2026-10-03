@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -153,11 +153,9 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn active" data-tab="ch2-infer-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch2-infer-mojo">
-        <pre><code>def main():
-    var a = 5              # Mojo infers that a is type Int
-    var b: Float64 = 3.14   # Explicit declaration of Float64 type
-    var c: String           # Name created but uninitialized (assigned later)
-</code></pre>
+        <pre><span class="kw">var</span> a = <span class="num">5</span>              <span class="cmt"># Mojo infers that a is type Int</span>
+<span class="kw">var</span> b: <span class="type">Float64</span> = <span class="num">3.14</span>   <span class="cmt"># Explicit declaration of Float64 type</span>
+<span class="kw">var</span> c: <span class="type">String</span>           <span class="cmt"># Name created but uninitialized (assigned later)</span></pre>
       </div>
     </div>
 
@@ -167,21 +165,21 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch2-strong-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch2-strong-py">Python</button>
       </div>
       <div class="tab-content active" id="ch2-strong-mojo">
         <pre><span class="kw">var</span> count = <span class="num">8</span>     <span class="cmt"># count is type Int</span>
 count = <span class="str">"Nine?"</span>   <span class="cmt"># Error: can't implicitly convert 'StringLiteral' to 'Int'</span></pre>
       </div>
-      <div class="tab-content" id="ch2-strong-py">
-        <pre>count = <span class="num">8</span>       <span class="cmt"># int</span>
-count = <span class="str">"Nine?"</span> <span class="cmt"># Fine: names are untyped, objects carry types</span></pre>
-      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>🐍 In Python:</strong>
+      <p>Names are untyped and the objects they point at carry the types, so <code class="inline">count = 8</code> followed by <code class="inline">count = "Nine?"</code> is perfectly fine — the same name simply refers to something else. Mojo binds the type to the <em>name</em>, which is what turns a type error into a compile error instead of a surprise three lines later.</p>
     </div>
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
-      <p>There is no <code class="inline">let</code> keyword in Mojo 1.x. Older tutorials use <code class="inline">let</code> for immutable variables — that syntax has been removed. If you want immutability, reach for <code class="inline">comptime</code> constants or immutable function arguments.</p>
+      <p>Immutability comes from never reassigning a name, or from <code class="inline">comptime</code> constants and immutable function arguments.</p>
     </div>
   </section>
 
@@ -246,27 +244,25 @@ dig: 2</pre>
       </div>
     </div>
 
-    <p>An assignment of an <em>existing</em> variable's value either copies or transfers o<pre><code>def main():
-    var owning_variable = &quot;Owned value&quot;
-</code></pre>s="tab-btn active" data-tab="ch2-cpmv-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch2-cpmv-py">Python</button>
+    <p>An assignment of an <em>existing</em> variable's value either copies or transfers ownership:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch2-cpmv-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch2-cpmv-mojo">
         <pre><span class="kw">var</span> source = <span class="type">String</span>(<span class="str">"Hello"</span>)
 <span class="kw">var</span> copied = source   <span class="cmt"># A copy — both names stay valid</span>
-<span c<pre><code>def main():
-    var source = String(&quot;Hello&quot;)
-    var copied = source   # A copy — both names stay valid
-    var moved = source^   # A transfer — source is now uninitialized!
-</code></pre>       <span class="cmt"># Still the same object; source stays valid</span></pre>
+<span class="kw">var</span> moved = source^   <span class="cmt"># A transfer — source is now uninitialized!</span></pre>
       </div>
     </div>
 
-    <p>The transfer sigil (<code class="inline">^</code>) moves the value to the new vari<pre><code>def main():
-    source = &quot;Hello&quot;
-    copied = source       # No copy — same object, two references
-    moved = source        # Still the same object; source stays valid
-</code></pre></strong>.</p>
+    <div class="info-box">
+      <strong>🐍 In Python:</strong>
+      <p>Assignment copies a <em>reference</em>, never the value: <code class="inline">copied = source</code> and <code class="inline">moved = source</code> both leave you pointing at one and the same <code class="inline">str</code> object, and <code class="inline">source</code> stays valid throughout. There is no way to express "give this away and destroy my handle" in the language, so a large intermediate value silently stays alive.</p>
+    </div>
+
+    <p>The transfer sigil (<code class="inline">^</code>) moves the value to the new variable and leaves <code class="inline">source</code> uninitialized — you can't use it again until you assign it a new value. A transfer may move the value to a different memory location, so it requires the type to be <strong>Movable</strong>.</p>
 
     <h3>Implicitly copyable vs explicitly copyable</h3>
     <p>Simple value types like <code class="inline">Int</code>, <code class="inline">Float64</code>, and <code class="inline">Bool</code> conform to <code class="inline">ImplicitlyCopyable</code>, so plain assignment copies them automatically:</p>
@@ -281,10 +277,11 @@ dig: 2</pre>
       </div>
     </div>
 
-    <p>Larger types like <code class="inline">List</code> are <code class="inline">Copyable</code> but not implicitly, because copying could be expensive. Assigning<pre><code>def main():
-    var one_value = 15
-    var another_value = one_value   # implicit copy — fine
-</code></pre>
+    <p>Larger types like <code class="inline">List</code> are <code class="inline">Copyable</code> but not implicitly, because copying could be expensive. Assigning one without a transfer is an error:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch2-listerr-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch2-listerr-mojo">
         <pre><span class="kw">var</span> first: <span class="type">List</span>[<span class="type">Int</span>] = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
@@ -304,13 +301,16 @@ dig: 2</pre>
         <pre><span class="kw">var</span> first: <span class="type">List</span>[<span class="type">Int</span>] = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
 
 <span class="kw">var</span> second = first.<span class="fn">copy</span>()   <span class="cmt"># Independent copy; `first` unchanged</span>
-second.<span class="fn">append</span>(<span class="num">4</span>)             <span class="cmt"># [1, 2, 3,<pre><code>def main():
-    var first: List[Int] = [1, 2, 3]
-    var second = first.copy()   # Independent copy; `first` unchanged
-    second.append(4)             # [1, 2, 3, 4] — only in `second`
-    print(first)                 # [1, 2, 3]
-    var third = first^           # Transfer ownership; `first` unusable now
-</code></pre>licit, and safe parallelism falls out naturally. Full details in Chapter 7.</p>
+second.<span class="fn">append</span>(<span class="num">4</span>)             <span class="cmt"># [1, 2, 3, 4] — only in `second`</span>
+<span class="fn">print</span>(first)                 <span class="cmt"># [1, 2, 3]</span>
+
+<span class="kw">var</span> third = first^           <span class="cmt"># Transfer ownership; `first` unusable now</span></pre>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>💡 Key Insight:</strong>
+      <p>This is where Mojo most differs from Python. In Python, assignment binds a second name to the same object. In Mojo, assignment gives you an independent owned value — an automatic copy for trivial types, an error for expensive ones unless you say <code class="inline">.copy()</code> or <code class="inline">^</code>. Data flow stays explicit, and safe parallelism falls out naturally. Full details in Chapter 7.</p>
     </div>
   </section>
 
@@ -334,12 +334,14 @@ item += <span class="num">1</span>             <span class="cmt"># increments th
     <p>To name a reference instead, use the <code class="inline">ref</code> keyword to create a <strong>reference binding</strong>:</p>
 
     <div class="code-tabs">
-      <div class="tabs-he<pre><code>def main():
-    var items: List[Int] = [99, 77, 33, 12]
-    var item = items[1]   # item is a COPY of items[1]
-    item += 1             # increments the copy
-    print(items[1])        # prints 77 — list untouched
-</code></pre>     <span class="cmt"># increments items[1]</span>
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch2-refbind-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch2-refbind-mojo">
+        <pre><span class="kw">var</span> items: <span class="type">List</span>[<span class="type">Int</span>] = [<span class="num">99</span>, <span class="num">77</span>, <span class="num">33</span>, <span class="num">12</span>]
+
+<span class="kw">ref</span> item_ref = items[<span class="num">1</span>]   <span class="cmt"># item_ref IS items[1] — no copy</span>
+item_ref += <span class="num">1</span>              <span class="cmt"># increments items[1]</span>
 <span class="fn">print</span>(items[<span class="num">1</span>])            <span class="cmt"># prints 78</span>
 
 <span class="cmt"># ref item_ref = items[2]  # Error: invalid redefinition of item_ref</span></pre>
@@ -353,13 +355,17 @@ item += <span class="num">1</span>             <span class="cmt"># increments th
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
-      <p>Mentally file these three tools together — <code class="inline">var x = <pre><code>def main():
-    var items: List[Int] = [99, 77, 33, 12]
-    ref item_ref = items[1]   # item_ref IS items[1] — no copy
-    item_ref += 1              # increments items[1]
-    print(items[1])            # prints 78
-    # ref item_ref = items[2]  # Error: invalid redefinition of item_ref
-</code></pre>/button>
+      <p>Mentally file these three tools together — <code class="inline">var x = y</code> (own a copy), <code class="inline">var x = y^</code> (take over ownership), <code class="inline">ref x = y</code> (alias without owning). Choosing among them deliberately is the core skill of idiomatic Mojo. We build the full model in Chapter 7.</p>
+    </div>
+  </section>
+
+  <section id="comptime">
+    <h2>5. Compile-Time Constants</h2>
+    <p>Since all variables are mutable by default, Mojo needs another way to express a value that can't change at runtime. That's the <code class="inline">comptime</code> keyword:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch2-comptime-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch2-comptime-mojo">
         <pre><span class="kw">comptime</span> MAX_RETRIES = <span class="num">3</span>

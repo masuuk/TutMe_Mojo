@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -232,7 +232,7 @@ cleanup always runs</pre>
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch10-typed-mojo">define &amp; raise</button>
-        <button class="tab-btn" data-tab="ch10-typed-out">catch</button>
+        <button class="tab-btn" data-tab="ch10-typed-out">Mojo catch</button>
       </div>
       <div class="tab-content active" id="ch10-typed-mojo">
         <pre><span class="fn">@fieldwise_init</span>
@@ -282,7 +282,7 @@ cleanup always runs</pre>
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch10-enum-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch10-enum-out">handle</button>
+        <button class="tab-btn" data-tab="ch10-enum-out">Mojo handle</button>
       </div>
       <div class="tab-content active" id="ch10-enum-mojo">
         <pre><span class="fn">@fieldwise_init</span>
@@ -640,5 +640,7 @@ const obs=new IntersectionObserver(entries=>{
 },{rootMargin:'-40% 0px -50% 0px'});
 sections.forEach(s=>obs.observe(s));
 </script>
+
+<script src="../mojo-hl.js"></script>
 </body>
 </html>

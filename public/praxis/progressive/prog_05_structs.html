@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -200,7 +200,7 @@ footer a:hover{text-decoration:underline}
 <div class="hero">
 <a class="backlink" href="../../index.html">&larr; TutMe🔥 Learning Hub</a><br>
 <a class="backlink" href="../index.html">&larr; Praxis shelf</a>
-<div><span class="badge">MOJO 1.0 &bull; PRAXIS &bull; PROGRESSIVE DRILLS</span></div>
+<div><span class="badge">MOJO 1.x &bull; PRAXIS &bull; PROGRESSIVE DRILLS</span></div>
 <h1>Structs, Traits &amp; Fieldwise Init</h1>
 <p class="subtitle">Learn by doing. Start with a plain struct and progressively move toward traits, fieldwise initialization and generic functions over trait-constrained types.</p>
 </div>
@@ -257,7 +257,7 @@ footer a:hover{text-decoration:underline}
 <div id="s1" class="solution">
 <strong>Solution</strong>
 <pre><code>KIAMBU 21.5</code></pre>
-<p>The hand-written <code>def __init__(out self, …)</code> fills the two typed fields; printing shows both values.</p>
+<p>The hand-written <code>__init__(out self, …)</code> fills the two typed fields; printing shows both values.</p>
 </div>
 </section>
 
@@ -292,7 +292,7 @@ footer a:hover{text-decoration:underline}
 <div id="s2" class="solution">
 <strong>Solution</strong>
 <pre><code>3</code></pre>
-<p>Methods that change the struct take <code>mut self</code> — the same convention as <code>mut</code> arguments. Three bumps leave <code>n</code> at 3.</p>
+<p>Methods that change the struct take <code>mut self</code> — the same convention as mutating arguments. Three bumps leave <code>n</code> at 3.</p>
 </div>
 </section>
 
@@ -327,21 +327,21 @@ footer a:hover{text-decoration:underline}
 </section>
 
 <section class="card level" data-level="4">
-<h2><span class="lvl-check">4</span>Level 4 — Writable</h2>
+<h2><span class="lvl-check">4</span>Level 4 — Stringable</h2>
 <div class="meta"><span class="tag">Intermediate+</span><span class="tag">Traits</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
-<pre><code>struct Temp(Writable):
-    var c: Float64
+<pre><code><span class="kw">struct</span> <span class="tp">Temp</span>: <span class="tp">Stringable</span>:
+    <span class="kw">var</span> c: <span class="tp">Float64</span>
 
-    def __init__(out self, c: Float64):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">out</span> self, c: <span class="tp">Float64</span>):
         self.c = c
 
-    def write_to[T: Writer](self, mut writer: T):
-        writer.write(String(self.c) + &quot;C&quot;)
+    <span class="kw">def</span> <span class="fn">__str__</span>(self) -&gt; <span class="tp">String</span>:
+        <span class="kw">return</span> <span class="tp">String</span>(self.c) + <span class="st">"C"</span>
 
-def main():
-    var t = Temp(19.5)
-    print(t)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> t = <span class="tp">Temp</span>(19.5)
+    <span class="fn">print</span>(t)</code></pre>
 <textarea id="a4" placeholder="Write the output or answer here..." onkeydown="onKey(event,4,'19.5C')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(4,'19.5C')">Check Answer</button>
@@ -349,12 +349,12 @@ def main():
 <button class="ghost" id="hintbtn4" onclick="showHint(4)" style="display:none">💡 Hint</button>
 <span class="attempts" id="att4"></span>
 </div>
-<div id="h4" class="hint">Conforming to <code>Writable</code> means implementing <code>write_to</code>, which <code>print</code> calls. What does that method append to the number?</div>
+<div id="h4" class="hint">Conforming to <code>Stringable</code> means <code>print</code> calls <code>__str__</code>. What does that method append to the number?</div>
 <div id="f4" class="feedback"></div>
 <div id="s4" class="solution">
 <strong>Solution</strong>
 <pre><code>19.5C</code></pre>
-<p>Conforming to <code>Writable</code> means implementing <code>write_to</code>, so <code>print(t)</code> uses it directly.</p>
+<p>Conforming to <code>Stringable</code> means implementing <code>__str__</code>, so <code>print(t)</code> uses it directly.</p>
 </div>
 </section>
 
@@ -362,14 +362,14 @@ def main():
 <h2><span class="lvl-check">5</span>Level 5 — Generic over a Trait</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Generics</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
-<pre><code>def larger[T: Comparable &amp; ImplicitlyCopyable](a: T, b: T) -&gt; T:
-    if b &gt; a:
-        return b
-    return a
+<pre><code><span class="kw">def</span> <span class="fn">larger</span>[T: <span class="tp">Comparable</span>](a: <span class="tp">T</span>, b: <span class="tp">T</span>) -&gt; <span class="tp">T</span>:
+    <span class="kw">if</span> b &gt; a:
+        <span class="kw">return</span> b
+    <span class="kw">return</span> a
 
-def main():
-    print(larger[Float64](2.5, 7.5))
-    print(larger[Int](9, 4))</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="fn">print</span>(<span class="fn">larger</span>[<span class="tp">Float64</span>](2.5, 7.5))
+    <span class="fn">print</span>(<span class="fn">larger</span>[<span class="tp">Int</span>](9, 4))</code></pre>
 <textarea id="a5" placeholder="Write the output or answer here..." onkeydown="onKey(event,5,'7.5\n9')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(5,'7.5\n9')">Check Answer</button>
@@ -427,7 +427,7 @@ def main():
 <ul class="mastery">
 <li>Why must struct fields have explicit types?</li>
 <li>What does <code>@fieldwise_init</code> generate, and what does it not generate?</li>
-<li>What must a struct implement to conform to <code>Writable</code>?</li>
+<li>What must a struct implement to conform to <code>Stringable</code>?</li>
 <li>What does a trait constraint on a function's type parameter guarantee?</li>
 </ul>
 <textarea id="masteryNotes" placeholder="Jot your own explanations here — saved automatically as you type..." oninput="saveNotes()"></textarea>
@@ -443,7 +443,10 @@ def main():
 
 <footer>
 Mojo 1.x Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_04_compound.html">&larr; Previous: Compound Growth &amp; Effective Rates</a><br><a href="prog_06_simd.html">Next: SIMD Vector Arithmetic &rarr;</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="prog_04_compound.html">← Previous</a> <a href="progressive.html">All 13 drills</a> <a href="prog_06_simd.html">Next drill →</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a>
 </footer>
 
 <script>

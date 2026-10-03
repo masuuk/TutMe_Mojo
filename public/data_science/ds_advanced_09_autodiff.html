@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -121,53 +121,31 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo"><code><span class="com"># Mojo's autodiff uses the ADT (Automatic Differentiation Type) system</span>
+        <pre class="code-block active" id="mojo"><code><span class="com">// Mojo's autodiff uses the ADT (Automatic Differentiation Type) system</span>
 <span class="kw">from</span> autodiff <span class="kw">import</span> gradient, Value
 
 <span class="kw">def</span> <span class="fn">quadratic</span>(x: Value) -&gt; Value:
-    <span class="com"># f(x) = 3x² + 2x + 1</span>
+    <span class="com">// f(x) = 3x² + 2x + 1</span>
     <span class="kw">return</span> <span class="num">3.0</span> * x * x + <span class="num">2.0</span> * x + <span class="num">1.0</span>
 
 <span class="kw">def</span> <span class="fn">rosenbrock</span>(x: Value, y: Value) -&gt; Value:
-    <span class="com"># f(x,y) = (1-x)² + 100(y-x²)²</span>
+    <span class="com">// f(x,y) = (1-x)² + 100(y-x²)²</span>
     <span class="kw">var</span> a = <span class="num">1.0</span> - x
     <span class="kw">var</span> b = y - x * x
     <span class="kw">return</span> a * a + <span class="num">100.0</span> * b * b
 
 
-<span class="com"># Compute gradients</span>
+<span class="com">// Compute gradients</span>
 <span class="kw">var</span> df_dx = gradient(quadratic)
-<span class="kw">print</span>(df_dx(<span class="num">2.0</span>))  <span class="com"># f'(2) = 12 + 2 = 14.0</span>
+<span class="kw">print</span>(df_dx(<span class="num">2.0</span>))  <span class="com">// f'(2) = 12 + 2 = 14.0</span>
 
-<span class="com"># Multi-variable gradient</span>
+<span class="com">// Multi-variable gradient</span>
 <span class="kw">var</span> grad = gradient(rosenbrock)
 <span class="kw">var</span> (dx, dy) = grad(<span class="num">1.0</span>, <span class="num">1.0</span>)
-<span class="kw">print</span>(dx, dy)  <span class="com"># (0.0, 0.0) — minimum at (1,1)</span></code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> torch
-
-x = torch.tensor(<span class="num">2.0</span>, requires_grad=<span class="kw">True</span>)
-y = torch.tensor(<span class="num">1.0</span>, requires_grad=<span class="kw">True</span>)
-
-<span class="com"># Forward pass</span>
-f = (<span class="num">1</span>-x)**<span class="num">2</span> + <span class="num">100</span>*(y-x**<span class="num">2</span>)**<span class="num">2</span>
-
-<span class="com"># Backward pass</span>
-f.backward()
-
-<span class="kw">print</span>(x.grad, y.grad)  <span class="com"># tensor(0.) tensor(0.)</span>
-
-<span class="com"># Or using torch.autograd.functional</span>
-<span class="kw">from</span> torch.autograd <span class="kw">import</span> functional <span class="kw">as</span> F
-
-<span class="kw">def</span> <span class="fn">quad</span>(x):
-    <span class="kw">return</span> <span class="num">3</span>*x**<span class="num">2</span> + <span class="num">2</span>*x + <span class="num">1</span>
-
-grad_fn = <span class="kw">lambda</span> x: F.jacobian(quad, x)
-<span class="kw">print</span>(grad_fn(torch.tensor(<span class="num">2.0</span>)))</code></pre>
+<span class="kw">print</span>(dx, dy)  <span class="com">// (0.0, 0.0) — minimum at (1,1)</span></code></pre>
       </div>
     </div>
 
@@ -216,15 +194,15 @@ grad_fn = <span class="kw">lambda</span> x: F.jacobian(quad, x)
         <span class="kw">for</span> key <span class="kw">in</span> grads:
             <span class="kw">var</span> g = grads[key]
 
-            <span class="com"># Update biased moments</span>
+            <span class="com">// Update biased moments</span>
             <span class="kw">self</span>.m[key] = <span class="kw">self</span>.beta1 * <span class="kw">self</span>.m.get(key, <span class="num">0.0</span>) + (<span class="num">1.0</span> - <span class="kw">self</span>.beta1) * g
             <span class="kw">self</span>.v[key] = <span class="kw">self</span>.beta2 * <span class="kw">self</span>.v.get(key, <span class="num">0.0</span>) + (<span class="num">1.0</span> - <span class="kw">self</span>.beta2) * g * g
 
-            <span class="com"># Bias correction</span>
+            <span class="com">// Bias correction</span>
             <span class="kw">var</span> m_hat = <span class="kw">self</span>.m[key] / (<span class="num">1.0</span> - <span class="kw">self</span>.beta1 ** <span class="fn">Float64</span>(<span class="kw">self</span>.t))
             <span class="kw">var</span> v_hat = <span class="kw">self</span>.v[key] / (<span class="num">1.0</span> - <span class="kw">self</span>.beta2 ** <span class="fn">Float64</span>(<span class="kw">self</span>.t))
 
-            <span class="com"># Update parameters</span>
+            <span class="com">// Update parameters</span>
             params[key] -= <span class="kw">self</span>.lr * m_hat / (sqrt(v_hat) + <span class="kw">self</span>.eps)
 
 
@@ -255,12 +233,11 @@ grad_fn = <span class="kw">lambda</span> x: F.jacobian(quad, x)
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo3">Mojo 1.x</div>
-        <div class="tab" data-target="python3">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> autodiff <span class="kw">import</span> gradient, Value
-<span class="kw">from</span> std.math <span class="kw">import</span> sqrt, exp
+<span class="kw">from</span> math <span class="kw">import</span> sqrt, exp
 
 <span class="kw">def</span> <span class="fn">linear_regression</span>(
     x_data: List[Float64],
@@ -268,13 +245,13 @@ grad_fn = <span class="kw">lambda</span> x: F.jacobian(quad, x)
     lr: Float64 = <span class="num">0.01</span>,
     epochs: Int = <span class="num">1000</span>
 ) -&gt; (Float64, Float64):
-    <span class="com"># Learn y = w*x + b</span>
+    <span class="com">// Learn y = w*x + b</span>
     <span class="kw">var</span> w = <span class="num">0.0</span>
     <span class="kw">var</span> b = <span class="num">0.0</span>
     <span class="kw">var</span> n = <span class="fn">Float64</span>(<span class="fn">len</span>(x_data))
 
     <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
-        <span class="com"># Forward pass: compute MSE loss</span>
+        <span class="com">// Forward pass: compute MSE loss</span>
         <span class="kw">var</span> loss = <span class="num">0.0</span>
         <span class="kw">var</span> dw = <span class="num">0.0</span>
         <span class="kw">var</span> db = <span class="num">0.0</span>
@@ -288,7 +265,7 @@ grad_fn = <span class="kw">lambda</span> x: F.jacobian(quad, x)
 
         loss /= n
 
-        <span class="com"># Update parameters</span>
+        <span class="com">// Update parameters</span>
         w -= lr * dw
         b -= lr * db
 
@@ -298,7 +275,7 @@ grad_fn = <span class="kw">lambda</span> x: F.jacobian(quad, x)
     <span class="kw">return</span> (w, b)
 
 
-<span class="com"># Generate synthetic data: y = 3x + 1 + noise</span>
+<span class="com">// Generate synthetic data: y = 3x + 1 + noise</span>
 <span class="kw">var</span> x_data = List[Float64]()
 <span class="kw">var</span> y_data = List[Float64]()
 <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">100</span>):
@@ -308,28 +285,6 @@ grad_fn = <span class="kw">lambda</span> x: F.jacobian(quad, x)
 
 <span class="kw">var</span> (w, b) = linear_regression(x_data, y_data)
 <span class="kw">print</span>(<span class="str">"Learned: y ="</span>, w, <span class="str">"* x +"</span>, b)</code></pre>
-        <pre class="code-block" id="python3"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">linear_regression</span>(x, y, lr=<span class="num">0.01</span>, epochs=<span class="num">1000</span>):
-    w, b = <span class="num">0.0</span>, <span class="num">0.0</span>
-    n = <span class="fn">len</span>(x)
-
-    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
-        preds = w * x + b
-        loss = np.mean((preds - y) ** <span class="num">2</span>)
-        dw = <span class="num">2</span> * np.mean((preds - y) * x)
-        db = <span class="num">2</span> * np.mean(preds - y)
-        w -= lr * dw
-        b -= lr * db
-
-        <span class="kw">if</span> epoch % <span class="num">200</span> == <span class="num">0</span>:
-            <span class="kw">print</span>(<span class="str">f"Epoch </span>{epoch}<span class="str"> loss = </span>{loss}<span class="str">"</span>)
-
-    <span class="kw">return</span> w, b
-
-x = np.linspace(<span class="num">0</span>, <span class="num">10</span>, <span class="num">100</span>)
-y = <span class="num">3</span>*x + <span class="num">1</span> + np.random.normal(<span class="num">0</span>, <span class="num">0.5</span>, <span class="num">100</span>)
-w, b = linear_regression(x, y)</code></pre>
       </div>
     </div>
   </section>
@@ -349,51 +304,37 @@ w, b = linear_regression(x, y)</code></pre>
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo4">Mojo 1.x</div>
-        <div class="tab" data-target="python4">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo4"><code><span class="kw">from</span> std.math <span class="kw">import</span> log, exp, abs
+        <pre class="code-block active" id="mojo4">from std.math import log, exp, abs
 
-<span class="kw">def</span> <span class="fn">mse_loss</span>(pred: List[Float64], target: List[Float64]) -&gt; Float64:
-    <span class="kw">var</span> total = <span class="num">0.0</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(pred)):
-        <span class="kw">var</span> diff = pred[i] - target[i]
+def mse_loss(pred: List[Float64], target: List[Float64]) -&gt; Float64:
+    var total = 0.0
+    for i in range(len(pred)):
+        var diff = pred[i] - target[i]
         total += diff * diff
-    <span class="kw">return</span> total / <span class="fn">Float64</span>(<span class="fn">len</span>(pred))
+    return total / Float64(len(pred))
 
 
-<span class="kw">def</span> <span class="fn">binary_cross_entropy</span>(pred: List[Float64], target: List[Float64]) -&gt; Float64:
-    <span class="kw">var</span> total = <span class="num">0.0</span>
-    <span class="kw">var</span> eps = <span class="num">1e-7</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(pred)):
-        <span class="kw">var</span> p = <span class="fn">max</span>(eps, <span class="fn">min</span>(<span class="num">1.0</span> - eps, pred[i]))
-        total -= target[i] * log(p) + (<span class="num">1.0</span> - target[i]) * log(<span class="num">1.0</span> - p)
-    <span class="kw">return</span> total / <span class="fn">Float64</span>(<span class="fn">len</span>(pred))
+def binary_cross_entropy(pred: List[Float64], target: List[Float64]) -&gt; Float64:
+    var total = 0.0
+    var eps = 1e-7
+    for i in range(len(pred)):
+        var p = max(eps, min(1.0 - eps, pred[i]))
+        total -= target[i] * log(p) + (1.0 - target[i]) * log(1.0 - p)
+    return total / Float64(len(pred))
 
 
-<span class="kw">def</span> <span class="fn">huber_loss</span>(pred: List[Float64], target: List[Float64], delta: Float64 = <span class="num">1.0</span>) -&gt; Float64:
-    <span class="kw">var</span> total = <span class="num">0.0</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(pred)):
-        <span class="kw">var</span> a = abs(pred[i] - target[i])
-        <span class="kw">if</span> a &lt;= delta:
-            total += <span class="num">0.5</span> * a * a
-        <span class="kw">else</span>:
-            total += delta * (a - <span class="num">0.5</span> * delta)
-    <span class="kw">return</span> total / <span class="fn">Float64</span>(<span class="fn">len</span>(pred))</code></pre>
-        <pre class="code-block" id="python4"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">mse_loss</span>(pred, target):
-    <span class="kw">return</span> np.mean((np.array(pred) - np.array(target)) ** <span class="num">2</span>)
-
-<span class="kw">def</span> <span class="fn">binary_cross_entropy</span>(pred, target, eps=<span class="num">1e-7</span>):
-    pred = np.clip(pred, eps, <span class="num">1</span> - eps)
-    <span class="kw">return</span> -np.mean(target * np.log(pred) + (<span class="num">1</span>-target) * np.log(<span class="num">1</span>-pred))
-
-<span class="kw">def</span> <span class="fn">huber_loss</span>(pred, target, delta=<span class="num">1.0</span>):
-    pred, target = np.array(pred), np.array(target)
-    a = np.abs(pred - target)
-    <span class="kw">return</span> np.mean(np.where(a &lt;= delta, <span class="num">0.5</span>*a**<span class="num">2</span>, delta*(a - <span class="num">0.5</span>*delta)))</code></pre>
+def huber_loss(pred: List[Float64], target: List[Float64], delta: Float64 = 1.0) -&gt; Float64:
+    var total = 0.0
+    for i in range(len(pred)):
+        var a = abs(pred[i] - target[i])
+        if a &lt;= delta:
+            total += 0.5 * a * a
+        else:
+            total += delta * (a - 0.5 * delta)
+    return total / Float64(len(pred))</pre>
       </div>
     </div>
 
@@ -446,6 +387,9 @@ w, b = linear_regression(x, y)</code></pre>
     <a class="navbtn" href="ds_advanced_08_statistics.html">← Chapter 8: Statistical Modeling</a>
     <a class="navbtn" href="ds_advanced_10_tensors.html">Chapter 10: Tensor Architecture →</a>
   </div>
+  <div class="chapnav" style="border-top:none;padding-top:0;margin-top:.75rem;">
+    <a class="navbtn" href="nn_mojo.html">🧮 Hands-on: four hand-written chain-rule derivatives, before autodiff</a>
+  </div>
 </div>
 </div>
 
@@ -492,4 +436,141 @@ wireQuiz('quiz1','feedback1');
 wireQuiz('quiz2','feedback2');
 </script>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body></html>

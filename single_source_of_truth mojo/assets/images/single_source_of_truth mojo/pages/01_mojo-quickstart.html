@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Mojo quickstart · Mojo v1 The Language Manual</title>
+<meta name="description" content="A guided first program: install, build, run.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part I · Orientation</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part I</span><span class="sep">/</span><span>Orientation</span><span class="sep">/</span><span class="num">01</span></nav><h1>Mojo quickstart</h1>
+<p class="dek">A guided first program: install, build, run.</p><p class="byline">Chapter 01 · 1,239 words · 16 code blocks · <a class="ext" href="https://mojolang.org/nightly/docs/manual/quickstart/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Welcome to Mojo, a systems language for the AI era.</p>
+<p>This tutorial offers a quick tour of Mojo language fundamentals by showing
+you how to build a simple application. You'll get a taste of Mojo's syntax
+and enough familiarity to read and write basic Mojo code.</p>
+<p>It should take about 15-30 minutes if you stop to explore, or less if
+you work straight through.</p>
+<h2 class="h h--2" data-level="2" id="setup">Setup<a aria-label="Link to Setup" class="h__link" href="#setup"></a></h2>
+<p>Before starting:</p>
+<ul>
+<li class="">Check the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/requirements/" rel="noopener noreferrer">system requirements</a>.</li>
+<li class=""><a class="ext" data-external="" href="https://mojolang.org/nightly/install/" rel="noopener noreferrer">Install Mojo</a> in a <code>pixi</code> or <code>uv</code> environment.</li>
+<li class="">Open a terminal and make sure <code>mojo</code> is in your path or environment.</li>
+</ul>
+<p>As you work through this tour, look for <em>Takeaways</em> items. They connect
+new Mojo syntax to concepts you may already know from other languages.</p>
+<h2 class="h h--2" data-level="2" id="hello-mojo">Hello Mojo<a aria-label="Link to Hello Mojo" class="h__link" href="#hello-mojo"></a></h2>
+<p>Create <code>analyzer.mojo</code> in your favorite IDE or editor.</p>
+<p>Add this to <code>analyzer.mojo</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Temperature Analyzer"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Run it:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo analyzer.mojo</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways"></a></h3>
+<ul>
+<li class="">If you see "Temperature Analyzer", your setup works.</li>
+<li class="">All Mojo executables use <code>main()</code> as their entry point.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="variables-and-data">Variables and data<a aria-label="Link to Variables and data" class="h__link" href="#variables-and-data"></a></h2>
+<p>Update your file to add temperature data:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Temperature Analyzer"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># [Float64] sets the List element type at compile time</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> temps<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Float64<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">20.5</span><span class="tk-punctuation">,</span> <span class="tk-number">22.3</span><span class="tk-punctuation">,</span> <span class="tk-number">19.8</span><span class="tk-punctuation">,</span> <span class="tk-number">25.1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Recorded"</span><span class="tk-punctuation">,</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-string">"temperatures"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="loops">Loops<a aria-label="Link to Loops" class="h__link" href="#loops"></a></h2>
+<p>Print each temperature. Add to the end of <code>main()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># ... existing code ...</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">for</span> index <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-comment"># The range is [0, len(temps))</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"  Day {index + 1}: {temps[index]}°C"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways-1">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-1"></a></h3>
+<ul>
+<li class="">
+<p>This loop uses indexes. Normally you iterate over elements.</p>
+</li>
+<li class="">
+<p>The <code>t"..."</code> prefix creates a <em>template string</em>. Braces <code>{}</code> interpolate
+expressions into the output. This avoids memory allocations for
+intermediate values.</p>
+</li>
+</ul>
+<aside class="callout callout--tip"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">✦</span>Worth knowing</p><div class="callout__body"><p>Mojo also has a <code>while</code> loop.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="functions">Functions<a aria-label="Link to Functions" class="h__link" href="#functions"></a></h2>
+<p>Add a function above <code>main()</code> to calculate the average temperature:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">calculate_average</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Float64<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># A literal with a decimal component defaults to Float64</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> total <span class="tk-operator">=</span> <span class="tk-number">0.0</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">for</span> temp <span class="tk-keyword">in</span> temps<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">        total <span class="tk-operator">+=</span> temp</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> total <span class="tk-operator">/</span> Float64<span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># ... existing code ...</span></span>
+</code></pre></figure>
+<p>Call the function by adding this to the end of <code>main()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">var</span> avg <span class="tk-operator">=</span> calculate_average<span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Average: {round(avg, 2)}°C"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways-2">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-2"></a></h3>
+<ul>
+<li class="">Mojo's <code>def</code> functions don't raise by default.</li>
+<li class=""><code>round()</code> returns <code>avg</code> rounded to two decimal places.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="conditionals">Conditionals<a aria-label="Link to Conditionals" class="h__link" href="#conditionals"></a></h2>
+<p>Classify the average temperature. Add to the end of <code>main()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">if</span> avg <span class="tk-operator">&gt;</span> <span class="tk-number">25.0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Hot week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">elif</span> avg <span class="tk-operator">&gt;</span> <span class="tk-number">20.0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Comfortable week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Cool week"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="raise-errors">Raise errors<a aria-label="Link to Raise errors" class="h__link" href="#raise-errors"></a></h2>
+<p>Empty data means no average. Update <code>calculate_average()</code> to handle the
+error:</p>
+<ul>
+<li class="">Add <code>raises</code> before the return arrow.</li>
+<li class="">Add an empty list check.</li>
+<li class="">Raise an <code>Error</code> if it's empty.</li>
+</ul>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">calculate_average</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Float64<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"No temperature data"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> total <span class="tk-operator">=</span> <span class="tk-number">0.0</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">for</span> temp <span class="tk-keyword">in</span> temps<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">        total <span class="tk-operator">+=</span> temp</span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> total <span class="tk-operator">/</span> Float64<span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>After updating, your app will no longer compile.</p>
+<p>Once <code>calculate_average()</code> can raise, its callers must handle or propagate
+the error. You do that in the next step.</p>
+<h2 class="h h--2" data-level="2" id="handle-errors">Handle errors<a aria-label="Link to Handle errors" class="h__link" href="#handle-errors"></a></h2>
+<p>Wrap failable code in <code>try-except</code> for error handling:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> avg <span class="tk-operator">=</span> calculate_average<span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Average: {round(avg, 2)}°C"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">if</span> avg <span class="tk-operator">&gt;</span> <span class="tk-number">25.0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Hot week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">elif</span> avg <span class="tk-operator">&gt;</span> <span class="tk-number">20.0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Comfortable week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Cool week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Error:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>To test the error, replace <code>temps</code> with <code>[]</code>.
+Confirm that your app errors with "No temperature data".</p>
+<h3 class="h h--3" data-level="3" id="takeaways-3">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-3"></a></h3>
+<ul>
+<li class="">Each <code>try</code> statement requires at least one <code>except</code> or <code>finally</code> clause.</li>
+<li class="">An <code>else</code> clause runs only if no error occurs.</li>
+<li class="">A <code>finally</code> clause always runs.</li>
+</ul>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    operation<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4">    handle_error<span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span> <span class="tk-comment"># Runs if an error occurs</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">    on_success<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Runs only if no error occurred</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">finally</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">    cleanup<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Always runs</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="python-integration">Python integration<a aria-label="Link to Python integration" class="h__link" href="#python-integration"></a></h2>
+<p>Mojo integrates with libraries written in other languages. Use Python's NumPy
+to calculate the standard deviation.</p>
+<p>Install NumPy with your package manager:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">pixi <span class="tk-function">add</span> numpy</span>
+</code></pre></figure>
+<p>or:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">uv pip <span class="tk-function">install</span> numpy</span>
+</code></pre></figure>
+<p>Add these imports at the top of your file:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python<span class="tk-punctuation">.</span>numpy <span class="tk-keyword">import</span> copy_to_numpy_array</span>
+</code></pre></figure>
+<p>Then calculate the standard deviation at the end of the <code>try</code> block in
+<code>main()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> np <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>import_module<span class="tk-punctuation">(</span><span class="tk-string">"numpy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> pytemps <span class="tk-operator">=</span> copy_to_numpy_array<span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> std_dev <span class="tk-operator">=</span> np<span class="tk-punctuation">.</span>std<span class="tk-punctuation">(</span>pytemps<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Temperature standard deviation:"</span><span class="tk-punctuation">,</span> std_dev<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="final-code">Final code<a aria-label="Link to Final code" class="h__link" href="#final-code"></a></h2>
+<p>Your complete <code>analyzer.mojo</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python<span class="tk-punctuation">.</span>numpy <span class="tk-keyword">import</span> copy_to_numpy_array</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">calculate_average</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Float64<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"No temperature data"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> total <span class="tk-operator">=</span> <span class="tk-number">0.0</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">for</span> temp <span class="tk-keyword">in</span> temps<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11">        total <span class="tk-operator">+=</span> temp</span>
+<span class="cl" data-line="12"> <span class="tk-keyword">return</span> total <span class="tk-operator">/</span> Float64<span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Temperature Analyzer"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">var</span> temps<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Float64<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">20.5</span><span class="tk-punctuation">,</span> <span class="tk-number">22.3</span><span class="tk-punctuation">,</span> <span class="tk-number">19.8</span><span class="tk-punctuation">,</span> <span class="tk-number">25.1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Recorded"</span><span class="tk-punctuation">,</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-string">"temperatures"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">for</span> index <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"  Day {index + 1}: {temps[index]}°C"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="22"></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">var</span> avg <span class="tk-operator">=</span> calculate_average<span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Average: {round(avg, 2)}°C"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="26"></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">if</span> avg <span class="tk-operator">&gt;</span> <span class="tk-number">25.0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="28"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Hot week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="29"> <span class="tk-keyword">elif</span> avg <span class="tk-operator">&gt;</span> <span class="tk-number">20.0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="30"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Comfortable week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="31"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="32"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Status: Cool week"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="33"></span>
+<span class="cl" data-line="34"> <span class="tk-keyword">var</span> np <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>import_module<span class="tk-punctuation">(</span><span class="tk-string">"numpy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="35"> <span class="tk-keyword">var</span> pytemps <span class="tk-operator">=</span> copy_to_numpy_array<span class="tk-punctuation">(</span>temps<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="36"> <span class="tk-keyword">var</span> std_dev <span class="tk-operator">=</span> np<span class="tk-punctuation">.</span>std<span class="tk-punctuation">(</span>pytemps<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="37"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Temperature standard deviation:"</span><span class="tk-punctuation">,</span> std_dev<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="38"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="39"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Error:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="what-you-touched">What you touched<a aria-label="Link to What you touched" class="h__link" href="#what-you-touched"></a></h2>
+<p>You just used: Mojo variables, lists, loops, functions, conditionals, error
+handling, and Python integration in one working program.</p>
+<h2 class="h h--2" data-level="2" id="your-first-day-try-these">Your first day? Try these<a aria-label="Link to Your first day? Try these" class="h__link" href="#your-first-day-try-these"></a></h2>
+<ul>
+<li class="">Build Conway's Game of Life with the <a href="../pages/02_get-started-with-mojo.html">get started
+tutorial</a>. It normally takes about 45-60
+minutes.</li>
+<li class="">Keep the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/reference/" rel="noopener noreferrer">language reference</a> handy for syntax,
+keywords, and more.</li>
+<li class="">Download the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/reference/cheat-sheets/" rel="noopener noreferrer">cheat sheets</a> for printable
+reference cards that bring entire concepts together.</li>
+<li class="">Play <a class="ext" data-external="" href="https://quest.mojolang.org/" rel="noopener noreferrer">Mojo Quest</a> to practice Mojo syntax
+with coding challenges.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="use-mojo-with-ai-coding-assistants">Use Mojo with AI coding assistants<a aria-label="Link to Use Mojo with AI coding assistants" class="h__link" href="#use-mojo-with-ai-coding-assistants"></a></h2>
+<p>If you use an AI coding assistant, install the Mojo agent skills to give it
+up-to-date information about the rapidly evolving language:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">npx skills <span class="tk-function">add</span> modular/skills</span>
+</code></pre></figure>
+<p>This installs all <a href="../pages/37_mojo-ai-skills.html">Mojo agent skills</a>, including the
+<code>mojo-syntax</code> skill for the latest nightly language releases.</p>
+<h2 class="h h--2" data-level="2" id="keep-going">Keep going<a aria-label="Link to Keep going" class="h__link" href="#keep-going"></a></h2>
+<ul>
+<li class="">Learn Mojo in depth with the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/manual/" rel="noopener noreferrer">Mojo Manual</a>.</li>
+<li class="">Look up APIs in the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/" rel="noopener noreferrer">Standard Library</a>.</li>
+<li class="">Ask questions and connect with other Mojo developers on the
+<a class="ext" data-external="" href="https://forum.modular.com/docs/community" rel="noopener noreferrer">Discourse forums</a> and
+<a class="ext" data-external="" href="https://discord.com/invite/modular" rel="noopener noreferrer">Discord</a>.</li>
+<li class="">Follow Mojo development on the <a class="ext" data-external="" href="https://www.modular.com/blog" rel="noopener noreferrer">Mojo Blog</a>.</li>
+</ul>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/nightly/docs/manual/quickstart/" rel="noopener noreferrer" data-external>https://mojolang.org/nightly/docs/manual/quickstart/</a>, saved Thu, 01 Oct 2026 15:29:52 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--next" href="../pages/02_get-started-with-mojo.html"><span class="pager__dir">Next →</span><span class="pager__title">Get started with Mojo</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#setup">Setup</a></li><li class="rail__depth-2"><a href="#hello-mojo">Hello Mojo</a></li><li class="rail__depth-2"><a href="#variables-and-data">Variables and data</a></li><li class="rail__depth-2"><a href="#loops">Loops</a></li><li class="rail__depth-2"><a href="#functions">Functions</a></li><li class="rail__depth-2"><a href="#conditionals">Conditionals</a></li><li class="rail__depth-2"><a href="#raise-errors">Raise errors</a></li><li class="rail__depth-2"><a href="#handle-errors">Handle errors</a></li><li class="rail__depth-2"><a href="#python-integration">Python integration</a></li><li class="rail__depth-2"><a href="#final-code">Final code</a></li><li class="rail__depth-2"><a href="#what-you-touched">What you touched</a></li><li class="rail__depth-2"><a href="#your-first-day-try-these">Your first day? Try these</a></li><li class="rail__depth-2"><a href="#use-mojo-with-ai-coding-assistants">Use Mojo with AI coding assistants</a></li><li class="rail__depth-2"><a href="#keep-going">Keep going</a></li><li class="rail__depth-3"><a href="#takeaways">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-1">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-2">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-3">Takeaways</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#setup">Setup</a></li><li class="rail__depth-2"><a href="#hello-mojo">Hello Mojo</a></li><li class="rail__depth-2"><a href="#variables-and-data">Variables and data</a></li><li class="rail__depth-2"><a href="#loops">Loops</a></li><li class="rail__depth-2"><a href="#functions">Functions</a></li><li class="rail__depth-2"><a href="#conditionals">Conditionals</a></li><li class="rail__depth-2"><a href="#raise-errors">Raise errors</a></li><li class="rail__depth-2"><a href="#handle-errors">Handle errors</a></li><li class="rail__depth-2"><a href="#python-integration">Python integration</a></li><li class="rail__depth-2"><a href="#final-code">Final code</a></li><li class="rail__depth-2"><a href="#what-you-touched">What you touched</a></li><li class="rail__depth-2"><a href="#your-first-day-try-these">Your first day? Try these</a></li><li class="rail__depth-2"><a href="#use-mojo-with-ai-coding-assistants">Use Mojo with AI coding assistants</a></li><li class="rail__depth-2"><a href="#keep-going">Keep going</a></li><li class="rail__depth-3"><a href="#takeaways">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-1">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-2">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-3">Takeaways</a></li></ol>
+<p class="rail__meta">Chapter 01 of 38 · Part I, Orientation.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

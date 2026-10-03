@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Variables · Mojo v1 The Language Manual</title>
+<meta name="description" content="Declaration, mutation, aliasing, and scopes.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">05</span></nav><h1>Variables</h1>
+<p class="dek">Declaration, mutation, aliasing, and scopes.</p><p class="byline">Chapter 05 · 1,208 words · 15 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/variables/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>A variable is a name that holds a value or object. All variables in Mojo
+are mutable by default. Their value can change. If you want to define a
+constant value that can't change at runtime, see the <a href="../pages/30_compile-time-evaluation.html#comptime-values"><code>comptime</code>
+keyword</a>
+or pass the value as a non-mutable function argument.</p>
+<p>When you declare a variable in Mojo, you allocate a logical storage location,
+and bind a name to that storage.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> greeting<span class="tk-punctuation">:</span> String <span class="tk-operator">=</span> <span class="tk-string">"Hello World"</span></span>
+</code></pre></figure>
+<p>A <code>var</code> declaration does three things:</p>
+<ul>
+<li class="">It declares a logical storage location, which is tied to a particular type.
+In this case, it holds <code>String</code> instances.</li>
+<li class="">It binds the name <code>greeting</code> to this logical storage location.</li>
+<li class="">It <em>initializes</em> the storage space with a newly created <code>String</code> value,
+using "Hello World". The new value is <em>owned by</em> the variable.
+No other variable can own this value unless you transfer its ownership.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="variable-declarations">Variable declarations<a aria-label="Link to Variable declarations" class="h__link" href="#variable-declarations"></a></h2>
+<p>To declare a variable, use <code>var</code> with a name. You can give it a value, a
+type annotation, or both. The more you annotate, the more explicit your
+code is, and the easier it is to read and maintain:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-number">5</span> <span class="tk-comment"># Mojo infers that a is type Int</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> b<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">3.14</span> <span class="tk-comment"># Explicit declaration of Float64 type</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> c<span class="tk-punctuation">:</span> String  <span class="tk-comment"># The name is created but uninitialized</span></span>
+</code></pre></figure>
+<p>A variable's type never changes. Its storage is strongly typed upon creation
+and can only hold values of that type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> count <span class="tk-operator">=</span> <span class="tk-number">8</span> <span class="tk-comment"># count is type Int</span></span>
+<span class="cl" data-line="2">count <span class="tk-operator">=</span> <span class="tk-string">"Nine?"</span> <span class="tk-comment"># Error: can't implicitly convert 'StringLiteral' to 'Int'</span></span>
+</code></pre></figure>
+<p>A variable is scoped to the block in which it is declared. Its value
+is destroyed at last use. You may transfer a value from a variable so it no
+longer lives in that variable or that scope. The name, that is, the variable
+itself, is destroyed when the scope ends.</p>
+<ul>
+<li class="">Variables are names that hold values.</li>
+<li class="">Values are data that live in memory.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="variable-scopes">Variable scopes<a aria-label="Link to Variable scopes" class="h__link" href="#variable-scopes"></a></h2>
+<p>Variables in Mojo use <em>lexical scoping</em>. A variable's definition is
+determined by where it appears in the source code, not when it executes
+at runtime. The specific scope level depends on how the variable is
+declared.</p>
+<p>Variables have <strong>block-level</strong> scope. Nested code can read and modify
+variables defined in an outer scope. An outer scope can't read variables
+defined in an inner scope.</p>
+<p>For example, the <code>if</code> code block shown here creates an inner scope where outer
+variables are accessible to read/write, but any new variables do not live
+beyond the scope of the <code>if</code> block:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">lexical_scopes</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> num <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> dig <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> num <span class="tk-operator">==</span> <span class="tk-number">1</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"num:"</span><span class="tk-punctuation">,</span> num<span class="tk-punctuation">)</span> <span class="tk-comment"># Reads the outer-scope "num"</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> num <span class="tk-operator">=</span> <span class="tk-number">2</span> <span class="tk-comment"># Creates new inner-scope "num"</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"num:"</span><span class="tk-punctuation">,</span> num<span class="tk-punctuation">)</span> <span class="tk-comment"># Reads the inner-scope "num"</span></span>
+<span class="cl" data-line="8">        dig <span class="tk-operator">=</span> <span class="tk-number">2</span> <span class="tk-comment"># Updates the outer-scope "dig"</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"num:"</span><span class="tk-punctuation">,</span> num<span class="tk-punctuation">)</span> <span class="tk-comment"># Reads the outer-scope "num"</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"dig:"</span><span class="tk-punctuation">,</span> dig<span class="tk-punctuation">)</span> <span class="tk-comment"># Reads the outer-scope "dig"</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">num: 1</span>
+<span class="cl" data-line="2">num: 2</span>
+<span class="cl" data-line="3">num: 1</span>
+<span class="cl" data-line="4">dig: 2</span>
+</code></pre></figure>
+<p>Note that the <code>var</code> statement inside the <code>if</code> creates a <strong>new</strong> variable
+with the same name as the outer variable. This prevents the inner
+if-statement from accessing the outer <code>num</code> variable. This is called
+"variable shadowing," where the inner scope variable hides or "shadows" a
+variable from an outer scope.</p>
+<p>The lifetime of the inner <code>num</code> ends exactly where the <code>if</code> code block ends,
+because that's the scope in which the variable was defined.</p>
+<h2 class="h h--2" data-level="2" id="copying-and-moving-values">Copying and moving values<a aria-label="Link to Copying and moving values" class="h__link" href="#copying-and-moving-values"></a></h2>
+<p>An assignment statement of a newly created value or a literal establishes
+ownership:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> owning_variable <span class="tk-operator">=</span> <span class="tk-string">"Owned value"</span></span>
+</code></pre></figure>
+<p>An assignment of an existing variable's value transfers ownership of that
+value or a copy of that value to the new variable:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> source <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> copied <span class="tk-operator">=</span> source   <span class="tk-comment"># A copy</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> moved <span class="tk-operator">=</span> source<span class="tk-operator">^</span> <span class="tk-comment"># A transfer</span></span>
+</code></pre></figure>
+<p>The right-hand side variables must be <code>Copyable</code> or <code>Movable</code> to be
+assigned in this way. After the assignment the new variable owns a value,
+whether copied or transferred. A transfer leaves <code>source</code> uninitialized, and
+you can't use it again until you assign it a new value.</p>
+<p>The value on the right-hand side of the assignment statement must be
+transferable to the new variable. Here's an example where that doesn't
+work:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> second <span class="tk-operator">=</span> first  <span class="tk-comment"># error: 'List[Int]' is not implicitly copyable because</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># it doesn't conform to 'ImplicitlyCopyable'</span></span>
+</code></pre></figure>
+<p>The first assignment is no problem: the expression <code>[1, 2, 3]</code> creates a
+new <code>List</code> value without an owner, so <code>first</code> becomes that owner without
+any ambiguity. The second assignment errors because <code>first</code> isn't
+implicitly copyable and the value isn't transferred.</p>
+<p>Each outcome depends on type features for the values involved in assignment.</p>
+<ul>
+<li class="">
+<p>A <code>Copyable</code> type can be copied explicitly, by calling its copy
+initializer or the <code>copy()</code> method.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> second <span class="tk-operator">=</span> first<span class="tk-punctuation">.</span>copy<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Copying leaves <code>first</code> unchanged. <code>second</code> is assigned its own, uniquely
+owned copy of the list.</p>
+</li>
+<li class="">
+<p><code>ImplicitlyCopyable</code> types can be copied without an explicit signal:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> one_value <span class="tk-operator">=</span> <span class="tk-number">15</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> another_value <span class="tk-operator">=</span> one_value  <span class="tk-comment"># implicit copy</span></span>
+</code></pre></figure>
+<p>Implicitly copyable types are generally simple value types like <code>Int</code>,
+<code>Float64</code>, and <code>Bool</code>, which can be copied trivially.</p>
+</li>
+<li class="">
+<p>The ownership of a value can be explicitly transferred from one variable
+to another by appending the <em>transfer sigil</em> (<code>^</code>) after the value to
+transfer:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> second <span class="tk-operator">=</span> first<span class="tk-operator">^</span></span>
+</code></pre></figure>
+<p>This moves the value to <code>second</code>, and leaves <code>first</code> uninitialized.</p>
+<p>This ownership may move the value from one memory location to another.
+This requires the value to be <code>Movable</code>.</p>
+</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="reference-bindings">Reference bindings<a aria-label="Link to Reference bindings" class="h__link" href="#reference-bindings"></a></h2>
+<p>Some APIs return
+<a href="../pages/21_lifetimes-origins-and-references.html#working-with-references"><em>references</em></a> to
+values owned elsewhere. References avoid copying values. For example, when
+you retrieve a value from a collection, the collection returns a reference,
+instead of a copy:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> animals<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-string">"Cats"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Dogs"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Zebras"</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>animals<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Prints "Zebras", does not copy the value.</span></span>
+</code></pre></figure>
+<p>If you assign a reference to a <em>variable</em>, it creates a copy (if the value
+is implicitly copyable) or produces an error (if it isn't):</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> items<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">99</span><span class="tk-punctuation">,</span> <span class="tk-number">77</span><span class="tk-punctuation">,</span> <span class="tk-number">33</span><span class="tk-punctuation">,</span> <span class="tk-number">12</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> item <span class="tk-operator">=</span> items<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-comment"># item is a copy of items[1]</span></span>
+<span class="cl" data-line="3">item <span class="tk-operator">+=</span> <span class="tk-number">1</span> <span class="tk-comment"># increments item</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>items<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prints 77</span></span>
+</code></pre></figure>
+<p>To name a reference, use the <code>ref</code> keyword to create a reference binding:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">ref</span> item_ref <span class="tk-operator">=</span> items<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-comment"># item_ref is a reference to item[1]</span></span>
+<span class="cl" data-line="2">item_ref <span class="tk-operator">+=</span> <span class="tk-number">1</span> <span class="tk-comment"># increments items[1]</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>items<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prints 78</span></span>
+</code></pre></figure>
+<p>The name <code>item_ref</code> is bound to <code>items[1]</code>. All reads and writes to
+<code>item_ref</code> go to the item it references.</p>
+<p>Reference bindings can't be re-assigned:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">ref</span> item_ref <span class="tk-operator">=</span> items<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span> <span class="tk-comment"># error: invalid redefinition of item_ref</span></span>
+</code></pre></figure>
+<p>For more information on references, see
+<a href="../pages/21_lifetimes-origins-and-references.html#working-with-references">Working with references</a>.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/variables/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/variables/</a>, saved Thu, 01 Oct 2026 15:48:14 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/04_mojo-tips-for-python-devs.html"><span class="pager__dir">← Previous</span><span class="pager__title">Mojo tips for Python devs</span></a><a class="pager__link pager__link--next" href="../pages/06_types.html"><span class="pager__dir">Next →</span><span class="pager__title">Types</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#variable-declarations">Variable declarations</a></li><li class="rail__depth-2"><a href="#variable-scopes">Variable scopes</a></li><li class="rail__depth-2"><a href="#copying-and-moving-values">Copying and moving values</a></li><li class="rail__depth-2"><a href="#reference-bindings">Reference bindings</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#variable-declarations">Variable declarations</a></li><li class="rail__depth-2"><a href="#variable-scopes">Variable scopes</a></li><li class="rail__depth-2"><a href="#copying-and-moving-values">Copying and moving values</a></li><li class="rail__depth-2"><a href="#reference-bindings">Reference bindings</a></li></ol>
+<p class="rail__meta">Chapter 05 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

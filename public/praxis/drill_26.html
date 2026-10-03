@@ -1,85 +1,176 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mojo 1.x · Drill 26 · AI Agent Tool Calling</title><link rel="stylesheet" href="../styles.css"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%22 stop-color=%22%235bd4ff%22/><stop offset=%221%22 stop-color=%22%232f8fe0%22/></linearGradient></defs><rect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/><g fill=%22none%22 stroke=%22%2306101c%22 stroke-width=%222.4%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 transform=%22translate(8 8)%22><path d=%22M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z%22/><path d=%22M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z%22/></g></svg>"></head><body>
-<nav><div class="wrap navin"><a class="brand" href="../index.html"><span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></g></svg></span><span>TutMe🔥 <span style="color:#5bd4ff">Learning Hub</span></span></a>
-<div class="navlinks"><a class="pill" href="../index.html">Home</a><a class="pill" href="../mojo_v1/index.html">Fundamentals</a><a class="pill" href="../data_science/index.html">Data Science</a><a class="pill" href="../applications/index.html">Applications</a><a class="pill" href="index.html">Praxis</a></div></div></nav>
-<main><section><div class="wrap hero"><span class="eyebrow">PRAXIS · DATA SCIENCE · AI AGENTS</span><h1>Drill 26 · AI Agent Tool Calling</h1><p class="lead">Turn a chatbot into an agent — describe a tool, let the model request it, execute locally, feed the result back.</p><div class="card big"><h3>Your task</h3><p>Port the guide's Section 05 pattern to Mojo: the model can't answer "How does Mojo call Python libraries?" from memory, so register a mock <code>search_docs(query: String) -> String</code> tool (swap the body for a vector search in production). Describe it with a JSON schema under <code>tools</code>, let the model decide with <code>tool_choice="auto"</code>, inspect <code>message.tool_calls</code>, execute the function locally, and feed the result back as a <code>role: "tool"</code> message carrying the matching <code>tool_call_id</code>. Make a second call so the model composes the final answer from the real data, and confirm the printout references <code>std.python</code> — proof the tool result reached the final generation.</p><div class="notice">Based on <a href="../data_science/ai_agents_python_vs_mojo.html" style="color:#5bd4ff">Building AI Agents · Python vs Mojo</a> (Section 05 · Tool Calling). Ground your code with <a href="../mojo_v1/mojo_11_interop.html" style="color:#5bd4ff">Python &amp; C Interop</a> and <a href="../mojo_v1/mojo_05_operators.html" style="color:#5bd4ff">Operators &amp; Control Flow</a>. Do the problem before looking for a solution or answering the checkpoint. If you forget syntax, use the <a href="../mojo_v1/index.html" style="color:#5bd4ff">Mojo Library</a>.</div></div>
-<div class="card big quiz" data-quiz><h3>Checkpoint · multiple choice</h3><p class="q">When the model decides a question needs a tool, it returns a request instead of text. What must your code do to give it the real result?</p>
-<label class="opt"><input type="radio" name="d26q1" value="a">Append the result as a normal <code>user</code> message.</label>
-<label class="opt" data-correct="true"><input type="radio" name="d26q1" value="b">Send a <code>role: "tool"</code> message whose <code>tool_call_id</code> matches the request.</label>
-<label class="opt"><input type="radio" name="d26q1" value="c">Re-run the model without the <code>tools</code> list.</label>
-<label class="opt"><input type="radio" name="d26q1" value="d">Raise an exception so the model retries on its own.</label>
+<title>Mojo 1.x · Drill 26 · The Agent Loop</title><link rel="stylesheet" href="../styles.css"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%22 stop-color=%22%235bd4ff%22/><stop offset=%221%22 stop-color=%22%232f8fe0%22/></linearGradient></defs><rect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/><g fill=%22none%22 stroke=%22%2306101c%22 stroke-width=%222.4%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 transform=%22translate(8 8)%22><path d=%22M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z%22/><path d=%22M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z%22/></g></svg>"></head><body>
+<nav><div class="wrap navin"><a class="brand" href="../index.html"><span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span><span>TutMe🔥 <span style="color:#5bd4ff">Learning Hub</span></span></a>
+<div class="navlinks"><a class="pill" href="../index.html">Home</a><a class="pill" href="../mojo_v1/index.html">Fundamentals</a><a class="pill" href="../data_science/index.html">Data Science</a><a class="pill" href="../applications/index.html">Applications</a><a class="pill" href="../praxis/index.html">Praxis</a></div></div></nav>
+<main><section><div class="wrap hero"><span class="eyebrow">PRAXIS · DATA SCIENCE · AI AGENTS</span><h1>Drill 26 · The Agent Loop</h1><p class="lead">Turn a stateless API call into a conversational loop — the foundation of every AI agent.</p><div class="card big"><h3>Your task</h3><p>Port Section 02's chat loop to Mojo through the Python interop layer: read `input("You: ")`, break on `exit`/`quit`, append the user message, call `client.chat.completions.create(...)`, append the assistant reply, and print `Bot: <reply>`. Keep the whole `messages` list as your agent's memory — every turn resends it. Then answer the checkpoint: what single step changes a *chatbot* that only talks into an *agent* that can act?</p><div class="notice">Based on <a href="../data_science/ai_agents_python_vs_mojo.html" style="color:#5bd4ff">AI Agents — Python vs. Mojo</a> (Sections 01–02, 05). Ground your interop syntax with <a href="../mojo_v1/mojo_11_interop.html" style="color:#5bd4ff">Interop (Ch 11)</a>. Do the problem before looking for a solution or answering the checkpoint. If you forget syntax, use the <a href="../mojo_v1/index.html" style="color:#5bd4ff">Mojo Library</a>.</div></div>
+<div class="card big quiz" data-quiz><h3>Checkpoint · multiple choice</h3><p class="q">A chatbot only talks. What is the standard mechanism that turns it into an agent that <strong>acts</strong>?</p>
+<label class="opt"><input type="radio" name="d26q1" value="a">Raising <code>temperature</code> so the model writes more imaginative replies.</label>
+<label class="opt"><input type="radio" name="d26q1" value="b">Streaming the response token-by-token with <code>stream=True</code>.</label>
+<label class="opt" data-correct="true"><input type="radio" name="d26q1" value="c">Registering tools the model can <em>request</em>, executing them locally, and feeding the results back.</label>
+<label class="opt"><input type="radio" name="d26q1" value="d">Pre-filling more example messages into the conversation history.</label>
 <div class="actions qactions"><button type="button" class="btn check">Check answer</button><button type="button" class="btn reset">Try again</button></div><p class="feedback"></p>
-<div class="explain" hidden><strong>Why:</strong> Tool results are carried by a <code>role: "tool"</code> message tied to <code>tool_call_id</code> — the assistant-role request and the tool-role result must share that id so the model can pair them.</div></div>
-<details class="solution"><summary>Solution</summary><p>Reference Mojo for a tool-calling agent loop over the interop layer.</p><pre class="code">from std.python import Python
-
-# A mock retrieval tool - swap the body for a vector search in production
-def search_docs(query: String) -> String:
-    return ("Top hit for '" + query + "': Mojo reaches the Python "
-            "ecosystem through std.python interop.")
+<div class="explain" hidden><strong>Why:</strong> From Section 05 — with tools registered, the model returns a <code>tool_calls</code> <em>request</em> instead of text; your code executes the function and feeds the result back as a <code>role: "tool"</code> message, then the model composes the final answer. That loop — <code>model requests → you execute → result feeds back → model answers</code> — is the agent primitive.</div></div>
+<details class="solution"><summary>Solution</summary><p>Reference Mojo for the conversational chat loop from Section 02.</p><pre class="code">from std.python import Python
 
 def main() raises:
     var openai = Python.import_module("openai")
-    var json = Python.import_module("json")
     var client = openai.OpenAI()
 
-    # 1) Describe the tool so the model knows it exists and how to call it
-    var tools = Python.list(
-        Python.dict(
-            type="function",
-            function=Python.dict(
-                name="search_docs",
-                description="Search the Mojo documentation",
-                parameters=Python.dict(
-                    type="object",
-                    properties=Python.dict(
-                        query=Python.dict(type="string", description="Search term")
-                    ),
-                    required=Python.list("query"),
-                ),
-            ),
-        )
-    )
+    var messages = Python.list()          # the agent's memory — resent every turn
 
-    var messages = Python.list(
-        Python.dict(
-            role="user",
-            content="How does Mojo call Python libraries?",
-        )
-    )
+    while True:
+        var user_input = input("You: ")
+        var cleaned = user_input.strip().lower()
+        if cleaned == "exit" or cleaned == "quit":
+            break
 
-    # 2) Ask, letting the model decide when to use the tool ("auto")
-    var response = client.chat.completions.create(
-        model="gpt-5-mini",
-        messages=messages,
-        tools=tools,
-        tool_choice="auto",
-    )
+        messages.append(Python.dict(role="user", content=user_input))
 
-    var message = response.choices[0].message
-
-    if message.tool_calls:
-        # 3) The model requested a call - execute it locally
-        for var call in message.tool_calls:
-            var args = json.loads(call.function.arguments)
-            var result = search_docs(String(py=args["query"]))
-
-            # 4) Feed the result back as a "tool" message
-            messages.append(
-                Python.dict(
-                    role="tool",
-                    tool_call_id=call.id,
-                    content=result,
-                )
-            )
-
-        # 5) Ask again: the model composes the final answer with real data
-        var final = client.chat.completions.create(
+        var response = client.chat.completions.create(
             model="gpt-5-mini",
             messages=messages,
-            tools=tools,
         )
-        print(String(py=final.choices[0].message.content))
-    else:
-        print(String(py=message.content))</pre></details>
+        var reply = response.choices[0].message.content
+
+        messages.append(Python.dict(role="assistant", content=reply))
+        print("Bot:", reply)</pre>
+<p>To act rather than just talk, register a <code>tools</code> list; when <code>message.tool_calls</code> is present you execute locally and append a <code>role: "tool"</code> message before calling the API again (Section 05).</p></details>
 <div class="actions"><a class="btn" href="index.html">← Praxis</a><a class="btn primary" href="../data_science/ai_agents_python_vs_mojo.html">Review guide →</a></div></div></section></main><footer><div class="wrap">TutMe🔥 · A structured path from syntax → fundamentals → applications → practice.</div></footer>
-<script defer src="praxis.js"></script></body></html>
+<script defer src="praxis.js"></script><!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
+</body></html>

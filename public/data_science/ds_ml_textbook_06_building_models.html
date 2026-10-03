@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -142,11 +142,10 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch6-mojo-tensor">Mojo</button>
-        <button class="tab-btn" data-tab="ch6-python-tensor">Python (NumPy)</button>
       </div>
       <div class="tab-content active" id="ch6-mojo-tensor">
 <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
-<span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+<span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">matmul</span>(
     A: Tensor[Float32], B: Tensor[Float32]
@@ -168,32 +167,22 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         <span class="kw">if</span> T[i] &lt; <span class="num">0.0</span>:
             T[i] = <span class="num">0.0</span></pre>
       </div>
-      <div class="tab-content" id="ch6-python-tensor">
-<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">matmul</span>(A: np.ndarray, B: np.ndarray) -&gt; np.ndarray:
-    <span class="kw">return</span> A @ B
-
-<span class="kw">def</span> <span class="fn">relu</span>(T: np.ndarray) -&gt; np.ndarray:
-    <span class="kw">return</span> np.maximum(T, <span class="num">0.0</span>)</pre>
-      </div>
       </div>
     </section></div>
-    <p>Mojo's <code class="inline">Tensor[Float32]</code> carries its element type at compile time, so the compiler knows the exact memory layout and can inline the math. Yet the code reads like Python — no extra annotations or boilerplate for this pattern.</p>
+    <p>Mojo's <code class="inline">Tensor[Float32]</code> carries its element type at compile time, so the compiler knows the exact memory layout and can inline the math. Compare the two primitives above: in NumPy a matrix multiply is <code class="inline">A @ B</code> and a ReLU is <code class="inline">np.maximum(T, 0.0)</code> — one line each, delegated to the library. The Mojo versions are the triple loop and the element-wise clamp, written out. That extra length buys something specific: <code class="inline">A.shape()[0]</code> is a compile-time-known layout, the accumulator <code class="inline">acc</code> stays in a register across the innermost loop, and <code class="inline">relu</code> takes <code class="inline">mut T</code> so it clamps in place instead of allocating a second tensor the way the returning NumPy form must.</p>
   
 
   <section id="tensor-ops">
     <h2>Essential Tensor Operations</h2>
-    <p>A neural network needs tensor primitives: element-wise operations, summation, and activation functions. Let's build reusable loss and activation functions in each language.</p>
+    <p>A neural network needs tensor primitives: element-wise operations, summation, and activation functions. Let's build the two this chapter leans on — a loss and a softmax — as reusable functions.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch6-mojo-ops">Mojo</button>
-        <button class="tab-btn" data-tab="ch6-python-ops">Python (NumPy)</button>
       </div>
       <div class="tab-content active" id="ch6-mojo-ops">
 <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
-<span class="kw">from</span> std.math <span class="kw">import</span> exp, log
+<span class="kw">from</span> math <span class="kw">import</span> exp, log
 
 <span class="kw">def</span> <span class="fn">mse_loss</span>(
     predictions: Tensor[Float32],
@@ -219,16 +208,6 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <span class="kw">for</span> i <span class="kw">in</span> range(n):
         logits[i] /= exp_sum</pre>
       </div>
-      <div class="tab-content" id="ch6-python-ops">
-<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">mse_loss</span>(predictions, targets) -&gt; float:
-    <span class="kw">return</span> np.mean((predictions - targets) ** <span class="num">2</span>)
-
-<span class="kw">def</span> <span class="fn">softmax</span>(logits):
-    e = np.exp(logits - np.max(logits))
-    <span class="kw">return</span> e / e.sum()</pre>
-      </div>
       </div>
     </section></div>
 
@@ -245,11 +224,10 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch6-mojo-nn">Mojo</button>
-        <button class="tab-btn" data-tab="ch6-python-nn">Python (PyTorch)</button>
       </div>
       <div class="tab-content active" id="ch6-mojo-nn">
 <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
-<span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+<span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">struct</span> <span class="type">TwoLayerNet</span>:
     <span class="kw">var</span> W1: Tensor[Float32]
@@ -284,26 +262,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         softmax(out)
         <span class="kw">return</span> out</pre>
       </div>
-      <div class="tab-content" id="ch6-python-nn">
-<pre><span class="kw">import</span> torch
-<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
-
-<span class="kw">class</span> <span class="type">TwoLayerNet</span>(nn.Module):
-    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_dim, hidden_dim, output_dim):
-        super().__init__()
-        self.W1 = nn.Linear(input_dim, hidden_dim)
-        self.W2 = nn.Linear(hidden_dim, output_dim)
-
-    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
-        h = torch.relu(self.W1(x))
-        <span class="kw">return</span> torch.softmax(self.W2(h), dim=<span class="num">-1</span>)</pre>
-      </div>
       </div>
     
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
       <p>The Mojo example uses manual loops for bias addition to demonstrate low-level control. In production, wrap common operations into utility functions to keep code clean and avoid off-by-one errors.</p>
+      <p>Worth naming what PyTorch was doing for you. As an <code class="inline">nn.Module</code>, <code class="inline">TwoLayerNet</code> gets <code class="inline">nn.Linear</code> layers, parameter registration, and the whole <code class="inline">super().__init__()</code> protocol for free — two lines of constructor become a full framework contract. The <code class="inline">struct TwoLayerNet</code> above has to spell out all four tensors, initialize them by hand, and write Xavier scaling inline. In exchange the tensors are compile-time typed, the forward pass is straight-line code with no dispatch layer, and nothing is hidden behind a <code class="inline">.backward()</code> you did not ask for.</p>
     </div>
   </section>
 
@@ -317,7 +282,6 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch6-mojo-train">Mojo</button>
-        <button class="tab-btn" data-tab="ch6-python-train">Python (PyTorch)</button>
       </div>
       <div class="tab-content active" id="ch6-mojo-train">
 <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
@@ -343,26 +307,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         model.W2[i] -= lr * d_logits[i % d_logits.num_elements()]
     <span class="kw">return</span> loss</pre>
       </div>
-      <div class="tab-content" id="ch6-python-train">
-<pre><span class="kw">import</span> torch
-<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
-
-<span class="kw">def</span> <span class="fn">train_epoch</span>(model, X, y, lr):
-    probs = model(X)
-    loss = F.cross_entropy(probs, y)
-    loss.backward()
-    <span class="kw">with</span> torch.no_grad():
-        <span class="kw">for</span> p <span class="kw">in</span> model.parameters():
-            p -= lr * p.grad
-            p.grad.zero_()
-    <span class="kw">return</span> loss.item()</pre>
-      </div>
       </div>
     
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
       <p>Mojo's <code class="inline">mut</code> parameter makes it explicit that <code class="inline">train_epoch</code> mutates the model. The compiler guarantees exclusive access to the tensors during the call, which prevents the aliasing bugs that can appear in Python autograd.</p>
+      <p>The same idea replaces the <code class="inline">torch.no_grad()</code> block. PyTorch needs that guard because gradients are recorded by default and stepping them means walking <code class="inline">model.parameters()</code>, updating <code class="inline">p.grad</code>, and calling <code class="inline">p.grad.zero_()</code> so the next epoch does not accumulate on top of it. The Mojo update has no tape to manage: <code class="inline">d_logits</code> is an ordinary local tensor, the SGD step touches <code class="inline">model.W2</code> through a <code class="inline">mut</code> parameter, and there is nothing to zero out.</p>
     </div>
   </section>
 
@@ -373,7 +324,6 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch6-mojo-eval">Mojo</button>
-        <button class="tab-btn" data-tab="ch6-python-eval">Python (scikit-learn)</button>
       </div>
       <div class="tab-content active" id="ch6-mojo-eval">
 <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
@@ -401,22 +351,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
 <span class="kw">var</span> acc = accuracy(model, X_test, y_test)
 <span class="kw">print</span>(<span class="str">"Test accuracy:"</span>, acc * <span class="num">100.0</span>, <span class="str">"%"</span>)</pre>
       </div>
-      <div class="tab-content" id="ch6-python-eval">
-<pre><span class="kw">from</span> sklearn.metrics <span class="kw">import</span> accuracy_score
-
-<span class="kw">def</span> <span class="fn">evaluate</span>(model, X_test, y_test):
-    model.eval()
-    <span class="kw">with</span> torch.no_grad():
-        probs = model(X_test)
-        preds = probs.argmax(dim=<span class="num">1</span>)
-    <span class="kw">print</span>(accuracy_score(y_test, preds))</pre>
-      </div>
       </div>
     
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
       <p>In production, Mojo's compiled evaluation loop runs inference on thousands of samples per second without the Python GIL bottleneck. The same binary that trains your model can serve predictions with zero interpreter overhead.</p>
+      <p>Worth comparing the shape of the two evaluation routines. The scikit-learn version is four lines because <code class="inline">model.eval()</code>, <code class="inline">torch.no_grad()</code>, <code class="inline">probs.argmax(dim=1)</code>, and <code class="inline">accuracy_score(y_test, preds)</code> each do a whole stage for you. The Mojo version spells out the two stages that were hidden — find the arg-max over the class axis, then count the matches — and the inner loop is where the compile-time shape pays off: <code class="inline">nc</code> is loaded once, and the row start <code class="inline">i * nc</code> is arithmetic on a known layout rather than a stride lookup.</p>
     </div>
   </section>
 

@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -137,10 +137,9 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch7-mojo-vec">Mojo</button>
-        <button class="tab-btn" data-tab="ch7-python-vec">Python (NumPy)</button>
       </div>
       <div class="tab-content active" id="ch7-mojo-vec">
-<pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+<pre><span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">dot_product_simd</span>(
     a: Tensor[Float32], b: Tensor[Float32]
@@ -163,29 +162,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         i += <span class="num">1</span>
     <span class="kw">return</span> total</pre>
       </div>
-      <div class="tab-content" id="ch7-python-vec">
-<pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">dot_product</span>(a, b) -&gt; float:
-    <span class="cmt"># NumPy dispatches to SIMD-optimized BLAS</span>
-    <span class="kw">return</span> np.dot(a, b)
-
-<span class="cmt"># Or with explicit SIMD via numba:</span>
-<span class="kw">from</span> numba <span class="kw">import</span> njit, prange
-
-<span class="kw">@</span>njit(parallel=True)
-<span class="kw">def</span> <span class="fn">dot_product_numba</span>(a, b):
-    <span class="kw">var</span> total = <span class="num">0.0</span>
-    <span class="kw">for</span> i <span class="kw">in</span> prange(len(a)):
-        total += a[i] * b[i]
-    <span class="kw">return</span> total</pre>
-      </div>
       </div>
     </section></div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
       <p>Mojos <code class="inline">SIMD[Float32, S]</code> type is a compile-time fixed-width vector. The compiler knows exactly how many elements it holds, so it can map directly to AVX2/AVX-512 instructions without any runtime dispatch.</p>
+    <p>Python has two routes to the same hardware, and neither is this one. The cheap route is <code class="inline">np.dot(a, b)</code>, which hands the work to a SIMD-optimized BLAS and returns the answer in one call — fast, but the vector width is the library's decision, not yours. The explicit route is numba: <code class="inline">@njit(parallel=True)</code> over a <code class="inline">prange</code> lets a plain Python loop compile to native code, which gets you SIMD as a side effect of the JIT. The Mojo version is the explicit route without the JIT — the width is <code class="inline">simdwidthof[Float32]()</code>, the loop steps by that width, and the horizontal reduction is written out. Note the remainder loop: an explicit vector kernel always needs one, because the length rarely divides evenly.</p>
     </div>
   
 
@@ -196,10 +179,9 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch7-mojo-simd">Mojo</button>
-        <button class="tab-btn" data-tab="ch7-python-simd">Python (C intrinsics)</button>
       </div>
       <div class="tab-content active" id="ch7-mojo-simd">
-<pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+<pre><span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">softmax_simd</span>(mut logits: Tensor[Float32]):
     <span class="kw">var</span> n = logits.num_elements()
@@ -236,25 +218,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         logits[i] *= inv_sum
         i += <span class="num">1</span></pre>
       </div>
-      <div class="tab-content" id="ch7-python-simd">
-<pre><span class="cmt"># In Python, you'd typically use NumPy or write C extensions</span>
-<span class="cmt"># with intrinsics like _mm256_fmadd_ps for AVX2 FMA</span>
-
-<span class="cmt"># Python equivalent (scalar, no SIMD):</span>
-<span class="kw">import</span> math
-
-<span class="kw">def</span> <span class="fn">softmax</span>(logits):
-    max_val = max(logits)
-    exps = [math.exp(x - max_val) <span class="kw">for</span> x <span class="kw">in</span> logits]
-    total = sum(exps)
-    <span class="kw">return</span> [e / total <span class="kw">for</span> e <span class="kw">in</span> exps]</pre>
-      </div>
       </div>
     </section></div>
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
       <p>Mojos <code class="inline">load</code> and <code class="inline">store</code> methods on Tensor use aligned memory access when possible. Aligned loads are significantly faster on x86 — up to 2x throughput for large arrays.</p>
+    <p>From Python this level of control is out of reach without leaving Python. The honest options are NumPy, which gives you whole-array operations and no width control, or a C extension that reaches for intrinsics like <code class="inline">_mm256_fmadd_ps</code> for an AVX2 fused multiply-add. Anything in between is a scalar list comprehension — the three-line softmax, subtract the max, exponentiate, divide — which is correct, portable, and around an order of magnitude off the vectorized version above. That gap is the argument for having a <code class="inline">SIMD</code> type in the language rather than behind an extension boundary.</p>
     </div>
   
 
@@ -265,10 +235,9 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch7-mojo-par">Mojo</button>
-        <button class="tab-btn" data-tab="ch7-python-par">Python (multiprocessing)</button>
       </div>
       <div class="tab-content active" id="ch7-mojo-par">
-<pre><span class="kw">from</span> std.algorithm <span class="kw">import</span> parallelize
+<pre><span class="kw">from</span> algorithm <span class="kw">import</span> parallelize
 
 <span class="kw">def</span> <span class="fn">parallel_matmul</span>(
     A: Tensor[Float32],
@@ -289,29 +258,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
 
     parallelize[compute_row](M, num_cores=logical_cores())</pre>
       </div>
-      <div class="tab-content" id="ch7-python-par">
-<pre><span class="kw">from</span> multiprocessing <span class="kw">import</span> Pool
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">parallel_matmul</span>(A, B):
-    <span class="cmt"># NumPy already parallelizes via BLAS</span>
-    <span class="kw">return</span> A @ B
-
-<span class="cmt"># Manual parallelism (slower due to GIL):</span>
-<span class="kw">def</span> <span class="fn">compute_row</span>(args):
-    row, A, B = args
-    <span class="kw">return</span> np.dot(A[row], B)
-
-<span class="kw">with</span> Pool() <span class="kw">as</span> p:
-    results = p.map(compute_row,
-        [(i, A, B) <span class="kw">for</span> i <span class="kw">in</span> range(A.shape[<span class="num">0</span>])])</pre>
-      </div>
       </div>
     
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
       <p>Mojos <code class="inline">parallelize[fn](total_items, num_cores)</code> abstracts thread pool management. Unlike Python's <code class="inline">multiprocessing</code>, it uses lightweight threads that share memory — no pickling overhead, no process startup cost.</p>
+      <p>The reason Python reaches for <code class="inline">multiprocessing</code> here at all is the GIL: <code class="inline">Pool().map</code> is the only way to put a CPU-bound loop on more than one core, and it pays for that with a copy. Every argument tuple crossing the process boundary is pickled, so the <code class="inline">[(i, A, B) for i in range(...)]</code> argument list pickles the whole of <code class="inline">A</code> and <code class="inline">B</code> once per row, and the result comes back the same way. In the Mojo pane <code class="inline">A</code>, <code class="inline">B</code> and <code class="inline">C</code> are already in one address space, so <code class="inline">parallelize[compute_row](M, num_cores=logical_cores())</code> passes nothing but an index — the row function reads and writes the shared tensors directly, and the nested function needs no arguments plumbed to it at all.</p>
     </div>
   </section>
 
@@ -325,10 +278,9 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch7-mojo-mem">Mojo</button>
-        <button class="tab-btn" data-tab="ch7-python-mem">Python</button>
       </div>
       <div class="tab-content active" id="ch7-mojo-mem">
-<pre><span class="kw">from</span> std.memory <span class="kw">import</span> unsafe_memcpy, stack_allocation
+<pre><span class="kw">from</span> memory <span class="kw">import</span> memcpy, stack_allocation
 
 <span class="cmt"># Small fixed-size buffer on the stack</span>
 <span class="kw">def</span> <span class="fn">compute_with_stack_buf</span>(
@@ -340,7 +292,7 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
 
     <span class="cmt"># Copy input into stack buffer</span>
     <span class="kw">var</span> n = min(input.num_elements(), BUF_SIZE)
-    unsafe_memcpy(buf, input.data(), n)
+    memcpy(buf, input.data(), n)
 
     <span class="cmt"># Process on stack — cache-friendly</span>
     <span class="kw">var</span> total: Float32 = <span class="num">0.0</span>
@@ -348,23 +300,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         total += buf[i] * buf[i]
     <span class="kw">return</span> sqrt(total)</pre>
       </div>
-      <div class="tab-content" id="ch7-python-mem">
-<pre><span class="cmt"># Python relies on the OS allocator</span>
-<span class="cmt"># and cannot control stack allocation</span>
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">compute</span>(input_arr):
-    <span class="cmt"># Always heap-allocated</span>
-    buf = np.zeros(<span class="num">256</span>, dtype=np.float32)
-    buf[:len(input_arr)] = input_arr[:<span class="num">256</span>]
-    <span class="kw">return</span> np.sqrt(np.sum(buf ** <span class="num">2</span>))</pre>
-      </div>
       </div>
     
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
       <p>Mojos <code class="inline">stack_allocation</code> is for fixed-size, compile-time-known sizes only. For dynamic sizes, you'll use the heap. Profile before optimizing — premature stack allocation can actually hurt if it causes stack overflow on large inputs.</p>
+      <p>Python has no equivalent switch. Every buffer is a heap object, so the closest equivalent to the Mojo pane is <code class="inline">np.zeros(256, dtype=np.float32)</code> followed by <code class="inline">buf[:len(input_arr)] = input_arr[:256]</code>: a <code class="inline">malloc</code> on every call, a bounds check on every slice, and no way to ask the language for the stack instead. The three-line form works, but note what it costs — the allocation is the expensive part, not the arithmetic, and that is exactly the cost <code class="inline">stack_allocation[Float32, BUF_SIZE]()</code> removes.</p>
     </div>
   </section>
 
@@ -375,10 +317,9 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch7-mojo-prof">Mojo</button>
-        <button class="tab-btn" data-tab="ch7-python-prof">Python</button>
       </div>
       <div class="tab-content active" id="ch7-mojo-prof">
-<pre><span class="kw">from</span> std.time <span class="kw">import</span> now
+<pre><span class="kw">from</span> time <span class="kw">import</span> now
 
 <span class="kw">def</span> <span class="fn">benchmark</span>():
     <span class="kw">var</span> N = <span class="num">1000000</span>
@@ -399,31 +340,13 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
 <span class="cmt"># Use --baseline for statistical benchmarking</span>
 <span class="cmt"># mojo run --baseline bench.mojo</span></pre>
       </div>
-      <div class="tab-content" id="ch7-python-prof">
-<pre><span class="kw">import</span> time
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">benchmark</span>():
-    N = <span class="num">1_000_000</span>
-    A = np.random.randn(N).astype(np.float32)
-    B = np.random.randn(N).astype(np.float32)
-
-    start = time.perf_counter()
-    result = np.dot(A, B)
-    elapsed = time.perf_counter() - start
-    <span class="kw">print</span>(<span class="str">f"Result: </span>{result}<span class="str">"</span>)
-    <span class="kw">print</span>(<span class="str">f"Time: </span>{elapsed*1000:.2f}<span class="str">ms"</span>)
-
-<span class="cmt"># For profiling:</span>
-<span class="cmt"># python -m cProfile -s cumulative script.py</span>
-<span class="cmt"># or: py-spy top --pid PID</span></pre>
-      </div>
       </div>
     
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
       <p>Mojos <code class="inline">--baseline</code> flag runs a function multiple times to compute statistically robust timing measurements. It handles warmup, outlier rejection, and reports confidence intervals — essential for micro-benchmarking.</p>
+      <p>The Python equivalent of the timer alone is <code class="inline">time.perf_counter()</code> on both sides of the call, but stopping there is what makes micro-benchmarks lie: one run on a shared machine is noise, and <code class="inline">timeit</code> is the usual answer. Everything past the timer has no equivalent worth copying — <code class="inline">python -m cProfile -s cumulative</code> and <code class="inline">py-spy top</code> profile the interpreter, so their overhead is the interpreter, and neither can report a confidence interval. The Mojo pane just runs <code class="inline">mojo run --baseline bench.mojo</code> and gets the statistics with the measurement.</p>
     </div>
   </section>
 

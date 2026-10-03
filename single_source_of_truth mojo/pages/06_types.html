@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Types · Mojo v1 The Language Manual</title>
+<meta name="description" content="The type system: integers, floats, strings, collections, SIMD, and Tensor.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">06</span></nav><h1>Types</h1>
+<p class="dek">The type system: integers, floats, strings, collections, SIMD, and Tensor.</p><p class="byline">Chapter 06 · 5,365 words · 63 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/types/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>All values in Mojo have an associated data type. Most of the types are
+<em>nominal</em> types, defined by a <a href="../pages/13_mojo-structs.html"><code>struct</code></a>. These types are
+nominal (or "named") because type equality is determined by the type's <em>name</em>,
+not its <em>structure</em>.</p>
+<p>There are some types that aren't defined as structs:</p>
+<ul>
+<li class="">Functions are typed based on their signatures.</li>
+<li class=""><code>NoneType</code> is a type with one instance, the <code>None</code> object, which is used to
+signal "no value."</li>
+</ul>
+<p>Mojo comes with a standard library that provides a number of useful types and
+utility functions. These standard types aren't privileged. Each of the standard
+library types is defined just like user-defined types—even basic types like
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/#int" rel="noopener noreferrer"><code>Int</code></a> and
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/string/string/String/" rel="noopener noreferrer"><code>String</code></a>. But these standard
+library types are the building blocks you'll use for most Mojo programs.</p>
+<p>The most common types are <em>built-in types</em>, which are always available and
+don't need to be imported. These include types for numeric values, strings,
+boolean values, and others.</p>
+<p>The standard library also includes many more types that you can import as
+needed, including collection types, utilities for interacting with the
+filesystem and getting system information, and so on.</p>
+<h2 class="h h--2" data-level="2" id="numeric-types">Numeric types<a aria-label="Link to Numeric types" class="h__link" href="#numeric-types"></a></h2>
+<p>Mojo provides built-in numeric types that represent signed integers, unsigned
+integers, and floating-point values. These types support multiple precisions and
+are used to model both low-level data and high-level numeric computation.</p>
+<p>The following sections introduce integer and floating-point types in Mojo.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>All numeric types support the usual numeric and bitwise operators. The
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/math/" rel="noopener noreferrer"><code>math</code></a> module provides additional math functions.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="integers-and-unsigned-integers">Integers and unsigned integers<a aria-label="Link to Integers and unsigned integers" class="h__link" href="#integers-and-unsigned-integers"></a></h3>
+<p>Mojo's general-purpose integer type is the signed <code>Int</code>. For a specific bit
+width, or for an unsigned integer, use the fixed-size integer types:</p>
+<ul>
+<li class="">
+<p>If you need a fixed-size integer, Mojo provides explicit-width integer types
+such as <code>Int8</code>, <code>Int16</code>, <code>UInt32</code>, and <code>UInt64</code>.</p>
+</li>
+<li class="">
+<p>Use the general <code>Int</code> type when you don't require a specific bit width.</p>
+</li>
+</ul>
+<p>These general and fixed-precision integer types are aliases to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/SIMD/" rel="noopener noreferrer"><code>SIMD</code></a> type.</p>
+<p><code>Int</code> represents a signed integer that uses the system's native word size,
+typically 64 bits on 64-bit CPUs and 32 bits on 32-bit CPUs.</p>
+<p>You may wonder when to use <code>Int</code> and when to use the other integer
+types. In general, <code>Int</code> is a good safe default when you need an integer type
+and you don't require a specific bit width. Using <code>Int</code> as the default integer
+type for APIs makes APIs more consistent and predictable.</p>
+<h4 class="h h--4" data-level="4" id="signed-versus-unsigned">Signed versus unsigned<a aria-label="Link to Signed versus unsigned" class="h__link" href="#signed-versus-unsigned"></a></h4>
+<p>Signed and unsigned integers with the same bit width can represent the same
+number of distinct values, but over different ranges. For example:</p>
+<ul>
+<li class=""><code>Int8</code> represents 256 values ranging from <code>-128</code> to <code>127</code></li>
+<li class=""><code>UInt8</code> represents 256 values ranging from <code>0</code> to <code>255</code></li>
+</ul>
+<h4 class="h h--4" data-level="4" id="overflow-behavior">Overflow behavior<a aria-label="Link to Overflow behavior" class="h__link" href="#overflow-behavior"></a></h4>
+<p>Signed and unsigned integers differ in how they handle overflow.</p>
+<ul>
+<li class="">When a signed integer overflows, the value wraps around into the negative
+range using two's complement arithmetic. For example, adding <code>1</code> to
+<code>var si: Int8 = 127</code> results in <code>-128</code>.</li>
+<li class="">When an unsigned integer overflows, the value wraps around to the beginning of
+its range. For example, adding <code>1</code> to <code>var ui: UInt8 = 255</code> results in <code>0</code>.</li>
+</ul>
+<p>You may prefer unsigned integers when negative values are not required, when
+you are not designing a public API, or when you want to maximize the usable
+positive range.</p>
+<h4 class="h h--4" data-level="4" id="mojo-supported-fixed-width-integer-types">Mojo-supported fixed-width integer types<a aria-label="Link to Mojo-supported fixed-width integer types" class="h__link" href="#mojo-supported-fixed-width-integer-types"></a></h4>
+<figure class="table-wrap" id="table-1"><table><caption class="table__caption"><b>Table 1.</b> Mojo signed integer types</caption><thead><tr><th>Type name</th><th>Description</th></tr></thead><tbody><tr><td><code>Int8</code></td><td>8-bit signed integer</td></tr><tr><td><code>Int16</code></td><td>16-bit signed integer</td></tr><tr><td><code>Int32</code></td><td>32-bit signed integer</td></tr><tr><td><code>Int64</code></td><td>64-bit signed integer</td></tr><tr><td><code>Int128</code></td><td>128-bit signed integer</td></tr><tr><td><code>Int256</code></td><td>256-bit signed integer</td></tr></tbody></table></figure>
+<figure class="table-wrap" id="table-2"><table><caption class="table__caption"><b>Table 2.</b> Mojo unsigned integer types</caption><thead><tr><th>Type name</th><th>Description</th></tr></thead><tbody><tr><td><code>UInt8</code></td><td>8-bit unsigned integer</td></tr><tr><td><code>UInt16</code></td><td>16-bit unsigned integer</td></tr><tr><td><code>UInt32</code></td><td>32-bit unsigned integer</td></tr><tr><td><code>UInt64</code></td><td>64-bit unsigned integer</td></tr><tr><td><code>UInt128</code></td><td>128-bit unsigned integer</td></tr><tr><td><code>UInt256</code></td><td>256-bit unsigned integer</td></tr></tbody></table></figure>
+<h3 class="h h--3" data-level="3" id="floating-point-numbers">Floating-point numbers<a aria-label="Link to Floating-point numbers" class="h__link" href="#floating-point-numbers"></a></h3>
+<p>Mojo provides several floating-point types for representing real numbers at
+different precisions. Since floating-point values use a fixed number of bits,
+some numbers can't be represented exactly.</p>
+<p>The floating-point types <code>Float64</code>, <code>Float32</code>, and <code>Float16</code> follow the
+IEEE 754-2008 standard for representing floating-point values. Each type
+includes a sign bit, a set of bits representing an exponent, and a set of bits
+representing the mantissa (also called fraction or significand).
+Table 3 shows how these types are represented in memory.</p>
+<figure class="table-wrap" id="table-3"><table><caption class="table__caption"><b>Table 3.</b> Details of floating-point types</caption><thead><tr><th>Type name</th><th>Sign</th><th>Exponent</th><th>Mantissa</th></tr></thead><tbody><tr><td><code>Float64</code></td><td>1 bit</td><td>11 bits</td><td>52 bits</td></tr><tr><td><code>Float32</code></td><td>1 bit</td><td>8 bits</td><td>23 bits</td></tr><tr><td><code>Float16</code></td><td>1 bit</td><td>5 bits</td><td>10 bits</td></tr></tbody></table></figure>
+<p>Exponent values of all zeros or all ones represent special cases. These
+patterns allow floating-point numbers to encode positive and negative
+infinity, signed zeros, and not-a-number (NaN). These values are available
+as static constants provided by
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/float_literal/FloatLiteral/" rel="noopener noreferrer"><code>FloatLiteral</code></a>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>math <span class="tk-keyword">import</span> copysign</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>utils<span class="tk-punctuation">.</span>numerics <span class="tk-keyword">import</span> isfinite<span class="tk-punctuation">,</span> isinf<span class="tk-punctuation">,</span> isnan</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> inf <span class="tk-operator">=</span> FloatLiteral<span class="tk-punctuation">.</span>infinity</span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>isinf<span class="tk-punctuation">(</span>inf<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># `True`</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>inf <span class="tk-operator">&gt;</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span> <span class="tk-comment"># `True`</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">var</span> neginf <span class="tk-operator">=</span> FloatLiteral<span class="tk-punctuation">.</span>negative_infinity</span>
+<span class="cl" data-line="9"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>isinf<span class="tk-punctuation">(</span>neginf<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># `True`</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>neginf <span class="tk-operator">&lt;</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span> <span class="tk-comment"># `True`</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-keyword">var</span> nan <span class="tk-operator">=</span> FloatLiteral<span class="tk-punctuation">.</span>nan</span>
+<span class="cl" data-line="13"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>isnan<span class="tk-punctuation">(</span>nan<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># `True`</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-keyword">var</span> negzero <span class="tk-operator">=</span> FloatLiteral<span class="tk-punctuation">.</span>negative_zero</span>
+<span class="cl" data-line="16"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>negzero <span class="tk-operator">==</span> <span class="tk-number">0.0</span><span class="tk-punctuation">)</span> <span class="tk-comment"># `True`</span></span>
+<span class="cl" data-line="17"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>copysign<span class="tk-punctuation">(</span><span class="tk-number">1.0</span><span class="tk-punctuation">,</span> negzero<span class="tk-punctuation">)</span> <span class="tk-operator">&lt;</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span> <span class="tk-comment"># `True`</span></span>
+</code></pre></figure>
+<p>For more details on how floating-point numbers are represented, see
+<a class="ext" data-external="" href="https://en.wikipedia.org/wiki/IEEE_754" rel="noopener noreferrer">IEEE 754</a>.</p>
+<h4 class="h h--4" data-level="4" id="floating-point-approximations-and-comparisons">Floating-point approximations and comparisons<a aria-label="Link to Floating-point approximations and comparisons" class="h__link" href="#floating-point-approximations-and-comparisons"></a></h4>
+<p>Because floating-point values are approximate, they often cannot represent the
+exact mathematical value they are intended to model.</p>
+<ul>
+<li class="">
+<p><strong>Rounding errors.</strong> Rounding may produce unexpected results. For example,
+<code>1/3</code> cannot be represented exactly in floating-point formats. As more
+floating-point operations are performed, rounding errors may accumulate.</p>
+</li>
+<li class="">
+<p><strong>Space between consecutive numbers.</strong> The distance between consecutive
+representable values varies across the range of a floating-point type. Near
+zero, values are densely packed. For large positive or negative numbers, the
+spacing can exceed 1, making it impossible to represent some consecutive
+integers.</p>
+</li>
+</ul>
+<p>Because values are approximate, it is rarely useful to compare floating-point
+numbers using the equality operator (<code>==</code>). For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> big_num <span class="tk-operator">=</span> <span class="tk-number">1.0e16</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> bigger_num <span class="tk-operator">=</span> big_num <span class="tk-operator">+</span> <span class="tk-number">1.0</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>big_num <span class="tk-operator">==</span> bigger_num<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">True</span>
+</code></pre></figure>
+<p>Comparison operators (such as <code>&lt;</code> and <code>&gt;=</code>) work as expected with floating-point
+values. To test whether two values are equal within a tolerance,
+use the <a class="ext" data-external="" href="https://mojolang.org/docs/std/math/math/isclose/" rel="noopener noreferrer"><code>math.isclose()</code></a> function to
+compare whether two floating-point numbers are equal within a
+specified tolerance.</p>
+<h4 class="h h--4" data-level="4" id="mojo-supported-floating-point-types">Mojo-supported floating-point types<a aria-label="Link to Mojo-supported floating-point types" class="h__link" href="#mojo-supported-floating-point-types"></a></h4>
+<p>In the following table, the <strong>eXmX</strong> format (for example, <code>Float8_e5m2</code> and
+<code>Float8_e4m3fn</code>) refers to the number of bits allocated to a floating-point
+number's exponent and mantissa.</p>
+<p>All IEEE 754 floating-point formats use an implied leading 1. That means
+<code>Float32</code> is e8m23 but effectively e8m24, <code>Float16</code> is e5m10 but effectively
+e5m11, <code>BFloat16</code> is e8m7 but effectively e8m8, and <code>Float8_e4m3fn</code> is e4m3 but
+effectively e4m4.</p>
+<p>In addition to eXmX:</p>
+<ul>
+<li class=""><strong>fn</strong> signifies finite numbers only. The numbers are valid floating-point
+values that are not infinite. NaN is supported.</li>
+<li class=""><strong>uz</strong> means unsigned zero. Only +0 is supported, not -0.</li>
+</ul>
+<p>Although Mojo supports all these types, these types are not supported
+on all hardware.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>The <em>B</em> in <code>BFloat16</code> stands for Brain, from the Google Brain artificial
+intelligence research group. Google developed it specifically for their
+Tensor Processing Units (TPUs) to accelerate machine learning workloads.
+Therefore the B is a project identifier and not a technical format indicator.</p></div></aside>
+<figure class="table-wrap" id="table-4"><table><caption class="table__caption"><b>Table 4.</b> Mojo floating-point types</caption><thead><tr><th>Type name</th><th>Description</th><th>CPU/GPU Support</th></tr></thead><tbody><tr><td><code>Float16</code></td><td>16-bit floating-point<br/>(IEEE 754-2008 binary16)</td><td>CPU and GPU</td></tr><tr><td><code>Float32</code></td><td>32-bit floating-point<br/>(IEEE 754-2008 binary32)</td><td>CPU and GPU</td></tr><tr><td><code>Float64</code></td><td>64-bit floating-point<br/>(IEEE 754-2008 binary64)</td><td>CPU and GPU</td></tr><tr><td><code>BFloat16</code></td><td>16-bit floating-point<br/>(16-bit version of IEEE 754 binary32)</td><td>CPU and GPU</td></tr><tr><td><code>Float4_e2m1fn</code></td><td>4-bit floating-point<br/>(e2m1 format from Open Compute MX specification — finite values and NaN only, no infinities)</td><td>GPU</td></tr><tr><td><code>Float8_e5m2</code></td><td>8-bit floating-point<br/>(OFP8 e5m2 format)</td><td>GPU</td></tr><tr><td><code>Float8_e5m2fnuz</code></td><td>8-bit floating-point<br/>(AMD-only e5m2fnuz format — finite values and NaN only, no infinities)</td><td>GPU</td></tr><tr><td><code>Float8_e4m3fn</code></td><td>8-bit floating-point<br/>(OFP8 e4m3fn format — finite values and NaN only, no infinities)</td><td>GPU</td></tr><tr><td><code>Float8_e4m3fnuz</code></td><td>8-bit floating-point<br/>(AMD-only e4m3fnuz format — finite values and NaN only, no infinities)</td><td>GPU</td></tr></tbody></table></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>GPU-only floating-point types are supported on specific accelerator hardware and
+may not be available on all GPUs.</p></div></aside>
+<h4 class="h h--4" data-level="4" id="ai-optimized-floating-point-formats">AI-optimized floating-point formats<a aria-label="Link to AI-optimized floating-point formats" class="h__link" href="#ai-optimized-floating-point-formats"></a></h4>
+<p>Several floating-point types are specifically designed for AI and machine
+learning workloads, trading precision for memory efficiency and computational
+throughput.</p>
+<p><strong>BFloat16 (Brain Floating Point)</strong> uses the same 8 exponent bits as
+<code>Float32</code>, preserving its dynamic range, but uses 7 explicit bits (8 effective
+bits) for the mantissa compared to Float32's 23 bits.
+This makes it ideal for neural network training where gradient magnitudes
+vary widely but high precision is less critical.</p>
+<p><strong>8-bit formats</strong> (<code>Float8_e5m2</code>, <code>Float8_e4m3fn</code>, and their <code>fnuz</code>
+variants) are ultra-compact formats for AI accelerators where memory
+bandwidth is the primary bottleneck.
+The naming indicates bit allocation: <code>e5m2</code> means 5 exponent bits and
+2 mantissa bits.
+The <code>fnuz</code> suffix additionally denotes unsigned zero (no -0), used
+in AMD hardware.</p>
+<p><strong>4-bit format</strong> (<code>Float4_e2m1fn</code>) offers extreme compression with only 2
+exponent bits and 1 mantissa bit, used in specialized inference scenarios
+where accuracy can be traded for maximum throughput.</p>
+<h3 class="h h--3" data-level="3" id="numeric-literals">Numeric literals<a aria-label="Link to Numeric literals" class="h__link" href="#numeric-literals"></a></h3>
+<p>In addition to these numeric types, the standard libraries provides integer and
+floating-point literal types,
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/int_literal/IntLiteral/" rel="noopener noreferrer"><code>IntLiteral</code></a> and
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/float_literal/FloatLiteral/" rel="noopener noreferrer"><code>FloatLiteral</code></a>.</p>
+<p>These literal types are used at compile time to represent literal numbers that
+appear in the code. In general, you should never instantiate these types
+yourself.</p>
+<p>Table 5 summarizes the literal formats you can use to represent numbers.</p>
+<figure class="table-wrap" id="table-5"><table><caption class="table__caption"><b>Table 5.</b> Numeric literal formats</caption><thead><tr><th>Format</th><th>Examples</th><th>Notes</th></tr></thead><tbody><tr><td>Integer literal</td><td><code>1760</code></td><td>Integer literal, in decimal format.</td></tr><tr><td>Hexadecimal literal</td><td><code>0xaa</code>, <code>0xFF</code></td><td>Integer literal, in hexadecimal format.<br/>Hex digits are case-insensitive.</td></tr><tr><td>Octal literal</td><td><code>0o77</code></td><td>Integer literal, in octal format.</td></tr><tr><td>Binary literal</td><td><code>0b0111</code></td><td>Integer literal, in binary format.</td></tr><tr><td>Floating-point literal</td><td><code>3.14</code>, <code>1.2e9</code></td><td>Floating-point literal.<br/>Must include the decimal point to be interpreted as floating-point.</td></tr></tbody></table></figure>
+<p>At compile-time, Mojo treats numeric literals as arbitrary-precision values, so
+the compiler can perform compile-time calculations without overflow or rounding
+errors.</p>
+<p>At runtime the values are converted to finite-precision types. <code>IntLiteral</code> can
+convert to any finite-precision integer type, defaulting to <code>Int</code> if the type is
+unspecified. And <code>FloatLiteral</code> converts to any finite-precision floating-point
+type, defaulting to <code>Float64</code>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> float1 <span class="tk-operator">=</span> <span class="tk-number">3.3</span> <span class="tk-comment"># float1 is type Float64</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> float2<span class="tk-punctuation">:</span> Float32 <span class="tk-operator">=</span> <span class="tk-number">7.5</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> int1 <span class="tk-operator">=</span> <span class="tk-number">5</span> <span class="tk-comment"># int1 is type Int</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> int2<span class="tk-punctuation">:</span> Int8 <span class="tk-operator">=</span> <span class="tk-number">4</span></span>
+</code></pre></figure>
+<p>This process of converting a value that can only exist at compile time into a
+runtime value is called <em>materialization</em>.</p>
+<p>The following code sample shows the difference between an arbitrary-precision
+calculation and the same calculation done using <code>Float64</code> values at runtime,
+which suffers from rounding errors.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> arbitrary_precision <span class="tk-operator">=</span> <span class="tk-number">3.0</span> <span class="tk-operator">*</span> <span class="tk-punctuation">(</span><span class="tk-number">4.0</span> <span class="tk-operator">/</span> <span class="tk-number">3.0</span> <span class="tk-operator">-</span> <span class="tk-number">1.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># use a variable to force the following calculation to occur at runtime</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> three <span class="tk-operator">=</span> <span class="tk-number">3.0</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> finite_precision <span class="tk-operator">=</span> three <span class="tk-operator">*</span> <span class="tk-punctuation">(</span><span class="tk-number">4.0</span> <span class="tk-operator">/</span> three <span class="tk-operator">-</span> <span class="tk-number">1.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>arbitrary_precision<span class="tk-punctuation">,</span> finite_precision<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">1.0 0.99999999999999978</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="simd-and-dtype"><code>SIMD</code> and <code>DType</code><a aria-label="Link to SIMD and DType" class="h__link" href="#simd-and-dtype"></a></h3>
+<p>To support high-performance numeric processing, Mojo uses the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/SIMD/" rel="noopener noreferrer"><code>SIMD</code></a> type as the basis for its numeric
+types. SIMD (single instruction, multiple data) is a processor technology that
+allows you to perform an operation on an entire set of operands at once. Mojo's
+<code>SIMD</code> type abstracts SIMD operations. A <code>SIMD</code> value represents a SIMD
+<em>vector</em>—that is, a fixed-size array of values that can fit into a processor's
+register. SIMD vectors are defined by two
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/" rel="noopener noreferrer"><em>parameters</em></a>:</p>
+<ul>
+<li class="">A <code>DType</code> value, defining the data type in the vector (for example,
+32-bit floating-point numbers).</li>
+<li class="">The number of elements in the vector, which must be a power of two.</li>
+</ul>
+<p>For example, you can define a vector of four <code>Float32</code> values like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> vec <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>float32<span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">3.0</span><span class="tk-punctuation">,</span> <span class="tk-number">2.0</span><span class="tk-punctuation">,</span> <span class="tk-number">2.0</span><span class="tk-punctuation">,</span> <span class="tk-number">1.0</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Math operations on SIMD values are
+applied <em>elementwise</em>, on each individual element in the vector. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> vec1 <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>int8<span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">7</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> vec2 <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>int8<span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> product <span class="tk-operator">=</span> vec1 <span class="tk-operator">*</span> vec2</span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>product<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">[2, 6, 15, 28]</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="scalar-values">Scalar values<a aria-label="Link to Scalar values" class="h__link" href="#scalar-values"></a></h3>
+<p>The <code>SIMD</code> module defines several <a href="../pages/30_compile-time-evaluation.html#comptime-values"><code>comptime</code>
+values</a>
+that function as <em>type aliases</em>—shorthand names for different <code>SIMD</code> vector
+types. The <code>Scalar</code> type is a <code>SIMD</code> vector with a single element. The
+numeric types, including signed integers such as <code>Int8</code> (<a href="../pages/06_types.html#table-1">Table
+1</a>), unsigned integers such as <code>UInt16</code> (<a href="../pages/06_types.html#table-2">Table 2</a>),
+and floating-point values such as <code>Float32</code> (<a href="../pages/06_types.html#table-4">Table 4</a>), are type
+aliases for scalar values:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> Scalar <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>length<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">comptime</span> Int <span class="tk-operator">=</span> Scalar<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span><span class="tk-builtin">int</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">comptime</span> Int8 <span class="tk-operator">=</span> Scalar<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>int8<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">comptime</span> Float32 <span class="tk-operator">=</span> Scalar<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>float32<span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>This means that whether you're working with a single <code>Float32</code> value or a
+vector of float32 values, the math operations go through exactly the same
+code path.</p>
+<h4 class="h h--4" data-level="4" id="the-dtype-type">The <code>DType</code> type<a aria-label="Link to The DType type" class="h__link" href="#the-dtype-type"></a></h4>
+<p>The <code>DType</code> struct describes the different data types that a <code>SIMD</code> vector can
+hold, and defines a number of utility functions for operating on those data
+types. The <code>DType</code> struct defines a set of
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/#comptime-members" rel="noopener noreferrer"><code>comptime</code> members</a> that act as
+identifiers for the different data types, like <code>DType.uint</code> and <code>DType.float32</code>.
+You use these <code>comptime</code> members when declaring a <code>SIMD</code> vector:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> v<span class="tk-punctuation">:</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>float64<span class="tk-punctuation">,</span> <span class="tk-number">16</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>Note that <code>DType.float64</code> isn't a <em>type</em>, it's a value that describes a data
+type. You can't create a variable with the type <code>DType.float64</code>. You can create
+a variable with the type <code>SIMD[DType.float64, 1]</code> (or <code>Float64</code>, which is the
+same thing).</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>utils<span class="tk-punctuation">.</span>numerics <span class="tk-keyword">import</span> max_finite<span class="tk-punctuation">,</span> min_finite</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> describeDType<span class="tk-punctuation">[</span>dtype<span class="tk-punctuation">:</span> DType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>dtype<span class="tk-punctuation">,</span> <span class="tk-string">"is floating-point:"</span><span class="tk-punctuation">,</span> dtype<span class="tk-punctuation">.</span>is_floating_point<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>dtype<span class="tk-punctuation">,</span> <span class="tk-string">"is integral:"</span><span class="tk-punctuation">,</span> dtype<span class="tk-punctuation">.</span>is_integral<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Min/max finite values for"</span><span class="tk-punctuation">,</span> dtype<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>min_finite<span class="tk-punctuation">[</span>dtype<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> max_finite<span class="tk-punctuation">[</span>dtype<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9">describeDType<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>float32<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">float32 is floating-point: True</span>
+<span class="cl" data-line="2">float32 is integral: False</span>
+<span class="cl" data-line="3">Min/max finite values for float32</span>
+<span class="cl" data-line="4">-3.4028234663852886e+38 3.4028234663852886e+38</span>
+</code></pre></figure>
+<p>There are several other data types in the standard library that also use
+the <code>DType</code> abstraction.</p>
+<h3 class="h h--3" data-level="3" id="numeric-type-conversion">Numeric type conversion<a aria-label="Link to Numeric type conversion" class="h__link" href="#numeric-type-conversion"></a></h3>
+<p>In Mojo, numeric <a href="../pages/07_operators.html">operators</a> <strong>don't</strong> automatically
+narrow or widen operands to a common type. You need to explicitly convert the
+operands to the desired type.</p>
+<p>You can explicitly convert a <code>SIMD</code> value to a different <code>SIMD</code> type either by
+invoking its <a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/SIMD/#cast" rel="noopener noreferrer"><code>cast()</code></a> method or by passing
+it as an argument to the initializer of the target type. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> simd1 <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>float32<span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">2.2</span><span class="tk-punctuation">,</span> <span class="tk-number">3.3</span><span class="tk-punctuation">,</span> <span class="tk-number">4.4</span><span class="tk-punctuation">,</span> <span class="tk-number">5.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> simd2 <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>int16<span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> simd3 <span class="tk-operator">=</span> simd1 <span class="tk-operator">*</span> simd2<span class="tk-punctuation">.</span>cast<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>float32<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Convert with cast() method</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"simd3:"</span><span class="tk-punctuation">,</span> simd3<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> simd4 <span class="tk-operator">=</span> simd2 <span class="tk-operator">+</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>int16<span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="6">    simd1</span>
+<span class="cl" data-line="7"><span class="tk-punctuation">)</span> <span class="tk-comment"># Convert with SIMD initializer</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"simd4:"</span><span class="tk-punctuation">,</span> simd4<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">simd3: [-2.2, 6.6, -13.200001, 22.0]</span>
+<span class="cl" data-line="2">simd4: [1, 5, 1, 9]</span>
+</code></pre></figure>
+<p>You can convert a <code>Scalar</code> value by passing it as an argument to the initializer
+of the target type. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> my_int<span class="tk-punctuation">:</span> Int16 <span class="tk-operator">=</span> <span class="tk-number">12</span> <span class="tk-comment"># SIMD[DType.int16, 1]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> my_float<span class="tk-punctuation">:</span> Float32 <span class="tk-operator">=</span> <span class="tk-number">0.75</span> <span class="tk-comment"># SIMD[DType.float32, 1]</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> result <span class="tk-operator">=</span> Float32<span class="tk-punctuation">(</span>my_int<span class="tk-punctuation">)</span> <span class="tk-operator">*</span> my_float    <span class="tk-comment"># Result is SIMD[DType.float32, 1]</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Result:"</span><span class="tk-punctuation">,</span> result<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Result: 9.0</span>
+</code></pre></figure>
+<p>You can convert a scalar value of any numeric type to <code>Int</code> by passing the value
+to the <a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/SIMD/#__init__" rel="noopener noreferrer"><code>Int()</code></a> initializer method.
+Additionally, you can pass an instance of any struct that implements the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/int/Intable/" rel="noopener noreferrer"><code>Intable</code></a> trait or
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/int/IntableRaising/" rel="noopener noreferrer"><code>IntableRaising</code></a> trait to the <code>Int()</code>
+initializer to convert that instance to an <code>Int</code>.</p>
+<h2 class="h h--2" data-level="2" id="strings">Strings<a aria-label="Link to Strings" class="h__link" href="#strings"></a></h2>
+<p>Strings are Mojo's primary text type. They store UTF-8 encoded text and
+provide a safe, ergonomic interface for string manipulation.</p>
+<p>Mojo's <code>String</code> type is a mutable string. <code>String</code> supports a variety
+of operators and common methods:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> s<span class="tk-punctuation">:</span> String <span class="tk-operator">=</span> <span class="tk-string">"Testing"</span></span>
+<span class="cl" data-line="2">s <span class="tk-operator">+=</span> <span class="tk-string">" Mojo strings"</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span> <span class="tk-comment"># Testing Mojo strings</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="construction">Construction<a aria-label="Link to Construction" class="h__link" href="#construction"></a></h3>
+<p>Many standard library types conform to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a> trait, which indicates
+that a value can be converted into a <code>String</code> using the <code>String(...)</code>
+initializer.</p>
+<p>The built-in <a class="ext" data-external="" href="https://mojolang.org/docs/std/io/io/print/" rel="noopener noreferrer"><code>print()</code></a> function accepts values
+that conform to the <code>Writable</code> trait.</p>
+<p>Use <code>String(value)</code> to explicitly convert a value to a <code>String</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> s <span class="tk-operator">=</span> <span class="tk-string">"Items in list: "</span> <span class="tk-operator">+</span> String<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span> <span class="tk-comment"># Items in list: 5</span></span>
+</code></pre></figure>
+<p>Or, use the string initializer with variadic <code>Writable</code> types,
+so you don't have to call <code>String()</code> on each value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> s <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span><span class="tk-string">"Items in list: "</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span> <span class="tk-comment"># Items in list: 5</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="emoji-and-grapheme-clusters">Emoji and grapheme clusters<a aria-label="Link to Emoji and grapheme clusters" class="h__link" href="#emoji-and-grapheme-clusters"></a></h3>
+<p>Mojo source files are UTF-8, letting you write emoji and other non-ASCII
+characters directly inside string literals.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> wave <span class="tk-operator">=</span> <span class="tk-string">"👋"</span></span>
+</code></pre></figure>
+<p>The standard library counts emoji three different ways, and the answers
+usually disagree:</p>
+<ul>
+<li class=""><code>byte_length()</code> returns the number of UTF-8 bytes.</li>
+<li class=""><code>count_codepoints()</code> counts the Unicode code points.</li>
+<li class=""><code>count_graphemes()</code> returns the number of user-perceived characters
+(grapheme clusters), following
+<a class="ext" data-external="" href="https://www.unicode.org/reports/tr29/" rel="noopener noreferrer">UAX #29</a>.</li>
+</ul>
+<p>The grapheme count is what matches what a human would tell you if you
+asked them to "count characters." A family emoji, a flag, and a waving
+hand with a skin tone are each one grapheme, even though each is built
+from several joined code points:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">show</span><span class="tk-punctuation">(</span>label<span class="tk-punctuation">:</span> StaticString<span class="tk-punctuation">,</span> s<span class="tk-punctuation">:</span> StringSlice<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3">        label<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4"> <span class="tk-string">"bytes="</span><span class="tk-punctuation">,</span> s<span class="tk-punctuation">.</span>byte_length<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="5"> <span class="tk-string">"codepoints="</span><span class="tk-punctuation">,</span> s<span class="tk-punctuation">.</span>count_codepoints<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6"> <span class="tk-string">"graphemes="</span><span class="tk-punctuation">,</span> s<span class="tk-punctuation">.</span>count_graphemes<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10">    show<span class="tk-punctuation">(</span><span class="tk-string">"family    "</span><span class="tk-punctuation">,</span> <span class="tk-string">"👨‍👩‍👧‍👦"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11">    show<span class="tk-punctuation">(</span><span class="tk-string">"flag      "</span><span class="tk-punctuation">,</span> <span class="tk-string">"🇺🇸"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12">    show<span class="tk-punctuation">(</span><span class="tk-string">"wave      "</span><span class="tk-punctuation">,</span> <span class="tk-string">"👋🏽"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13">    show<span class="tk-punctuation">(</span><span class="tk-string">"namaste   "</span><span class="tk-punctuation">,</span> <span class="tk-string">"नमस्ते"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Output:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">family     bytes=25  codepoints=7  graphemes=1</span>
+<span class="cl" data-line="2">flag       bytes=8   codepoints=2  graphemes=1</span>
+<span class="cl" data-line="3">wave       bytes=8   codepoints=2  graphemes=1</span>
+<span class="cl" data-line="4">namaste    bytes=18  codepoints=6  graphemes=3</span>
+</code></pre></figure>
+<p>If you'd rather not embed non-ASCII bytes in your source, for example, in
+ASCII-only codebases, you can spell the code point with a hex escape or
+<code>chr()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> wave <span class="tk-operator">=</span> <span class="tk-string">"\U0001F44B"</span> <span class="tk-comment"># 8-digit hex escape</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> wave2 <span class="tk-operator">=</span> <span class="tk-builtin">chr</span><span class="tk-punctuation">(</span><span class="tk-number">0x1F44B</span><span class="tk-punctuation">)</span> <span class="tk-comment"># chr() function</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> copy   <span class="tk-operator">=</span> <span class="tk-string">"\u00A9"</span> <span class="tk-comment"># 4-digit hex escape, ©</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> euro   <span class="tk-operator">=</span> <span class="tk-string">"\u20AC"</span> <span class="tk-comment"># 4-digit hex escape, €</span></span>
+</code></pre></figure>
+<p>Mojo's 4-digit <code>\uHHHH</code> escape spells code points up to U+FFFF. The
+8-digit <code>\U</code> form extends to U+10FFFF, Unicode's upper limit, covering
+emoji like 👋 (U+1F44B) and other characters above the Basic Multilingual
+Plane. The <code>chr()</code> function works for the full range too.</p>
+<p>Both forms reject surrogate code points (U+D800 to U+DFFF). Surrogates
+are reserved for UTF-16 encoding and aren't valid on their own. To
+escape a character above U+FFFF, write its full code point with <code>\U</code>.
+Don't use a UTF-16 surrogate pair.</p>
+<h3 class="h h--3" data-level="3" id="string-formatting">String formatting<a aria-label="Link to String formatting" class="h__link" href="#string-formatting"></a></h3>
+<p>The <code>format()</code> method inserts values into a string using manual or
+automatic positional indexing. Replacement fields use braces:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"{0} {1} {0}"</span><span class="tk-punctuation">.</span><span class="tk-builtin">format</span><span class="tk-punctuation">(</span><span class="tk-string">"Mojo"</span><span class="tk-punctuation">,</span> <span class="tk-number">1.125</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Mojo 1.125 Mojo</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"{} {}"</span><span class="tk-punctuation">.</span><span class="tk-builtin">format</span><span class="tk-punctuation">(</span><span class="tk-boolean">True</span><span class="tk-punctuation">,</span> <span class="tk-string">"hello world"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True hello world</span></span>
+</code></pre></figure>
+<p>Mojo's <code>TString</code> (template string) replaces the functionality of
+the <code>format()</code> method with direct expressions and better
+performance characteristics.</p>
+<p><code>TString</code>s work like <code>format()</code>, but they insert
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a> representations of expressions
+into replacement fields. This provides safe and flexible string
+processing:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> count <span class="tk-operator">=</span> <span class="tk-number">3</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> items <span class="tk-operator">=</span> <span class="tk-string">"apples"</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> template <span class="tk-operator">=</span> t<span class="tk-string">"Give me {count} {items}."</span> <span class="tk-comment"># Template string</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>template<span class="tk-punctuation">)</span> <span class="tk-comment"># Output: Give me 3 apples.</span></span>
+</code></pre></figure>
+<p><code>TString</code> values are lazy. They don't allocate until you explicitly
+construct a <code>String</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">41</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"The answer is {x + 1}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># The answer is 42 (no allocation)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> name <span class="tk-operator">=</span> <span class="tk-string">"Nate"</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> template <span class="tk-operator">=</span> t<span class="tk-string">"Hello, {name}!"</span> <span class="tk-comment"># template creation</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>template<span class="tk-punctuation">)</span> <span class="tk-comment"># Hello, Nate! (no allocation)</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">var</span> s <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span>template<span class="tk-punctuation">)</span> <span class="tk-comment"># explicitly construct a string</span></span>
+</code></pre></figure>
+<p><code>TString</code>s can add arbitrary expressions within the replacement fields:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"{list[0] + list[1]}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 3</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="raw-strings">Raw strings<a aria-label="Link to Raw strings" class="h__link" href="#raw-strings"></a></h3>
+<p>In Mojo, <strong>raw strings</strong> are string literals prefixed with <code>r</code>.
+If you ran the following command it would print on one line, not
+two, because raw strings prevent backslash escape sequences from
+being interpreted:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">r"Hello\nWorld"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Hello\nWorld, with the backslash and n</span></span>
+</code></pre></figure>
+<p>Raw strings help with regular expressions, code generation,
+serialization code, and other applications where you want to use
+escape sequences as literal entries in your string. Unlike
+normal strings, escapes aren't processed.</p>
+<p>Rawness applies to all forms of strings: single line, multi-line,
+docstrings, and <code>TString</code>s. Raw <code>TString</code>s support interpolation
+but won't expand escape sequences:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> name <span class="tk-operator">=</span> <span class="tk-string">"Nate"</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>rt<span class="tk-string">"Hello,\t{name}."</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Hello,\tNate., with the backslash and t</span></span>
+</code></pre></figure>
+<p>Raw strings <em>still</em> need a way to terminate, so if you have to use
+<code>"</code> within your content, use an alternate form of quote, such as
+single quote (<code>'</code>) or triple quotes, (<code>"""</code>, <code>'''</code>) to enclose
+it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-string">r'She said, "Hello, World!"'</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="string-literals">String literals<a aria-label="Link to String literals" class="h__link" href="#string-literals"></a></h3>
+<p>As with numeric types, the standard library includes a string literal type used
+to represent literal strings in the program source. String literals are
+enclosed in either single or double quotes.</p>
+<p>Adjacent literals are concatenated together, so you can define a long string
+using a series of literals broken up over several lines:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> s <span class="tk-operator">=</span> <span class="tk-string">"A very long string which is "</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"broken into two literals for legibility."</span></span>
+</code></pre></figure>
+<p>To define a multi-line string, enclose the literal in three single or double
+quotes:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> s <span class="tk-operator">=</span> <span class="tk-string">"""</span></span>
+<span class="cl" data-line="2"><span class="tk-string">Multi-line string literals let you</span></span>
+<span class="cl" data-line="3"><span class="tk-string">enter long blocks of text, including</span></span>
+<span class="cl" data-line="4"><span class="tk-string">newlines."""</span></span>
+</code></pre></figure>
+<p>Note that the triple double quote form is also used for API documentation
+strings.</p>
+<p>A <code>StringLiteral</code> will materialize to a <code>String</code> when used at run-time:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> param <span class="tk-operator">=</span> <span class="tk-string">"foo"</span> <span class="tk-comment"># type = StringLiteral</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> runtime_value <span class="tk-operator">=</span> <span class="tk-string">"bar"</span> <span class="tk-comment"># type = String</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> runtime_value2 <span class="tk-operator">=</span> param <span class="tk-comment"># type = String</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="booleans">Booleans<a aria-label="Link to Booleans" class="h__link" href="#booleans"></a></h2>
+<p>Mojo's <code>Bool</code> type represents a boolean value. It can take one of two values,
+<code>True</code> or <code>False</code>. You can negate a boolean value using the <code>not</code> operator.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> conditionA <span class="tk-operator">=</span> <span class="tk-boolean">False</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> conditionB<span class="tk-punctuation">:</span> Bool</span>
+<span class="cl" data-line="3">conditionB <span class="tk-operator">=</span> <span class="tk-keyword">not</span> conditionA</span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>conditionA<span class="tk-punctuation">,</span> conditionB<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">False True</span>
+</code></pre></figure>
+<p>Many types have a boolean representation. Any type that implements the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/bool/Boolable/" rel="noopener noreferrer"><code>Boolable</code></a> trait has a boolean
+representation. As a general principle, collections evaluate as True if they
+contain any elements, False if they are empty; strings evaluate as True if they
+have a non-zero length.</p>
+<h2 class="h h--2" data-level="2" id="tuples">Tuples<a aria-label="Link to Tuples" class="h__link" href="#tuples"></a></h2>
+<p>Mojo's <code>Tuple</code> is a lightweight, fixed-size, heterogeneous collection with
+value semantics. A tuple contains zero or more comma-separated values,
+which may have different types. Although a tuple's structure (its size and
+element types) is fixed, individual elements can be mutated. Tuples support
+several forms of indexing:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Tuples can hold multiple types</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> example_tuple <span class="tk-operator">=</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-string">"Example"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-comment"># Assign multiple variables at once</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> example_tuple</span>
+<span class="cl" data-line="6"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">,</span> y<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-comment"># Get individual values with an index</span></span>
+<span class="cl" data-line="9"><span class="tk-keyword">var</span> s <span class="tk-operator">=</span> example_tuple<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">1 Example</span>
+<span class="cl" data-line="2">Example</span>
+</code></pre></figure>
+<p>You can also create a tuple without explicit typing.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> example_tuple <span class="tk-operator">=</span> <span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-string">"Example"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> s <span class="tk-operator">=</span> example_tuple<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Example</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="collection-types">Collection types<a aria-label="Link to Collection types" class="h__link" href="#collection-types"></a></h2>
+<p>The Mojo standard library also includes a set of basic collection types that
+can be used to build more complex data structures:</p>
+<ul>
+<li class=""><a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/list/List/" rel="noopener noreferrer"><code>List</code></a>, a dynamically-sized array of
+items.</li>
+<li class=""><a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/Dict/" rel="noopener noreferrer"><code>Dict</code></a>, an associative array of
+key-value pairs.</li>
+<li class=""><a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/set/Set/" rel="noopener noreferrer"><code>Set</code></a>, an unordered collection of unique
+items.</li>
+<li class=""><a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/optional/Optional/" rel="noopener noreferrer"><code>Optional</code></a>
+represents a value that may or may not be present.</li>
+</ul>
+<p>The collection types are <em>parameterized types</em>: while a given collection can
+only hold a specific type of value (such as <code>Int</code> or <code>Float64</code>), you specify the
+type at compile time using a <a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/" rel="noopener noreferrer">parameter</a>. For example,
+you can create a <code>List</code> of <code>Int</code> values like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> l<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># l.append(3.14) # error: FloatLiteral cannot be converted to Int</span></span>
+</code></pre></figure>
+<p>You don't always need to specify the type explicitly. If Mojo can <em>infer</em> the
+type, you can omit it. For example, when you construct a list from a set of
+integer literals, Mojo creates a <code>List[Int]</code>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Inferred type == List[Int]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> l1<span class="tk-punctuation">:</span> List <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>Where you need a more flexible collection, the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/utils/variant/Variant/" rel="noopener noreferrer"><code>Variant</code></a> type can hold different types
+of values. For example, a <code>Variant[Int32, Float64]</code> can hold either an <code>Int32</code>
+<em>or</em> a <code>Float64</code> value at any given time. (Using <code>Variant</code> is not covered in
+this section, see the <a class="ext" data-external="" href="https://mojolang.org/docs/std/utils/variant/Variant/" rel="noopener noreferrer">API docs</a> for more
+information.)</p>
+<p>The following sections give brief introduction to the main collection types.</p>
+<h3 class="h h--3" data-level="3" id="list">List<a aria-label="Link to List" class="h__link" href="#list"></a></h3>
+<p><a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/list/List/" rel="noopener noreferrer"><code>List</code></a> is a dynamically-sized array of
+elements. You can create a <code>List</code> by passing the element type as a
+parameter, like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> l <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The <code>List</code> type supports a subset of the Python <code>list</code> API, including the
+ability to append to the list, pop items out of the list, and access list items
+using subscript notation.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-builtin">list</span><span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">7</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-builtin">list</span><span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">11</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Popping last item from list: "</span><span class="tk-punctuation">,</span> <span class="tk-builtin">list</span><span class="tk-punctuation">.</span>pop<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">for</span> idx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Popping last item from list:  11</span>
+<span class="cl" data-line="2">2, 3, 5, 7,</span>
+</code></pre></figure>
+<p>Note that the previous code sample leaves out the type parameter when creating
+the list. Because the list is being created with a set of <code>Int</code> values, Mojo can
+<em>infer</em> the type from the arguments.</p>
+<ul>
+<li class="">
+<p>Mojo supports list, set, and dictionary literals for collection
+initialization:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># List literal, element type infers to Int.</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> nums<span class="tk-punctuation">:</span> List <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>You can also use an explicit type if you want a specific element type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> <span class="tk-builtin">list</span> <span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>UInt8<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>You can also use list "comprehensions" for compact conditional initialization:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> list2 <span class="tk-operator">=</span> <span class="tk-punctuation">[</span>x<span class="tk-operator">*</span>Int<span class="tk-punctuation">(</span>y<span class="tk-punctuation">)</span> <span class="tk-keyword">for</span> x <span class="tk-keyword">in</span> nums <span class="tk-keyword">for</span> y <span class="tk-keyword">in</span> <span class="tk-builtin">list</span> <span class="tk-keyword">if</span> x <span class="tk-operator">!=</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>You can't <code>print()</code> a list, or convert it directly into a string.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Does not work</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>As shown above, you can print the individual elements in a list as long as
+they're a <a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a> type.</p>
+</li>
+<li class="">
+<p>Iterating a <code>List</code> returns an immutable
+<a href="../pages/21_lifetimes-origins-and-references.html#working-with-references">reference</a> to each
+item:</p>
+</li>
+</ul>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>item<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">2, 3, 4,</span>
+</code></pre></figure>
+<p>If you would like to mutate the elements of the list, capture the reference to
+the element with <code>ref</code> instead of making a copy:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">for</span> <span class="tk-keyword">ref</span> item <span class="tk-keyword">in</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> <span class="tk-comment"># Capture a ref to the list element</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>item<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4">      item <span class="tk-operator">=</span> <span class="tk-number">0</span> <span class="tk-comment"># Mutates the element inside the list</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"\nAfter loop:"</span><span class="tk-punctuation">,</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">2, 3, 4,</span>
+<span class="cl" data-line="2">After loop: 0 0 0</span>
+</code></pre></figure>
+<p>You can see that the original loop entries were modified.</p>
+<h3 class="h h--3" data-level="3" id="dict">Dict<a aria-label="Link to Dict" class="h__link" href="#dict"></a></h3>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/Dict/" rel="noopener noreferrer"><code>Dict</code></a> type is an associative array
+that holds key-value pairs. You can create a <code>Dict</code> by specifying the key type
+and value type as parameters and using dictionary literals:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Empty dictionary</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> empty_dict<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Float64<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-comment"># Dictionary with initial key-value pairs</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Float64<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-string">"pi"</span><span class="tk-punctuation">:</span> <span class="tk-number">3.14159</span><span class="tk-punctuation">,</span> <span class="tk-string">"e"</span><span class="tk-punctuation">:</span> <span class="tk-number">2.71828</span><span class="tk-punctuation">}</span></span>
+</code></pre></figure>
+<p>You can also use the initializer syntax:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> values <span class="tk-operator">=</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Float64<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The dictionary's key type must conform to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/#keyelement" rel="noopener noreferrer"><code>KeyElement</code></a> trait, and value
+elements must conform to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/copyable/Copyable/" rel="noopener noreferrer"><code>Copyable</code></a> trait.</p>
+<p>You can insert and remove key-value pairs, update the value assigned to a key,
+and iterate through keys, values, or items in the dictionary.</p>
+<p>The <code>Dict</code> iterators all yield
+<a href="../pages/21_lifetimes-origins-and-references.html#working-with-references">references</a>, which are
+copied into the declared name by default, but you can use the <code>ref</code> marker to
+avoid the copy:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> d<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Float64<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"plasticity"</span><span class="tk-punctuation">:</span> <span class="tk-number">3.1</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3"> <span class="tk-string">"elasticity"</span><span class="tk-punctuation">:</span> <span class="tk-number">1.3</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4"> <span class="tk-string">"electricity"</span><span class="tk-punctuation">:</span> <span class="tk-number">9.7</span></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> d<span class="tk-punctuation">.</span>items<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>item<span class="tk-punctuation">.</span>key<span class="tk-punctuation">,</span> item<span class="tk-punctuation">.</span>value<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">plasticity 3.1000000000000001</span>
+<span class="cl" data-line="2">elasticity 1.3</span>
+<span class="cl" data-line="3">electricity 9.6999999999999993</span>
+</code></pre></figure>
+<p>This is an unmeasurable micro-optimization in this case, but is useful when
+working with types that aren't <code>Copyable</code>.</p>
+<h3 class="h h--3" data-level="3" id="set">Set<a aria-label="Link to Set" class="h__link" href="#set"></a></h3>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/set/Set/" rel="noopener noreferrer"><code>Set</code></a> type represents a set of unique
+values. You can add and remove elements from the set, test whether a value
+exists in the set, and perform set algebra operations, like unions and
+intersections between two sets.</p>
+<p>Sets are parameterized and the element type must conform to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/#keyelement" rel="noopener noreferrer"><code>KeyElement</code></a> trait. Like lists and
+dictionaries, sets support standard literal syntax, as well as generator
+comprehensions:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> i_like <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-string">"sushi"</span><span class="tk-punctuation">,</span> <span class="tk-string">"ice cream"</span><span class="tk-punctuation">,</span> <span class="tk-string">"tacos"</span><span class="tk-punctuation">,</span> <span class="tk-string">"pho"</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> you_like <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-string">"burgers"</span><span class="tk-punctuation">,</span> <span class="tk-string">"tacos"</span><span class="tk-punctuation">,</span> <span class="tk-string">"salad"</span><span class="tk-punctuation">,</span> <span class="tk-string">"ice cream"</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> we_like <span class="tk-operator">=</span> i_like<span class="tk-punctuation">.</span>intersection<span class="tk-punctuation">(</span>you_like<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"We both like:"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> we_like<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"-"</span><span class="tk-punctuation">,</span> item<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">We both like:</span>
+<span class="cl" data-line="2">- ice cream</span>
+<span class="cl" data-line="3">- tacos</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="optional">Optional<a aria-label="Link to Optional" class="h__link" href="#optional"></a></h3>
+<p>An <a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/optional/Optional/" rel="noopener noreferrer"><code>Optional</code></a> represents a
+value that may or may not be present. Like the other collection types, it is
+parameterized, and can hold any type that conforms to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/copyable/Copyable/" rel="noopener noreferrer"><code>Copyable</code></a> trait.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Two ways to initialize an Optional with a value</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> opt1 <span class="tk-operator">=</span> Optional<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> opt2<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">5</span></span>
+<span class="cl" data-line="4"><span class="tk-comment"># Two ways to initialize an Optional with no value</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> opt3 <span class="tk-operator">=</span> Optional<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">var</span> opt4<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-boolean">None</span></span>
+</code></pre></figure>
+<p>An <code>Optional</code> evaluates as <code>True</code> when it holds a value, <code>False</code> otherwise. If
+the <code>Optional</code> holds a value, you can retrieve a reference to the value using
+the <code>value()</code> method. But calling <code>value()</code> on an <code>Optional</code> with no value
+results in undefined behavior, so you should always guard a call to <code>value()</code>
+inside a conditional that checks whether a value exists.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> opt<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-string">"Testing"</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> opt<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> value_ref <span class="tk-operator">=</span> opt<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>value_ref<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Testing</span>
+</code></pre></figure>
+<p>Alternately, you can use the <code>or_else()</code> method, which returns the stored
+value if there is one, or a user-specified default value otherwise:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> custom_greeting<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-boolean">None</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>custom_greeting<span class="tk-punctuation">.</span>or_else<span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Hello</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4">custom_greeting <span class="tk-operator">=</span> <span class="tk-string">"Hi"</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>custom_greeting<span class="tk-punctuation">.</span>or_else<span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Hi</span></span>
+</code></pre></figure>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/types/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/types/</a>, saved Thu, 01 Oct 2026 15:33:11 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/05_variables.html"><span class="pager__dir">← Previous</span><span class="pager__title">Variables</span></a><a class="pager__link pager__link--next" href="../pages/07_operators.html"><span class="pager__dir">Next →</span><span class="pager__title">Operators</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#numeric-types">Numeric types</a></li><li class="rail__depth-2"><a href="#strings">Strings</a></li><li class="rail__depth-2"><a href="#booleans">Booleans</a></li><li class="rail__depth-2"><a href="#tuples">Tuples</a></li><li class="rail__depth-2"><a href="#collection-types">Collection types</a></li><li class="rail__depth-3"><a href="#integers-and-unsigned-integers">Integers and unsigned integers</a></li><li class="rail__depth-3"><a href="#floating-point-numbers">Floating-point numbers</a></li><li class="rail__depth-3"><a href="#numeric-literals">Numeric literals</a></li><li class="rail__depth-3"><a href="#simd-and-dtype">SIMD and DType</a></li><li class="rail__depth-3"><a href="#scalar-values">Scalar values</a></li><li class="rail__depth-3"><a href="#numeric-type-conversion">Numeric type conversion</a></li><li class="rail__depth-3"><a href="#construction">Construction</a></li><li class="rail__depth-3"><a href="#emoji-and-grapheme-clusters">Emoji and grapheme clusters</a></li><li class="rail__depth-3"><a href="#string-formatting">String formatting</a></li><li class="rail__depth-3"><a href="#raw-strings">Raw strings</a></li><li class="rail__depth-3"><a href="#string-literals">String literals</a></li><li class="rail__depth-3"><a href="#list">List</a></li><li class="rail__depth-3"><a href="#dict">Dict</a></li><li class="rail__depth-3"><a href="#set">Set</a></li><li class="rail__depth-3"><a href="#optional">Optional</a></li><li class="rail__depth-4"><a href="#signed-versus-unsigned">Signed versus unsigned</a></li><li class="rail__depth-4"><a href="#overflow-behavior">Overflow behavior</a></li><li class="rail__depth-4"><a href="#mojo-supported-fixed-width-integer-types">Mojo-supported fixed-width integer types</a></li><li class="rail__depth-4"><a href="#floating-point-approximations-and-comparisons">Floating-point approximations and comparisons</a></li><li class="rail__depth-4"><a href="#mojo-supported-floating-point-types">Mojo-supported floating-point types</a></li><li class="rail__depth-4"><a href="#ai-optimized-floating-point-formats">AI-optimized floating-point formats</a></li><li class="rail__depth-4"><a href="#the-dtype-type">The DType type</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#numeric-types">Numeric types</a></li><li class="rail__depth-2"><a href="#strings">Strings</a></li><li class="rail__depth-2"><a href="#booleans">Booleans</a></li><li class="rail__depth-2"><a href="#tuples">Tuples</a></li><li class="rail__depth-2"><a href="#collection-types">Collection types</a></li><li class="rail__depth-3"><a href="#integers-and-unsigned-integers">Integers and unsigned integers</a></li><li class="rail__depth-3"><a href="#floating-point-numbers">Floating-point numbers</a></li><li class="rail__depth-3"><a href="#numeric-literals">Numeric literals</a></li><li class="rail__depth-3"><a href="#simd-and-dtype">SIMD and DType</a></li><li class="rail__depth-3"><a href="#scalar-values">Scalar values</a></li><li class="rail__depth-3"><a href="#numeric-type-conversion">Numeric type conversion</a></li><li class="rail__depth-3"><a href="#construction">Construction</a></li><li class="rail__depth-3"><a href="#emoji-and-grapheme-clusters">Emoji and grapheme clusters</a></li><li class="rail__depth-3"><a href="#string-formatting">String formatting</a></li><li class="rail__depth-3"><a href="#raw-strings">Raw strings</a></li><li class="rail__depth-3"><a href="#string-literals">String literals</a></li><li class="rail__depth-3"><a href="#list">List</a></li><li class="rail__depth-3"><a href="#dict">Dict</a></li><li class="rail__depth-3"><a href="#set">Set</a></li><li class="rail__depth-3"><a href="#optional">Optional</a></li><li class="rail__depth-4"><a href="#signed-versus-unsigned">Signed versus unsigned</a></li><li class="rail__depth-4"><a href="#overflow-behavior">Overflow behavior</a></li><li class="rail__depth-4"><a href="#mojo-supported-fixed-width-integer-types">Mojo-supported fixed-width integer types</a></li><li class="rail__depth-4"><a href="#floating-point-approximations-and-comparisons">Floating-point approximations and comparisons</a></li><li class="rail__depth-4"><a href="#mojo-supported-floating-point-types">Mojo-supported floating-point types</a></li><li class="rail__depth-4"><a href="#ai-optimized-floating-point-formats">AI-optimized floating-point formats</a></li><li class="rail__depth-4"><a href="#the-dtype-type">The DType type</a></li></ol>
+<p class="rail__meta">Chapter 06 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Get started with Mojo · Mojo v1 The Language Manual</title>
+<meta name="description" content="Toolchain, first project, and the full source of two samples.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part I · Orientation</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part I</span><span class="sep">/</span><span>Orientation</span><span class="sep">/</span><span class="num">02</span></nav><h1>Get started with Mojo</h1>
+<p class="dek">Toolchain, first project, and the full source of two samples.</p><p class="byline">Chapter 02 · 4,466 words · 27 code blocks · <a class="ext" href="https://mojolang.org/nightly/docs/manual/get-started/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Get started with Mojo by building
+<a class="ext" data-external="" href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life" rel="noopener noreferrer">Conway's Game of
+Life</a>,
+a simulation in which cells live, die, and reproduce based on the state of
+their neighbors.</p>
+<p>This tutorial walks you through the steps to build a simple version of the
+game. It should take you about 45-60 minutes to complete. Don't feel you
+need to rush it.</p>
+<p>Whether you arrive from, say, C++ or Python, you'll encounter unfamiliar
+syntax like transfer operators and compile-time variables. Read the
+<em>Takeaways</em> items to map these new features to concepts you already know.</p>
+<p>Run the code in your terminal and watch the grid evolve over time. As you
+build the game, you'll learn the Mojo syntax you need to start writing
+programs of your own.</p>
+<aside class="callout callout--tip"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">✦</span>Before you start</p><div class="callout__body"><p>Make sure you've <a class="ext" data-external="" href="https://mojolang.org/nightly/install/" rel="noopener noreferrer">installed Mojo</a> and can build and run Mojo code.</p><p>If you're using an AI coding assistant, install <a href="../pages/37_mojo-ai-skills.html">Mojo agent
+skills</a>. The skills track current Mojo syntax and
+language features.</p><figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">npx skills <span class="tk-function">add</span> modular/skills</span>
+</code></pre></figure></div></aside>
+<h2 class="h h--2" data-level="2" id="game-state">Game state<a aria-label="Link to Game state" class="h__link" href="#game-state"></a></h2>
+<p>Conway's Game of Life runs on a two-dimensional grid. Each cell is either
+alive or inactive. You'll use <code>1</code> for live cells and <code>0</code> for inactive
+cells. Count the neighbors around each cell by adding their values to a
+running sum.</p>
+<p>Create <code>life.mojo</code>. Build an 8 x 8 grid containing a
+<a class="ext" data-external="" href="https://en.wikipedia.org/wiki/Glider_(Conway%27s_Game_of_Life)" rel="noopener noreferrer">glider</a>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">64</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> num_cols<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">8</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> glider_grid <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>length<span class="tk-operator">=</span>count<span class="tk-punctuation">,</span> fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># Convert (x, y) coordinates to a linear index in the grid</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> to_index <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> y <span class="tk-operator">*</span> num_cols <span class="tk-operator">+</span> x</span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># Set up the grid</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">for</span> coord <span class="tk-keyword">in</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12">        glider_grid<span class="tk-punctuation">[</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># Print the grid</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">for</span> index <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"X"</span> <span class="tk-keyword">if</span> glider_grid<span class="tk-punctuation">[</span>index<span class="tk-punctuation">]</span> <span class="tk-keyword">else</span> <span class="tk-string">"."</span><span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">if</span> index <span class="tk-operator">%</span> num_cols <span class="tk-operator">==</span> <span class="tk-punctuation">(</span>num_cols <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Run the program to see the initial glider configuration:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo life.mojo</span>
+</code></pre></figure>
+<p>Output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">..X.....</span>
+<span class="cl" data-line="2">X.X.....</span>
+<span class="cl" data-line="3">.XX.....</span>
+<span class="cl" data-line="4">........</span>
+<span class="cl" data-line="5">........</span>
+<span class="cl" data-line="6">........</span>
+<span class="cl" data-line="7">........</span>
+<span class="cl" data-line="8">........</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways"></a></h3>
+<ul>
+<li class="">All variable declarations like <code>count</code> and <code>num_cols</code> start with <code>var</code>.</li>
+<li class=""><code>var</code> bindings are mutable by default.</li>
+<li class="">The <code>to_index</code> <em>lambda expression</em> defines a small local function that
+converts coordinates to a list index. Lambdas are short anonymous
+functions that evaluate a single expression.</li>
+</ul>
+<aside class="callout callout--tip"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">✦</span>Worth knowing</p><div class="callout__body"><p>When assigning contents, a list expression sets the values:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">12</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">7</span><span class="tk-punctuation">,</span> <span class="tk-number">64</span><span class="tk-punctuation">]</span> <span class="tk-comment"># This is a list expression</span></span>
+</code></pre></figure><p>In type names, square brackets supply compile-time <em>parameters</em>:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-comment"># List is a standard library-supplied type</span></span>
+<span class="cl" data-line="2">Grid<span class="tk-punctuation">[</span><span class="tk-number">8</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">]</span> <span class="tk-comment"># Grid is a custom type</span></span>
+</code></pre></figure><p>Parentheses supply run-time <em>arguments</em>:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2">Grid<span class="tk-punctuation">[</span><span class="tk-number">8</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure></div></aside>
+<h2 class="h h--2" data-level="2" id="add-reusable-printing">Add reusable printing<a aria-label="Link to Add reusable printing" class="h__link" href="#add-reusable-printing"></a></h2>
+<p>Move the display loop to a reusable function. Place this above <code>main()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print_grid</span><span class="tk-punctuation">(</span>grid<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> num_cols<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> index <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>grid<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"X"</span> <span class="tk-keyword">if</span> grid<span class="tk-punctuation">[</span>index<span class="tk-punctuation">]</span> <span class="tk-keyword">else</span> <span class="tk-string">"."</span><span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> index <span class="tk-operator">%</span> num_cols <span class="tk-operator">==</span> <span class="tk-punctuation">(</span>num_cols <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Replace the print loop with <code>print_grid(glider_grid, num_cols)</code> and run.</p>
+<p>Improve performance by replacing individual prints with a single string.
+This solution uses <em>comprehensions</em>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">print_grid</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> grid_str <span class="tk-operator">=</span> <span class="tk-string">""</span><span class="tk-punctuation">.</span>join<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">[</span><span class="tk-punctuation">(</span><span class="tk-punctuation">(</span><span class="tk-string">"X"</span> <span class="tk-keyword">if</span> value <span class="tk-keyword">else</span> <span class="tk-string">"."</span><span class="tk-punctuation">)</span> <span class="tk-operator">+</span> </span>
+<span class="cl" data-line="4"> <span class="tk-punctuation">(</span><span class="tk-string">"\n"</span> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span>index <span class="tk-operator">+</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span> <span class="tk-operator">%</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">==</span> <span class="tk-number">0</span> <span class="tk-keyword">else</span> <span class="tk-string">""</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">for</span> index<span class="tk-punctuation">,</span> value <span class="tk-keyword">in</span> <span class="tk-builtin">enumerate</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>grid_str<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>When running the program with larger grids and many generations, this
+approach is faster than printing each cell individually. You print once per
+frame instead of once per cell.</p>
+<p>Call <code>print_grid()</code> from <code>main()</code> and confirm the output:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Print the grid</span></span>
+<span class="cl" data-line="2">print_grid<span class="tk-punctuation">(</span>glider_grid<span class="tk-punctuation">,</span> num_cols<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways-1">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-1"></a></h3>
+<ul>
+<li class="">Comprehensions are a shorthand for creating lists and other
+collections.<code>print_grid()</code> uses a list comprehension to transform each
+cell into a <code>String</code>, then joins them (<code>join()</code>) for printing.</li>
+<li class="">Enumeration (<code>enumerate()</code>) accesses each cell's index and value,
+selecting "X" for live cells or "." for inactive cells. It also adds
+newlines between rows.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="add-lookups">Add lookups<a aria-label="Link to Add lookups" class="h__link" href="#add-lookups"></a></h2>
+<p>Make a few more changes in place in <code>life.mojo</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> count<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">64</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">comptime</span> num_cols<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">8</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-comment"># Transform coordinates to a linear index</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">comptime</span> to_index <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="6">    y <span class="tk-operator">*</span> num_cols <span class="tk-operator">+</span> x</span>
+<span class="cl" data-line="7"><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-comment"># Transform linear index to coordinates</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">comptime</span> to_coord <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>i<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="11"> <span class="tk-punctuation">(</span>i <span class="tk-operator">%</span> num_cols<span class="tk-punctuation">,</span> i <span class="tk-operator">//</span> num_cols<span class="tk-punctuation">)</span> <span class="tk-comment"># `//` is flooring divide</span></span>
+<span class="cl" data-line="12"><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"><span class="tk-keyword">def</span> <span class="tk-function">print_grid</span><span class="tk-punctuation">(</span>grid<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">for</span> index <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>grid<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"X"</span> <span class="tk-keyword">if</span> grid<span class="tk-punctuation">[</span>index<span class="tk-punctuation">]</span> <span class="tk-keyword">else</span> <span class="tk-string">"."</span><span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">if</span> index <span class="tk-operator">%</span> num_cols <span class="tk-operator">==</span> <span class="tk-punctuation">(</span>num_cols <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18"></span>
+<span class="cl" data-line="19"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">var</span> glider_grid<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>length<span class="tk-operator">=</span>count<span class="tk-punctuation">,</span> fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21"></span>
+<span class="cl" data-line="22"> <span class="tk-comment"># Set up the grid</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">for</span> coord <span class="tk-keyword">in</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24">        glider_grid<span class="tk-punctuation">[</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="25"></span>
+<span class="cl" data-line="26"> <span class="tk-comment"># Print the grid</span></span>
+<span class="cl" data-line="27">    print_grid<span class="tk-punctuation">(</span>glider_grid<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Now you can convert coordinates to indices and indices to coordinates.</p>
+<h3 class="h h--3" data-level="3" id="takeaways-2">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-2"></a></h3>
+<ul>
+<li class=""><code>comptime</code> declarations are evaluated at compile time before the code
+runs. This lets Mojo optimize and generate efficient machine code.</li>
+<li class="">The flooring divide operator (<code>//</code>) used here performs integer
+division, rounding towards negative infinity. For integer types, <code>/</code>
+returns an integer, rounding towards zero.</li>
+<li class="">You've moved all the constants out from <code>main()</code> to <code>comptime</code>
+declarations, making them available throughout this file.</li>
+<li class="">You've created two lambda expressions that convert between
+coordinates and indices.</li>
+<li class="">You've removed the second argument from <code>print_grid()</code>.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="try-this">Try this<a aria-label="Link to Try this" class="h__link" href="#try-this"></a></h3>
+<p>In a separate source file, declare the number of rows as a comptime
+constant and compute the <em>count</em> at compile time.</p>
+<p>Remove the new source after verifying your solution is correct. You will
+always need two of these three items: the number of rows, the number of
+columns, and the total count of cells.</p>
+<h2 class="h h--2" data-level="2" id="define-a-grid-type">Define a <code>Grid</code> type<a aria-label="Link to Define a Grid type" class="h__link" href="#define-a-grid-type"></a></h2>
+<p>Revise your code again, into a new file called <code>grid.mojo</code>. You're
+creating a new type, called a <code>struct</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Grid</span><span class="tk-punctuation">[</span>num_cols<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> num_rows<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> cells<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">*</span> Self<span class="tk-punctuation">.</span>num_rows</span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>length<span class="tk-operator">=</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count<span class="tk-punctuation">,</span> fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> glider_grid <span class="tk-operator">=</span> Grid<span class="tk-punctuation">[</span><span class="tk-number">8</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>__init__(out self)</code> initializes a new <code>Grid</code>. Every field must receive a
+value before the initializer returns.</p>
+<p>Here, <code>count</code> comes from the grid dimensions, and <code>cells</code> starts as a list
+of zeros.</p>
+<h3 class="h h--3" data-level="3" id="takeaways-3">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-3"></a></h3>
+<ul>
+<li class=""><code>Grid</code> uses both compile-time parameters and runtime fields.</li>
+<li class=""><code>Self.num_cols</code> and <code>Self.num_rows</code> belong to the parameterized type.</li>
+<li class=""><code>self.cells</code> and <code>self.count</code> belong to one <code>Grid</code> instance.</li>
+<li class="">This <code>Grid</code> needs custom initialization, so it defines <code>__init__()</code>.</li>
+</ul>
+<aside class="callout callout--tip"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">✦</span>Worth knowing</p><div class="callout__body"><p>Normally, if an initializer just assigns arguments directly to fields,
+add <code>@fieldwise_init</code> to the struct instead. Mojo generates that
+initializer for you. For example, in an alternate implementation
+you might define all three core measurements as fields in your
+struct rather than synthesize one from the other two:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Grid</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> cells<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> num_cols<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> num_rows<span class="tk-punctuation">:</span> Int</span>
+</code></pre></figure></div></aside>
+<h2 class="h h--2" data-level="2" id="add-grid-operations">Add grid operations<a aria-label="Link to Add grid operations" class="h__link" href="#add-grid-operations"></a></h2>
+<p>Put the following content into your <code>Grid</code> struct:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">comptime</span> to_index <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2">        y <span class="tk-operator">*</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">+</span> x</span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> to_coord <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>i<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="6"> <span class="tk-punctuation">(</span>i <span class="tk-operator">%</span> Self<span class="tk-punctuation">.</span>num_cols<span class="tk-punctuation">,</span> i <span class="tk-operator">//</span> Self<span class="tk-punctuation">.</span>num_cols<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">print_grid</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> grid_str <span class="tk-operator">=</span> <span class="tk-string">""</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">for</span> index <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12">            grid_str <span class="tk-operator">+=</span> <span class="tk-string">"X"</span> <span class="tk-keyword">if</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>index<span class="tk-punctuation">]</span> <span class="tk-keyword">else</span> <span class="tk-string">"."</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span>index <span class="tk-operator">%</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">==</span> <span class="tk-punctuation">(</span>Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span> <span class="tk-keyword">and</span></span>
+<span class="cl" data-line="14">                index <span class="tk-operator">!=</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">)</span> <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15">                grid_str <span class="tk-operator">+=</span> <span class="tk-string">"\n"</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>grid_str<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">def</span> <span class="tk-function">__setitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> value</span>
+<span class="cl" data-line="20"></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways-4">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-4"></a></h3>
+<ul>
+<li class=""><code>Self.to_index()</code> accesses a type member. The lambda <code>to_index()</code> belongs
+to <code>Grid</code>. Uppercase <code>Self</code> refers to the type.</li>
+<li class="">Instance methods take <code>self</code> as their first argument. Lowercase <code>self</code>
+refers to an instance.</li>
+<li class=""><code>mut self</code> allows a method to change the instance.</li>
+<li class=""><code>__getitem__()</code> and <code>__setitem__()</code> define indexing behavior, so a <code>Grid</code>
+can use <code>grid[coord]</code> notation.</li>
+</ul>
+<p>Don't add this anywhere. It's just a preview of how this all works from the
+call site:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Set up the grid</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">for</span> coord <span class="tk-keyword">in</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    glider_grid<span class="tk-punctuation">[</span>coord<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span> <span class="tk-comment"># Uses indexing with `__setitem__()`</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="import-grid">Import <code>Grid</code><a aria-label="Link to Import Grid" class="h__link" href="#import-grid"></a></h2>
+<p>Remove <code>main()</code> from <code>grid.mojo</code>, save it, and import your new type into
+<code>life.mojo</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> grid <span class="tk-keyword">import</span> Grid  <span class="tk-comment"># Separate concerns into separate files</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> glider_grid <span class="tk-operator">=</span> Grid<span class="tk-punctuation">[</span><span class="tk-number">8</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-comment"># Set up the grid</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">for</span> coord <span class="tk-keyword">in</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">        glider_grid<span class="tk-punctuation">[</span>coord<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># Print the grid</span></span>
+<span class="cl" data-line="11">    glider_grid<span class="tk-punctuation">.</span>print_grid<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Run it and confirm everything works as expected.</p>
+<h2 class="h h--2" data-level="2" id="be-random">Be random<a aria-label="Link to Be random" class="h__link" href="#be-random"></a></h2>
+<p>Gliders are terrific for validating code, but random values produce
+great animations. Set up your seed in <code>main()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>random <span class="tk-keyword">import</span> seed</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> grid <span class="tk-keyword">import</span> Grid</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    seed<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># ...</span></span>
+</code></pre></figure>
+<p>Mojo won't allow runtime statements at global scope, so you can't call
+<code>seed()</code> there. Instead, seed the RNG from executable code, such as
+<code>main()</code> or another function. You only need to seed once: seeding sets the
+state of a single PRNG shared across threads.</p>
+<h3 class="h h--3" data-level="3" id="add-protection">Add protection<a aria-label="Link to Add protection" class="h__link" href="#add-protection"></a></h3>
+<p>Filling every cell independently gives you random static. It works, but it
+doesn't produce especially interesting Game of Life patterns. Instead,
+build a few random clumps of live cells.</p>
+<p>To start, add checks to your setter in <code>grid.mojo</code>. A coordinate check
+function helps:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">is_valid_coord</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> <span class="tk-keyword">not</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3">            coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">&lt;</span> <span class="tk-number">0</span> <span class="tk-keyword">or</span> coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">&gt;=</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-keyword">or</span></span>
+<span class="cl" data-line="4">            coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">&lt;</span> <span class="tk-number">0</span> <span class="tk-keyword">or</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">&gt;=</span> Self<span class="tk-punctuation">.</span>num_rows</span>
+<span class="cl" data-line="5"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">__setitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>is_valid_coord<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-keyword">return</span> <span class="tk-comment"># no op</span></span>
+<span class="cl" data-line="9"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> value</span>
+</code></pre></figure>
+<p>You can add a check to the getter, too. Instead of returning a made-up
+value, raise an error or abort the process. The best approach tests the
+coordinates before indexing (<code>if self.is_valid_coord(coord):</code>) to
+avoid indexing errors instead of adding no-op workarounds.</p>
+<h3 class="h h--3" data-level="3" id="introducing-errors">Introducing errors<a aria-label="Link to Introducing errors" class="h__link" href="#introducing-errors"></a></h3>
+<p>This version of <code>__getitem__()</code> raises an error when coordinates aren't
+valid. Add <code>raises</code> to the signature before the arrow, and call <code>raise</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>is_valid_coord<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> String<span class="tk-punctuation">(</span>t<span class="tk-string">"Invalid coordinate: ({coord[0]}, {coord[1]})"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>A <em>TString</em> starts with <code>t"</code> and creates a template format. <code>print()</code>
+statements automatically convert to strings, but everywhere else explicitly
+call <code>String()</code>.</p>
+<p>Once <code>__getitem__()</code> raises, every caller must either raise or handle
+the error using Mojo's <code>try/except</code> error handling.</p>
+<p>For now, revert your changes and let <code>__getitem__()</code> handle invalid
+coordinates as it did before.</p>
+<h3 class="h h--3" data-level="3" id="construct-the-random-grid">Construct the random grid<a aria-label="Link to Construct the random grid" class="h__link" href="#construct-the-random-grid"></a></h3>
+<p>Add a static method that constructs a random <code>Grid</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>random <span class="tk-keyword">import</span> random_si64  <span class="tk-comment"># Add this import to grid.mojo</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-comment"># and inside Grid:</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">random_grid</span><span class="tk-punctuation">(</span>clumps<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> grid <span class="tk-operator">=</span> Self<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">for</span> _ <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>clumps<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> idx <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>random_si64<span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> Int64<span class="tk-punctuation">(</span>grid<span class="tk-punctuation">.</span>count<span class="tk-punctuation">)</span> <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>to_coord<span class="tk-punctuation">(</span>idx<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11">            grid<span class="tk-punctuation">[</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">,</span> y<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span> <span class="tk-comment"># Fill index cell</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">for</span> dx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-comment"># -1, 0, or 1</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">for</span> dy <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> grid<span class="tk-punctuation">.</span>is_valid_coord<span class="tk-punctuation">(</span><span class="tk-punctuation">(</span>x <span class="tk-operator">+</span> dx<span class="tk-punctuation">,</span> y <span class="tk-operator">+</span> dy<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">if</span> random_si64<span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-operator">&gt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span> <span class="tk-keyword">continue</span> <span class="tk-comment"># 75% skip</span></span>
+<span class="cl" data-line="17">                    grid<span class="tk-punctuation">[</span><span class="tk-punctuation">(</span>x <span class="tk-operator">+</span> dx<span class="tk-punctuation">,</span> y <span class="tk-operator">+</span> dy<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">return</span> grid<span class="tk-operator">^</span></span>
+</code></pre></figure>
+<p>By default, <code>random_grid()</code> builds two clumps when called without arguments
+(<code>clumps: Int = 2</code>). The default value follows the equal sign.</p>
+<p>A <code>@staticmethod</code> belongs to the type and not an individual instance. Call
+it through the <code>Grid</code> type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"\nRandom grid:\n"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> random_grid <span class="tk-operator">=</span> Grid<span class="tk-punctuation">[</span><span class="tk-number">8</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>random_grid<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3">random_grid<span class="tk-punctuation">.</span>print_grid<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You don't have to add this code except to test it. You can remove it
+afterwards.</p>
+<h3 class="h h--3" data-level="3" id="takeaways-5">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-5"></a></h3>
+<ul>
+<li class="">This static method still needs <code>Grid</code> parameters, namely 8 and 8.</li>
+<li class="">Each neighboring cell has a 25% chance of becoming live. Adjust
+to your preference.</li>
+<li class=""><code>random_si64()</code> returns an <code>Int64</code>. Cast the value to <code>Int</code>.</li>
+<li class="">The clump loop variable is <code>_</code>, the discard pattern. Use this when
+you don't care about the value it produces.</li>
+<li class="">A <code>^</code> sigil transfers the newly initialized <code>Grid</code>, avoiding a copy.
+Transfer means changing ownership, handing the value to the new owner.
+By skipping a copy, you avoid the time and memory costs of duplicating
+data.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="evolve">Evolve<a aria-label="Link to Evolve" class="h__link" href="#evolve"></a></h2>
+<p>In <code>life.mojo</code>, cut out the glider grid and remove the print statements.
+Next, you'll start making the grid change over time. Start by adding a
+separate <code>next_cells</code> list to <code>Grid</code> and initialize it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Grid</span><span class="tk-punctuation">[</span>num_cols<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> num_rows<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> cells<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-comment"># Holds the current generation</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> next_cells<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-comment"># Holds the next generation</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">*</span> Self<span class="tk-punctuation">.</span>num_rows</span>
+<span class="cl" data-line="8"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>length<span class="tk-operator">=</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count<span class="tk-punctuation">,</span> fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>length<span class="tk-operator">=</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count<span class="tk-punctuation">,</span> fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Conway's Game of Life applies three rules to every cell:</p>
+<ul>
+<li class="">A live cell stays alive with two or three live neighbors.</li>
+<li class="">An inactive cell becomes alive with exactly three live neighbors.</li>
+<li class="">Every other cell is inactive in the next generation.</li>
+</ul>
+<p>The updated cells are stored in the <code>next_cells</code> list. They won't affect
+math for the previous generation.</p>
+<p>Each cell has eight neighbors: the cells in the 3 x 3 square around it,
+excluding the cell itself.</p>
+<p>Add these methods to <code>Grid</code>.</p>
+<p><code>evolve_cell()</code> determines the state for the next generation of a single
+cell based on its neighbors:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">evolve_cell</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> i<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> is_live <span class="tk-operator">=</span> Bool<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Count the neighbors</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> ncount <span class="tk-operator">=</span> <span class="tk-operator">-</span><span class="tk-number">1</span> <span class="tk-keyword">if</span> is_live <span class="tk-keyword">else</span> <span class="tk-number">0</span> <span class="tk-comment"># Exclude self from the count</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>to_coord<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">for</span> dx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">for</span> dy <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> nx <span class="tk-operator">=</span> x <span class="tk-operator">+</span> dx</span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> ny <span class="tk-operator">=</span> y <span class="tk-operator">+</span> dy</span>
+<span class="cl" data-line="12">                ncount <span class="tk-operator">+=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>nx<span class="tk-punctuation">,</span> ny<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># Live cell stays alive with two or three live neighbors</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">if</span> is_live <span class="tk-keyword">and</span> <span class="tk-punctuation">(</span>ncount <span class="tk-operator">==</span> <span class="tk-number">2</span> <span class="tk-keyword">or</span> ncount <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="17"> <span class="tk-comment"># Inactive cell becomes alive with exactly three live neighbors</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">elif</span> <span class="tk-keyword">not</span> is_live <span class="tk-keyword">and</span> ncount <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+</code></pre></figure>
+<p><code>evolve()</code> updates the entire grid to the next generation by calling
+<code>evolve_cell()</code> for each index:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"> <span class="tk-keyword">def</span> <span class="tk-function">evolve</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>to_coord<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># Edges are excluded from evolution and will always go inactive.</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span>x <span class="tk-operator">==</span> <span class="tk-number">0</span> <span class="tk-keyword">or</span> y <span class="tk-operator">==</span> <span class="tk-number">0</span> <span class="tk-keyword">or</span></span>
+<span class="cl" data-line="6">                x <span class="tk-operator">==</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">-</span> <span class="tk-number">1</span> <span class="tk-keyword">or</span> y <span class="tk-operator">==</span> Self<span class="tk-punctuation">.</span>num_rows <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">0</span> <span class="tk-comment"># Edges go inactive</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="9"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>evolve_cell<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># Swap the current and next cell states</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> tmp <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-operator">^</span> <span class="tk-comment"># Transfer</span></span>
+<span class="cl" data-line="13"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-operator">^</span> <span class="tk-comment"># Transfer</span></span>
+<span class="cl" data-line="14"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells <span class="tk-operator">=</span> tmp<span class="tk-operator">^</span> <span class="tk-comment"># Every cell is written, so this is safe</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways-6">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-6"></a></h3>
+<ul>
+<li class="">The algorithm progresses in integer order, excluding edges.</li>
+<li class="">Live cells offset by -1, to exclude them from the count.</li>
+<li class="">Mojo's "ternary" has no <code>? :</code> syntax. Use the Python-style <code>if-else</code>
+expression instead: <code>-1 if is_live else 0</code>.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="run-the-simulation">Run the simulation<a aria-label="Link to Run the simulation" class="h__link" href="#run-the-simulation"></a></h2>
+<p>Add a loop so you can watch the grid evolve in the terminal. Here's the
+final <code>life.mojo</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>random <span class="tk-keyword">import</span> seed</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> grid <span class="tk-keyword">import</span> Grid</span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>time <span class="tk-keyword">import</span> sleep</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">comptime</span> gridw<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">80</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> gridh<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">20</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">comptime</span> grid_count<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">400</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10">    seed<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> grid <span class="tk-operator">=</span> Grid<span class="tk-punctuation">[</span>gridw<span class="tk-punctuation">,</span> gridh<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>random_grid<span class="tk-punctuation">(</span>grid_count<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">while</span> <span class="tk-boolean">True</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">for</span> gen <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">100</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"\033[H\033[J\nGeneration: {gen}{' ' * 4}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16">            grid<span class="tk-punctuation">.</span>evolve<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">;</span> grid<span class="tk-punctuation">.</span>print_grid<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17">            sleep<span class="tk-punctuation">(</span><span class="tk-number">0.1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18">        grid <span class="tk-operator">=</span> Grid<span class="tk-punctuation">[</span>gridw<span class="tk-punctuation">,</span> gridh<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>random_grid<span class="tk-punctuation">(</span>grid_count<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="takeaways-7">Takeaways<a aria-label="Link to Takeaways" class="h__link" href="#takeaways-7"></a></h3>
+<ul>
+<li class=""><code>comptime</code> declarations let you set constants.</li>
+<li class="">The odd characters in the print statement are ANSI escape codes.
+You'll see the updates generation-by-generation. Keep your terminal
+at a minimum of 80x24 for best results.</li>
+</ul>
+<aside class="callout callout--tip"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">✦</span>Worth knowing</p><div class="callout__body"><p>Mojo uses semicolons to separate statements, not to end them. One
+statement per line is the usual form. This listing pairs them to stay
+compact.</p></div></aside>
+<ul>
+<li class="">Mojo uses semicolons to separate statements, not to end them. One
+statement per line is the usual form. This listing pairs them to stay
+compact.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="your-first-day-try-these">Your first day? Try these<a aria-label="Link to Your first day? Try these" class="h__link" href="#your-first-day-try-these"></a></h2>
+<ul>
+<li class="">To use AI coding assistants with Mojo, see <a href="../pages/37_mojo-ai-skills.html">our AI skills
+guide</a> for using the latest
+up-to-date language know-how.</li>
+<li class="">Our Mojo <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/reference/" rel="noopener noreferrer">language
+reference</a> section provides a
+concise reference for syntax, keywords, and more.</li>
+<li class="">You can download our <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/reference/cheat-sheets/" rel="noopener noreferrer">cheat
+sheets</a> for printable
+reference cards that unify entire concepts.</li>
+<li class=""><a class="ext" data-external="" href="https://quest.mojolang.org/" rel="noopener noreferrer">Mojo Quest</a> is a web-based game where you
+solve coding challenges to practice Mojo syntax.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="final-code">Final code<a aria-label="Link to Final code" class="h__link" href="#final-code"></a></h2>
+<details class="disc"><summary class="disc__summary">View the complete grid.mojo</summary><div><div><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>random <span class="tk-keyword">import</span> random_si64</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">struct</span> <span class="tk-class-name">Grid</span><span class="tk-punctuation">[</span>num_cols<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> num_rows<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> cells<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-comment"># Holds the current generation</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> next_cells<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-comment"># Holds the next generation</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">*</span> Self<span class="tk-punctuation">.</span>num_rows</span>
+<span class="cl" data-line="11"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>length<span class="tk-operator">=</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count<span class="tk-punctuation">,</span> fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>length<span class="tk-operator">=</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count<span class="tk-punctuation">,</span> fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">comptime</span> to_index <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="15">        y <span class="tk-operator">*</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">+</span> x</span>
+<span class="cl" data-line="16"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">comptime</span> to_coord <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>i<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="19"> <span class="tk-punctuation">(</span>i <span class="tk-operator">%</span> Self<span class="tk-punctuation">.</span>num_cols<span class="tk-punctuation">,</span> i <span class="tk-operator">//</span> Self<span class="tk-punctuation">.</span>num_cols<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="20"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21"></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">def</span> <span class="tk-function">print_grid</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">var</span> grid_str <span class="tk-operator">=</span> <span class="tk-string">""</span><span class="tk-punctuation">.</span>join<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="24"> <span class="tk-punctuation">[</span><span class="tk-punctuation">(</span><span class="tk-punctuation">(</span><span class="tk-string">"X"</span> <span class="tk-keyword">if</span> value <span class="tk-keyword">else</span> <span class="tk-string">"."</span><span class="tk-punctuation">)</span> <span class="tk-operator">+</span> </span>
+<span class="cl" data-line="25"> <span class="tk-punctuation">(</span><span class="tk-string">"\n"</span> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span>index <span class="tk-operator">+</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span> <span class="tk-operator">%</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">==</span> <span class="tk-number">0</span> <span class="tk-keyword">else</span> <span class="tk-string">""</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">for</span> index<span class="tk-punctuation">,</span> value <span class="tk-keyword">in</span> <span class="tk-builtin">enumerate</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="27"> <span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="28"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="29"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>grid_str<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="30"></span>
+<span class="cl" data-line="31"> <span class="tk-keyword">def</span> <span class="tk-function">is_valid_coord</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="32"> <span class="tk-keyword">return</span> <span class="tk-keyword">not</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="33">            coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">&lt;</span> <span class="tk-number">0</span> <span class="tk-keyword">or</span> coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">&gt;=</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-keyword">or</span></span>
+<span class="cl" data-line="34">            coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">&lt;</span> <span class="tk-number">0</span> <span class="tk-keyword">or</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">&gt;=</span> Self<span class="tk-punctuation">.</span>num_rows</span>
+<span class="cl" data-line="35"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="36"></span>
+<span class="cl" data-line="37"> <span class="tk-keyword">def</span> <span class="tk-function">__setitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="38"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>is_valid_coord<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="39"> <span class="tk-keyword">return</span> <span class="tk-comment"># no op</span></span>
+<span class="cl" data-line="40"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> value</span>
+<span class="cl" data-line="41"></span>
+<span class="cl" data-line="42"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">:</span> Tuple<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="43"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>coord<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> coord<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="44"></span>
+<span class="cl" data-line="45"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="46"> <span class="tk-keyword">def</span> <span class="tk-function">random_grid</span><span class="tk-punctuation">(</span>clumps<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="47"> <span class="tk-keyword">var</span> grid <span class="tk-operator">=</span> Self<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="48"> <span class="tk-keyword">for</span> _ <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>clumps<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="49"> <span class="tk-keyword">var</span> idx <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>random_si64<span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> Int64<span class="tk-punctuation">(</span>grid<span class="tk-punctuation">.</span>count<span class="tk-punctuation">)</span> <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="50"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>to_coord<span class="tk-punctuation">(</span>idx<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="51">            grid<span class="tk-punctuation">[</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">,</span> y<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span> <span class="tk-comment"># Fill index cell</span></span>
+<span class="cl" data-line="52"></span>
+<span class="cl" data-line="53"> <span class="tk-keyword">for</span> dx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-comment"># -1, 0, or 1</span></span>
+<span class="cl" data-line="54"> <span class="tk-keyword">for</span> dy <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="55"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> grid<span class="tk-punctuation">.</span>is_valid_coord<span class="tk-punctuation">(</span><span class="tk-punctuation">(</span>x <span class="tk-operator">+</span> dx<span class="tk-punctuation">,</span> y <span class="tk-operator">+</span> dy<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="56"> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="57"> <span class="tk-keyword">if</span> random_si64<span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-operator">&gt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="58"> <span class="tk-keyword">continue</span> <span class="tk-comment"># 75% skip</span></span>
+<span class="cl" data-line="59">                    grid<span class="tk-punctuation">[</span><span class="tk-punctuation">(</span>x <span class="tk-operator">+</span> dx<span class="tk-punctuation">,</span> y <span class="tk-operator">+</span> dy<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="60"> <span class="tk-keyword">return</span> grid<span class="tk-operator">^</span></span>
+<span class="cl" data-line="61"></span>
+<span class="cl" data-line="62"> <span class="tk-keyword">def</span> <span class="tk-function">evolve_cell</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> i<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="63"> <span class="tk-keyword">var</span> is_live <span class="tk-operator">=</span> Bool<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="64"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="65"></span>
+<span class="cl" data-line="66"> <span class="tk-comment"># Count the neighbors</span></span>
+<span class="cl" data-line="67"> <span class="tk-keyword">var</span> ncount <span class="tk-operator">=</span> <span class="tk-operator">-</span><span class="tk-number">1</span> <span class="tk-keyword">if</span> is_live <span class="tk-keyword">else</span> <span class="tk-number">0</span> <span class="tk-comment"># Exclude self from the count</span></span>
+<span class="cl" data-line="68"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>to_coord<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="69"> <span class="tk-keyword">for</span> dx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="70"> <span class="tk-keyword">for</span> dy <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="71"> <span class="tk-keyword">var</span> nx <span class="tk-operator">=</span> x <span class="tk-operator">+</span> dx</span>
+<span class="cl" data-line="72"> <span class="tk-keyword">var</span> ny <span class="tk-operator">=</span> y <span class="tk-operator">+</span> dy</span>
+<span class="cl" data-line="73">                ncount <span class="tk-operator">+=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>to_index<span class="tk-punctuation">(</span>nx<span class="tk-punctuation">,</span> ny<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="74"></span>
+<span class="cl" data-line="75"> <span class="tk-comment"># Live cell stays alive with two or three live neighbors</span></span>
+<span class="cl" data-line="76"> <span class="tk-keyword">if</span> is_live <span class="tk-keyword">and</span> <span class="tk-punctuation">(</span>ncount <span class="tk-operator">==</span> <span class="tk-number">2</span> <span class="tk-keyword">or</span> ncount <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="77"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="78"> <span class="tk-comment"># Inactive cell becomes alive with exactly three live neighbors</span></span>
+<span class="cl" data-line="79"> <span class="tk-keyword">elif</span> <span class="tk-keyword">not</span> is_live <span class="tk-keyword">and</span> ncount <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="80"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="81"></span>
+<span class="cl" data-line="82"> <span class="tk-keyword">def</span> <span class="tk-function">evolve</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="83"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="84"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>to_coord<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="85"> <span class="tk-comment"># Edges are excluded from evolution and will always go inactive.</span></span>
+<span class="cl" data-line="86"> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="87">                x <span class="tk-operator">==</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="88"> <span class="tk-keyword">or</span> y <span class="tk-operator">==</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="89"> <span class="tk-keyword">or</span> x <span class="tk-operator">==</span> Self<span class="tk-punctuation">.</span>num_cols <span class="tk-operator">-</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="90"> <span class="tk-keyword">or</span> y <span class="tk-operator">==</span> Self<span class="tk-punctuation">.</span>num_rows <span class="tk-operator">-</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="91"> <span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="92"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">0</span> <span class="tk-comment"># Edges go inactive</span></span>
+<span class="cl" data-line="93"> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="94"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>evolve_cell<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="95"></span>
+<span class="cl" data-line="96"> <span class="tk-comment"># Swap the current and next cell states</span></span>
+<span class="cl" data-line="97"> <span class="tk-keyword">var</span> tmp <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells<span class="tk-operator">^</span> <span class="tk-comment"># Transfer</span></span>
+<span class="cl" data-line="98"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>cells <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells<span class="tk-operator">^</span> <span class="tk-comment"># Transfer</span></span>
+<span class="cl" data-line="99"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>next_cells <span class="tk-operator">=</span> tmp<span class="tk-operator">^</span> <span class="tk-comment"># Every cell is written, so this is safe</span></span>
+</code></pre></figure></div></div></details>
+<details class="disc"><summary class="disc__summary">View the complete life.mojo</summary><div><div><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>random <span class="tk-keyword">import</span> seed</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> grid <span class="tk-keyword">import</span> Grid</span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>time <span class="tk-keyword">import</span> sleep</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> gridw<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">80</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">comptime</span> gridh<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">20</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">comptime</span> grid_count<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">400</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11">    seed<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> grid <span class="tk-operator">=</span> Grid<span class="tk-punctuation">[</span>gridw<span class="tk-punctuation">,</span> gridh<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>random_grid<span class="tk-punctuation">(</span>grid_count<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">while</span> <span class="tk-boolean">True</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">for</span> gen <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">100</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"\033[H\033[J\nGeneration: {gen}{' ' * 4}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17">            grid<span class="tk-punctuation">.</span>evolve<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18">            grid<span class="tk-punctuation">.</span>print_grid<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19">            sleep<span class="tk-punctuation">(</span><span class="tk-number">0.1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="20">        grid <span class="tk-operator">=</span> Grid<span class="tk-punctuation">[</span>gridw<span class="tk-punctuation">,</span> gridh<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>random_grid<span class="tk-punctuation">(</span>grid_count<span class="tk-punctuation">)</span></span>
+</code></pre></figure></div></div></details>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/nightly/docs/manual/get-started/" rel="noopener noreferrer" data-external>https://mojolang.org/nightly/docs/manual/get-started/</a>, saved Thu, 01 Oct 2026 15:29:19 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/01_mojo-quickstart.html"><span class="pager__dir">← Previous</span><span class="pager__title">Mojo quickstart</span></a><a class="pager__link pager__link--next" href="../pages/03_mojo-language-basics.html"><span class="pager__dir">Next →</span><span class="pager__title">Mojo language basics</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#game-state">Game state</a></li><li class="rail__depth-2"><a href="#add-reusable-printing">Add reusable printing</a></li><li class="rail__depth-2"><a href="#add-lookups">Add lookups</a></li><li class="rail__depth-2"><a href="#define-a-grid-type">Define a Grid type</a></li><li class="rail__depth-2"><a href="#add-grid-operations">Add grid operations</a></li><li class="rail__depth-2"><a href="#import-grid">Import Grid</a></li><li class="rail__depth-2"><a href="#be-random">Be random</a></li><li class="rail__depth-2"><a href="#evolve">Evolve</a></li><li class="rail__depth-2"><a href="#run-the-simulation">Run the simulation</a></li><li class="rail__depth-2"><a href="#your-first-day-try-these">Your first day? Try these</a></li><li class="rail__depth-2"><a href="#final-code">Final code</a></li><li class="rail__depth-3"><a href="#takeaways">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-1">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-2">Takeaways</a></li><li class="rail__depth-3"><a href="#try-this">Try this</a></li><li class="rail__depth-3"><a href="#takeaways-3">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-4">Takeaways</a></li><li class="rail__depth-3"><a href="#add-protection">Add protection</a></li><li class="rail__depth-3"><a href="#introducing-errors">Introducing errors</a></li><li class="rail__depth-3"><a href="#construct-the-random-grid">Construct the random grid</a></li><li class="rail__depth-3"><a href="#takeaways-5">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-6">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-7">Takeaways</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#game-state">Game state</a></li><li class="rail__depth-2"><a href="#add-reusable-printing">Add reusable printing</a></li><li class="rail__depth-2"><a href="#add-lookups">Add lookups</a></li><li class="rail__depth-2"><a href="#define-a-grid-type">Define a Grid type</a></li><li class="rail__depth-2"><a href="#add-grid-operations">Add grid operations</a></li><li class="rail__depth-2"><a href="#import-grid">Import Grid</a></li><li class="rail__depth-2"><a href="#be-random">Be random</a></li><li class="rail__depth-2"><a href="#evolve">Evolve</a></li><li class="rail__depth-2"><a href="#run-the-simulation">Run the simulation</a></li><li class="rail__depth-2"><a href="#your-first-day-try-these">Your first day? Try these</a></li><li class="rail__depth-2"><a href="#final-code">Final code</a></li><li class="rail__depth-3"><a href="#takeaways">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-1">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-2">Takeaways</a></li><li class="rail__depth-3"><a href="#try-this">Try this</a></li><li class="rail__depth-3"><a href="#takeaways-3">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-4">Takeaways</a></li><li class="rail__depth-3"><a href="#add-protection">Add protection</a></li><li class="rail__depth-3"><a href="#introducing-errors">Introducing errors</a></li><li class="rail__depth-3"><a href="#construct-the-random-grid">Construct the random grid</a></li><li class="rail__depth-3"><a href="#takeaways-5">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-6">Takeaways</a></li><li class="rail__depth-3"><a href="#takeaways-7">Takeaways</a></li></ol>
+<p class="rail__meta">Chapter 02 of 38 · Part I, Orientation.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

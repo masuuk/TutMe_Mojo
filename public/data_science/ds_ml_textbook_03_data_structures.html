@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -137,14 +137,15 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
 
     <h3>The <code class="inline">Array</code> Type</h3>
     <p><code class="inline">Array</code> is a fixed-size, stack-allocated collection. Because the compiler knows the size at compile time, it can place the data directly on the stack — no heap allocation, no pointer chasing. This makes <code class="inline">Array</code> significantly faster for small, known-size collections.</p>
+    <p>Python has only one of these: a single dynamically-sized list. A Python tuple is the nearest equivalent to a fixed-size <code class="inline">Array</code>, but it is a layout of pointers to boxed objects, not a contiguous run of unboxed <code class="inline">Float64</code> — which is exactly the difference Mojo's stack-allocated <code class="inline">Array[Float64, 3]</code> makes. In NumPy the same contrast appears as <code class="inline">np.zeros((3,), dtype=np.float32)</code> against a list of Python floats.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch3-arrays-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch3-arrays-py">Python</button>
       </div>
       <div class="tab-content active" id="ch3-arrays-mojo">
-        <pre>
+        <pre><span class="kw">from</span> collections <span class="kw">import</span> List
+
 <span class="kw">def</span> <span class="fn">array_demo</span>():
     <span class="cmt"># Dynamic list — can grow and shrink</span>
     <span class="kw">var</span> scores = List[Float64]()
@@ -165,19 +166,6 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <span class="kw">for</span> s <span class="kw">in</span> scores:
         <span class="fn">print</span>(s * <span class="num">10.0</span>)</pre>
       </div>
-      <div class="tab-content" id="ch3-arrays-py">
-        <pre><span class="cmt"># Python — single dynamic list type</span>
-scores = [<span class="num">9.5</span>, <span class="num">8.7</span>, <span class="num">7.2</span>]
-<span class="fn">print</span>(<span class="str">f"Scores: </span>{scores}<span class="str">"</span>)
-<span class="fn">print</span>(<span class="str">f"Length: </span>{<span class="fn">len</span>(scores)}<span class="str">"</span>)
-
-<span class="cmt"># Tuple as "fixed-size" equivalent</span>
-coordinates = (<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>)
-<span class="fn">print</span>(<span class="str">f"x = </span>{coordinates[<span class="num">0</span>]}<span class="str">"</span>)
-
-<span class="kw">for</span> s <span class="kw">in</span> scores:
-    <span class="fn">print</span>(s * <span class="num">10.0</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box tip-box">
@@ -195,10 +183,9 @@ coordinates = (<span class="num">1.0</span>, <span class="num">2.0</span>, <span
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch3-tensor-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch3-tensor-py">Python (NumPy)</button>
       </div>
       <div class="tab-content active" id="ch3-tensor-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+        <pre><span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">tensor_basics</span>():
     <span class="cmt"># Create a 2x3 tensor of zeros</span>
@@ -219,26 +206,12 @@ coordinates = (<span class="num">1.0</span>, <span class="num">2.0</span>, <span
     <span class="kw">var</span> ones = Tensor[Float32](<span class="num">3</span>, <span class="num">3</span>)
     ones.fill(<span class="num">1.0</span>)</pre>
       </div>
-      <div class="tab-content" id="ch3-tensor-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="cmt"># Create a 2x3 tensor of zeros</span>
-t = np.zeros((<span class="num">2</span>, <span class="num">3</span>), dtype=np.float32)
-<span class="fn">print</span>(<span class="str">f"Shape: </span>{t.shape}<span class="str">"</span>)
-
-<span class="cmt"># Create a tensor with specific values</span>
-mat = np.array([[<span class="num">1.0</span>, <span class="num">2.0</span>],
-                [<span class="num">3.0</span>, <span class="num">4.0</span>]], dtype=np.float32)
-<span class="fn">print</span>(<span class="str">f"mat[0,1] = </span>{mat[<span class="num">0</span>, <span class="num">1</span>]}<span class="str">"</span>)
-
-<span class="cmt"># Fill with a constant</span>
-ones = np.ones((<span class="num">3</span>, <span class="num">3</span>), dtype=np.float32)</pre>
-      </div>
     </div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
       <p>Mojo tensors are stored in row-major (C-style) order by default, just like NumPy arrays. The contiguous memory layout means that iterating over elements in row-major order is cache-friendly and maximizes memory bandwidth.</p>
+      <p>The NumPy spellings map across one-for-one, with the dtype becoming the parameter: <code class="inline">np.zeros((2, 3), dtype=np.float32)</code> is <code class="inline">Tensor[Float32](2, 3)</code>, and the fill helper <code class="inline">np.ones((3, 3), dtype=np.float32)</code> is <code class="inline">Tensor[Float32](3, 3)</code> followed by <code class="inline">.fill(1.0)</code>. Where NumPy infers the shape from a nested list, Mojo wants the dimensions stated up front and the values assigned by index — which is what lets the compiler size the allocation before the program runs.</p>
     </div>
   </section>
 
@@ -247,11 +220,11 @@ ones = np.ones((<span class="num">3</span>, <span class="num">3</span>), dtype=n
     <p>Vectorized operations apply a function to an entire array at once, without explicit Python-style <code class="inline">for</code> loops. In Mojo, these operations compile to SIMD (Single Instruction, Multiple Data) instructions that process multiple elements per CPU cycle.</p>
 
     <p>When you write element-wise operations on tensors, the Mojo compiler automatically vectorizes them using SIMD. This means a loop that adds two arrays of 1 million elements can execute 4–16 elements at a time (depending on your CPU's SIMD width), giving you near-linear speedups.</p>
+    <p>The initialization loop above is where NumPy would reach for <code class="inline">np.arange(n, dtype=np.float32)</code>. Writing the loop out is the point: it is the one part of the kernel Mojo will not fold away, and it is still compiled to straight-line SIMD. Everything after it — the additions, the multiplies, the scalar broadcast — is a single overloaded operator that the compiler lowers for you.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch3-vec-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch3-vec-py">Python (NumPy)</button>
       </div>
       <div class="tab-content active" id="ch3-vec-mojo">
         <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
@@ -281,25 +254,6 @@ ones = np.ones((<span class="num">3</span>, <span class="num">3</span>), dtype=n
     <span class="fn">print</span>(<span class="str">"result[0] ="</span>, result[<span class="num">0</span>])
     <span class="fn">print</span>(<span class="str">"result[999] ="</span>, result[<span class="num">999</span>])</pre>
       </div>
-      <div class="tab-content" id="ch3-vec-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-n = <span class="num">1000</span>
-a = np.arange(n, dtype=np.float32)
-b = np.arange(n, dtype=np.float32) * <span class="num">2.0</span>
-
-<span class="cmt"># Element-wise addition</span>
-result = a + b
-
-<span class="cmt"># Element-wise multiplication</span>
-result = a * b
-
-<span class="cmt"># Scalar operations broadcast</span>
-result = a * <span class="num">3.14</span> + <span class="num">1.0</span>
-
-<span class="fn">print</span>(<span class="str">f"result[0] = </span>{result[<span class="num">0</span>]}<span class="str">"</span>)
-<span class="fn">print</span>(<span class="str">f"result[999] = </span>{result[<span class="num">999</span>]}<span class="str">"</span>)</pre>
-      </div>
     </div>
   </section>
 
@@ -312,11 +266,10 @@ result = a * <span class="num">3.14</span> + <span class="num">1.0</span>
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch3-broadcast-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch3-broadcast-py">Python (NumPy)</button>
       </div>
       <div class="tab-content active" id="ch3-broadcast-mojo">
         <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
-<span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+<span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">linear_algebra_demo</span>():
     <span class="cmt"># Broadcasting: scalar + tensor</span>
@@ -342,32 +295,12 @@ result = a * <span class="num">3.14</span> + <span class="num">1.0</span>
     <span class="fn">print</span>(<span class="str">"c[0,0] ="</span>, c[<span class="num">0</span>, <span class="num">0</span>])  <span class="cmt"># 58.0</span>
     <span class="fn">print</span>(<span class="str">"c[1,1] ="</span>, c[<span class="num">1</span>, <span class="num">1</span>])  <span class="cmt"># 154.0</span></pre>
       </div>
-      <div class="tab-content" id="ch3-broadcast-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="cmt"># Broadcasting: scalar + tensor</span>
-t = np.full((<span class="num">3</span>, <span class="num">3</span>), <span class="num">2.0</span>, dtype=np.float32)
-t += <span class="num">1.0</span>           <span class="cmt"># each element becomes 3.0</span>
-
-<span class="cmt"># Broadcasting: row vector + matrix</span>
-row = np.array([<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>], dtype=np.float32)
-
-<span class="cmt"># Matrix multiplication</span>
-a = np.array([[<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>],
-              [<span class="num">4.0</span>, <span class="num">5.0</span>, <span class="num">6.0</span>]], dtype=np.float32)
-b = np.array([[<span class="num">7.0</span>, <span class="num">8.0</span>],
-              [<span class="num">9.0</span>, <span class="num">10.0</span>],
-              [<span class="num">11.0</span>, <span class="num">12.0</span>]], dtype=np.float32)
-
-c = a @ b             <span class="cmt"># or np.matmul(a, b)</span>
-<span class="fn">print</span>(<span class="str">f"c[0,0] = </span>{c[<span class="num">0</span>, <span class="num">0</span>]}<span class="str">"</span>)  <span class="cmt"># 58.0</span>
-<span class="fn">print</span>(<span class="str">f"c[1,1] = </span>{c[<span class="num">1</span>, <span class="num">1</span>]}<span class="str">"</span>)  <span class="cmt"># 154.0</span></pre>
-      </div>
     </div>
 
     <div class="info-box warning-box">
       <strong>⚠️ Important:</strong>
       <p>Broadcasting rules in Mojo follow NumPy's conventions: dimensions are aligned from the right, and a dimension of size 1 is stretched to match. However, Mojo enforces type consistency — you cannot broadcast between <code class="inline">Float32</code> and <code class="inline">Int32</code> without explicit conversion.</p>
+      <p>Matrix multiplication has two spellings on either side of the interop line. In NumPy it is the <code class="inline">@</code> operator, <code class="inline">c = a @ b</code>, with <code class="inline">np.matmul(a, b)</code> as the spelled-out form; in Mojo it is the <code class="inline">matmul</code> function, <code class="inline">c = matmul(a, b)</code>, which dispatches to the same optimized BLAS routines. Both return the same 2×2 result above, and both spell the constant-fill differently: <code class="inline">np.full((3, 3), 2.0, dtype=np.float32)</code> against <code class="inline">Tensor[Float32](3, 3)</code> plus <code class="inline">.fill(2.0)</code>.</p>
     </div>
   </section>
 

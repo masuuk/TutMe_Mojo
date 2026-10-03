@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -120,16 +120,15 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (TorchScript)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo"><code><span class="kw">from</span> compiler <span class="kw">import</span> compile_model, CompileConfig
 <span class="kw">from</span> inference <span class="kw">import</span> InferenceSession
 
-<span class="com"># Compile a trained model for inference</span>
+<span class="com">// Compile a trained model for inference</span>
 <span class="kw">var</span> cfg = CompileConfig(
-    target=Target.CPU,   <span class="com"># or Target.CUDA, Target.METAL</span>
+    target=Target.CPU,   <span class="com">// or Target.CUDA, Target.METAL</span>
     precision=Float16,
     fuse_ops=<span class="num">True</span>,
     optimize_memory=<span class="num">True</span>
@@ -140,19 +139,10 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     config=cfg
 )
 
-<span class="com"># Run inference — no Python overhead</span>
+<span class="com">// Run inference — no Python overhead</span>
 <span class="kw">var</span> session = InferenceSession(compiled)
 <span class="kw">var</span> output = session.run(input_tensor)
-print(output.shape)  <span class="com"># [1, 512, 1024]</span></code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> torch
-
-<span class="com"># TorchScript compilation</span>
-scripted = torch.jit.trace(model, example_input)
-scripted.save(<span class="str">"model.pt"</span>)
-
-<span class="com"># Or use torch.compile for PyTorch 2.0+</span>
-compiled = torch.compile(model, backend=<span class="str">"inductor"</span>)
-output = compiled(input_tensor)</code></pre>
+print(output.shape)  <span class="com">// [1, 512, 1024]</span></code></pre>
       </div>
     </div>
 
@@ -176,20 +166,20 @@ output = compiled(input_tensor)</code></pre>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo2"><code><span class="com"># The compiler sees this sequence:</span>
+        <pre class="code-block active" id="mojo2"><code><span class="com">// The compiler sees this sequence:</span>
 <span class="kw">var</span> x = matmul(q, k_transposed)
 <span class="kw">var</span> x = x / sqrt(d_k)
 <span class="kw">var</span> x = softmax(x, axis=-<span class="num">1</span>)
 <span class="kw">var</span> x = matmul(x, v)
 
-<span class="com"># And compiles it into a single fused attention kernel</span>
-<span class="com"># No intermediate tensors allocated on the heap</span>
+<span class="com">// And compiles it into a single fused attention kernel</span>
+<span class="com">// No intermediate tensors allocated on the heap</span>
 
-<span class="com"># You can inspect the fusion report:</span>
+<span class="com">// You can inspect the fusion report:</span>
 compiled.fusion_report()
-<span class="com"># → "Fused 4 ops into 1 kernel (attention)</span>
-<span class="com">#    Memory saved: 3 allocations eliminated</span>
-<span class="com">#    Speedup: 2.3x vs unfused"</span></code></pre>
+<span class="com">// → "Fused 4 ops into 1 kernel (attention)</span>
+<span class="com">//    Memory saved: 3 allocations eliminated</span>
+<span class="com">//    Speedup: 2.3x vs unfused"</span></code></pre>
       </div>
     </div>
   </section>
@@ -201,13 +191,12 @@ compiled.fusion_report()
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo3">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (ONNX Runtime)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> quantize <span class="kw">import</span> QuantConfig, quantize_model, CalibrationData
 
-<span class="com"># INT8 dynamic quantization with calibration</span>
+<span class="com">// INT8 dynamic quantization with calibration</span>
 <span class="kw">var</span> qcfg = QuantConfig(
     dtype=Int8,
     method=Method.DYNAMIC,
@@ -216,23 +205,13 @@ compiled.fusion_report()
     )
 )
 
-<span class="com"># Quantize — preserves accuracy with calibration</span>
+<span class="com">// Quantize — preserves accuracy with calibration</span>
 <span class="kw">var</span> quantized = quantize_model(model, qcfg)
-<span class="print">print</span>(quantized.size_bytes())  <span class="com"># ~75% reduction</span>
+<span class="print">print</span>(quantized.size_bytes())  <span class="com">// ~75% reduction</span>
 
-<span class="com"># Mixed precision: keep sensitive layers at FP16</span>
+<span class="com">// Mixed precision: keep sensitive layers at FP16</span>
 quantized.set_precision(<span class="str">"attention.qkv"</span>, Float16)
 quantized.set_precision(<span class="str">"output_head"</span>, Float32)</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> onnxruntime <span class="kw">as</span> ort
-
-<span class="com"># Static quantization with calibration</span>
-quantized_model = ort.quantization.quantize_dynamic(
-    model_path=<span class="str">"model.onnx"</span>,
-    weight_type=ort.quantization.QuantType.QInt8
-)
-
-<span class="com"># Or use ONNX Runtime's QAT support</span>
-session = ort.InferenceSession(<span class="str">"model_quant.onnx"</span>)</code></pre>
       </div>
     </div>
 
@@ -263,7 +242,7 @@ session = ort.InferenceSession(<span class="str">"model_quant.onnx"</span>)</cod
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo4"><code><span class="kw">from</span> serve <span class="kw">import</span> Server, ModelConfig, BatchingConfig
 
-<span class="com"># Load and serve a compiled model</span>
+<span class="com">// Load and serve a compiled model</span>
 <span class="kw">var</span> model_cfg = ModelConfig(
     path=<span class="str">"./compiled_model.mojomodel"</span>,
     max_batch_size=<span class="num">32</span>,
@@ -280,11 +259,11 @@ session = ort.InferenceSession(<span class="str">"model_quant.onnx"</span>)</cod
     auth=AuthConfig(api_keys=[<span class="str">"sk-..."</span>])
 )
 
-<span class="com"># Start serving — OpenAI-compatible API</span>
+<span class="com">// Start serving — OpenAI-compatible API</span>
 server.start()
-<span class="com"># POST /v1/chat/completions</span>
-<span class="com"># POST /v1/embeddings</span>
-<span class="com"># GET  /v1/models</span></code></pre>
+<span class="com">// POST /v1/chat/completions</span>
+<span class="com">// POST /v1/embeddings</span>
+<span class="com">// GET  /v1/models</span></code></pre>
       </div>
     </div>
 
@@ -309,13 +288,12 @@ server.start()
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo5">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo5"><code><span class="kw">from</span> export <span class="kw">import</span> export_model, ExportFormat
 
-<span class="com"># Export to Mojo's native format</span>
+<span class="com">// Export to Mojo's native format</span>
 export_model(
     model,
     path=<span class="str">"./model.mojomodel"</span>,
@@ -323,7 +301,7 @@ export_model(
     sample_input=example_batch
 )
 
-<span class="com"># Export to ONNX for cross-framework compatibility</span>
+<span class="com">// Export to ONNX for cross-framework compatibility</span>
 export_model(
     model,
     path=<span class="str">"./model.onnx"</span>,
@@ -331,27 +309,12 @@ export_model(
     opset_version=<span class="num">17</span>
 )
 
-<span class="com"># Export weights only (SafeTensors)</span>
+<span class="com">// Export weights only (SafeTensors)</span>
 export_model(
     model,
     path=<span class="str">"./weights.safetensors"</span>,
     format=ExportFormat.SAFETENSORS
 )</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> torch.onnx
-
-<span class="com"># Export to ONNX</span>
-torch.onnx.export(
-    model,
-    example_input,
-    <span class="str">"model.onnx"</span>,
-    opset_version=<span class="num">17</span>,
-    input_names=[<span class="str">"input"</span>],
-    output_names=[<span class="str">"output"</span>]
-)
-
-<span class="com"># SafeTensors for weights</span>
-<span class="kw">from</span> safetensors.torch <span class="kw">import</span> save_file
-save_file(model.state_dict(), <span class="str">"weights.safetensors"</span>)</code></pre>
       </div>
     </div>
 

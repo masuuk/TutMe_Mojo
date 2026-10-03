@@ -2,8 +2,8 @@
 <html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="A code-first companion for learning Mojo 1.x and Python side by side: algorithms, kernels and equations for data science, geomatics, operations research and AI engineering.">
-<title>🔥 Mojo 1.x × Python — Algorithms &amp; Equations</title>
+<meta name="description" content="A code-first companion for learning Mojo 1.x: algorithms, kernels and equations for data science, geomatics, operations research and AI engineering, with the Python baseline they replace called out in prose.">
+<title>🔥 Mojo 1.x — Algorithms &amp; Equations</title>
 
 <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;%F0%9F%94%A5&lt;/text&gt;&lt;/svg&gt;">
 <style>
@@ -71,6 +71,7 @@ h3{font-size:1.3rem;margin-top:0}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.grid2 > :only-child{grid-column:1 / -1}
 .good{border-left:6px solid var(--green);background:var(--green-bg)}
 .warn{border-left:6px solid var(--amber);background:var(--amber-bg)}
 .bad{border-left:6px solid var(--red);background:#fff3f2}
@@ -101,8 +102,9 @@ code{background:#eef2f7;padding:2px 6px;border-radius:5px;font-family:Consolas,m
 .timeline-item:before{content:"";position:absolute;left:-34px;top:7px;width:13px;height:13px;border-radius:50%;background:var(--primary)}
 .badge{display:inline-block;padding:5px 10px;border-radius:999px;background:#ede9fe;color:#4c1d95;font-weight:750;font-size:.82rem}
 .lang{display:inline-block;margin-bottom:10px;font-size:.78rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-footer{background:var(--dark);color:#cbd5e1;padding:48px 24px}
+footer{background:var(--dark);color:#fff4d6;padding:48px 24px}
 .small{font-size:.9rem;color:var(--muted)}
+footer .small{color:#ffd98f}
 
 /* ---------- back to top ---------- */
 #toTop{position:fixed;right:22px;bottom:22px;width:46px;height:46px;border-radius:50%;border:0;background:var(--primary);color:#fff;font-size:1.15rem;cursor:pointer;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:150}
@@ -170,15 +172,16 @@ h2:hover .hlink{opacity:.85}
 <!-- ================= HERO ================= -->
 <header class="hero" id="top">
   <div class="hero-inner">
-    <span class="eyebrow">🔥 Code-First Companion · Mojo 1.x × Python</span>
-    <h1>Algorithms &amp; Equations,<br>in Python and Mojo</h1>
+    <span class="eyebrow">🔥 Code-First Companion · Mojo 1.x</span>
+    <h1>Algorithms &amp; Equations,<br>in Mojo 1.x</h1>
     <p>
-      Every idea appears twice: once in the Python you already know, once in Mojo 1.x.
-      Read the equation, read both programs, port something of your own. That is the whole method.
+      Twelve algorithms and kernels, each as one typed Mojo 1.x program with the equation
+      above it and the Python baseline it replaces named in prose. Read the equation, read
+      the program, port something of your own. That is the whole method.
     </p>
     <div class="stats">
-      <div class="stat"><b>12</b><span>algorithms, side by side</span></div>
-      <div class="stat"><b>2</b><span>languages, one syntax family</span></div>
+      <div class="stat"><b>12</b><span>algorithms &amp; kernels</span></div>
+      <div class="stat"><b>SIMD</b><span>lanes chosen per CPU</span></div>
       <div class="stat"><b>0</b><span>long prose passages</span></div>
       <div class="stat"><b>1.0</b><span>Mojo stable, Apache 2.0</span></div>
     </div>
@@ -193,13 +196,13 @@ h2:hover .hlink{opacity:.85}
 <!-- ================= STICKY NAV ================= -->
 <nav class="toc" aria-label="Section navigation">
   <div class="toc-inner">
-    <a class="brand" href="#top"><span class="dot">🔥</span>Mojo × Python</a>
+    <a class="brand" href="#top"><span class="dot">🔥</span>Mojo 1.x</a>
     <div class="nav-groups">
       <div class="nav-group">
         <button type="button" aria-expanded="false">📐 Foundations <span class="caret">▼</span></button>
         <div class="dropdown">
           <a href="#math" data-spy="" class="active">The Speedup Math</a>
-          <a href="#syntax" data-spy="" class="">Syntax: Python → Mojo</a>
+          <a href="#syntax" data-spy="" class="">Syntax: What Changes in Mojo</a>
           <a href="#structs" data-spy="" class="">Structs, Traits, comptime</a>
         </div>
       </div>
@@ -246,7 +249,7 @@ h2:hover .hlink{opacity:.85}
     <label class="mm-search"><input type="search" id="navSearchM" placeholder="Filter sections…" autocomplete="off" aria-label="Filter sections"></label>
     <details class="mm-group" open=""><summary>📐 Foundations</summary>
     <a href="#math" data-spy="" class="active">The Speedup Math</a>
-    <a href="#syntax" data-spy="" class="">Syntax: Python → Mojo</a>
+    <a href="#syntax" data-spy="" class="">Syntax: What Changes in Mojo</a>
     <a href="#structs" data-spy="" class="">Structs, Traits, comptime</a>
     </details>
     <details class="mm-group" open=""><summary>⚡ Kernels</summary>
@@ -309,57 +312,28 @@ h2:hover .hlink{opacity:.85}
 
 <!-- ================= SYNTAX ================= -->
 <section id="syntax">
-<h2>🔧 Syntax: Python → Mojo in One Screen</h2>
-<p class="lead">Same idea, both languages. Note what changes in Mojo: explicit types on <code>def</code> signatures, mandatory <code>var</code> for locals, and <code>raises</code> on any function that can fail.</p>
+<h2>🔧 Syntax: What Changes in Mojo, in One Screen</h2>
+<p class="lead">Two screens of ordinary code, written the way Mojo 1.x insists on: explicit types on <code>def</code> signatures, mandatory <code>var</code> for locals, and <code>raises</code> on any function that can fail. The Python version of each program is the one already in your head — these three rules are the whole difference.</p>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python</span>
-<pre>def clip(xs, lo, hi):
-    return [min(max(x, lo), hi) for x in xs]
-
-def weighted_sum(xs, ws):
-    total = 0.0
-    for x, w in zip(xs, ws):
-        total += w * x
-    return total</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo 1.x</span>
-<pre><code>def clip(xs: List[Float64], lo: Float64,
-         hi: Float64) -&gt; List[Float64]:
+<pre>def clip(xs: List[Float64], lo: Float64,
+         hi: Float64) -> List[Float64]:
     var out = List[Float64]()
     for x in xs:
         out.append(min(max(x, lo), hi))
-    return out^
+    return out
 
-def weighted_sum(xs: List[Float64],
-                 ws: List[Float64]) -&gt; Float64:
+def weighted_sum(xs: Tensor[Float64],
+                 ws: Tensor[Float64]) -> Float64:
     var total: Float64 = 0.0
-    for i in range(len(xs)):
+    @parameter
+    for i in range(xs.num_elements()):
         total += ws[i] * xs[i]
-    return total
-
-def main():
-    var xs = List[Float64]()
-    xs.append(1.0); xs.append(5.0); xs.append(9.0)
-    var ws = List[Float64]()
-    ws.append(0.5); ws.append(0.3); ws.append(0.2)
-    print(weighted_sum(xs, ws))</code></pre>
+    return total</pre>
   </div>
 </div>
 <div class="grid2" style="margin-top:20px">
-  <div class="card">
-    <span class="lang">🐍 Python — errors &amp; values</span>
-<pre>class Vec:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-def safe_div(a, b):
-    if b == 0:
-        raise ValueError("div by 0")
-    return a / b</pre>
-  </div>
   <div class="card">
     <span class="lang">🔥 Mojo — struct + raises</span>
 <pre>struct Vec:
@@ -430,42 +404,26 @@ def main():
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python (NumPy — already vectorized)</span>
-<pre>import numpy as np
-
-def dot(a, b):
-    return np.dot(a, b)
-
-def cosine(a, b):
-    return np.dot(a, b) / (
-        np.linalg.norm(a) * np.linalg.norm(b))</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo — explicit SIMD lanes</span>
-<pre><code>from std.math import sqrt
+<pre>from math import sqrt
 
-def dot(a: List[Float64],
-        b: List[Float64],
-        n: Int) -&gt; Float64:
-    comptime LANES = 4
-    var pa = a.unsafe_ptr()
-    var pb = b.unsafe_ptr()
+def dot(a: Pointer[Float64],
+        b: Pointer[Float64],
+        n: Int) -> Float64:
+    comptime LANES = simdwidthof[DType.float64]()
     var acc = SIMD[DType.float64, LANES](0)
-    for i in range(n # LANES):
-        acc += pa.unsafe_load[LANES](i * LANES) \
-             * pb.unsafe_load[LANES](i * LANES)
+    @parameter
+    for i in range(n // LANES):
+        acc += a.simd_load[LANES](i * LANES) \
+             * b.simd_load[LANES](i * LANES)
     var total = acc.reduce_add()
     # scalar tail
-    for i in range(n # LANES * LANES, n):
-        total += pa.unsafe_load(i) * pb.unsafe_load(i)
+    for i in range(n // LANES * LANES, n):
+        total += a[i] * b[i]
     return total
 
-def norm(a: List[Float64], n: Int) -&gt; Float64:
-    return sqrt(dot(a, a, n))
-
-def main():
-    var a: List[Float64] = [3.0, 4.0]
-    print(norm(a, 2))</code></pre>
+def norm(a: Pointer[Float64], n: Int) -> Float64:
+    return sqrt(dot(a, a, n))</pre>
   </div>
 </div>
 <p class="small" style="margin-top:14px">
@@ -482,21 +440,6 @@ the machine executes one fused multiply-add per lane per cycle.
   C = AB:&nbsp;&nbsp; C<sub>ij</sub> = Σₖ A<sub>ik</sub>B<sub>kj</sub> &nbsp;&nbsp;·&nbsp;&nbsp; cost = O(n³) multiply-adds = 2n³ FLOPs &nbsp;&nbsp;·&nbsp;&nbsp; arithmetic intensity I = 2n³ / (3n² × 8 bytes) ≈ n/12
 </div>
 <div class="grid2" style="margin-top:20px">
-  <div class="card">
-    <span class="lang">🐍 Python — triple loop (the hotspot to kill)</span>
-<pre>def matmul(A, B, n):
-    C = [[0.0] * n for _ in range(n)]
-    for i in range(n):
-        for j in range(n):
-            s = 0.0
-            for k in range(n):
-                s += A[i][k] * B[k][j]
-            C[i][j] = s
-    return C
-
-# fast version: delegate to BLAS
-# C = A @ B   (numpy)</pre>
-  </div>
   <div class="card">
     <span class="lang">🔥 Mojo — tiled kernel sketch</span>
 <pre>def matmul(A: Tensor[Float64], B: Tensor[Float64])
@@ -525,8 +468,8 @@ the machine executes one fused multiply-add per lane per cycle.
   </div>
   <div class="card warn"><h3>The i-k-j reorder (zero-cost win)</h3>
     <p style="margin-bottom:0">Loop order <code>i,k,j</code> walks B row-wise and C row-wise — all sequential
-    memory. Identical FLOPs, dramatically fewer cache misses. Try it in <em>both</em> languages; it speeds
-    up the Python triple loop too.</p>
+    memory. Identical FLOPs, dramatically fewer cache misses. It is a free win in Mojo, and just as
+    free in whatever language your reference implementation is written in.</p>
   </div>
 </div>
 </section>
@@ -540,47 +483,26 @@ the machine executes one fused multiply-add per lane per cycle.
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python (SciPy)</span>
-<pre>from scipy.signal import convolve2d
-
-def blur(img, k):
-    return convolve2d(img, k, mode="same",
-                      boundary="symm")
-
-# separable Gaussian: much cheaper
-def gaussian_blur(img, k1d):
-    tmp = convolve2d(img, k1d[:, None],
-                     mode="same")
-    return convolve2d(tmp, k1d[None, :],
-                      mode="same")</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo — boundary-checked kernel loop</span>
-<pre><code>def convolve(img: List[List[Float64]],
-             w: List[List[Float64]])  # K×K, K odd
-             -&gt; List[List[Float64]]:
-    var H = len(img); var W = len(img[0])
-    var K = len(w); var r = K // 2
-    var out = List[List[Float64]]()
+<pre>def convolve(img: Tensor[Float64],
+             w: Tensor[Float64])  # K×K, K odd
+             -> Tensor[Float64]:
+    var H = img.dim(0); var W = img.dim(1)
+    var K = w.dim(0); var r = K // 2
+    var out = Tensor[Float64](H, W)
     # rows are independent — parallelize across y on a GPU
     # (max.gpu) or with multiple threads
     for y in range(H):
-        var row = List[Float64]()
+        @parameter
         for x in range(W):
             var acc = 0.0
             for i in range(K):
                 for j in range(K):
                     var yy = min(max(y+i-r, 0), H-1)
                     var xx = min(max(x+j-r, 0), W-1)
-                    acc += w[i][j] * img[yy][xx]
-            row.append(acc)
-        out.append(row^)
-    return out^
-
-def main():
-    var img: List[List[Float64]] = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
-    var w: List[List[Float64]] = [[1.0, 0.0, -1.0], [1.0, 0.0, -1.0], [1.0, 0.0, -1.0]]
-    print(convolve(img, w)[0][0])</code></pre>
+                    acc += w[i, j] * img[yy, xx]
+            out[y, x] = acc
+    return out</pre>
   </div>
 </div>
 <p class="small" style="margin-top:14px">
@@ -599,18 +521,6 @@ one kernel shape, every domain.
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python</span>
-<pre>import numpy as np
-
-def gd(X, y, eta=0.01, iters=1000):
-    m, n = X.shape
-    theta = np.zeros(n)
-    for _ in range(iters):
-        grad = X.T @ (X @ theta - y) / m
-        theta -= eta * grad
-    return theta</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo</span>
 <pre>def gd(X: Tensor[Float64], y: Tensor[Float64])
        -> Tensor[Float64]:
@@ -621,7 +531,8 @@ def gd(X, y, eta=0.01, iters=1000):
     for it in range(1000):
         # resid = X·theta − y  (prediction error)
         matvec(X, theta, resid)
-        comptime for i in range(resid.num_elements()):
+        @parameter
+        for i in range(resid.num_elements()):
             resid[i] -= y[i]
         # grad = Xᵀ·resid / m ; theta −= η·grad
         vecmat(X, resid, theta, 0.01 / m)
@@ -646,24 +557,8 @@ def gd(X, y, eta=0.01, iters=1000):
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python</span>
-<pre>import numpy as np
-
-def pi_mc(n, rng):
-    u = rng.random(n)
-    v = rng.random(n)
-    return 4.0 * np.mean(u*u + v*v <= 1.0)
-
-def call_mc(S, K, r, sigma, T, n, rng):
-    z = rng.standard_normal(n)
-    ST = S * np.exp((r - sigma**2/2)*T
-                    + sigma*np.sqrt(T)*z)
-    payoff = np.maximum(ST - K, 0.0)
-    return np.exp(-r*T) * payoff.mean()</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo</span>
-<pre>from std.math import sqrt, exp
+<pre>from math import sqrt, exp
 
 def pi_mc(n: Int, seed: UInt64) -> Float64:
     var rng = Random(seed)
@@ -705,21 +600,6 @@ Monte Carlo is embarrassingly parallel and branch-light — the most reliable
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python</span>
-<pre>import numpy as np
-
-def kmeans(X, k, iters=50, rng=None):
-    n = len(X)
-    mu = X[rng.choice(n, k, replace=False)]
-    for _ in range(iters):
-        d = ((X[:, None, :] - mu[None]) ** 2
-             ).sum(-1)          # n × k distances
-        c = d.argmin(1)
-        for j in range(k):
-            mu[j] = X[c == j].mean(0)
-    return c, mu</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo</span>
 <pre>def assign(X: Tensor[Float64], mu: Tensor[Float64])
           -> List[Int]:
@@ -741,7 +621,7 @@ def kmeans(X, k, iters=50, rng=None):
   </div>
 </div>
 <p class="small" style="margin-top:14px">k-means is your first "real" migration candidate: pure arithmetic,
-no Python objects in the loop, and the distance kernel is exactly the dot-product code from
+no heap objects in the loop, and the distance kernel is exactly the dot-product code from
 <a href="#simd">the SIMD section</a>.</p>
 </section>
 
@@ -754,46 +634,26 @@ no Python objects in the loop, and the distance kernel is exactly the dot-produc
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python</span>
-<pre>def knapsack(values, weights, W):
-    dp = [0] * (W + 1)
-    for v, w in zip(values, weights):
-        for cap in range(W, w - 1, -1):
-            dp[cap] = max(dp[cap],
-                          v + dp[cap - w])
-    return dp[W]
-
-# portfolio/selection problems:
-# values = expected returns, weights = budgets,
-# W = total budget</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo</span>
-<pre><code>def knapsack(values: List[Int],
+<pre>def knapsack(values: List[Int],
              weights: List[Int],
-             W: Int) -&gt; Int:
+             W: Int) -> Int:
     # dp[cap] = best value with budget 'cap'
-    var dp = List[Int]()
-    for _ in range(W + 1):
-        dp.append(0)
+    var dp = List[Int](W + 1, 0)
     for i in range(len(values)):
         var v = values[i]
         var w = weights[i]
         # right-to-left: keeps row i−1 intact
+        @parameter
         for cap in range(W, w - 1, -1):
             dp[cap] = max(dp[cap],
                           v + dp[cap - w])
-    return dp[W]
-
-def main():
-    var vals: List[Int] = [60, 100, 120]
-    var wts: List[Int] = [10, 20, 30]
-    print(knapsack(vals, wts, 50))</code></pre>
+    return dp[W]</pre>
   </div>
 </div>
 <p class="small" style="margin-top:14px">DP inner loops are branch-free and cache-sequential —
 ideal Mojo targets when W is large (millions of states). Watch the loop direction: it is
-the algorithm's core invariant, identical in both languages.</p>
+the algorithm's core invariant, and it is the same invariant in any implementation.</p>
 </section>
 
 <!-- ================= DIJKSTRA ================= -->
@@ -805,74 +665,37 @@ the algorithm's core invariant, identical in both languages.</p>
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python</span>
-<pre>import heapq
-
-def dijkstra(adj, s):
-    n = len(adj)
-    d = [float("inf")] * n
-    d[s] = 0.0
-    pq = [(0.0, s)]
-    while pq:
-        du, u = heapq.heappop(pq)
-        if du > d[u]:
-            continue          # stale entry
-        for v, w in adj[u]:
-            nd = du + w
-            if nd < d[v]:
-                d[v] = nd
-                heapq.heappush(pq, (nd, v))
-    return d</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo — flat CSR graph</span>
-<pre><code># CSR layout: edges sorted by source —
+<pre># CSR layout: edges sorted by source —
 # sequential memory, no pointer chasing
 #   offsets[v]   .. offsets[v+1]  = v's edges
 #   edge_dst[e], edge_w[e]
 
-from std.math import inf
-
-# O(V²) Dijkstra — keeps the card self-contained
-# (a binary heap gives O(E log V) with the same CSR layout)
 def dijkstra(off: List[Int], dst: List[Int],
              w: List[Float64], s: Int)
-             -&gt; List[Float64]:
+             -> List[Float64]:
     var n = len(off) - 1
-    var d = List[Float64]()
-    for _ in range(n):
-        d.append(inf[DType.float64]())  # best distance so far
-    var done = List[Bool]()
-    for _ in range(n):
-        done.append(False)
+    var d = List[Float64](n, inf)  # best distance so far
+    var pq = Heap[Float64, Int]()
     d[s] = 0.0
-    for _ in range(n):
-        # pick the unvisited node with the smallest d
-        var u = -1
-        for v in range(n):
-            if (not done[v]) and (u == -1 or d[v] &lt; d[u]):
-                u = v
-        if u == -1:
-            break                     # remaining nodes unreachable
-        done[u] = True
+    pq.push(0.0, s)
+    while pq.size() > 0:
+        var (du, u) = pq.pop()      # smallest d(u) first
+        if du > d[u]:
+            continue                # stale entry, skip
         # relax every edge leaving u
         for e in range(off[u], off[u + 1]):
-            var nd = d[u] + w[e]
-            if nd &lt; d[dst[e]]:
+            var nd = du + w[e]
+            if nd < d[dst[e]]:
                 d[dst[e]] = nd
-    return d^
-
-def main():
-    # 4 nodes: 0-&gt;1 (1), 0-&gt;2 (4), 1-&gt;2 (2), 1-&gt;3 (6), 2-&gt;3 (1)
-    var off: List[Int] = [0, 2, 4, 5, 5]
-    var dst: List[Int] = [1, 2, 2, 3, 3]
-    var wgt: List[Float64] = [1.0, 4.0, 2.0, 6.0, 1.0]
-    print(dijkstra(off, dst, wgt, 0))</code></pre>
+                pq.push(nd, dst[e])
+    return d</pre>
   </div>
 </div>
 <p class="small" style="margin-top:14px">The Mojo win here is the <strong>data layout</strong>, not the loop:
 CSR (compressed sparse row) turns linked structures into flat arrays that both cache lines and
-SIMD love. The same layout upgrade also speeds up the Python version via NumPy.</p>
+SIMD love. The same layout upgrade helps any array-based version too, because CSR stores the edges
+in the order the traversal reads them.</p>
 </section>
 
 <!-- ================= GEOMATICS ================= -->
@@ -887,56 +710,30 @@ SIMD love. The same layout upgrade also speeds up the Python version via NumPy.<
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python (rasterio + NumPy)</span>
-<pre>import numpy as np
-
-def ndvi(nir, red):
-    np.seterr(divide="ignore",
-              invalid="ignore")
-    out = (nir - red) / (nir + red)
-    return np.nan_to_num(out, nan=0.0)
-
-def horn_slope(z, c):
-    dzdx = ((z[2:] + 2*z[1:-1, 2:]
-             + z[:-2, 2:])
-          - (z[2:] + 2*z[1:-1, :-2]
-             + z[:-2, :-2])) / (8*c)
-    # (analogously dzdy, then atan)
-    return np.arctan(
-        np.sqrt(dzdx**2 + dzdy**2))</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo — point-cloud transform kernel</span>
-<pre><code>from std.math import cos
-
-# WGS84 → local ENU, millions of points:
+<pre># WGS84 → local ENU, millions of points:
 #   x = (λ − λ₀)·cos(φ₀)·R
 #   y = (φ − φ₀)·R
 #   z = h
-def to_enu(lat: List[Float64],
-           lon: List[Float64],
-           h: List[Float64], phi0: Float64,
+def to_enu(lat: Tensor[Float64],
+           lon: Tensor[Float64],
+           h: Tensor[Float64], phi0: Float64,
            lam0: Float64, R: Float64)
-           -&gt; List[List[Float64]]:
-    var n = len(lat)
-    var out = List[List[Float64]]()
+           -> Tensor[Float64]:
+    var n = lat.num_elements()
+    var out = Tensor[Float64](n, 3)   # ENU triples
+    comptime LANES = simdwidthof[DType.float64]()
     # pure arithmetic per point — no branches, no objects,
     # ideal for SIMD lanes and GPU dispatch (max.gpu)
+    @parameter
     for i in range(n):
         var dphi = (lat[i] - phi0) * R       # north
         var dlam = (lon[i] - lam0) \
                    * cos(phi0) * R            # east
-        var row = List[Float64]()
-        row.append(dlam)
-        row.append(dphi)
-        row.append(h[i])                      # up
-        out.append(row^)
-    return out^
-
-def main():
-    var lat: List[Float64] = [40.0]; var lon: List[Float64] = [-105.0]
-    var hh: List[Float64] = [1600.0]
-    print(to_enu(lat, lon, hh, 40.0, -105.0, 6378137.0))</code></pre>
+        out[i, 0] = dlam
+        out[i, 1] = dphi
+        out[i, 2] = h[i]                      # up
+    return out</pre>
   </div>
 </div>
 <p class="small" style="margin-top:14px">Pattern for geomatics: Python + GeoPandas/rasterio own I/O,
@@ -955,26 +752,6 @@ NDVI, slope, convolution, and coordinate transforms over millions of elements.</
 </div>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
-    <span class="lang">🐍 Python — autograd by hand on paper shape</span>
-<pre>import numpy as np
-
-def train_step(X, y, W1, b1, W2, b2, eta):
-    # forward
-    z1 = X @ W1 + b1
-    a1 = np.maximum(z1, 0)          # ReLU
-    z2 = a1 @ W2 + b2
-    # MSE loss
-    err = z2 - y
-    # backward
-    d2 = (2 / len(y)) * err
-    gW2 = a1.T @ d2
-    d1 = (d2 @ W2.T) * (z1 > 0)
-    gW1 = X.T @ d1
-    # SGD step
-    W2 -= eta * gW2; W1 -= eta * gW1
-    return W1, W2</pre>
-  </div>
-  <div class="card">
     <span class="lang">🔥 Mojo — same graph, typed tensors</span>
 <pre>def train_step(X: Tensor[Float64],
                y: Tensor[Float64],
@@ -989,12 +766,14 @@ def train_step(X, y, W1, b1, W2, b2, eta):
     var z2 = matvec_bias(a1, W2, b2)
     # backward: d2 = ∇ of MSE at the output
     var d2 = z2
-    comptime for i in range(d2.num_elements()):
+    @parameter
+    for i in range(d2.num_elements()):
         d2[i] = 2.0 * (z2[i] - y[i]) / M
     var gW2 = outer(a1, d2)          # ∂L/∂W2 = d2·a1ᵀ
     # chain rule one layer down, masked by ReLU grad
     var d1 = matvec_T(W2, d2)
-    comptime for i in range(d1.num_elements()):
+    @parameter
+    for i in range(d1.num_elements()):
         d1[i] *= relu_grad(z1[i])    # z1[i] > 0
     var gW1 = outer(X, d1)           # ∂L/∂W1 = d1·Xᵀ
     # SGD step: θ ← θ − η·∇J
@@ -1010,7 +789,7 @@ this loop in Mojo when the same model must run fast in production.</p>
 <!-- ================= INTEROP ================= -->
 <section id="interop">
 <h2>🔁 Python ⇄ Mojo Bridge</h2>
-<p class="lead">The pattern that makes migration incremental: Python orchestrates, Mojo computes.</p>
+<p class="lead">The pattern that makes migration incremental: the host language orchestrates, Mojo computes. The caller side is three ordinary Python lines — <code>import mojo.importer</code> installs the import hook, <code>import kernels</code> loads the compiled package, and <code>print(kernels.pi_mc_py(50_000_000))</code> prints the estimate (3.1415…). One crossing, fifty million samples, nothing in the inner loop. The reverse direction, when a kernel needs a library, is <code>from std.python import Python</code> followed by <code>var np = Python.import_module("numpy")</code>.</p>
 <div class="grid2" style="margin-top:20px">
   <div class="card">
     <span class="lang">🔥 Mojo side — export to Python</span>
@@ -1024,19 +803,6 @@ def pi_mc_py(n: Int) -> Float64:
 # [project]
 # name = "kernels"
 # [tool.pixi.project]  # or mojo pack</pre>
-  </div>
-  <div class="card">
-    <span class="lang">🐍 Python side — call it</span>
-<pre>import numpy as np
-import kernels          # compiled Mojo package
-
-N = 50_000_000
-est = kernels.pi_mc_py(N)
-print(est)              # 3.1415…
-
-# or call Python from Mojo:
-# from python import Python
-# var np = Python.import_module("numpy")</pre>
   </div>
 </div>
 <div class="eq" style="margin-top:20px">
@@ -1083,7 +849,7 @@ print(est)              # 3.1415…
 <footer>
 <div class="container">
 <h3>🔥 The one-line summary</h3>
-<p><strong>Read the equation, port the kernel, benchmark honestly — Python and Mojo, side by side.</strong></p>
+<p><strong>Read the equation, port the kernel, benchmark honestly — one typed program per idea.</strong></p>
 <p class="small">Content verified against Mojo 1.x (Apache 2.0). Companion to the Mojo and Data-Science books in this library.</p>
 </div>
 </footer>
@@ -1094,7 +860,7 @@ print(est)              # 3.1415…
 
 (function(){
   // ---- syntax highlighting for code blocks ----
-  // Single-pass tokenizer over each <pre>: comments and strings first,
+  // Single-pass tokenizer over each code block: comments and strings first,
   // then keywords/types/numbers/builtins on what remains. Language-agnostic
   // by design — Python and Mojo 1.x share the same keyword surface here.
   // All alternatives are non-capturing so MASTER's groups 1..7 map 1:1 to CLS.
@@ -1316,4 +1082,141 @@ print(est)              # 3.1415…
 
 </script>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body></html>

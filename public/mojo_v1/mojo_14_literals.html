@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -182,17 +182,17 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn active" data-tab="ch14-str-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch14-str-mojo">
-        <pre><code>def main():
-    &quot;Hello&quot;  'world'
-    &quot;&quot;&quot;Multi-line string
-    &quot;&quot;&quot;                  # Includes final newline
-    &quot;&quot;&quot;\
-    No leading newline.&quot;&quot;&quot; # Backslash at end of line joins the next line
-    # Adjacent literals are joined into one string
-    var x = &quot;Hello, &quot; &quot;World&quot;       # &quot;Hello, World&quot;
-    # Raw strings: r or R disables escape processing
-    var path = r&quot;C:\path\to\file&quot;     # Backslashes literal
-</code></pre>
+        <pre><span class="str">"Hello"</span>  <span class="str">'world'</span>
+<span class="str">"""Multi-line string
+"""</span>                  <span class="cmt"># Includes final newline</span>
+<span class="str">"""\</span>
+<span class="str">No leading newline."""</span> <span class="cmt"># Backslash at end of line joins the next line</span>
+
+<span class="cmt"># Adjacent literals are joined into one string</span>
+<span class="kw">var</span> x = <span class="str">"Hello, "</span> <span class="str">"World"</span>       <span class="cmt"># "Hello, World"</span>
+
+<span class="cmt"># Raw strings: r or R disables escape processing</span>
+<span class="kw">var</span> path = <span class="str">r"C:\path\to\file"</span>     <span class="cmt"># Backslashes literal</span></pre>
       </div>
     </div>
 
@@ -209,16 +209,22 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
       <div class="tab-content active" id="ch14-tstr-mojo">
         <pre><span class="kw">var</span> name = <span class="str">"World"</span>
 <span class="kw">var</span> greeting = <span class="str">t"Hello, {name}!"</span>     <span class="cmt"># "Hello, World!"</span>
-<span class="kw">var</span<pre><code>def main():
-    var name = &quot;World&quot;
-    var greeting = t&quot;Hello, {name}!&quot;     # &quot;Hello, World!&quot;
-    var result = t&quot;1 + 1 = {1 + 1}&quot;       # &quot;1 + 1 = 2&quot;
-    print(greeting)
-    # A t-string is its own type; cast to use it as a String
-    var greeting_str = String(greeting)
-    # Literal braces: {{ and }}
-    print(t&quot;Use {{braces}} in t-strings&quot;)   # Use {braces} in t-strings
-</code></pre>rder (<code class="inline">rt"..."</code>). They can be nested — an interpolation expression can itself contain t-strings, up to 20 levels deep:</p>
+<span class="kw">var</span> result = <span class="str">t"1 + 1 = {1 + 1}"</span>       <span class="cmt"># "1 + 1 = 2"</span>
+<span class="fn">print</span>(greeting)
+
+<span class="cmt"># A t-string is its own type; cast to use it as a String</span>
+<span class="kw">var</span> greeting_str = <span class="type">String</span>(greeting)
+
+<span class="cmt"># Literal braces: {{ and }}</span>
+<span class="fn">print</span>(<span class="str">t"Use {{braces}} in t-strings"</span>)   <span class="cmt"># Use {braces} in t-strings</span></pre>
+      </div>
+      <div class="tab-content" id="ch14-tstr-out">
+        <pre>Hello, World!
+Use {braces} in t-strings</pre>
+      </div>
+    </div>
+
+    <p>T-strings can be triple-quoted and combined with the raw prefix in any order (<code class="inline">rt"..."</code>). They can be nested — an interpolation expression can itself contain t-strings, up to 20 levels deep:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
@@ -238,11 +244,12 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 
   <section id="expressions">
     <h2>3. Expressions</h2>
-    <p>An expression is any piece of code that p<pre><code>def main():
-    var name = &quot;world&quot;
-    var greeting = t&quot;Hello, {t&quot; dear {name} &quot;}!&quot;
-    print(greeting)   # Hello, dear world!
-</code></pre>"code-tabs">
+    <p>An expression is any piece of code that produces a value. Beyond the obvious (identifiers, parentheses, calls, member access, subscripts), Mojo has several expression forms worth knowing cold.</p>
+
+    <h3>Tuples</h3>
+    <p><strong>Commas create tuples, not parentheses:</strong></p>
+
+    <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch14-tuple-mojo">Mojo</button>
         <button class="tab-btn" data-tab="ch14-tuple-out">output</button>
@@ -253,15 +260,21 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 <span class="kw">var</span> x, y = b            <span class="cmt"># x is 2, y is 3</span>
 ()                      <span class="cmt"># empty tuple</span>
 (<span class="num">1</span>,)                  <span class="cmt"># one-element tuple — the trailing comma matters</span>
-<span c<pre><code>def main():
-    var a = 2, 3          # tuple without parentheses
-    var b = (2, 3)        # same tuple with parentheses
-    var x, y = b            # x is 2, y is 3
-    ()                      # empty tuple
-    (1,)                  # one-element tuple — the trailing comma matters
-    var point = (10, 20)
-    print(point[0])        # 10 — tuples support indexing
-</code></pre>>
+<span class="kw">var</span> point = (<span class="num">10</span>, <span class="num">20</span>)
+<span class="fn">print</span>(point[<span class="num">0</span>])        <span class="cmt"># 10 — tuples support indexing</span></pre>
+      </div>
+      <div class="tab-content" id="ch14-tuple-out">
+        <pre>10</pre>
+      </div>
+    </div>
+
+    <h3>Collection displays</h3>
+    <p>Displays are like literals but can contain expressions: <code class="inline">[1, 1+1, 1+1+1]</code>. List displays use brackets, dict displays use <code class="inline">key: value</code> pairs in braces, and set displays use braces without colons. Don't mix the two brace forms:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch14-disp-mojo">Mojo</button>
+      </div>
       <div class="tab-content active" id="ch14-disp-mojo">
         <pre><span class="kw">var</span> numbers = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]            <span class="cmt"># list — trailing commas OK</span>
 <span class="kw">var</span> ages = {<span class="str">"Alice"</span>: <span class="num">30</span>, <span class="str">"Bob"</span>: <span class="num">25</span>}  <span class="cmt"># dict</span>
@@ -274,13 +287,16 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 
     <div class="info-box warning-box">
       <strong>⚠️ Sharp Edge:</strong>
-      <p>Brace syntax also serves as an <em>initializer list</em> — syntactic sugar for constructor calls, resolved at ty<pre><code>def main():
-    var numbers = [1, 2, 3]            # list — trailing commas OK
-    var ages = {&quot;Alice&quot;: 30, &quot;Bob&quot;: 25}  # dict
-    var primes = {2, 3, 5, 7}           # set
-    # {&quot;a&quot;: 1, 2}  # Error: expected 'key: value' in dictionary expression
-    # {1, &quot;b&quot;: 2}  # Error: cannot have a 'key: value' pair in set initializer
-</code></pre>" data-tab="ch14-slice-out">output</button>
+      <p>Brace syntax also serves as an <em>initializer list</em> — syntactic sugar for constructor calls, resolved at type-check time. <code class="inline">var x: T = {}</code> calls <code class="inline">T()</code>. And while set <em>displays</em> are core syntax, the <code class="inline">Set</code> type is not: import it with <code class="inline">from std.collections import Set</code> before using it as a type.</p>
+    </div>
+
+    <h3>Calls, subscripts, and slices</h3>
+    <p>Arguments before any keyword argument are positional; keyword arguments use <code class="inline">name=value</code>. Positional arguments can't follow keyword arguments, and keywords can't repeat. Colons inside square brackets create slices:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch14-slice-mojo">Mojo</button>
+        <button class="tab-btn" data-tab="ch14-slice-out">output</button>
       </div>
       <div class="tab-content active" id="ch14-slice-mojo">
         <pre><span class="kw">var</span> items = [<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]
@@ -370,17 +386,12 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn" data-tab="ch14-comp-out">output</button>
       </div>
       <div class="tab-content active" id="ch14-comp-mojo">
-        <pre><span <pre><code>def heavy_calculation() -&gt; Int:
-    var sum = 0
-    for i in range(1_000_000):
-        sum += i
-    return sum
+        <pre><span class="cmt"># List: [expr for pattern in iterable if condition]</span>
+<span class="kw">var</span> squares = [x * x <span class="kw">for</span> x <span class="kw">in</span> [<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>] <span class="kw">if</span> x % <span class="num">2</span> == <span class="num">0</span>]
+<span class="cmt"># [0, 4, 16]</span>
 
-def main():
-    # var x = comptime heavy_calculation()   # Error: requires parentheses
-    var x = comptime (heavy_calculation())  # O(1) at runtime
-    print(x)   # 499999500000
-</code></pre>an>)}   <span class="cmt"># {1, 2, 3, 5, 8} — deduped</span>
+<span class="cmt"># Set: {expr for pattern in iterable if condition}</span>
+<span class="kw">var</span> fibs = {<span class="fn">fib</span>(x) <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">6</span>)}   <span class="cmt"># {1, 2, 3, 5, 8} — deduped</span>
 
 <span class="cmt"># Dict: {key: value for pattern in iterable if condition}</span>
 <span class="kw">var</span> lengths: <span class="type">Dict</span>[<span class="type">String</span>, <span class="type">Int</span>] =
@@ -422,9 +433,8 @@ def main():
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch14-imp-mojo">Mojo</button>
-      </di<pre><code>def main():
-    [0, 4, 16]
-</code></pre>tab-content active" id="ch14-imp-mojo">
+      </div>
+      <div class="tab-content active" id="ch14-imp-mojo">
         <pre><span class="kw">import</span> std.math
 <span class="kw">from</span> std.collections <span class="kw">import</span> <span class="type">Dict</span>, <span class="type">Set</span>
 
@@ -432,13 +442,16 @@ def main():
 <span class="kw">from</span> std.collections <span class="kw">import</span> (
     <span class="type">Dict</span>,
     <span class="type">Set</span>,
-    <span class="type">List</span<pre><code>def main():
-    var products = [(x, y, x * y)
-                  for x in range(3)
-                  for y in range(3)
-                  if (x + y) % 2 == 0]
-    # [(0, 0, 0), (0, 2, 0), (1, 1, 1), (2, 0, 0), (2, 2, 4)]
-</code></pre>>Assignment</h3>
+    <span class="type">List</span>,
+)
+
+<span class="kw">import</span> numpy <span class="kw">as</span> np                          <span class="cmt"># Module alias</span>
+<span class="kw">from</span> std.collections <span class="kw">import</span> <span class="type">Dict</span> <span class="kw">as</span> <span class="type">Dictionary</span> <span class="cmt"># Name alias</span>
+<span class="kw">from</span> std.math <span class="kw">import</span> *                       <span class="cmt"># Wildcard</span></pre>
+      </div>
+    </div>
+
+    <h3>Assignment</h3>
     <p>Use <code class="inline">var</code> to declare new variables and <code class="inline">ref</code> to create reference bindings (a <code class="inline">ref</code> doesn't create a new value — writes through it write the referred-to element):</p>
 
     <div class="code-tabs">
@@ -594,16 +607,24 @@ dx
       </div>
     </div>
 
-    <h3>try / ex<pre><code>def main():
-    var list: List[String] = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]
-    for var item in list:      # mutable copy — list unchanged
-        item = item + &quot;x&quot;
-        print(item)           # ax, bx, cx, dx
-    print(list)               # [a, b, c, d]
-    for ref item in list:      # reference — writes hit the list
-        item = item + &quot;x&quot;
-    print(list)               # [ax, bx, cx, dx]
-</code></pre>errors: the bound variable's type is inferred</span>
+    <h3>try / except / else / finally</h3>
+    <p>A <code class="inline">try</code> statement requires at least one <code class="inline">except</code> or <code class="inline">finally</code> clause; the full order is fixed:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch14-try-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch14-try-mojo">
+        <pre><span class="kw">try</span>:
+    <span class="fn">operation</span>()
+<span class="kw">except</span> e:
+    <span class="fn">handle_error</span>(e)   <span class="cmt"># Runs if an error occurs</span>
+<span class="kw">else</span>:
+    <span class="fn">on_success</span>()      <span class="cmt"># Runs only if NO error occurred</span>
+<span class="kw">finally</span>:
+    <span class="fn">cleanup</span>()         <span class="cmt"># Always runs last</span>
+
+<span class="cmt"># Typed errors: the bound variable's type is inferred</span>
 <span class="kw">try</span>:
     <span class="kw">var</span> result = <span class="fn">fetch</span>()
 <span class="kw">except</span> e:            <span class="cmt"># e is inferred as the declared error type</span>
@@ -689,18 +710,12 @@ exiting setup</pre>
         <tr><td>Walrus</td><td><code>(n := len(items))</code></td><td>Lowest precedence — parenthesize</td></tr>
         <tr><td>Compile-time expr</td><td><code>comptime (f())</code></td><td>Parentheses required</td></tr>
         <tr><td>Comprehension</td><td><code>[x*x for x in xs if p]</code></td><td>List / set / dict forms</td></tr>
-        <tr><td>Reference binding</td><td><code>ref y = my_lis<pre><code>from std.sys import size_of
-
-
-def main():
-    comptime if size_of[Int]() == 8:
-        print(&quot;64-bit&quot;)
-    else:
-        print(&quot;Probably 32-bit&quot;)
-    # Unrolls to: print(0); print(1); print(2)
-    comptime for i in range(3):
-        print(i)
-</code></pre>>Cleanup even on error</td></tr>
+        <tr><td>Reference binding</td><td><code>ref y = my_list[3]</code></td><td>No new value; writes go through</td></tr>
+        <tr><td>Chained init</td><td><code>var x = var y = "Hi"</code></td><td>Right-associative, RHS once</td></tr>
+        <tr><td>Loop binding</td><td><code>for var|ref item in xs</code></td><td>Default is an immutable reference</td></tr>
+        <tr><td>Loop else</td><td><code>for ... else:</code></td><td>Skipped when break exits the loop</td></tr>
+        <tr><td>try structure</td><td><code>try/except/else/finally</code></td><td>One error type per try</td></tr>
+        <tr><td>Context manager</td><td><code>__enter__</code> / <code>__exit__</code></td><td>Cleanup even on error</td></tr>
         <tr><td>Compile-time control flow</td><td><code>comptime if</code> / <code>comptime for</code></td><td>Prunes branches / unrolls loops</td></tr>
       </tbody>
     </table>

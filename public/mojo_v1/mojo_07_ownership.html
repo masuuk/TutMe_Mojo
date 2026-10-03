@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -137,13 +137,11 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn" data-tab="ch7-vs-out">output</button>
       </div>
       <div class="tab-content active" id="ch7-vs-mojo">
-        <pre><code>def main():
-    var x = 1
-    var y = x        # y gets a copy of x's value
-    y += 1
-    print(&quot;x:&quot;, x)   # 1 — untouched
-    print(&quot;y:&quot;, y)   # 2
-</code></pre>
+        <pre><span class="kw">var</span> x = <span class="num">1</span>
+<span class="kw">var</span> y = x        <span class="cmt"># y gets a copy of x's value</span>
+y += <span class="num">1</span>
+<span class="fn">print</span>(<span class="str">"x:"</span>, x)   <span class="cmt"># 1 — untouched</span>
+<span class="fn">print</span>(<span class="str">"y:"</span>, y)   <span class="cmt"># 2</span></pre>
       </div>
       <div class="tab-content" id="ch7-vs-out">
         <pre>x: 1
@@ -252,13 +250,13 @@ x: 1</pre>
         <button class="tab-btn" data-tab="ch7-mut-out">output</button>
       </div>
       <div class="tab-content active" id="ch7-mut-mojo">
-        <pre><code>def mutate(mut l: List[Int]):
-    l.append(5)   # no copy made
+        <pre><span class="kw">def</span> <span class="fn">mutate</span>(<span class="kw">mut</span> l: <span class="type">List</span>[<span class="type">Int</span>]):
+    l.<span class="fn">append</span>(<span class="num">5</span>)   <span class="cmt"># no copy made</span>
 
-def main():
-    var values: List[Int] = [1, 2, 3, 4]
-    mutate(values)
-    print(values)   # [1, 2, 3, 4, 5]</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> values = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>]
+    <span class="fn">mutate</span>(values)
+    <span class="fn">print</span>(values.__str__())   <span class="cmt"># [1, 2, 3, 4, 5]</span></pre>
       </div>
       <div class="tab-content" id="ch7-mut-out">
         <pre>[1, 2, 3, 4, 5]</pre>
@@ -268,9 +266,7 @@ def main():
     <p>Caveats:</p>
     <ul>
       <li>The passed value must already be mutable — Mojo can't form a mutable reference from an immutable one.</li>
-      <<pre><code>def main():
-    [1, 2, 3, 4, 5]
-</code></pre>ed on <code class="inline">mut</code> arguments.</li>
+      <li>No default values allowed on <code class="inline">mut</code> arguments.</li>
     </ul>
 
     <h3>Argument exclusivity</h3>
@@ -529,26 +525,30 @@ Dana?</pre>
       </div>
       <div class="tab-content active" id="ch7-ptr-mojo">
         <pre><span class="kw">var</span> count = <span class="num">0</span>
-<span class="kw">var</span> ptr = <span class="type">Pointer</span>(to=count)   <span class="cmt"># point a<pre><code>def main():
-    var count = 0
-    var ptr = Pointer(to=count)   # point at an owned value
-    ptr[] += 100                 # dereference-write
-    print(ptr[])                  # dereference-read → 100
-</code></pre>fe: <em>your code</em> owns allocating, tracking initialization state, and calling deinitializers. Unsafe APIs are prefixed <code class="inline">unsafe_</code>:</p>
+<span class="kw">var</span> ptr = <span class="type">Pointer</span>(to=count)   <span class="cmt"># point at an owned value</span>
+
+ptr[] += <span class="num">100</span>                 <span class="cmt"># dereference-write</span>
+<span class="fn">print</span>(ptr[])                  <span class="cmt"># dereference-read → 100</span></pre>
+      </div>
+      <div class="tab-content" id="ch7-ptr-out">
+        <pre>100</pre>
+      </div>
+    </div>
+
+    <p>Everything else — especially dynamic allocation — is unsafe: <em>your code</em> owns allocating, tracking initialization state, and calling deinitializers. Unsafe APIs are prefixed <code class="inline">unsafe_</code>:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch7-alloc-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch7-alloc-mojo">
-        <pre><code>from std.memory import Layout, dealloc
+        <pre><span class="kw">from</span> std.memory.alloc <span class="kw">import</span> alloc, dealloc
 
-def main():
-    var allocation = alloc(Layout[Int](count=1))
-    var ptr = allocation.unsafe_ptr()   # space for one Int (untracked origin)
-    ptr.unsafe_write(42)              # initialize the memory
-    print(ptr.unsafe_load())          # 42
-    dealloc(allocation^)              # free it — ptr now dangles!</code></pre>
+<span class="kw">var</span> allocation = <span class="fn">alloc</span>[<span class="type">Int</span>](<span class="num">1</span>)   <span class="cmt"># space for one Int (untracked origin)</span>
+<span class="kw">var</span> ptr = allocation.<span class="fn">unsafe_ptr</span>()
+ptr.<span class="fn">unsafe_write</span>(<span class="num">42</span>)              <span class="cmt"># initialize the memory</span>
+<span class="fn">print</span>(ptr[])                      <span class="cmt"># 42</span>
+<span class="fn">dealloc</span>(allocation^)              <span class="cmt"># free it — ptr now dangles!</span></pre>
       </div>
     </div>
 

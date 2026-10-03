@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -199,7 +199,8 @@ footer a:hover{text-decoration:underline}
 <header>
 <div class="hero">
 <a class="backlink" href="../../index.html">&larr; TutMe🔥 Learning Hub</a><br>
-<a class="backlink" href="../index.html">&larr; Praxis shelf</a>
+<a class="backlink" href="../index.html">&larr; Praxis shelf</a><br>
+<a class="backlink" href="../../applications/geomatics/geo_computations.html">Geomatics Computations tutorial</a>
 <div><span class="badge">GEOMATICS &bull; PRAXIS &bull; PROGRESSIVE DRILLS</span></div>
 <h1>Planar Distance &amp; Bearing</h1>
 <p class="subtitle">Learn by doing. Start with Pythagoras on grid coordinates and progressively move toward bearings, quadrant conversion and closure checks.</p>
@@ -234,12 +235,12 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">1</span>Level 1 — Grid Distance</h2>
 <div class="meta"><span class="tag">Beginner</span><span class="tag">Pythagoras</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
-<pre><code>from std.math import sqrt
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">sqrt</span>
 
-def main():
-    var dE = 3.0
-    var dN = 4.0
-    print(sqrt(dE * dE + dN * dN))</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> dE = 3.0
+    <span class="kw">var</span> dN = 4.0
+    <span class="fn">print</span>(<span class="fn">sqrt</span>(dE * dE + dN * dN))</code></pre>
 <textarea id="a1" placeholder="Write the output or answer here..." onkeydown="onKey(event,1,'5')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(1,'5')">Check Answer</button>
@@ -284,13 +285,13 @@ def main():
 <h2><span class="lvl-check">3</span>Level 3 — Whole-circle Bearing</h2>
 <div class="meta"><span class="tag">Intermediate</span><span class="tag">atan2</span></div>
 <p><strong>Challenge:</strong> With ΔE = 90 and ΔN = 160, what bearing (degrees, 2 decimals) does atan2 give? North is 0°.</p>
-<pre><code>from std.math import atan2
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">atan2</span>
 
-def main():
-    var dE = 90.0
-    var dN = 160.0
-    var deg = atan2(dE, dN) * (180.0 / 3.141592653589793)
-    print(deg)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> dE = 90.0
+    <span class="kw">var</span> dN = 160.0
+    <span class="kw">var</span> deg = <span class="fn">atan2</span>(dE, dN) * (180.0 / 3.141592653589793)
+    <span class="fn">print</span>(deg)</code></pre>
 <textarea id="a3" placeholder="Write the output or answer here..." onkeydown="onKey(event,3,'29.36')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(3,'29.36')">Check Answer</button>
@@ -302,7 +303,7 @@ def main():
 <div id="f3" class="feedback"></div>
 <div id="s3" class="solution">
 <strong>Solution</strong>
-<pre><code>29.357753542791276</code></pre>
+<pre><code>29.362604748</code></pre>
 <p>atan2(east, north) measures clockwise from north: atan2(90,160) ≈ 29.36°, a north-easterly direction.</p>
 </div>
 </section>
@@ -311,13 +312,13 @@ def main():
 <h2><span class="lvl-check">4</span>Level 4 — Axis Bearing</h2>
 <div class="meta"><span class="tag">Intermediate+</span><span class="tag">Quadrants</span></div>
 <p><strong>Challenge:</strong> What is printed for a line going due west (ΔE = −5, ΔN = 0)?</p>
-<pre><code>from std.math import atan2
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">atan2</span>
 
-def main():
-    var deg = atan2(-5.0, 0.0) * (180.0 / 3.141592653589793)
-    if deg &lt; 0.0:
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> deg = <span class="fn">atan2</span>(-5.0, 0.0) * (180.0 / 3.141592653589793)
+    <span class="kw">if</span> deg &lt; 0.0:
         deg += 360.0
-    print(deg)</code></pre>
+    <span class="fn">print</span>(deg)</code></pre>
 <textarea id="a4" placeholder="Write the output or answer here..." onkeydown="onKey(event,4,'270')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(4,'270')">Check Answer</button>
@@ -411,7 +412,10 @@ deg = deg % 360.0
 
 <footer>
 Geomatics Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_08_npv.html">&larr; Previous: Discounting, NPV &amp; the Annuity</a><br><a href="prog_10_queues.html">Next: Little's Law &amp; Queues &rarr;</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a><br><a href="../../applications/geomatics/geo_computations.html#coordinates">Theory: Geomatics Computations</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="prog_08_npv.html">← Previous</a> <a href="progressive.html">All 13 drills</a> <a href="prog_10_queues.html">Next drill →</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a> &middot; <a href="../../applications/geomatics/geo_computations.html">Geomatics Computations</a>
 </footer>
 
 <script>

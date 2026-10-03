@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 9 — Mojo vs Python: A Side-by-Side Syntax Tour · Mojo 1.x Textbook</title>
+<title>Chapter 9 — Mojo vs Python: A Syntax Tour · Mojo 1.x Textbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -122,62 +122,46 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 <div class="wrap">
 <div class="container">
   <span class="kicker">Chapter 9</span>
-  <h1>🔀 Mojo vs Python: A <span class="highlight">Side-by-Side</span> Syntax Tour</h1>
-  <p class="dek">Seven classic problems implemented in Mojo and Python — the fastest way to internalize Mojo's syntax by comparing it against what you already know.</p>
+  <h1>🔀 Mojo vs Python: A <span class="highlight">Syntax Tour</span></h1>
+  <p class="dek">Seven classic problems implemented in Mojo 1.x. Each one is a single program, with the Python habit it replaces called out in prose — the fastest way to internalize the syntax if you already write Python.</p>
 
   <section id="quadratic">
     <h2>1. Quadratic Equation Solver</h2>
-    <p>Given coefficients <strong>a</strong>, <strong>b</strong>, and <strong>c</strong>, solve <code class="inline">ax² + bx + c = 0</code> using the quadratic formula. This example shows function signatures, conditionals, and error handling in both languages.</p>
+    <p>Given coefficients <strong>a</strong>, <strong>b</strong>, and <strong>c</strong>, solve <code class="inline">ax² + bx + c = 0</code> using the quadratic formula. This example shows function signatures, conditionals, and error handling in a single screen.</p>
     <p>Like Python, Mojo uses indentation — not curly braces — to delimit blocks. Where Python opens a block with a colon and indents, Mojo does exactly the same: there are no <code class="inline">{ }</code> in sight.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-quad-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-quad-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-quad-mojo">
-        <pre><code>def solve_quadratic(a: Float64, b: Float64, c: Float64) raises -&gt; Tuple[Float64, Float64]:
-    var discriminant = b * b - 4.0 * a * c
-    if discriminant &lt; 0.0:
-        raise &quot;No real roots&quot;
-    var root1 = (-b + discriminant ** 0.5) / (2.0 * a)
-    var root2 = (-b - discriminant ** 0.5) / (2.0 * a)
-    return (root1, root2)
-
-def main() raises:
-    var r1, r2 = solve_quadratic(1.0, -5.0, 6.0)
-    print(&quot;x1 =&quot;, r1, &quot;x2 =&quot;, r2)</code></pre>
-      </div>
-      <div class="tab-content" id="ch9-quad-py">
-        <pre><span class="kw">import</span> math
-
-<span class="kw">def</span> <span class="fn">solve_quadratic</span>(a: float, b: float, c: float) -> tuple[float, float]:
-    discriminant = b * b - <span class="num">4.0</span> * a * c
+        <pre><span class="kw">def</span> <span class="fn">solve_quadratic</span>(a: Float64, b: Float64, c: Float64) <span class="kw">raises</span> -> (Float64, Float64):
+    <span class="kw">var</span> discriminant = b * b - <span class="num">4.0</span> * a * c
     <span class="kw">if</span> discriminant < <span class="num">0.0</span>:
-        <span class="kw">raise</span> <span class="type">ValueError</span>(<span class="str">"No real roots"</span>)
-    root1 = (-b + math.<span class="fn">sqrt</span>(discriminant)) / (<span class="num">2.0</span> * a)
-    root2 = (-b - math.<span class="fn">sqrt</span>(discriminant)) / (<span class="num">2.0</span> * a)
+        <span class="kw">raise</span> <span class="str">"No real roots"</span>
+    <span class="kw">var</span> root1 = (<span class="op">-</span>b + discriminant ** <span class="num">0.5</span>) / (<span class="num">2.0</span> * a)
+    <span class="kw">var</span> root2 = (<span class="op">-</span>b - discriminant ** <span class="num">0.5</span>) / (<span class="num">2.0</span> * a)
     <span class="kw">return</span> (root1, root2)
 
-r1, r2 = <span class="fn">solve_quadratic</span>(<span class="num">1.0</span>, <span class="op">-</span><span class="num">5.0</span>, <span class="num">6.0</span>)
-<span class="fn">print</span>(<span class="str">f"x1 = </span>{r1}<span class="str">  x2 = </span>{r2}<span class="str">"</span>)</pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> r1, r2 = <span class="fn">solve_quadratic</span>(<span class="num">1.0</span>, <span class="op">-</span><span class="num">5.0</span>, <span class="num">6.0</span>)
+    <span class="fn">print</span>(<span class="str">"x1 ="</span>, r1, <span class="str">"x2 ="</span>, r2)</pre>
       </div>
     </div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
-      <p>Mojo raises errors like Python — even a bare string works as shorthand for <code class="inline">raise Error("No real roots")</code>. One difference: the function must declare it with the <code class="inline">raises</code> keyword in its signature, so callers know at a glance that the call can fail.</p>
+      <p>Mojo raises errors like Python — even a bare string works as shorthand for <code class="inline">raise Error("No real roots")</code>. One difference: the function must declare it with the <code class="inline">raises</code> keyword in its signature, so callers know at a glance that the call can fail. The square root needs no import either: <code class="inline">discriminant ** 0.5</code> is the Mojo spelling of Python's <code class="inline">math.sqrt(discriminant)</code>, because <code class="inline">**</code> is overloaded for <code class="inline">Float64</code>.</p>
     </div>
   </section>
 
   <section id="compound">
     <h2>2. Compound Interest</h2>
-    <p>Calculate accumulated value using <code class="inline">A = P(1 + r/n)^(nt)</code>. This highlights how each language handles exponentiation, floating-point arithmetic, and formatted output.</p>
+    <p>Calculate accumulated value using <code class="inline">A = P(1 + r/n)^(nt)</code>. This highlights how Mojo handles exponentiation, floating-point arithmetic, and formatted output.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-compound-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-compound-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-compound-mojo">
         <pre><span class="kw">def</span> <span class="fn">compound_interest</span>(
@@ -195,25 +179,11 @@ r1, r2 = <span class="fn">solve_quadratic</span>(<span class="num">1.0</span>, <
     <span class="kw">var</span> amount = <span class="fn">compound_interest</span>(<span class="num">10000.0</span>, <span class="num">0.05</span>, <span class="num">12</span>, <span class="num">10</span>)
     <span class="fn">print</span>(<span class="str">"Accumulated:"</span>, amount)</pre>
       </div>
-      <div class="tab-content" id="ch9-compound-py">
-        <pre><span class="kw">def</span> <span class="fn">compound_interest</span>(
-    principal: float,
-    rate: float,
-    times_per_year: int,
-    years: int
-) -> float:
-    base = <span class="num">1.0</span> + rate / times_per_year
-    exponent = times_per_year * years
-    <span class="kw">return</span> principal * base ** exponent
-
-amount = <span class="fn">compound_interest</span>(<span class="num">10000.0</span>, <span class="num">0.05</span>, <span class="num">12</span>, <span class="num">10</span>)
-<span class="fn">print</span>(<span class="str">f"Accumulated: </span>{amount:<span class="num">.2f</span>}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
-      <p>Both languages use the <code class="inline">**</code> operator for exponentiation, and Mojo's version accepts float exponents directly on <code class="inline">Float64</code> values — no import needed. Note the explicit conversions: Mojo won't silently mix <code class="inline">Int</code> and <code class="inline">Float64</code> arithmetic the way Python does.</p>
+      <p>Both languages use the <code class="inline">**</code> operator for exponentiation, and Mojo's version accepts float exponents directly on <code class="inline">Float64</code> values — no import needed. Note the explicit conversions: Mojo won't silently mix <code class="inline">Int</code> and <code class="inline">Float64</code> arithmetic the way Python does. Formatted output splits the same way: Python's <code class="inline">f"Accumulated: {amount:.2f}"</code> becomes a t-string, <code class="inline">t"Accumulated: {amount:.2f}"</code>.</p>
     </div>
   </section>
 
@@ -224,7 +194,6 @@ amount = <span class="fn">compound_interest</span>(<span class="num">10000.0</sp
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-npv-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-npv-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-npv-mojo">
         <pre><span class="kw">def</span> <span class="fn">npv</span>(rate: Float64, cash_flows: <span class="type">List</span>[Float64]) -> Float64:
@@ -238,33 +207,21 @@ amount = <span class="fn">compound_interest</span>(<span class="num">10000.0</sp
     <span class="kw">var</span> result = <span class="fn">npv</span>(<span class="num">0.08</span>, flows)
     <span class="fn">print</span>(<span class="str">"NPV ="</span>, result)</pre>
       </div>
-      <div class="tab-content" id="ch9-npv-py">
-        <pre><span class="kw">def</span> <span class="fn">npv</span>(rate: float, cash_flows: list[float]) -> float:
-    total = <span class="num">0.0</span>
-    <span class="kw">for</span> t, cf <span class="kw">in</span> <span class="fn">enumerate</span>(cash_flows):
-        total += cf / (<span class="num">1.0</span> + rate) ** t
-    <span class="kw">return</span> total
-
-flows = [<span class="op">-</span><span class="num">1000.0</span>, <span class="num">300.0</span>, <span class="num">420.0</span>, <span class="num">680.0</span>]
-result = <span class="fn">npv</span>(<span class="num">0.08</span>, flows)
-<span class="fn">print</span>(<span class="str">f"NPV = </span>{result:<span class="num">.2f</span>}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
-      <p>Mojo's <code class="inline">**</code> operator handles <code class="inline">Float64</code> exponents directly. In production finance code, prefer an integer exponent when you can — it's faster and avoids floating-point drift in the discount factor.</p>
+      <p>Mojo's <code class="inline">**</code> operator handles <code class="inline">Float64</code> exponents directly. In production finance code, prefer an integer exponent when you can — it's faster and avoids floating-point drift in the discount factor. There is no <code class="inline">enumerate</code> either: the loop walks indices with <code class="inline">range(len(cash_flows))</code> and indexes the list, which is why the exponent is cast with <code class="inline">Float64(t)</code> instead of being used bare.</p>
     </div>
   </section>
 
   <section id="simultaneous">
     <h2>4. Simultaneous Equations (Cramer's Rule)</h2>
-    <p>Solve a 2×2 system using Cramer's rule. This example demonstrates <strong>structs</strong>: Mojo's <code class="inline">struct</code> and Python's <code class="inline">dataclass</code>.</p>
+    <p>Solve a 2×2 system using Cramer's rule. This example demonstrates <strong>structs</strong> — Mojo's <code class="inline">struct</code>, taking over the job Python's <code class="inline">@dataclass</code> does.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-simult-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-simult-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-simult-mojo">
         <pre><span class="fn">@fieldwise_init</span>
@@ -290,31 +247,6 @@ result = <span class="fn">npv</span>(<span class="num">0.08</span>, flows)
     <span class="kw">var</span> x, y = sys.<span class="fn">solve</span>()
     <span class="fn">print</span>(<span class="str">"x ="</span>, x, <span class="str">"y ="</span>, y)</pre>
       </div>
-      <div class="tab-content" id="ch9-simult-py">
-        <pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
-
-<span class="kw">@dataclass</span>
-<span class="kw">class</span> <span class="type">System2x2</span>:
-    a1: float
-    b1: float
-    c1: float
-    a2: float
-    b2: float
-    c2: float
-
-    <span class="kw">def</span> <span class="fn">solve</span>(self) -> tuple[float, float]:
-        det = self.a1 * self.b2 <span class="op">-</span> self.a2 * self.b1
-        <span class="kw">if</span> det == <span class="num">0.0</span>:
-            <span class="kw">raise</span> <span class="type">ValueError</span>(<span class="str">"No unique solution"</span>)
-        x = (self.c1 * self.b2 <span class="op">-</span> self.c2 * self.b1) / det
-        y = (self.a1 * self.c2 <span class="op">-</span> self.a2 * self.c1) / det
-        <span class="kw">return</span> (x, y)
-
-<span class="cmt"># 2x + 3y = 8,  4x - y = 2</span>
-sys = System2x2(<span class="num">2.0</span>, <span class="num">3.0</span>, <span class="num">8.0</span>, <span class="num">4.0</span>, <span class="op">-</span><span class="num">1.0</span>, <span class="num">2.0</span>)
-x, y = sys.<span class="fn">solve</span>()
-<span class="fn">print</span>(<span class="str">f"x = </span>{x}<span class="str">  y = </span>{y}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box">
@@ -325,12 +257,11 @@ x, y = sys.<span class="fn">solve</span>()
 
   <section id="factorial">
     <h2>5. Factorial (Iterative &amp; Recursive)</h2>
-    <p>Implement factorial both iteratively and recursively. This highlights loops, recursion, type annotations, and how each language handles base cases.</p>
+    <p>Implement factorial both iteratively and recursively. This highlights loops, recursion, type annotations, and how Mojo handles the base case.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-fact-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-fact-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-fact-mojo">
         <pre><span class="kw">def</span> <span class="fn">factorial_iter</span>(n: <span class="type">Int</span>) -> <span class="type">Int</span>:
@@ -349,21 +280,6 @@ x, y = sys.<span class="fn">solve</span>()
         <span class="fn">print</span>(i, <span class="str">"! ="</span>, <span class="fn">factorial_iter</span>(i),
               <span class="str">"|"</span>, <span class="fn">factorial_rec</span>(i))</pre>
       </div>
-      <div class="tab-content" id="ch9-fact-py">
-        <pre><span class="kw">def</span> <span class="fn">factorial_iter</span>(n: int) -> int:
-    result = <span class="num">1</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>, n + <span class="num">1</span>):
-        result *= i
-    <span class="kw">return</span> result
-
-<span class="kw">def</span> <span class="fn">factorial_rec</span>(n: int) -> int:
-    <span class="kw">if</span> n <= <span class="num">1</span>:
-        <span class="kw">return</span> <span class="num">1</span>
-    <span class="kw">return</span> n * <span class="fn">factorial_rec</span>(n - <span class="num">1</span>)
-
-<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">11</span>):
-    <span class="fn">print</span>(<span class="str">f"</span>{i}<span class="str">! = </span>{<span class="fn">factorial_iter</span>(i)}<span class="str"> | </span>{<span class="fn">factorial_rec</span>(i)}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box tip-box">
@@ -374,50 +290,35 @@ x, y = sys.<span class="fn">solve</span>()
 
   <section id="fibonacci">
     <h2>6. Fibonacci Sequence</h2>
-    <p>Generate the first N Fibonacci numbers. This example reveals differences in mutable state, list construction, and iteration patterns in Mojo and Python.</p>
+    <p>Generate the first N Fibonacci numbers. This example reveals how mutable state, list construction, and iteration patterns work in Mojo.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-fib-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-fib-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-fib-mojo">
-        <pre><code>def fibonacci(n: Int) -&gt; List[Int]:
-    if n &lt;= 0:
-        return List[Int]()
-    var seq = List[Int]()
-    seq.append(0)
-    if n &gt; 1:
-        seq.append(1)
-    for i in range(2, n):
-        var next_val = seq[i - 1] + seq[i - 2]
-        seq.append(next_val)
-    return seq^
-
-def main():
-    var fib = fibonacci(15)
-    for val in fib:
-        print(val)</code></pre>
-      </div>
-      <div class="tab-content" id="ch9-fib-py">
-        <pre><span class="kw">def</span> <span class="fn">fibonacci</span>(n: int) -> list[int]:
+        <pre><span class="kw">def</span> <span class="fn">fibonacci</span>(n: <span class="type">Int</span>) -> <span class="type">List</span>[<span class="type">Int</span>]:
     <span class="kw">if</span> n <= <span class="num">0</span>:
-        <span class="kw">return</span> []
-    seq = [<span class="num">0</span>]
+        <span class="kw">return</span> <span class="type">List</span>[<span class="type">Int</span>]()
+    <span class="kw">var</span> seq = <span class="type">List</span>[<span class="type">Int</span>]()
+    seq.<span class="fn">append</span>(<span class="num">0</span>)
     <span class="kw">if</span> n > <span class="num">1</span>:
-        seq.append(<span class="num">1</span>)
+        seq.<span class="fn">append</span>(<span class="num">1</span>)
     <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>, n):
-        seq.append(seq[i <span class="op">-</span> <span class="num">1</span>] + seq[i <span class="op">-</span> <span class="num">2</span>])
+        <span class="kw">var</span> next_val = seq[i - <span class="num">1</span>] + seq[i - <span class="num">2</span>]
+        seq.<span class="fn">append</span>(next_val)
     <span class="kw">return</span> seq
 
-fib = <span class="fn">fibonacci</span>(<span class="num">15</span>)
-<span class="fn">print</span>(<span class="str">" "</span>.<span class="fn">join</span>(<span class="fn">map</span>(str, fib)))</pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> fib = <span class="fn">fibonacci</span>(<span class="num">15</span>)
+    <span class="kw">for</span> val <span class="kw">in</span> fib:
+        <span class="fn">print</span>(val)</pre>
       </div>
     </div>
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
-      <p>Mojo's <code class="inline">List</code> grows dynamically like Python's <code class="inline">list</code>. For performance-critical sequences, pre-allocate in Mojo with <code class="inline">List[Int](capacity=n)</code> to avoid repeated reallocations.</p>
+      <p>Mojo's <code class="inline">List</code> grows dynamically like Python's <code class="inline">list</code>. For performance-critical sequences, pre-allocate in Mojo with <code class="inline">List[Int](capacity=n)</code> to avoid repeated reallocations. Python's one-line <code class="inline">" ".join(map(str, fib))</code> has no Mojo equivalent, so the driver loop just prints each value.</p>
     </div>
   </section>
 
@@ -436,7 +337,7 @@ fib = <span class="fn">fibonacci</span>(<span class="num">15</span>)
       <tbody>
         <tr>
           <td>Function definition</td>
-          <td><code>def name(x: Int) -&gt; Int:</code> <span style="color:var(--text-muted)">(<code>fn</code> is deprecated)</span></td>
+          <td><code>def name(x: Int) -&gt; Int:</code></td>
           <td><code>def name(x: int) -&gt; int:</code></td>
         </tr>
         <tr>

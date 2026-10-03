@@ -2,7 +2,7 @@
 <title>Mojo 1.x · Drill 22 · Coordinate Records</title><link rel="stylesheet" href="../styles.css"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%22 stop-color=%22%235bd4ff%22/><stop offset=%221%22 stop-color=%22%232f8fe0%22/></linearGradient></defs><rect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/><g fill=%22none%22 stroke=%22%2306101c%22 stroke-width=%222.4%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 transform=%22translate(8 8)%22><path d=%22M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z%22/><path d=%22M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z%22/></g></svg>"></head><body>
 <nav><div class="wrap navin"><a class="brand" href="../index.html"><span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span><span>TutMe🔥 <span style="color:#5bd4ff">Learning Hub</span></span></a>
 <div class="navlinks"><a class="pill" href="../index.html">Home</a><a class="pill" href="../mojo_v1/index.html">Fundamentals</a><a class="pill" href="../data_science/index.html">Data Science</a><a class="pill" href="../applications/index.html">Applications</a><a class="pill" href="../praxis/index.html">Praxis</a></div></div></nav>
-<main><section><div class="wrap hero"><span class="eyebrow">PRAXIS · APPLICATIONS · GEOMATICS</span><h1>Drill 22 · Coordinate Records</h1><p class="lead">Model coordinate records from the geomatics shelf and process a small feature set.</p><div class="card big"><h3>Your task</h3><p>Model a `Point` struct with `var x: Float64` and `var y: Float64` and a `distance(a: Point, b: Point) -> Float64` function using the Euclidean formula from the geomatics shelf. Then extend it: read a list of points from a `List[Point]`, compute the bounding box, the nearest neighbour of each point, and the per-point distance to a reference point. Print a small tabular report of the results. Consider how you would attach attributes to each point (e.g. an id) using a second struct.</p><div class="notice">Related geomatics material: <a href="../applications/geomatics/gnss_surveying.html" style="color:#5bd4ff">GNSS Surveying</a>, <a href="../applications/geomatics/karney_krueger_equations.html" style="color:#5bd4ff">The Karney-Krueger Equations</a>, and the <a href="../applications/geomatics/geo_computations.html#coordinates" style="color:#5bd4ff">Geomatics Computations</a> lab. Ground your code with <a href="../mojo_v1/mojo_06_structs.html" style="color:#5bd4ff">Structs &amp; Traits</a>, <a href="../mojo_v1/mojo_03_types.html" style="color:#5bd4ff">Types &amp; Values</a> and <a href="../mojo_v1/mojo_05_operators.html" style="color:#5bd4ff">Operators &amp; Control Flow</a>. Do the problem before looking for a solution or answering the checkpoint. If you forget syntax, use the <a href="../mojo_v1/index.html" style="color:#5bd4ff">Mojo Library</a>.</div></div>
+<main><section><div class="wrap hero"><span class="eyebrow">PRAXIS · APPLICATIONS · GEOMATICS</span><h1>Drill 22 · Coordinate Records</h1><p class="lead">Model coordinate records from the geomatics shelf and process a small feature set.</p><div class="card big"><h3>Your task</h3><p>Model a `Point` struct with `var x: Float64` and `var y: Float64` and a `distance(a: Point, b: Point) -> Float64` function using the Euclidean formula from the geomatics shelf. Then extend it: read a list of points from a `List[Point]`, compute the bounding box, the nearest neighbour of each point, and the per-point distance to a reference point. Print a small tabular report of the results. Consider how you would attach attributes to each point (e.g. an id) using a second struct.</p><div class="notice">Related geomatics material: <a href="../applications/geomatics/geo_computations.html" style="color:#5bd4ff">Geomatics Computations</a>, <a href="../applications/geomatics/gnss_surveying.html" style="color:#5bd4ff">GNSS Surveying</a> and <a href="../applications/geomatics/karney_krueger_equations.html" style="color:#5bd4ff">The Karney-Krueger Equations</a>. Ground your code with <a href="../mojo_v1/mojo_06_structs.html" style="color:#5bd4ff">Structs &amp; Traits</a>, <a href="../mojo_v1/mojo_03_types.html" style="color:#5bd4ff">Types &amp; Values</a> and <a href="../mojo_v1/mojo_05_operators.html" style="color:#5bd4ff">Operators &amp; Control Flow</a>. Do the problem before looking for a solution or answering the checkpoint. If you forget syntax, use the <a href="../mojo_v1/index.html" style="color:#5bd4ff">Mojo Library</a>.</div></div>
 <div class="card big quiz" data-quiz><h3>Checkpoint · multiple choice</h3><p class="q">The bounding box of a set of points is defined by what?</p>
 <label class="opt"><input type="radio" name="d22q1" value="a">The average x and y of all points.</label>
 <label class="opt" data-correct="true"><input type="radio" name="d22q1" value="b">The min/max of the x and y coordinates across all points.</label>
@@ -10,9 +10,10 @@
 <label class="opt"><input type="radio" name="d22q1" value="d">The point closest to the centroid.</label>
 <div class="actions qactions"><button type="button" class="btn check">Check answer</button><button type="button" class="btn reset">Try again</button></div><p class="feedback"></p>
 <div class="explain" hidden><strong>Why:</strong> The bbox is the smallest axis-aligned rectangle containing the set: (minX, minY) to (maxX, maxY).</div></div>
-<details class="solution"><summary>Solution</summary><p>Reference Mojo for a Point struct, distance, bbox, and nearest-neighbour printing.</p><pre class="code">struct Point(Copyable):
+<details class="solution"><summary>Solution</summary><p>Reference Mojo for a Point struct, distance, bbox, and nearest-neighbour printing.</p><pre class="code">struct Point:
     var x: Float64
     var y: Float64
+
     def __init__(out self, x: Float64, y: Float64):
         self.x = x
         self.y = y
@@ -30,21 +31,158 @@ struct BBox:
 def bounding_box(pts: List[Point]) -&gt; BBox:
     var b = BBox(pts[0].x, pts[0].y, pts[0].x, pts[0].y)
     for p in pts:
-        b.min_x = p.x if p.x &lt; b.min_x else b.min_x
-        b.min_y = p.y if p.y &lt; b.min_y else b.min_y
-        b.max_x = p.x if p.x &gt; b.max_x else b.max_x
-        b.max_y = p.y if p.y &gt; b.max_y else b.max_y
-    return b^
+        if p.x &lt; b.min_x: b.min_x = p.x
+        if p.y &lt; b.min_y: b.min_y = p.y
+        if p.x &gt; b.max_x: b.max_x = p.x
+        if p.y &gt; b.max_y: b.max_y = p.y
+    return b
 
 def main():
-    var pts: List[Point] = [Point(0, 0), Point(3, 4), Point(-1, 2)]
+    var pts = List[Point](Point(0.0, 0.0), Point(3.0, 4.0), Point(-1.0, 2.0))
     var bb = bounding_box(pts)
     print(bb.min_x, bb.min_y, bb.max_x, bb.max_y)   # -1 0 3 4
 
-    var origin = Point(0, 0)
+    var origin = Point(0.0, 0.0)
     for p in pts:
-        print(&quot;dist to (0,0):&quot;, distance(p, origin))
+        print("dist to (0,0):", distance(p, origin))
 
     # Attributes: wrap Point inside a Feature struct and add an id field.</pre></details>
 <div class="actions"><a class="btn" href="index.html">← Praxis</a><a class="btn primary" href="../applications/geomatics/index.html">Geomatics shelf →</a></div></div></section></main><footer><div class="wrap">TutMe🔥 · A structured path from syntax → fundamentals → applications → practice.</div></footer>
-<script defer src="praxis.js"></script></body></html>
+<script defer src="praxis.js"></script><!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
+</body></html>

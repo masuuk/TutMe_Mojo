@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -118,7 +116,6 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="ownership"><span class="sw"></span>ownership.mojo</div>
-        <div class="tab" data-lang="python" data-group="ownership"><span class="sw"></span>aliasing.py</div>
       </div>
       <div class="panes" data-group="ownership">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — values have a single owner</span>
@@ -133,22 +130,9 @@ print(c)                <span class="tok-com"># [1, 2, 3]</span>
 <span class="tok-kw">var</span> e = d.copy()       <span class="tok-com"># deep copy — both d and e own their data</span>
 d.append(<span class="tok-num">7</span>)            <span class="tok-com"># only affects d</span>
 print(e)                <span class="tok-com"># [4, 5, 6] — unchanged</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — reference semantics (no ownership)</span>
-a = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>]
-b = a              <span class="tok-com"># both a and b point to SAME list</span>
-b.append(<span class="tok-num">4</span>)
-print(a)           <span class="tok-com"># [1, 2, 3, 4] — surprise!</span>
-
-<span class="tok-com"># To get Mojo's "copy" behavior in Python:</span>
-c = a.copy()       <span class="tok-com"># explicit shallow copy</span>
-<span class="tok-kw">import</span> copy
-d = copy.deepcopy(a)  <span class="tok-com"># deep copy</span>
-
-<span class="tok-com"># Python's GC handles freeing — you never think about it</span>
-<span class="tok-com"># But: hidden copies, race conditions, unpredictable pauses</span></pre></div>
       </div>
     </div>
-    <p class="cap">Mojo enforces single ownership at compile time. Python's reference semantics are simpler but sacrifice control.</p>
+    <p class="cap">Mojo enforces single ownership at compile time. Python's reference semantics are simpler but sacrifice control: the two names for one list above cost you nothing, but the <code class="inline">d = d.copy()</code> / <code class="inline">copy.deepcopy(a)</code> calls that buy Mojo's behaviour back are explicit in Python, and freeing is the collector's problem — which is also where the hidden copies, the race conditions and the unpredictable pauses come from.</p>
 
     <div class="callout">
       <span class="lbl">The data science angle</span>

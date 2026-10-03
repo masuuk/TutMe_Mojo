@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Parameterized declarations · Mojo v1 The Language Manual</title>
+<meta name="description" content="Generic types and functions, and how they specialise.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part III · Abstraction &amp; Values</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part III</span><span class="sep">/</span><span>Abstraction &amp; Values</span><span class="sep">/</span><span class="num">17</span></nav><h1>Parameterized declarations</h1>
+<p class="dek">Generic types and functions, and how they specialise.</p><p class="byline">Chapter 17 · 4,413 words · 42 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/generics/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Parameterized types let you write code once and use it across many types
+without duplicating logic. You don't need separate implementations or
+type checks for each case. Mojo generates specialized versions for each
+type you use.</p>
+<p>Most languages only parameterize over types. Mojo also supports value
+parameters. Its parameter system accepts both types and compile-time values
+using the same <code>[]</code> syntax.</p>
+<p>Mojo distinguishes compile-time parameters from runtime arguments in its
+syntax. Parameters go in square brackets <code>[]</code> and resolve at compile
+time. Arguments go in parentheses <code>()</code> and resolve at runtime.</p>
+<p>You see this distinction at every definition and call site, so you always
+know what the compiler specializes and what gets passed at runtime.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># T is a type parameter, threshold is a value parameter.</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># Both are compile-time. values is a runtime argument.</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> count_above<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="4">    T<span class="tk-punctuation">:</span> Comparable <span class="tk-operator">&amp;</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Deinitable<span class="tk-punctuation">,</span> threshold<span class="tk-punctuation">:</span> T</span>
+<span class="cl" data-line="5"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> count <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">for</span> v <span class="tk-keyword">in</span> values<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">if</span> v <span class="tk-operator">&gt;</span> threshold<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9">            count <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">return</span> count</span>
+</code></pre></figure>
+<p>Many parameterized declarations use traits to constrain which types work with
+the code. A trait defines what a type must do, and parameterized code declares
+which traits it requires. The compiler enforces these requirements and generates
+specialized code for each concrete type at the call site.</p>
+<h2 class="h h--2" data-level="2" id="type-generics">Type parameters<a aria-label="Link to Type parameters" class="h__link" href="#type-generics"></a></h2>
+<p>Type parameters let you write code that works across many types. You define
+behavior once, and the compiler specializes it for each concrete type at
+the call site.</p>
+<h3 class="h h--3" data-level="3" id="type-constraints">Type constraints<a aria-label="Link to Type constraints" class="h__link" href="#type-constraints"></a></h3>
+<p><em>Constraints</em> define what a type must do. You express them as traits or trait
+compositions. You must always constrain or explicitly type parameter names.
+Without a fixed set of required features, the compiler has no guarantees about
+what operations are valid.</p>
+<ul>
+<li class="">
+<p>The most permissive constraint is
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/anytype/AnyType/" rel="noopener noreferrer"><code>AnyType</code></a>. It places no behavioral
+requirements on a type.</p>
+</li>
+<li class="">
+<p><a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/deinitable/Deinitable/" rel="noopener noreferrer"><code>Deinitable</code></a>
+is a common baseline for types with lifetimes. Parameterized code that stores
+or owns values often requires it.</p>
+</li>
+</ul>
+<p>Constraints make your code sound: every operation you use is guaranteed
+to exist for any type that satisfies them.</p>
+<h3 class="h h--3" data-level="3" id="naming-conventions">Naming conventions<a aria-label="Link to Naming conventions" class="h__link" href="#naming-conventions"></a></h3>
+<p>Mojo follows naming conventions used in languages like Rust and C++.
+Type parameter names use PascalCase, short (<code>T</code>, <code>E</code>) or descriptive
+(<code>ErrorType</code>, <code>Element</code>). By convention, <code>T</code>, <code>U</code>, <code>V</code> are general
+types; <code>K</code>/<code>V</code> for key-value pairs; <code>E</code> for errors; <code>H</code> for hashers.
+Value parameter names use lower_snake_case and should be descriptive
+(<code>capacity</code>, <code>hasher</code>, <code>tile_x</code>).</p>
+<h3 class="h h--3" data-level="3" id="basic-example-compare-two-lists">Basic example: compare two lists<a aria-label="Link to Basic example: compare two lists" class="h__link" href="#basic-example-compare-two-lists"></a></h3>
+<p>Consider comparing two lists to test whether they contain the same values
+in the same order.</p>
+<p>You could write a separate implementation for each element type. Or you
+can write one parameterized function that works for any list whose elements
+support the operations you need.</p>
+<p>This concrete version only works with integers:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">all_equal_int</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span> lhs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-keyword">ref</span> rhs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>lhs<span class="tk-punctuation">)</span> <span class="tk-operator">!=</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>rhs<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-keyword">return</span> <span class="tk-boolean">False</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">for</span> left<span class="tk-punctuation">,</span> right <span class="tk-keyword">in</span> <span class="tk-builtin">zip</span><span class="tk-punctuation">(</span>lhs<span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">if</span> left <span class="tk-operator">!=</span> right<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> <span class="tk-boolean">False</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> <span class="tk-boolean">True</span></span>
+</code></pre></figure>
+<p>The parameterized version doesn't care about the element type. It only requires
+the capabilities the algorithm uses: elements must support equality
+comparison, be copyable, and be implicitly destructible (so the tuples
+<code>zip()</code> yields can be cleaned up at the end of each iteration):</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> all_equal<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    T<span class="tk-punctuation">:</span> Equatable <span class="tk-operator">&amp;</span> Copyable <span class="tk-operator">&amp;</span> Deinitable</span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span> lhs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-keyword">ref</span> rhs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>lhs<span class="tk-punctuation">)</span> <span class="tk-operator">!=</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>rhs<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-keyword">return</span> <span class="tk-boolean">False</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">for</span> left<span class="tk-punctuation">,</span> right <span class="tk-keyword">in</span> <span class="tk-builtin">zip</span><span class="tk-punctuation">(</span>lhs<span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">if</span> left <span class="tk-operator">!=</span> right<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> <span class="tk-boolean">False</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">return</span> <span class="tk-boolean">True</span></span>
+</code></pre></figure>
+<p>Both implementations follow the same logic: check lengths, return <code>False</code>
+on the first mismatch, and return <code>True</code> if no differences are found.</p>
+<p>The type parameter <code>T</code> is declared in square brackets before the function
+arguments. It represents the element type for both lists. When you call
+<code>all_equal()</code>, the compiler infers <code>T</code> from the call site:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Int (Expect True):\t"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="2">    all_equal<span class="tk-punctuation">(</span><span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Int (Expect False):\t"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4">    all_equal<span class="tk-punctuation">(</span><span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">[</span><span class="tk-number">4</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">6</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"String (Expect True):\t"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6">    all_equal<span class="tk-punctuation">(</span><span class="tk-punctuation">[</span><span class="tk-string">"hello"</span><span class="tk-punctuation">,</span> <span class="tk-string">"world"</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">[</span><span class="tk-string">"hello"</span><span class="tk-punctuation">,</span> <span class="tk-string">"world"</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"String (Expect False):\t"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="8">    all_equal<span class="tk-punctuation">(</span><span class="tk-punctuation">[</span><span class="tk-string">"hello"</span><span class="tk-punctuation">,</span> <span class="tk-string">"world"</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">[</span><span class="tk-string">"goodbye"</span><span class="tk-punctuation">,</span> <span class="tk-string">"world"</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># False</span></span>
+</code></pre></figure>
+<p>The compiler generates a concrete, type-specific version of
+<code>all_equal()</code> for each type you use: one for <code>Int</code> and one for
+<code>String</code> in this example.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>In type theory, the parametric <code>all_equal()</code> function is
+<em>polymorphic</em>. The generated type-specific versions are <em>monomorphic</em>.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="choosing-constraints">Choosing constraints<a aria-label="Link to Choosing constraints" class="h__link" href="#choosing-constraints"></a></h3>
+<p>Keep requirements minimal:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">T<span class="tk-punctuation">:</span> Equatable <span class="tk-operator">&amp;</span> Copyable <span class="tk-operator">&amp;</span> Deinitable</span>
+</code></pre></figure>
+<p>The ampersand (<code>&amp;</code>) composes traits. Use the fewest constraints your code
+needs. This keeps your function usable with more types. If you remove
+<code>Equatable</code> from <code>all_equal()</code>, the code won't compile because the
+compiler can't guarantee that <code>!=</code> exists for all <code>T</code>. Dropping
+<code>Deinitable</code> fails for a subtler reason: <code>zip()</code> yields each pair
+as a tuple, and the loop can only destroy that temporary tuple if <code>T</code> is
+implicitly destructible.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>A type supports <code>!=</code> by implementing <code>__ne__()</code>.</p></div></aside>
+<p>When your code uses an operation not covered by its constraints, the
+compiler reports an error: the type is <em>underspecified</em>. Fix this by
+adding the trait that provides the missing behavior. In practice, parameterized
+errors mean your constraints don't include the behavior your code uses.</p>
+<p>Adding constraints restricts which types you accept, but expands what
+your code can do. Each trait adds guaranteed operations, which lets the
+compiler check correctness and reason about lifetimes and effects.</p>
+<h3 class="h h--3" data-level="3" id="generic-parameter-types">Parameterized types<a aria-label="Link to Parameterized types" class="h__link" href="#generic-parameter-types"></a></h3>
+<p>In the <code>all_equal()</code> example, both parameters use the same element type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">lhs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> rhs<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>Using <code>T</code> for both ensures your loop compares like with like and prevents
+type mismatches. You can also use a parameterized type directly without
+embedding it in a container:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> my_parameterized_fn<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+<p>This function accepts any type because its only limit is <code>AnyType</code>, the
+root of the trait hierarchy that all types conform to. Using <code>AnyType</code>
+means the value has no guaranteed deinitializer or lifetime management.
+Outside of <a href="../pages/33_reflection.html">reflection</a>, this
+function can't do anything meaningful with <code>value</code>.</p>
+<h4 class="h h--4" data-level="4" id="printing-under-specified-parameterized-values">Printing under-specified parameterized values<a aria-label="Link to Printing under-specified parameterized values" class="h__link" href="#printing-under-specified-parameterized-values"></a></h4>
+<p>A common issue with <code>AnyType</code> is that the compiler can't print values of
+unspecified types. Because it can't determine whether <code>T</code> conforms to
+<code>Writable</code>, it can't generate the code needed to print it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> function<span class="tk-punctuation">[</span>Ts<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>args<span class="tk-punctuation">:</span> Ts<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> arg <span class="tk-keyword">in</span> args<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>arg<span class="tk-punctuation">)</span> <span class="tk-comment"># Will error.</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># The compiler can't verify `Writable` conformance</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">    function<span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Work around this by testing the parameterized type parameter for <code>Writable</code>
+conformance and downcasting to expose the <code>Writable</code> trait:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> represent<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>v<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> String<span class="tk-punctuation">(</span>v<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> String<span class="tk-punctuation">(</span>t<span class="tk-string">"{reflect[T].name()}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> function<span class="tk-punctuation">[</span>Ts<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>args<span class="tk-punctuation">:</span> Ts<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">for</span> arg <span class="tk-keyword">in</span> args<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>represent<span class="tk-punctuation">(</span>arg<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="12"><span class="tk-keyword">struct</span> <span class="tk-class-name">SomeStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16">    function<span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-comment"># prints each integer</span></span>
+<span class="cl" data-line="17">    function<span class="tk-punctuation">(</span>SomeStruct<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> SomeStruct<span class="tk-punctuation">(</span><span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># each "(module-name).SomeStruct"</span></span>
+</code></pre></figure>
+<p><code>Writable</code> items print as if explicitly converted to <code>String</code>.
+Non-<code>Writable</code> items use their type name, prefixed by the module name
+(the file name without the extension).</p>
+<p>Read more about <a href="../pages/17_parameterized-declarations.html#downcasting-safely">safe downcasting</a> on this page.</p>
+<h2 class="h h--2" data-level="2" id="generic-types">Parameterized types<a aria-label="Link to Parameterized types" class="h__link" href="#generic-types"></a></h2>
+<p>Parameterized declarations aren't limited to functions. You can define
+parameterized types that use compile-time parameters to define both their fields
+and their methods.</p>
+<p>Parameterized types let you package a reusable shape: stored fields plus
+supported operations. Instead of writing <code>PairInt</code>, <code>PairString</code>, and so
+on, you write one <code>Pair[T]</code> and let the compiler generate specialized
+versions for each concrete <code>T</code> you use.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> ComparableValue <span class="tk-operator">=</span> Equatable <span class="tk-operator">&amp;</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Deinitable</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">struct</span> <span class="tk-class-name">Pair</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> ComparableValue<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>ComparableValue<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> left<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> right<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> <span class="tk-function">__eq__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> other<span class="tk-punctuation">:</span> Pair<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>left <span class="tk-operator">==</span> other<span class="tk-punctuation">.</span>left <span class="tk-keyword">and</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>right <span class="tk-operator">==</span> other<span class="tk-punctuation">.</span>right</span>
+</code></pre></figure>
+<p>Like parameterized functions, parameterized types use placeholder parameters,
+but a parameterized type uses those parameters in its storage as well as in its
+methods. Here, <code>Pair</code> stores two values of the same element type and implements
+equality by comparing its fields.</p>
+<p><code>Pair</code> needs to compare values, so <code>T</code> must be equatable. It also needs
+to copy and clean up values in common operations, so it applies a trait
+composition on <code>T</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> ComparableValue <span class="tk-operator">=</span> Equatable <span class="tk-operator">&amp;</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Deinitable</span>
+</code></pre></figure>
+<p>The <code>Pair</code> definition applies this conformance in two places:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Pair</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> ComparableValue<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>ComparableValue<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+<ul>
+<li class=""><strong>Square brackets</strong> — a requirement on callers: any value used with
+<code>Pair</code> must have type <code>T</code>, and <code>T</code> must be a <code>ComparableValue</code>.</li>
+<li class=""><strong>Parentheses</strong> — a promise from <code>Pair</code> itself: "I am a
+<code>ComparableValue</code>."</li>
+</ul>
+<p>This makes <code>Pair[T]</code> usable anywhere a <code>ComparableValue</code> is required,
+and ensures all <code>T</code> values conform.</p>
+<h2 class="h h--2" data-level="2" id="mixing-type-and-value-parameters">Mixing type and value parameters<a aria-label="Link to Mixing type and value parameters" class="h__link" href="#mixing-type-and-value-parameters"></a></h2>
+<p>Parameterized types can take non-type parameters too. Add whatever you need
+to define the behavior:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">ExampleStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> example<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="3">        T<span class="tk-punctuation">:</span> Writable <span class="tk-operator">&amp;</span> Copyable<span class="tk-punctuation">,</span> <span class="tk-comment"># type parameter</span></span>
+<span class="cl" data-line="4">        count<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> <span class="tk-comment"># value parameter</span></span>
+<span class="cl" data-line="5"> <span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="6"> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="7">        data<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> <span class="tk-comment"># argument</span></span>
+<span class="cl" data-line="8">        init_value<span class="tk-punctuation">:</span> T             <span class="tk-comment"># parameterized argument</span></span>
+<span class="cl" data-line="9"> <span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+<p>By convention, Mojo uses lower_snake_case for compile-time value
+parameters. This visually distinguishes them from type parameters.</p>
+<h2 class="h h--2" data-level="2" id="simplified-conformance-syntax-with-some">Simplified conformance syntax with <code>Some</code><a aria-label="Link to Simplified conformance syntax with Some" class="h__link" href="#simplified-conformance-syntax-with-some"></a></h2>
+<p>You can replace explicit type parameters and conformances with concise
+<code>Some[Trait(s)]</code> and <code>SomeTypeList[Trait(s)]</code> syntax. These forms
+support both a single trait and trait compositions, and let you express
+conformance where you use the type instead of declaring a parameter in
+one place and using it in another.</p>
+<p>For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> my_parameterized_fn<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Trait<span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+<p>becomes:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">my_parameterized_fn</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Trait<span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+<p>You can use <code>Some</code> with any trait or trait composition, under any
+argument convention, wherever you've been using type parameters. If the
+compiler can't infer a concrete type, it errors and asks you to use
+explicit type parameters instead.</p>
+<h3 class="h h--3" data-level="3" id="arguments">Arguments<a aria-label="Link to Arguments" class="h__link" href="#arguments"></a></h3>
+<p><code>Some</code> places the trait requirement directly on the argument, eliminating the
+explicit type parameter:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Before</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> foo<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Intable<span class="tk-punctuation">,</span> <span class="tk-operator">//</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> x<span class="tk-punctuation">.</span>__int__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># After</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Intable<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> x<span class="tk-punctuation">.</span>__int__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="function-types">Function types<a aria-label="Link to Function types" class="h__link" href="#function-types"></a></h3>
+<p><code>Some</code> works with function types too, moving closure parameter conformance
+onto the argument:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Before</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> sync_parallelize<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="3">    FuncType<span class="tk-punctuation">:</span> <span class="tk-keyword">def</span><span class="tk-punctuation">(</span>Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>func<span class="tk-punctuation">:</span> FuncType<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-comment"># After</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">def</span> <span class="tk-function">sync_parallelize</span><span class="tk-punctuation">(</span>func<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span><span class="tk-keyword">def</span><span class="tk-punctuation">(</span>Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="variadics">Variadics<a aria-label="Link to Variadics" class="h__link" href="#variadics"></a></h3>
+<p>Use <code>*SomeTypeList</code> to conform a variadic parameter pack instead of a
+single type parameter:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Before</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> show<span class="tk-punctuation">[</span><span class="tk-operator">*</span>Ts<span class="tk-punctuation">:</span> Writable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>pack<span class="tk-punctuation">:</span> <span class="tk-operator">*</span>Ts<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># After</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">show</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>pack<span class="tk-punctuation">:</span> <span class="tk-operator">*</span>SomeTypeList<span class="tk-punctuation">[</span>Writable<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="operator-overloads">Operator overloads<a aria-label="Link to Operator overloads" class="h__link" href="#operator-overloads"></a></h3>
+<p>Operator overloads are a natural fit for <code>Some</code>, the trait that enables
+the operator lives directly on the declaration:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Before</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> __getitem__<span class="tk-punctuation">[</span>I<span class="tk-punctuation">:</span> Indexer<span class="tk-punctuation">,</span> <span class="tk-operator">//</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> idx<span class="tk-punctuation">:</span> I<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-keyword">ref</span><span class="tk-punctuation">[</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>x<span class="tk-punctuation">]</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># After</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> idx<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Indexer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-keyword">ref</span><span class="tk-punctuation">[</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>x<span class="tk-punctuation">]</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="where-some-wont-work">Where <code>Some</code> won't work<a aria-label="Link to Where Some won't work" class="h__link" href="#where-some-wont-work"></a></h3>
+<p><code>Some</code> can't replace type parameters in all cases. The compiler can't
+infer a concrete type for struct fields, and will report an error
+indicating the type isn't concrete and asking you to use <code>[]</code> to bind
+missing parameters:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Struct</span><span class="tk-punctuation">(</span>Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># Error: a `Some` struct field has no concrete type to infer</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Copyable <span class="tk-operator">&amp;</span> Deinitable <span class="tk-operator">&amp;</span> Writable<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> s <span class="tk-operator">=</span> Struct<span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Move the conformances back to a parameterized type parameter to fix this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Struct</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable <span class="tk-operator">&amp;</span> Deinitable <span class="tk-operator">&amp;</span> Writable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> s <span class="tk-operator">=</span> Struct<span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span> <span class="tk-comment"># Struct[Int](x=1)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="downcasting-safely">Using conditional availability<a aria-label="Link to Using conditional availability" class="h__link" href="#downcasting-safely"></a></h2>
+<p>Sometimes a conformance is broader than you need. For example, a
+parameterized type may be constrained to <code>AnyType</code> in a struct, but you
+want to use it as <code>Writable</code> in a given method. Add a <code>where</code> clause to
+require <code>Writable</code>, allowing the compiler to prove the conformance before
+allowing a concrete instance to call the method:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">process</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">)</span> where conforms_to<span class="tk-punctuation">(</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Call <code>conforms_to(T, Trait)</code> to test whether <code>T</code> satisfies a trait.
+Combine multiple checks with <code>and</code> or <code>or</code> to express more complex
+conditions.</p>
+<p>Conditions are not limited to trait checks. They can also constrain
+compile-time facts, such as a data length being a power of two or a
+capacity being positive. Any compile-time expression with a known value
+can appear in a <code>where</code> clause.</p>
+<p>The compiler rejects calls that don't satisfy the constraint. For example,
+a type built with a non-writable type <code>T</code> can't call <code>process()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>process<span class="tk-punctuation">(</span>non_writable<span class="tk-punctuation">)</span> <span class="tk-comment"># Compile-time error, constraint violation</span></span>
+</code></pre></figure>
+<p><code>where</code> clauses let the compiler prove conditions before constructing
+types, resolving conformances, compiling methods and functions, or
+manifesting compile-time declarations.</p>
+<p>Beyond conformance, a where clause can test predicates on its
+parameters: whether a <code>DType</code> is floating point or numeric
+(<code>dtype.is_floating_point()</code>, <code>dtype.is_numeric()</code>), or whether an integer
+parameter is a power of two.</p>
+<p>What it can't do is evaluate target facts like <code>is_64bit()</code> or
+<code>is_nvidia_gpu()</code>, or arbitrary compile-time functions, as constraints. The
+compiler can't carry those as proof. For those cases, use <code>comptime if</code>
+instead, which evaluates its condition directly.</p>
+<h2 class="h h--2" data-level="2" id="value-generics">Parameterized values<a aria-label="Link to Parameterized values" class="h__link" href="#value-generics"></a></h2>
+<p>Values parameterize code over compile-time constants instead of
+types. You declare them in <code>[]</code> alongside type parameters, but they bind
+to values.</p>
+<h3 class="h h--3" data-level="3" id="when-to-use-value-generics">When to use parameterized values<a aria-label="Link to When to use parameterized values" class="h__link" href="#when-to-use-value-generics"></a></h3>
+<p>Use parameterized values when a value shapes structure or behavior and is known
+at compile time. Common cases:</p>
+<ul>
+<li class=""><em>Fixed sizes:</em> buffer lengths, array dimensions, matrix shapes</li>
+<li class=""><em>Thresholds and limits:</em> capacity caps, retry counts, precision levels</li>
+<li class=""><em>Feature selection:</em> algorithm variants, debug flags, mode switches</li>
+<li class=""><em>Numeric configuration:</em> SIMD widths, stride lengths, unroll factors</li>
+</ul>
+<p>The compiler specializes code for each distinct value. It can remove dead
+branches (<code>comptime if</code>), unroll loops (<code>comptime for</code>), replace inline
+constants, and optimize aggressively with no runtime cost.</p>
+<h3 class="h h--3" data-level="3" id="basic-example">Basic example<a aria-label="Link to Basic example" class="h__link" href="#basic-example"></a></h3>
+<p>This function creates a fixed-size list initialized with a default value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> MyCollectionElement <span class="tk-operator">=</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Deinitable</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> make_filled<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> MyCollectionElement<span class="tk-punctuation">,</span> size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="4">    splat_value<span class="tk-punctuation">:</span> T</span>
+<span class="cl" data-line="5"><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> result <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>capacity<span class="tk-operator">=</span>size<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">for</span> _ <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>size<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">        result<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>splat_value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">return</span> result<span class="tk-operator">^</span></span>
+</code></pre></figure>
+<p>The <code>size</code> parameter resolves at compile time. Each call site with a
+different value gets its own specialized version:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> three_zeros <span class="tk-operator">=</span> make_filled<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> five_hellos <span class="tk-operator">=</span> make_filled<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"hello"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>three_zeros<span class="tk-punctuation">)</span> <span class="tk-comment"># [0, 0, 0]</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>five_hellos<span class="tk-punctuation">)</span> <span class="tk-comment"># [hello, hello, hello, hello, hello]</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="value-parameters-vs-runtime-arguments">Value parameters vs runtime arguments<a aria-label="Link to Value parameters vs runtime arguments" class="h__link" href="#value-parameters-vs-runtime-arguments"></a></h3>
+<p>Put values known at compile time in <code>[]</code>. Put values only known at
+runtime in <code>()</code>.</p>
+<p>Ask yourself: does the caller know this value when writing the code? If
+yes, use a parameter. If it depends on input, files, or runtime state,
+use an argument.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># size is compile-time: the compiler specializes</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> fixed<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> buf <span class="tk-operator">=</span> Array<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> size<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>fill<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># size is runtime: no specialization</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">dynamic</span><span class="tk-punctuation">(</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> buf <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>capacity<span class="tk-operator">=</span>size<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="generics-and-explicit-destruction">Parameterized types and explicit destruction<a aria-label="Link to Parameterized types and explicit destruction" class="h__link" href="#generics-and-explicit-destruction"></a></h2>
+<p>Explicitly destroyed types don't always work with parameterized code. The issue
+isn't parameterization; it's lifetime management. Explicit destruction gives you
+control over teardown: you can define deinitializers that take arguments,
+follow different paths, or raise errors.</p>
+<p>Parameterized code that copies or moves values can't see or honor that logic.
+Once a value is copied or transferred, you lose control over how (or
+whether) it's cleaned up, and the code won't compile.</p>
+<p>Watch for these cases:</p>
+<ul>
+<li class="">Parameterized code that manages lifetimes</li>
+<li class="">Parameterized code that copies or transfers values</li>
+</ul>
+<p>These show up most often in containers, collections, and iterators that
+copy values or take ownership and decide when destruction happens.</p>
+<p>Safe cases are parameterized operations that don't affect lifetimes, such as
+comparisons and predicates.</p>
+<p>If your parameterized code needs to own, copy, or control when a value dies,
+avoid explicitly destroyed types. Add a <code>Deinitable</code> constraint
+to keep things working.</p>
+<h2 class="h h--2" data-level="2" id="conditional-trait-conformance">Conditional trait conformance<a aria-label="Link to Conditional trait conformance" class="h__link" href="#conditional-trait-conformance"></a></h2>
+<aside class="callout callout--caution"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">▲</span>Caution</p><div class="callout__body"><p>Certain capabilities may be unstable or unusable during roll-out. Use
+caution with <code>RegisterPassable</code> and <code>TrivialRegisterPassable</code>.</p></div></aside>
+<p><em>Conditional trait conformance</em> uses checks before allowing a type to
+adopt a trait. When the condition is satisfied, the type conforms. It
+must fulfill the trait's requirements and gains any default implementation
+the trait provides. When the condition isn't satisfied, Mojo skips the
+conformance.</p>
+<h3 class="h h--3" data-level="3" id="example-derived-conformance">Example: derived conformance<a aria-label="Link to Example: derived conformance" class="h__link" href="#example-derived-conformance"></a></h3>
+<p>In the following declaration, Mojo conforms <code>Wrapper</code> to <code>Writable</code> when
+its parameter <code>T</code> is also <code>Writable</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> BaseTraits <span class="tk-operator">=</span> Copyable <span class="tk-operator">&amp;</span> Deinitable <span class="tk-operator">&amp;</span> Writable</span>
+<span class="cl" data-line="2"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">struct</span> <span class="tk-class-name">Wrapper</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> BaseTraits<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="4">    Writable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T</span>
+</code></pre></figure>
+<p>When conforming to <code>Writable</code>, <code>Wrapper</code> doesn't need to implement any
+methods. The trait provides a default implementation of <code>write_to()</code>.</p>
+<p>Now consider a type that isn't <code>Writable</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">NotWritable</span><span class="tk-punctuation">(</span>BaseTraits<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> data<span class="tk-punctuation">:</span> Int</span>
+</code></pre></figure>
+<p>When instantiated with <code>Int</code> or <code>String</code> (both <code>Writable</code>), <code>Wrapper</code>
+gains <code>Writable</code> conformance. With <code>NotWritable</code>, you can build the
+struct, but you can't print it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> w_int <span class="tk-operator">=</span> Wrapper<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">42</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Int is Writable</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>w_int<span class="tk-punctuation">)</span> <span class="tk-comment"># Wrapper[Int](value=42)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> w_str <span class="tk-operator">=</span> Wrapper<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># String is Writable</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>w_str<span class="tk-punctuation">)</span> <span class="tk-comment"># Wrapper[String](value=Hello)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-comment"># OK: only `Writable` conformance is unavailable</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">var</span> w_not_writable <span class="tk-operator">=</span> Wrapper<span class="tk-punctuation">[</span>NotWritable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>NotWritable<span class="tk-punctuation">(</span><span class="tk-number">10</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"><span class="tk-comment"># print(w_not_writable)  # Compile-time error:</span></span>
+<span class="cl" data-line="10"><span class="tk-comment"># Wrapper[NotWritable] doesn't conform to Writable</span></span>
+</code></pre></figure>
+<p>This pattern is standard for single-type containers like <code>Optional[T]</code>,
+<code>Box[T]</code>, <code>Lazy[T]</code>, and <code>List[T]</code>. It says: "This type can do X if its
+inner type can do X."</p>
+<h3 class="h h--3" data-level="3" id="example-parts-conformance">Example: parts conformance<a aria-label="Link to Example: parts conformance" class="h__link" href="#example-parts-conformance"></a></h3>
+<p>For types with multiple distinct components, the pattern extends
+naturally. <code>Result[T, E]</code>, <code>Pair[L, R]</code>, <code>Dict[K, V]</code>, and similar
+types say: "This type can do X if each of its parts can do X":</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> BaseTraits <span class="tk-operator">=</span> Copyable <span class="tk-operator">&amp;</span> Deinitable</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">struct</span> <span class="tk-class-name">Pair</span><span class="tk-punctuation">[</span>L<span class="tk-punctuation">:</span> BaseTraits<span class="tk-punctuation">,</span> R<span class="tk-punctuation">:</span> BaseTraits<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="5">    Hashable where conforms_to<span class="tk-punctuation">(</span>L<span class="tk-punctuation">,</span> Hashable<span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> conforms_to<span class="tk-punctuation">(</span>R<span class="tk-punctuation">,</span> Hashable<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> left<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>L</span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> right<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>R</span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="12"><span class="tk-keyword">struct</span> <span class="tk-class-name">NotHashable</span><span class="tk-punctuation">(</span>BaseTraits<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">var</span> data<span class="tk-punctuation">:</span> Int</span>
+</code></pre></figure>
+<p>When both <code>L</code> and <code>R</code> are <code>Hashable</code>, the concrete <code>Pair</code> type becomes
+<code>Hashable</code>, gaining the <code>hash()</code> method from the trait:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> pair <span class="tk-operator">=</span> Pair<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>left<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> right<span class="tk-operator">=</span><span class="tk-string">"one"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> <span class="tk-builtin">hash</span> <span class="tk-operator">=</span> <span class="tk-builtin">hash</span><span class="tk-punctuation">(</span>pair<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">hash</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Prints the hash of the pair</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># OK: only hashing is unavailable</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">var</span> pair2 <span class="tk-operator">=</span> Pair<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> NotHashable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>left<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> right<span class="tk-operator">=</span>NotHashable<span class="tk-punctuation">(</span><span class="tk-number">10</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"><span class="tk-comment"># var hash2 = hash(pair2) # Compile-time error</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="example-conditional-method-access">Example: conditional method access<a aria-label="Link to Example: conditional method access" class="h__link" href="#example-conditional-method-access"></a></h3>
+<p>When a type adopts a trait, it must satisfy the trait's required methods.
+You gate those method implementations with <code>where</code> clauses, the same
+conditions that control whether the conformance applies.</p>
+<p>You can make <code>Wrapper</code> testable in <code>if</code> statements by conforming to
+<code>Boolable</code>, which requires <code>__bool__()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Wrapper</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> BaseTraits<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3">    Writable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4">    Boolable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Boolable<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="5"> <span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> <span class="tk-function">__bool__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool where conforms_to<span class="tk-punctuation">(</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">,</span> Boolable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>value<span class="tk-punctuation">.</span>__bool__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The condition on <code>__bool__()</code> matches the one used for the <code>Boolable</code>
+conditional conformance. Since the method and the conformance use the
+same condition, they stay aligned. You won't end up with a conformance
+but no method, or a method without the corresponding conformance.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> w_str <span class="tk-operator">=</span> Wrapper<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> w_str<span class="tk-punctuation">:</span> <span class="tk-comment"># Chooses the non-empty branch</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Non-empty string \"{w_str.value}\" is truthy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Empty string \"{w_str.value}\" is falsy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">var</span> w_empty_str <span class="tk-operator">=</span> Wrapper<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">if</span> w_empty_str<span class="tk-punctuation">:</span> <span class="tk-comment"># Chooses the empty branch</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Non-empty string \"{w_empty_str.value}\" is truthy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Empty string \"{w_empty_str.value}\" is falsy"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Because <code>NotWritable</code> isn't <code>Boolable</code>, the condition on <code>__bool__()</code>
+fails and the method isn't available:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">NotWritable</span><span class="tk-punctuation">(</span>BaseTraits<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> data<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> w_not_writable <span class="tk-operator">=</span> Wrapper<span class="tk-punctuation">[</span>NotWritable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>NotWritable<span class="tk-punctuation">(</span><span class="tk-number">10</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-comment"># Compile-time error: the method condition is false</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">if</span> w_not_writable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"NotWritable with data {w_not_writable.value.data} is truthy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"NotWritable with data {w_not_writable.value.data} is falsy"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>where</code> clauses on methods are useful beyond trait conformance too. You
+can gate a method so it only works with non-empty lists, real numbers, or
+values that fall within a collection's index bounds.</p>
+<h3 class="h h--3" data-level="3" id="conditional-trait-composition">Conditional trait composition<a aria-label="Link to Conditional trait composition" class="h__link" href="#conditional-trait-composition"></a></h3>
+<p>Mojo supports flexible condition composition:</p>
+<ul>
+<li class="">
+<p><strong>Unconditional</strong> — no special clauses:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Foo</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> Deinitable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><strong>Simple condition</strong> — as shown in <code>Wrapper</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Wrapper</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> BaseTraits<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2">    Writable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><strong>Hybrid</strong> — mixes unconditional and conditional traits:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Foo</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2">    Copyable<span class="tk-punctuation">,</span> Writable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><strong>Multiple aligned conditions</strong> — as shown in <code>Pair</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Pair</span><span class="tk-punctuation">[</span>L<span class="tk-punctuation">:</span> BaseTraits<span class="tk-punctuation">,</span> R<span class="tk-punctuation">:</span> BaseTraits<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2">    Hashable where conforms_to<span class="tk-punctuation">(</span>L<span class="tk-punctuation">,</span> Hashable<span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> conforms_to<span class="tk-punctuation">(</span>R<span class="tk-punctuation">,</span> Hashable<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p><strong>Multiple independent conditions</strong>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Foo</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2">  Writable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3">  Hashable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Hashable<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="conditional-conformance-with-value-parameters">Conditional conformance with value parameters<a aria-label="Link to Conditional conformance with value parameters" class="h__link" href="#conditional-conformance-with-value-parameters"></a></h3>
+<p>Conditional conformance also works with value parameters. You can gate
+both conformance and methods on compile-time value conditions.</p>
+<p>This is useful when a type's capabilities depend on a numeric parameter.
+For example, a fixed-capacity wrapper might only be <code>Writable</code> when it
+has capacity and its elements are writable. The <code>Sized</code> conformance is
+unconditional:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> ElementTraits <span class="tk-operator">=</span> Writable <span class="tk-operator">&amp;</span> Copyable <span class="tk-operator">&amp;</span> Deinitable</span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">SizedListWrapper</span><span class="tk-punctuation">[</span>capacity<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> T<span class="tk-punctuation">:</span> ElementTraits<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3">    Sized<span class="tk-punctuation">,</span> Writable where conforms_to<span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> capacity <span class="tk-operator">&gt;</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> data<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>data <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>capacity<span class="tk-operator">=</span>Self<span class="tk-punctuation">.</span>capacity<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">for</span> _ <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>Self<span class="tk-punctuation">.</span>capacity<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>data<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>value<span class="tk-punctuation">.</span>copy<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">def</span> <span class="tk-function">__len__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">return</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>data<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-builtin">repr</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>data<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You can gate methods on value conditions:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">first</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">.</span>T where Self<span class="tk-punctuation">.</span>capacity <span class="tk-operator">&gt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>data<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>copy<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>When <code>capacity</code> is one or more, the type conforms to <code>Writable</code> and
+<code>first()</code> is available. When it's zero or less, neither is usable:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> s <span class="tk-operator">=</span> SizedListWrapper<span class="tk-punctuation">[</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">42</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span> <span class="tk-comment"># List of 42s</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">.</span>first<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 42</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># var s = SizedListWrapper[0, Int](42)</span></span>
+<span class="cl" data-line="6"><span class="tk-comment"># print(s)          # Error: Writable not satisfied</span></span>
+<span class="cl" data-line="7"><span class="tk-comment"># print(s.first())  # Error: constraint is false</span></span>
+</code></pre></figure>
+<p>Value conditions follow the same rules as type conditions. You can
+combine them with <code>and</code> and mix them with <code>conforms_to</code> checks in the
+same <code>where</code> clause.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/generics/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/generics/</a>, saved Thu, 01 Oct 2026 15:40:11 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/16_traits.html"><span class="pager__dir">← Previous</span><span class="pager__title">Traits</span></a><a class="pager__link pager__link--next" href="../pages/18_value-semantics.html"><span class="pager__dir">Next →</span><span class="pager__title">Value semantics</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#type-generics">Type parameters</a></li><li class="rail__depth-2"><a href="#generic-types">Parameterized types</a></li><li class="rail__depth-2"><a href="#mixing-type-and-value-parameters">Mixing type and value parameters</a></li><li class="rail__depth-2"><a href="#simplified-conformance-syntax-with-some">Simplified conformance syntax with Some</a></li><li class="rail__depth-2"><a href="#downcasting-safely">Using conditional availability</a></li><li class="rail__depth-2"><a href="#value-generics">Parameterized values</a></li><li class="rail__depth-2"><a href="#generics-and-explicit-destruction">Parameterized types and explicit destruction</a></li><li class="rail__depth-2"><a href="#conditional-trait-conformance">Conditional trait conformance</a></li><li class="rail__depth-3"><a href="#type-constraints">Type constraints</a></li><li class="rail__depth-3"><a href="#naming-conventions">Naming conventions</a></li><li class="rail__depth-3"><a href="#basic-example-compare-two-lists">Basic example: compare two lists</a></li><li class="rail__depth-3"><a href="#choosing-constraints">Choosing constraints</a></li><li class="rail__depth-3"><a href="#generic-parameter-types">Parameterized types</a></li><li class="rail__depth-3"><a href="#arguments">Arguments</a></li><li class="rail__depth-3"><a href="#function-types">Function types</a></li><li class="rail__depth-3"><a href="#variadics">Variadics</a></li><li class="rail__depth-3"><a href="#operator-overloads">Operator overloads</a></li><li class="rail__depth-3"><a href="#where-some-wont-work">Where Some won't work</a></li><li class="rail__depth-3"><a href="#when-to-use-value-generics">When to use parameterized values</a></li><li class="rail__depth-3"><a href="#basic-example">Basic example</a></li><li class="rail__depth-3"><a href="#value-parameters-vs-runtime-arguments">Value parameters vs runtime arguments</a></li><li class="rail__depth-3"><a href="#example-derived-conformance">Example: derived conformance</a></li><li class="rail__depth-3"><a href="#example-parts-conformance">Example: parts conformance</a></li><li class="rail__depth-3"><a href="#example-conditional-method-access">Example: conditional method access</a></li><li class="rail__depth-3"><a href="#conditional-trait-composition">Conditional trait composition</a></li><li class="rail__depth-3"><a href="#conditional-conformance-with-value-parameters">Conditional conformance with value parameters</a></li><li class="rail__depth-4"><a href="#printing-under-specified-parameterized-values">Printing under-specified parameterized values</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#type-generics">Type parameters</a></li><li class="rail__depth-2"><a href="#generic-types">Parameterized types</a></li><li class="rail__depth-2"><a href="#mixing-type-and-value-parameters">Mixing type and value parameters</a></li><li class="rail__depth-2"><a href="#simplified-conformance-syntax-with-some">Simplified conformance syntax with Some</a></li><li class="rail__depth-2"><a href="#downcasting-safely">Using conditional availability</a></li><li class="rail__depth-2"><a href="#value-generics">Parameterized values</a></li><li class="rail__depth-2"><a href="#generics-and-explicit-destruction">Parameterized types and explicit destruction</a></li><li class="rail__depth-2"><a href="#conditional-trait-conformance">Conditional trait conformance</a></li><li class="rail__depth-3"><a href="#type-constraints">Type constraints</a></li><li class="rail__depth-3"><a href="#naming-conventions">Naming conventions</a></li><li class="rail__depth-3"><a href="#basic-example-compare-two-lists">Basic example: compare two lists</a></li><li class="rail__depth-3"><a href="#choosing-constraints">Choosing constraints</a></li><li class="rail__depth-3"><a href="#generic-parameter-types">Parameterized types</a></li><li class="rail__depth-3"><a href="#arguments">Arguments</a></li><li class="rail__depth-3"><a href="#function-types">Function types</a></li><li class="rail__depth-3"><a href="#variadics">Variadics</a></li><li class="rail__depth-3"><a href="#operator-overloads">Operator overloads</a></li><li class="rail__depth-3"><a href="#where-some-wont-work">Where Some won't work</a></li><li class="rail__depth-3"><a href="#when-to-use-value-generics">When to use parameterized values</a></li><li class="rail__depth-3"><a href="#basic-example">Basic example</a></li><li class="rail__depth-3"><a href="#value-parameters-vs-runtime-arguments">Value parameters vs runtime arguments</a></li><li class="rail__depth-3"><a href="#example-derived-conformance">Example: derived conformance</a></li><li class="rail__depth-3"><a href="#example-parts-conformance">Example: parts conformance</a></li><li class="rail__depth-3"><a href="#example-conditional-method-access">Example: conditional method access</a></li><li class="rail__depth-3"><a href="#conditional-trait-composition">Conditional trait composition</a></li><li class="rail__depth-3"><a href="#conditional-conformance-with-value-parameters">Conditional conformance with value parameters</a></li><li class="rail__depth-4"><a href="#printing-under-specified-parameterized-values">Printing under-specified parameterized values</a></li></ol>
+<p class="rail__meta">Chapter 17 of 38 · Part III, Abstraction &amp; Values.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

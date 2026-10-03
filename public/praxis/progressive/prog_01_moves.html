@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -201,7 +201,7 @@ footer a:hover{text-decoration:underline}
 <a class="backlink" href="../../index.html">&larr; TutMe🔥 Learning Hub</a><br>
 <a class="backlink" href="../index.html">&larr; Praxis shelf</a>
 <div><span class="badge">Mojo 1.x &bull; Praxis &bull; Progressive Drills</span></div>
-<h1>Ownership: Borrow, Mutate, Move</h1>
+<h1>Ownership: Read, Mutate, Move</h1>
 <p class="subtitle">Learn by doing. Start with a simple read and progressively move toward <code>mut</code> mutation, <code>var</code> consumption, and move tracing.</p>
 </div>
 </header>
@@ -226,12 +226,12 @@ footer a:hover{text-decoration:underline}
 <li>If incorrect, try again — a hint unlocks after two misses, or reveal the solution.</li>
 </ol>
 <div class="tip">
-<strong>Core concept:</strong> Arguments are <code>imm</code> by default (read-only references). <code>mut</code> lets a function mutate the caller's value; <code>var</code> takes ownership, usually paired with <code>^</code> at the call site to transfer (move) a value out of its variable.
+<strong>Core concept:</strong> Arguments are immutable read-only references by default. <code>mut</code> lets a function mutate the caller's value; <code>var</code> takes ownership — pair it with <code>^</code> at the call site to transfer (move) a value out of its variable.
 </div>
 </section>
 
 <section class="card level" data-level="1">
-<h2><span class="lvl-check">1</span>Level 1 — A Borrowed Read</h2>
+<h2><span class="lvl-check">1</span>Level 1 — A Read-Only Reference</h2>
 <div class="meta"><span class="tag">Beginner</span><span class="tag">Output Prediction</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
 <pre><code><span class="kw">def</span> <span class="fn">double</span>(x: <span class="tp">Int</span>) -&gt; <span class="tp">Int</span>:
@@ -251,12 +251,12 @@ footer a:hover{text-decoration:underline}
 <div id="s1" class="solution">
 <strong>Solution</strong>
 <pre><code>42</code></pre>
-<p><code>x</code> is borrowed (the default): the function reads it but cannot change the caller's value. 21 × 2 = 42.</p>
+<p><code>x</code> is an immutable reference (the default): the function reads it but cannot change the caller's value. 21 × 2 = 42.</p>
 </div>
 </section>
 
 <section class="card level" data-level="2">
-<h2><span class="lvl-check">2</span>Level 2 — Shadowing Meets Borrowing</h2>
+<h2><span class="lvl-check">2</span>Level 2 — Shadowing Meets Read-Only</h2>
 <div class="meta"><span class="tag">Beginner+</span><span class="tag">Scope</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
 <pre><code><span class="kw">def</span> <span class="fn">double</span>(x: <span class="tp">Int</span>) -&gt; <span class="tp">Int</span>:
@@ -311,7 +311,7 @@ footer a:hover{text-decoration:underline}
 </section>
 
 <section class="card level" data-level="4">
-<h2><span class="lvl-check">4</span>Level 4 — Borrowed Can't Mutate</h2>
+<h2><span class="lvl-check">4</span>Level 4 — Read-Only Can't Mutate</h2>
 <div class="meta"><span class="tag">Intermediate+</span><span class="tag">Conventions</span></div>
 <p><strong>Challenge:</strong> This version does NOT compile. Which line is wrong, and what keyword fixes it? (answer like: line a, mut)</p>
 <pre><code><span class="kw">def</span> <span class="fn">set_to_99</span>(x: <span class="tp">Int</span>):
@@ -335,7 +335,7 @@ footer a:hover{text-decoration:underline}
 <p>Line A is the culprit — declare <code>x</code> as <code>mut</code>:</p>
 <pre><code><span class="kw">def</span> <span class="fn">set_to_99</span>(<span class="kw">mut</span> x: <span class="tp">Int</span>):
     x = 99</code></pre>
-<p>A default (immutable) argument is read-only, so <code>x = 99</code> fails to compile. Changing the signature to <code>def set_to_99(mut x: Int)</code> fixes it, and <code>main</code> then prints 99.</p>
+<p>The default convention is a read-only reference, so <code>x = 99</code> fails to compile. Changing the signature to <code>def set_to_99(mut x: Int)</code> fixes it, and <code>main</code> then prints 99.</p>
 </div>
 </section>
 
@@ -343,14 +343,14 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">5</span>Level 5 — Move with ^</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Ownership Trace</span></div>
 <p><strong>Challenge:</strong> Predict the three lines printed.</p>
-<pre><code>def consume(var s: String):
-    print(&quot;got:&quot;, s)
+<pre><code><span class="kw">def</span> <span class="fn">consume</span>(<span class="kw">var</span> s: <span class="tp">String</span>):
+    <span class="fn">print</span>(<span class="st">"got:"</span>, s)
 
-def main():
-    var s = String(&quot;hello&quot;)
-    print(s.byte_length())
-    consume(s^)
-    print(&quot;done&quot;)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> s = <span class="tp">String</span>(<span class="st">"hello"</span>)
+    <span class="fn">print</span>(<span class="fn">len</span>(s))
+    <span class="fn">consume</span>(s^)
+    <span class="fn">print</span>(<span class="st">"done"</span>)</code></pre>
 <textarea id="a5" placeholder="Write the output or answer here..." onkeydown="onKey(event,5,'5\ngot: hello\ndone')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(5,'5\ngot: hello\ndone')">Check Answer</button>
@@ -410,7 +410,7 @@ done</code></pre>
 <h2 style="font-family:var(--serif);font-weight:600">Mastery Check</h2>
 <p>Before moving on, explain these ideas in your own words:</p>
 <ul class="mastery">
-<li>What is the difference between a default (<code>imm</code>), a <code>mut</code>, and a <code>var</code> (owning) argument?</li>
+<li>What is the difference between a default (read-only), a <code>mut</code> and a <code>var</code> argument?</li>
 <li>What does the <code>^</code> operator do at a call site?</li>
 <li>Why must a moved-from variable not be used afterwards?</li>
 <li>Why is copying an <code>Int</code> cheap while moving a <code>String</code> avoids a heap copy?</li>
@@ -428,7 +428,10 @@ done</code></pre>
 
 <footer>
 Mojo 1.x Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_02_stats.html">Next: Mean, Variance, Deviation &rarr;</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="progressive.html">All 13 drills</a> <a href="prog_02_stats.html">Next drill →</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a>
 </footer>
 
 <script>

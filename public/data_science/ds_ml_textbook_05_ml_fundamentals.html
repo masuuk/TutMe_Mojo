@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -116,17 +116,21 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <p>The update rule is: <code class="inline">param = param - learning_rate * gradient</code>. The <strong>learning rate</strong> controls how large each step is — too small and training is slow, too large and you overshoot the minimum.</p>
     <p>Mojo's compiled loops make gradient descent ~100-1000x faster than pure Python for each epoch, which matters enormously when training on large datasets.</p>
 
+    <div class="info-box">
+      <strong>💡 Key Insight:</strong>
+      <p>Mojo has no <code class="inline">zip</code> and no generator expression, so the two gradients cannot be written as a pair of <code class="inline">sum(... for ...)</code> one-liners. The loop above is the replacement — and it is better than the one-liner for two reasons. It walks the data once instead of twice, accumulating <code class="inline">grad_w</code> and <code class="inline">grad_b</code> together, and it divides by <code class="inline">n</code> only once at the end, so every intermediate value stays inside a <code class="inline">Float64</code> the compiler can keep in a register. Note too that <code class="inline">gradient_step</code> takes <code class="inline">mut w</code> and <code class="inline">mut b</code>: the update happens in place, so there is no <code class="inline">return w, b</code> to unpack at the call site.</p>
+    </div>
+
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch5-gd-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch5-gd-py">Python</button>
       </div>
       <div class="tab-content active" id="ch5-gd-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+        <pre>from std.math import sqrt
 
-<span class="kw">def</span> <span class="fn">gradient_step</span>(
-    <span class="kw">mut</span> w: Float64,
-    <span class="kw">mut</span> b: Float64,
+def gradient_step(
+    mut w: Float64,
+    mut b: Float64,
     lr: Float64,
     grad_w: Float64,
     grad_b: Float64
@@ -134,35 +138,21 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     w -= lr * grad_w
     b -= lr * grad_b
 
-<span class="kw">def</span> <span class="fn">compute_gradient</span>(
+def compute_gradient(
     x: List[Float64],
     y: List[Float64],
     w: Float64,
     b: Float64
 ) -&gt; Tuple[Float64, Float64]:
-    <span class="kw">var</span> n = Float64(len(x))
-    <span class="kw">var</span> grad_w: Float64 = <span class="num">0.0</span>
-    <span class="kw">var</span> grad_b: Float64 = <span class="num">0.0</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(len(x)):
-        <span class="kw">var</span> pred = w * x[i] + b
-        <span class="kw">var</span> err = pred - y[i]
-        grad_w += <span class="num">2.0</span> * err * x[i]
-        grad_b += <span class="num">2.0</span> * err
-    <span class="kw">return</span> (grad_w / n, grad_b / n)</pre>
-      </div>
-      <div class="tab-content" id="ch5-gd-py">
-        <pre><span class="kw">def</span> <span class="fn">gradient_step</span>(w, b, lr, grad_w, grad_b):
-    w -= lr * grad_w
-    b -= lr * grad_b
-    <span class="kw">return</span> w, b
-
-<span class="kw">def</span> <span class="fn">compute_gradient</span>(x, y, w, b):
-    n = <span class="fn">len</span>(x)
-    grad_w = <span class="fn">sum</span>(<span class="num">2</span> * (w*xi + b - yi) * xi
-                 <span class="kw">for</span> xi, yi <span class="kw">in</span> <span class="fn">zip</span>(x, y))
-    grad_b = <span class="fn">sum</span>(<span class="num">2</span> * (w*xi + b - yi)
-                 <span class="kw">for</span> xi, yi <span class="kw">in</span> <span class="fn">zip</span>(x, y))
-    <span class="kw">return</span> grad_w / n, grad_b / n</pre>
+    var n = Float64(len(x))
+    var grad_w: Float64 = 0.0
+    var grad_b: Float64 = 0.0
+    for i in range(len(x)):
+        var pred = w * x[i] + b
+        var err = pred - y[i]
+        grad_w += 2.0 * err * x[i]
+        grad_b += 2.0 * err
+    return (grad_w / n, grad_b / n)</pre>
       </div>
     </div>
   </section>
@@ -175,43 +165,31 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
       <li><strong>Mean Absolute Error (MAE):</strong> <code class="inline">L = mean(|pred - true|)</code> — more robust to outliers</li>
       <li><strong>Cross-Entropy Loss:</strong> used for classification tasks</li>
     </ul>
+    <p>Each of these takes two <code class="inline">List[Float64]</code> arguments and returns a <code class="inline">Float64</code>, so there is no array conversion to write: NumPy's <code class="inline">np.mean((np.array(pred) - np.array(target)) ** 2)</code> becomes a loop over two lists, and <code class="inline">np.abs</code> becomes <code class="inline">abs</code>. <code class="inline">rmse_loss</code> then shows the other half of the pattern — a derived loss is a one-line composition of the loss you already have with the <code class="inline">sqrt</code> imported from <code class="inline">std.math</code>.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch5-loss-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch5-loss-py">Python</button>
       </div>
       <div class="tab-content active" id="ch5-loss-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+        <pre>from std.math import sqrt
 
-<span class="kw">def</span> <span class="fn">mse_loss</span>(pred: List[Float64], target: List[Float64]) -&gt; Float64:
-    <span class="kw">var</span> total: Float64 = <span class="num">0.0</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(len(pred)):
-        <span class="kw">var</span> diff = pred[i] - target[i]
+def mse_loss(pred: List[Float64], target: List[Float64]) -&gt; Float64:
+    var total: Float64 = 0.0
+    for i in range(len(pred)):
+        var diff = pred[i] - target[i]
         total += diff * diff
-    <span class="kw">return</span> total / Float64(len(pred))
+    return total / Float64(len(pred))
 
-<span class="kw">def</span> <span class="fn">mae_loss</span>(pred: List[Float64], target: List[Float64]) -&gt; Float64:
-    <span class="kw">var</span> total: Float64 = <span class="num">0.0</span>
-    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(len(pred)):
-        <span class="kw">var</span> diff = pred[i] - target[i]
-        total += <span class="fn">abs</span>(diff)
-    <span class="kw">return</span> total / Float64(len(pred))
+def mae_loss(pred: List[Float64], target: List[Float64]) -&gt; Float64:
+    var total: Float64 = 0.0
+    for i in range(len(pred)):
+        var diff = pred[i] - target[i]
+        total += abs(diff)
+    return total / Float64(len(pred))
 
-<span class="kw">def</span> <span class="fn">rmse_loss</span>(pred: List[Float64], target: List[Float64]) -&gt; Float64:
-    <span class="kw">return</span> sqrt(mse_loss(pred, target))</pre>
-      </div>
-      <div class="tab-content" id="ch5-loss-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">mse_loss</span>(pred, target):
-    <span class="kw">return</span> np.mean((np.array(pred) - np.array(target))**<span class="num">2</span>)
-
-<span class="kw">def</span> <span class="fn">mae_loss</span>(pred, target):
-    <span class="kw">return</span> np.mean(np.abs(np.array(pred) - np.array(target)))
-
-<span class="kw">def</span> <span class="fn">rmse_loss</span>(pred, target):
-    <span class="kw">return</span> np.sqrt(mse_loss(pred, target))</pre>
+def rmse_loss(pred: List[Float64], target: List[Float64]) -&gt; Float64:
+    return sqrt(mse_loss(pred, target))</pre>
       </div>
     </div>
   </section>
@@ -223,32 +201,31 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch5-loop-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch5-loop-py">Python</button>
       </div>
       <div class="tab-content active" id="ch5-loop-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+        <pre>from std.math import sqrt
 
-<span class="kw">def</span> <span class="fn">train_loop</span>(
-    <span class="kw">mut</span> w: Float64,
-    <span class="kw">mut</span> b: Float64,
+def train_loop(
+    mut w: Float64,
+    mut b: Float64,
     x: List[Float64],
     y: List[Float64],
     lr: Float64,
     epochs: Int
 ):
-    <span class="kw">var</span> n = Float64(len(x))
+    var n = Float64(len(x))
 
-    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
-        <span class="cmt"># Forward pass + gradient in one pass</span>
-        <span class="kw">var</span> grad_w: Float64 = <span class="num">0.0</span>
-        <span class="kw">var</span> grad_b: Float64 = <span class="num">0.0</span>
-        <span class="kw">var</span> loss: Float64 = <span class="num">0.0</span>
+    for epoch in range(epochs):
+        # Forward pass + gradient in one pass
+        var grad_w: Float64 = 0.0
+        var grad_b: Float64 = 0.0
+        var loss: Float64 = 0.0
 
-        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(len(x)):
-            <span class="kw">var</span> pred = w * x[i] + b
-            <span class="kw">var</span> err = pred - y[i]
-            grad_w += <span class="num">2.0</span> * err * x[i]
-            grad_b += <span class="num">2.0</span> * err
+        for i in range(len(x)):
+            var pred = w * x[i] + b
+            var err = pred - y[i]
+            grad_w += 2.0 * err * x[i]
+            grad_b += 2.0 * err
             loss += err * err
 
         grad_w /= n
@@ -258,34 +235,16 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         w -= lr * grad_w
         b -= lr * grad_b
 
-        <span class="kw">if</span> epoch % <span class="num">100</span> == <span class="num">0</span>:
-            <span class="fn">print</span>(<span class="str">"Epoch"</span>, epoch,
-                   <span class="str">"Loss:"</span>, loss,
-                   <span class="str">"w:"</span>, w, <span class="str">"b:"</span>, b)</pre>
-      </div>
-      <div class="tab-content" id="ch5-loop-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">train_loop</span>(w, b, x, y, lr, epochs):
-    n = <span class="fn">len</span>(x)
-    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
-        preds = w * x + b
-        errors = preds - y
-        grad_w = <span class="num">2</span> * np.mean(errors * x)
-        grad_b = <span class="num">2</span> * np.mean(errors)
-        loss = np.mean(errors**<span class="num">2</span>)
-
-        w -= lr * grad_w
-        b -= lr * grad_b
-
-        <span class="kw">if</span> epoch % <span class="num">100</span> == <span class="num">0</span>:
-            <span class="fn">print</span>(<span class="str">f"Epoch </span>{epoch}<span class="str"> Loss: </span>{loss}<span class="str">"</span>)</pre>
+        if epoch % 100 == 0:
+            print("Epoch", epoch,
+                   "Loss:", loss,
+                   "w:", w, "b:", b)</pre>
       </div>
     </div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
-      <p>The Mojo version uses explicit loops instead of NumPy vectorization, yet achieves comparable performance because the compiler auto-vectorizes the loop. This gives you Python-like readability with C-like speed.</p>
+      <p>The epoch here is written as one explicit loop rather than as the three whole-array expressions NumPy would use, yet it achieves comparable performance, because the compiler auto-vectorizes the loop for you. You keep the step-by-step readability of Python with C-like speed — and one detail is worth copying: printing every hundredth epoch with <code class="inline">print("Epoch", epoch, "Loss:", loss, "w:", w, "b:", b)</code> passes the values as separate arguments, so no f-string is needed to format the line.</p>
     </div>
   </section>
 
@@ -296,11 +255,10 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch5-lr-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch5-lr-py">Python</button>
       </div>
       <div class="tab-content active" id="ch5-lr-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
-<span class="kw">from</span> std.random <span class="kw">import</span> random_normal, seed
+        <pre><span class="kw">from</span> math <span class="kw">import</span> sqrt
+<span class="kw">from</span> random <span class="kw">import</span> random_normal, seed
 
 <span class="kw">def</span> <span class="fn">generate_data</span>(n: Int) -&gt; Tuple[List[Float64], List[Float64]]:
     seed(<span class="num">42</span>)
@@ -349,34 +307,12 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
         sse += (pred - y[i]) * (pred - y[i])
     <span class="fn">print</span>(<span class="str">"RMSE:"</span>, sqrt(sse / n))</pre>
       </div>
-      <div class="tab-content" id="ch5-lr-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-np.random.seed(<span class="num">42</span>)
-x = np.random.randn(<span class="num">200</span>) * <span class="num">10.0</span>
-y = <span class="num">3.5</span> * x + <span class="num">2.0</span> + np.random.randn(<span class="num">200</span>) * <span class="num">1.0</span>
-
-w, b = <span class="num">0.0</span>, <span class="num">0.0</span>
-lr = <span class="num">0.01</span>
-
-<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(<span class="num">500</span>):
-    preds = w * x + b
-    errors = preds - y
-    grad_w = <span class="num">2</span> * np.mean(errors * x)
-    grad_b = <span class="num">2</span> * np.mean(errors)
-    w -= lr * grad_w
-    b -= lr * grad_b
-
-<span class="fn">print</span>(<span class="str">f"Learned w: </span>{w}<span class="str"> (expected ~3.5)"</span>)
-<span class="fn">print</span>(<span class="str">f"Learned b: </span>{b}<span class="str"> (expected ~2.0)"</span>)
-rmse = np.sqrt(np.mean((w*x + b - y)**<span class="num">2</span>))
-<span class="fn">print</span>(<span class="str">f"RMSE: </span>{rmse}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
       <p>This simple linear regression should converge to w ≈ 3.5 and b ≈ 2.0. If the RMSE is close to 1.0, your model has learned the noise level. This is the same pattern used in neural networks — just with more parameters and nonlinear activations.</p>
+      <p>The NumPy version of this model is four lines per epoch, because <code class="inline">preds = w * x + b</code> produces a whole array at once and <code class="inline">2 * np.mean(errors * x)</code> reduces it in one call. The Mojo pane spells the same four steps out, and the final RMSE is computed the same way it is done in the loss section — accumulate the squared errors, divide by <code class="inline">n</code>, then <code class="inline">sqrt</code>. The two reach the same numbers; only the spelling of "multiply every element" differs.</p>
     </div>
   </section>
 
@@ -434,6 +370,9 @@ rmse = np.sqrt(np.mean((w*x + b - y)**<span class="num">2</span>))
     <a class="navbtn" href="ds_ml_textbook_04_numerical.html">← Chapter 4: Numerical Computing</a>
     <a class="navbtn" href="ds_ml_textbook_06_building_models.html">Chapter 6: Building ML Models →</a>
   </div>
+  <div class="chapnav" style="border-top:none;padding-top:0;margin-top:.75rem;">
+    <a class="navbtn" href="nn_mojo.html">🧮 Hands-on: loss, gradient descent and a dead ReLU, fully expanded</a>
+  </div>
 </div>
 </div>
 
@@ -482,4 +421,141 @@ wireQuiz('quiz2','feedback2');
 wireQuiz('quiz3','feedback3');
 </script>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body></html>

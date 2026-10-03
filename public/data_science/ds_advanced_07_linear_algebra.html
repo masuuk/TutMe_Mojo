@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -119,23 +119,22 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo"><code><span class="com"># Direct BLAS Level-3 call from Mojo</span>
-<span class="kw">from</span> std.math.linalg <span class="kw">import</span> matrix_multiply, Matrix
-<span class="kw">from</span> std.sys.ffi <span class="kw">import</span> cblas_dgemm
+        <pre class="code-block active" id="mojo"><code><span class="com">// Direct BLAS Level-3 call from Mojo</span>
+<span class="kw">from</span> math.linalg <span class="kw">import</span> matrix_multiply, Matrix
+<span class="kw">from</span> sys.ffi <span class="kw">import</span> cblas_dgemm
 
 <span class="kw">var</span> A = Matrix[Float64](<span class="num">64</span>, <span class="num">64</span>)
 <span class="kw">var</span> B = Matrix[Float64](<span class="num">64</span>, <span class="num">64</span>)
 <span class="kw">var</span> C = Matrix[Float64](<span class="num">64</span>, <span class="num">64</span>)
 
-<span class="com"># Fill A and B with values...</span>
+<span class="com">// Fill A and B with values...</span>
 randomize(A)
 randomize(B)
 
-<span class="com"># C = alpha * A × B + beta * C</span>
+<span class="com">// C = alpha * A × B + beta * C</span>
 cblas_dgemm(
     CblasRowMajor, CblasNoTrans, CblasNoTrans,
     <span class="num">64</span>, <span class="num">64</span>, <span class="num">64</span>,
@@ -143,15 +142,6 @@ cblas_dgemm(
     B.data(), <span class="num">64</span>,
     <span class="num">0.0</span>, C.data(), <span class="num">64</span>
 )</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">from</span> scipy <span class="kw">import</span> linalg
-
-A = np.random.rand(<span class="num">64</span>, <span class="num">64</span>)
-B = np.random.rand(<span class="num">64</span>, <span class="num">64</span>)
-
-<span class="com"># Under the hood this calls scipy.linalg.get_lapack_funcs()</span>
-<span class="com"># which resolves to a LAPACKE wrapper around Fortran BLAS</span>
-C = linalg.blas.dgemm(<span class="num">1.0</span>, A, B)</code></pre>
       </div>
     </div>
 
@@ -183,7 +173,7 @@ C = linalg.blas.dgemm(<span class="num">1.0</span>, A, B)</code></pre>
     <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, n, TILE):
         <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, n, TILE):
             <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, n, TILE):
-                <span class="com"># Multiply tile block (i:k) × (k:j)</span>
+                <span class="com">// Multiply tile block (i:k) × (k:j)</span>
                 <span class="kw">for</span> ti <span class="kw">in</span> <span class="fn">range</span>(i, <span class="fn">min</span>(i + TILE, n)):
                     <span class="kw">for</span> tj <span class="kw">in</span> <span class="fn">range</span>(j, <span class="fn">min</span>(j + TILE, n)):
                         <span class="kw">var</span> sum = <span class="num">0.0</span>
@@ -215,45 +205,29 @@ C = linalg.blas.dgemm(<span class="num">1.0</span>, A, B)</code></pre>
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo3">Mojo 1.x</div>
-        <div class="tab" data-target="python3">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> std.math.linalg <span class="kw">import</span> (
+        <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> math.linalg <span class="kw">import</span> (
     lu_decomposition,
     solve_triangular,
     matrix_inverse
 )
 
 <span class="kw">def</span> <span class="fn">solve_linear_system</span>(A: Matrix[Float64], b: Vector[Float64]) -&gt; Vector[Float64]:
-    <span class="com"># LU factorization with partial pivoting</span>
+    <span class="com">// LU factorization with partial pivoting</span>
     <span class="kw">var</span> (L, U, P) = lu_decomposition(A)
 
-    <span class="com"># Solve Ly = Pb (forward substitution)</span>
+    <span class="com">// Solve Ly = Pb (forward substitution)</span>
     <span class="kw">var</span> y = solve_triangular(L, P @ b, lower=<span class="kw">True</span>)
 
-    <span class="com"># Solve Ux = y (back substitution)</span>
+    <span class="com">// Solve Ux = y (back substitution)</span>
     <span class="kw">return</span> solve_triangular(U, y, lower=<span class="kw">False</span>)
 
 
 <span class="kw">def</span> <span class="fn">matrix_norm</span>(A: Matrix[Float64]) -&gt; Float64:
-    <span class="com"># Frobenius norm — fully vectorized</span>
+    <span class="com">// Frobenius norm — fully vectorized</span>
     <span class="kw">return</span> sqrt((A ** <span class="num">2.0</span>).sum())</code></pre>
-        <pre class="code-block" id="python3"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">from</span> scipy <span class="kw">import</span> linalg
-
-<span class="kw">def</span> <span class="fn">solve_linear_system</span>(A, b):
-    <span class="com"># LU factorization with partial pivoting</span>
-    P, L, U = linalg.lu(A)
-
-    <span class="com"># Solve Ly = Pb</span>
-    y = linalg.solve_triangular(L, P @ b, lower=<span class="kw">True</span>)
-
-    <span class="com"># Solve Ux = y</span>
-    <span class="kw">return</span> linalg.solve_triangular(U, y, lower=<span class="kw">False</span>)
-
-<span class="kw">def</span> <span class="fn">matrix_norm</span>(A):
-    <span class="kw">return</span> np.linalg.norm(A, ord=<span class="str">'fro'</span>)</code></pre>
       </div>
     </div>
   </section>
@@ -318,6 +292,9 @@ C = linalg.blas.dgemm(<span class="num">1.0</span>, A, B)</code></pre>
   <div class="chapnav"> <a class="navbtn" href="../mojo_v1/mojo_book_1.html">📕 Mojo Textbook</a>
     <a class="navbtn" href="ds_advanced_06_zero_copy.html">← Chapter 6: Parallelism</a>
     <a class="navbtn" href="ds_advanced_08_statistics.html">Chapter 8: Statistical Modeling →</a>
+  </div>
+  <div class="chapnav" style="border-top:none;padding-top:0;margin-top:.75rem;">
+    <a class="navbtn" href="nn_mojo.html">🧮 Hands-on: the same matmul, hand-rolled in a 3-4-1 network</a>
   </div>
 </div>
 </div>

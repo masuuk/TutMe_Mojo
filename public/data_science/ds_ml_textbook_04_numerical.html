@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -125,11 +125,10 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch4-la-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch4-la-py">Python (NumPy)</button>
       </div>
       <div class="tab-content active" id="ch4-la-mojo">
         <pre><span class="kw">from</span> tensor <span class="kw">import</span> Tensor
-<span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+<span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">linalg_demo</span>():
     <span class="cmt"># Dot product</span>
@@ -161,29 +160,12 @@ pre .kw{color:#c084fc;}pre .fn{color:#60a5fa;}pre .str{color:#4ade80;}pre .num{c
     norm = sqrt(norm)
     <span class="fn">print</span>(<span class="str">"Frobenius norm:"</span>, norm)</pre>
       </div>
-      <div class="tab-content" id="ch4-la-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-a = np.array([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>], dtype=np.float32)
-b = np.array([<span class="num">2</span>, <span class="num">4</span>, <span class="num">6</span>, <span class="num">8</span>], dtype=np.float32)
-dp = np.dot(a, b)  <span class="cmt"># 60</span>
-<span class="fn">print</span>(<span class="str">f"Dot product: </span>{dp}<span class="str">"</span>)
-
-M = np.array([[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
-              [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>],
-              [<span class="num">7</span>, <span class="num">8</span>, <span class="num">9</span>]], dtype=np.float32)
-v = np.array([<span class="num">1</span>, <span class="num">0</span>, <span class="num">-1</span>], dtype=np.float32)
-result = M @ v
-<span class="fn">print</span>(<span class="str">f"M * v = </span>{result}<span class="str">"</span>)
-
-norm = np.linalg.norm(M)
-<span class="fn">print</span>(<span class="str">f"Frobenius norm: </span>{norm}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
       <p>Mojo's <code class="inline">matmul</code> dispatches to the best available implementation at compile time — MKL on Intel, cuBLAS on NVIDIA GPUs, or an optimized pure-Mojo fallback. You get hardware-optimal performance without platform-specific code.</p>
+      <p>Each NumPy spelling has a Mojo counterpart, usually just a different name: <code class="inline">np.dot(a, b)</code> is <code class="inline">dot(a, b)</code>, the <code class="inline">@</code> operator <code class="inline">M @ v</code> is <code class="inline">matmul(M, v)</code>, and <code class="inline">A.T</code> is <code class="inline">A.T</code> as well — a transposed view, not a copy. The one that deliberately looks different is the norm: <code class="inline">np.linalg.norm(M)</code> is a single call into LAPACK, while the Mojo pane above writes the Frobenius norm out as the double loop that defines it, because writing the loop is what lets the compiler keep the accumulation in a register.</p>
     </div>
   </section>
 
@@ -194,10 +176,9 @@ norm = np.linalg.norm(M)
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch4-stats-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch4-stats-py">Python</button>
       </div>
       <div class="tab-content active" id="ch4-stats-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+        <pre><span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">mean</span>(data: List[Float64]) -&gt; Float64:
     <span class="kw">var</span> total: Float64 = <span class="num">0.0</span>
@@ -217,28 +198,25 @@ norm = np.linalg.norm(M)
     <span class="fn">print</span>(<span class="str">"Mean:"</span>, mean(data))
     <span class="fn">print</span>(<span class="str">"Std Dev:"</span>, std_dev(data))</pre>
       </div>
-      <div class="tab-content" id="ch4-stats-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+    </div>
 
-data = np.array([<span class="num">2.1</span>, <span class="num">4.5</span>, <span class="num">3.3</span>, <span class="num">7.8</span>, <span class="num">1.2</span>, <span class="num">6.4</span>, <span class="num">5.9</span>])
-<span class="fn">print</span>(<span class="str">f"Mean: </span>{np.mean(data)}<span class="str">"</span>)
-<span class="fn">print</span>(<span class="str">f"Std Dev: </span>{np.std(data)}<span class="str">"</span>)
-<span class="fn">print</span>(<span class="str">f"Min: </span>{np.min(data)}<span class="str"> Max: </span>{np.max(data)}<span class="str">"</span>)</pre>
-      </div>
+    <div class="info-box">
+      <strong>💡 Key Insight:</strong>
+      <p>In NumPy the same numbers are four one-liners — <code class="inline">np.mean(data)</code>, <code class="inline">np.std(data)</code>, <code class="inline">np.min(data)</code>, <code class="inline">np.max(data)</code> — and the two functions above are what they are computing underneath. Dividing by <code class="inline">Float64(len(data))</code> is what makes this the population standard deviation, the same default <code class="inline">np.std</code> uses; pass <code class="inline">n - 1</code> instead for the sample deviation. Min and max need no library at all: they are a single comparison per element in a <code class="inline">for</code> loop over the list.</p>
     </div>
   </section>
 
   <section id="random">
     <h2>Random Number Generation</h2>
     <p>Random number generation is essential for machine learning — initializing weights, data augmentation, Monte Carlo simulations, and stochastic gradient descent. Mojo provides a high-performance <code class="inline">random</code> module. Unlike Python's <code class="inline">random</code> module (single-threaded), Mojo's RNG is designed for parallelism with independent streams per thread.</p>
+    <p>There is one seed, not two. A NumPy script that wants reproducibility has to seed the standard library <em>and</em> NumPy separately, <code class="inline">random.seed(42)</code> alongside <code class="inline">np.random.seed(42)</code>, because they are two unrelated generators. The Mojo pane calls <code class="inline">seed(42)</code> once and every later draw — <code class="inline">random_float64()</code> for the unit interval, <code class="inline">random_uniform(5.0, 10.0)</code> for a scaled range, <code class="inline">random_normal()</code> for the standard normal — comes from that one seeded stream. The <code class="inline">random_float64</code> name is also the honest one: the return type is part of the function, where <code class="inline">random.random()</code> hides it.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch4-rng-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch4-rng-py">Python</button>
       </div>
       <div class="tab-content active" id="ch4-rng-mojo">
-        <pre><span class="kw">from</span> std.random <span class="kw">import</span> random_float64, random_uniform, random_normal, seed
+        <pre><span class="kw">from</span> random <span class="kw">import</span> random_float64, random_uniform, random_normal, seed
 
 <span class="kw">def</span> <span class="fn">rng_demo</span>():
     seed(<span class="num">42</span>)
@@ -257,20 +235,6 @@ data = np.array([<span class="num">2.1</span>, <span class="num">4.5</span>, <sp
         weights.append(random_normal())
     <span class="fn">print</span>(<span class="str">"Weights:"</span>, weights)</pre>
       </div>
-      <div class="tab-content" id="ch4-rng-py">
-        <pre><span class="kw">import</span> random
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-
-random.seed(<span class="num">42</span>)
-np.random.seed(<span class="num">42</span>)
-
-r1 = random.random()          <span class="cmt"># [0, 1)</span>
-r2 = random.uniform(<span class="num">5.0</span>, <span class="num">10.0</span>) <span class="cmt"># [5, 10)</span>
-r3 = np.random.randn()        <span class="cmt"># N(0, 1)</span>
-
-weights = np.random.randn(<span class="num">5</span>)
-<span class="fn">print</span>(<span class="str">f"Weights: </span>{weights}<span class="str">"</span>)</pre>
-      </div>
     </div>
   </section>
 
@@ -288,11 +252,10 @@ weights = np.random.randn(<span class="num">5</span>)
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch4-bench-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch4-bench-py">Python</button>
       </div>
       <div class="tab-content active" id="ch4-bench-mojo">
-        <pre><span class="kw">from</span> std.time <span class="kw">import</span> now
-<span class="kw">from</span> std.random <span class="kw">import</span> random_float64
+        <pre><span class="kw">from</span> time <span class="kw">import</span> now
+<span class="kw">from</span> random <span class="kw">import</span> random_float64
 
 <span class="kw">def</span> <span class="fn">sse_benchmark</span>(n: Int) -&gt; Float64:
     <span class="kw">var</span> a = Tensor[Float64](n)
@@ -313,24 +276,12 @@ weights = np.random.randn(<span class="num">5</span>)
 <span class="kw">def</span> <span class="fn">main</span>():
     sse_benchmark(<span class="num">1_000_000</span>)</pre>
       </div>
-      <div class="tab-content" id="ch4-bench-py">
-        <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">import</span> time
-
-n = <span class="num">1_000_000</span>
-a = np.random.rand(n)
-b = np.random.rand(n)
-
-start = time.perf_counter()
-sse = np.sum((a - b) ** <span class="num">2</span>)
-elapsed = time.perf_counter() - start
-<span class="fn">print</span>(<span class="str">f"Time: </span>{elapsed*<span class="num">1000</span>:.1f}<span class="str"> ms"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
       <p>The benchmark shows Mojo reaching near-native performance for raw loop work — roughly 1600x faster than a Python for-loop. Mojo achieves this while maintaining Python-like syntax, making it much more accessible for data scientists.</p>
+      <p>The <code class="inline">now()</code> clock and the <code class="inline"># 1_000_000</code> size make the two harnesses directly comparable. The NumPy version reaches for <code class="inline">np.random.rand(n)</code> to fill the vectors, brackets the timed region with <code class="inline">time.perf_counter()</code>, and expresses the whole computation as one expression, <code class="inline">np.sum((a - b) ** 2)</code> — hence its ~3 ms row in the table above, against ~800 ms for an explicit Python loop and ~0.5 ms for the compiled Mojo loop that walks the same two arrays. The Mojo pane is deliberately the slowest-looking of the three: a plain <code class="inline">for</code> loop, which is the thing being measured.</p>
     </div>
   </section>
 

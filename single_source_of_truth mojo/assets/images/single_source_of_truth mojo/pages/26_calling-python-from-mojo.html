@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Calling Python from Mojo · Mojo v1 The Language Manual</title>
+<meta name="description" content="Importing modules and invoking Python at run time.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part IV · Memory &amp; Interop</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part IV</span><span class="sep">/</span><span>Memory &amp; Interop</span><span class="sep">/</span><span class="num">26</span></nav><h1>Calling Python from Mojo</h1>
+<p class="dek">Importing modules and invoking Python at run time.</p><p class="byline">Chapter 26 · 804 words · 8 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/python/python-from-mojo/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>The Python ecosystem is full of useful libraries, so you shouldn't have to
+rewrite them in Mojo. Instead, you can simply import Python packages and call
+Python APIs from Mojo. The Python code runs in a standard Python interpreter
+(CPython), so your existing Python code doesn't need to change.</p>
+<h2 class="h h--2" data-level="2" id="specify-your-python-version">Specify your Python version<a aria-label="Link to Specify your Python version" class="h__link" href="#specify-your-python-version"></a></h2>
+<p>Mojo doesn't include a CPython interpreter—it uses the CPython interpreter
+provided by your environment's default Python version. So be sure you know
+which Python version you're using in each environment where your Mojo code will
+run.</p>
+<p>To ensure you get consistent results, we recommend you
+<a class="ext" data-external="" href="https://pixi.prefix.dev/latest/installation/" rel="noopener noreferrer">use Pixi</a> to manage your package
+dependency and virtual environment. In a Pixi project, you can specify the
+Python version like this:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">pixi <span class="tk-function">add</span> <span class="tk-string">"python==3.11"</span></span>
+</code></pre></figure>
+<p>Now, even if your operating system's default Python version is something else,
+your Pixi project (and the Mojo code inside) always uses Python 3.11.</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">pixi run python --version</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Python 3.11.0</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="import-a-python-module-in-mojo">Import a Python module in Mojo<a aria-label="Link to Import a Python module in Mojo" class="h__link" href="#import-a-python-module-in-mojo"></a></h2>
+<p>To import a Python module in Mojo, just call
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#import_module" rel="noopener noreferrer"><code>Python.import_module()</code></a>
+with the module name. The following shows an example of importing the standard
+Python <a class="ext" data-external="" href="https://numpy.org/" rel="noopener noreferrer">NumPy</a> package:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># This is equivalent to Python's `import numpy as np`</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> np <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>import_module<span class="tk-punctuation">(</span><span class="tk-string">"numpy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># Now use numpy as if writing in Python</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> array <span class="tk-operator">=</span> np<span class="tk-punctuation">.</span>array<span class="tk-punctuation">(</span>Python<span class="tk-punctuation">.</span><span class="tk-builtin">list</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>array<span class="tk-punctuation">)</span> <span class="tk-comment"># [1 2 3]</span></span>
+</code></pre></figure>
+<p>Assuming that you have the NumPy package installed in your environment, this
+imports NumPy and you can use any of its features.</p>
+<p>If you want to use Python builtin APIs, you just need to import the <code>builtins</code>
+module the same way. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> np <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>import_module<span class="tk-punctuation">(</span><span class="tk-string">"numpy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> array <span class="tk-operator">=</span> np<span class="tk-punctuation">.</span>array<span class="tk-punctuation">(</span>Python<span class="tk-punctuation">.</span><span class="tk-builtin">list</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> builtins <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>import_module<span class="tk-punctuation">(</span><span class="tk-string">"builtins"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>builtins<span class="tk-punctuation">.</span><span class="tk-builtin">type</span><span class="tk-punctuation">(</span>array<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># &lt;class 'numpy.ndarray'&gt;</span></span>
+</code></pre></figure>
+<p>A few things to note:</p>
+<ul>
+<li class="">
+<p>The <code>import_module()</code> method returns a reference to the module in the form of
+a <a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python_object/PythonObject/" rel="noopener noreferrer"><code>PythonObject</code></a> wrapper. You
+must store the reference in a variable and then use it as shown in the example
+above to access functions, classes, and other objects defined by the module.
+See <a href="../pages/25_python-types.html#mojo-wrapper-objects">Mojo wrapper objects</a>
+for more information about the <code>PythonObject</code> type.</p>
+</li>
+<li class="">
+<p>Currently, you cannot import individual members (such as a single Python class
+or function). You must import the whole Python module and then access members
+through the module name.</p>
+</li>
+<li class="">
+<p>Mojo doesn't yet support top-level code, so the <code>import_module()</code> call must
+be inside another method. This means you may need to import a module multiple
+times or pass around a reference to the module. This works the same way as
+Python: importing the module multiple times won't run the initialization
+logic more than once, so you don't pay any performance penalty.</p>
+</li>
+<li class="">
+<p><code>import_module()</code> may raise an exception. Raising exceptions is much
+more common in Python code than in the Mojo standard library, which
+<a class="ext" data-external="" href="https://mojolang.org/docs/roadmap/#the-standard-library-has-limited-exceptions-use" rel="noopener noreferrer">limits their use for performance
+reasons</a>.</p>
+</li>
+<li class="">
+<p>We recommend using a package manager such as pixi, uv, or conda to manage your
+environment. For instructions on setting up a Mojo project with pixi, see
+<a href="../pages/02_get-started-with-mojo.html">Create a Mojo project</a> in
+the Get started with Mojo tutorial.</p>
+</li>
+</ul>
+<aside class="callout callout--caution"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">▲</span>Caution</p><div class="callout__body"><p><a class="ext" data-external="" href="https://mojolang.org/docs/cli/build/" rel="noopener noreferrer"><code>mojo build</code></a> doesn't include the Python packages used by
+your Mojo project. Instead, Mojo loads the Python interpreter and Python
+packages at runtime, so they must be provided in the environment where you run
+the Mojo program (such as inside the pixi environment where you built the
+executable).</p></div></aside>
+<h3 class="h h--3" data-level="3" id="import-a-local-python-module">Import a local Python module<a aria-label="Link to Import a local Python module" class="h__link" href="#import-a-local-python-module"></a></h3>
+<p>If you have some local Python code you want to use in Mojo, just add
+the directory to the Python path and then import the module.</p>
+<p>For example, suppose you have a Python file named <code>mypython.py</code>:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__file">mypython.py</span><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> numpy <span class="tk-keyword">as</span> np</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">gen_random_values</span><span class="tk-punctuation">(</span>size<span class="tk-punctuation">,</span> base<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># generate a size x size array of random numbers between base and base+1</span></span>
+<span class="cl" data-line="5">    random_array <span class="tk-operator">=</span> np<span class="tk-punctuation">.</span>random<span class="tk-punctuation">.</span>rand<span class="tk-punctuation">(</span>size<span class="tk-punctuation">,</span> size<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> random_array <span class="tk-operator">+</span> base</span>
+</code></pre></figure>
+<p>Here's how you can import it and use it in a Mojo file:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">main.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4">    Python<span class="tk-punctuation">.</span>add_to_path<span class="tk-punctuation">(</span><span class="tk-string">"path/to/module"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> mypython <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>import_module<span class="tk-punctuation">(</span><span class="tk-string">"mypython"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> values <span class="tk-operator">=</span> mypython<span class="tk-punctuation">.</span>gen_random_values<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Both absolute and relative paths work with
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#add_to_path" rel="noopener noreferrer"><code>add_to_path()</code></a>. For example,
+you can import from the local directory like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Python<span class="tk-punctuation">.</span>add_to_path<span class="tk-punctuation">(</span><span class="tk-string">"."</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/python/python-from-mojo/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/python/python-from-mojo/</a>, saved Thu, 01 Oct 2026 15:43:33 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/25_python-types.html"><span class="pager__dir">← Previous</span><span class="pager__title">Python types</span></a><a class="pager__link pager__link--next" href="../pages/27_calling-mojo-from-python.html"><span class="pager__dir">Next →</span><span class="pager__title">Calling Mojo from Python</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#specify-your-python-version">Specify your Python version</a></li><li class="rail__depth-2"><a href="#import-a-python-module-in-mojo">Import a Python module in Mojo</a></li><li class="rail__depth-3"><a href="#import-a-local-python-module">Import a local Python module</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#specify-your-python-version">Specify your Python version</a></li><li class="rail__depth-2"><a href="#import-a-python-module-in-mojo">Import a Python module in Mojo</a></li><li class="rail__depth-3"><a href="#import-a-local-python-module">Import a local Python module</a></li></ol>
+<p class="rail__meta">Chapter 26 of 38 · Part IV, Memory &amp; Interop.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

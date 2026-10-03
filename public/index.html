@@ -3,724 +3,1020 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TutMe🔥 · Learning Hub</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%22 stop-color=%22%235bd4ff%22/><stop offset=%221%22 stop-color=%22%232f8fe0%22/></linearGradient></defs><rect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/><g fill=%22none%22 stroke=%22%23052033%22 stroke-width=%222.4%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 transform=%22translate(8 8)%22><path d=%22M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z%22/><path d=%22M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z%22/></g></svg>">
+    <title>TutMe | Master Mojo v1 & Applied Computing</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            color-scheme: dark;
-            --bg: #08131f;
-            --bg-deep: #040b13;
-            --ink: #e6f5ff;
-            --muted: rgba(230, 245, 255, .56);
-            --desc: rgba(230, 245, 255, .74);
-            --glass: rgba(255, 255, 255, .06);
-            --glass-hover: rgba(255, 255, 255, .11);
-            --line: rgba(255, 255, 255, .08);
-            --c-green: #57e6b8;
-            --c-blue: #4fb3ff;
-            --c-gold: #8fe1ff;
-            --c-red: #ff8d7a;
-            --grad-text: linear-gradient(92.72deg, #eafcff 1.22%, #4fb3ff 96.05%);
-            --grad-brand: linear-gradient(92.72deg, #5bd4ff, #2f8fe0);
-            --grad-index: linear-gradient(320.12deg, #9fe9ff -6.62%, #2f8fe0 107.08%);
-            --grad-cta: linear-gradient(181deg, #8fe4ff 1.02%, #2f8fe0 123.28%);
-            --orb-green: rgba(63, 201, 242, .26);
-            --orb-gold: rgba(143, 225, 255, .2);
-            --orb-blue: rgba(47, 143, 224, .22);
-            --nav-bg: rgba(4, 13, 21, .8);
-            --nav-border: rgba(255, 255, 255, .08);
-            --pill-active-bg: linear-gradient(180deg, rgba(63, 201, 242, .18), rgba(143, 225, 255, .1));
-            --pill-active-bd: rgba(63, 201, 242, .4);
-            --gold-tint-bg: rgba(143, 225, 255, .1);
-            --gold-tint-bd: rgba(143, 225, 255, .42);
-            --ghost-bd: rgba(255, 255, 255, .18);
-            --ghost-bg: rgba(255, 255, 255, .06);
-            --ghost-bd-h: rgba(255, 255, 255, .32);
-            --ghost-bg-h: rgba(255, 255, 255, .12);
-            --icon-bg: linear-gradient(180deg, rgba(63, 201, 242, .18), rgba(143, 225, 255, .12));
-            --icon-bd: rgba(255, 255, 255, .1);
-            --surface1: rgba(255, 255, 255, .045);
-            --surface2: rgba(10, 25, 42, .82);
-            --surface1-h: rgba(255, 255, 255, .09);
-            --panel-tint: rgba(63, 201, 242, .12);
-            --panel-border: rgba(63, 201, 242, .16);
-            --panel-glow-a: rgba(63, 201, 242, .4);
-            --panel-glow-b: rgba(143, 225, 255, .26);
-            --card-border: rgba(95, 212, 255, .13);
-            --tile-bg: linear-gradient(180deg, rgba(9, 28, 46, .82), rgba(6, 20, 36, .88));
-            --tile-bg-h: linear-gradient(180deg, rgba(13, 36, 58, .9), rgba(8, 25, 43, .94));
-            --tile-bd: rgba(95, 212, 255, .12);
-            --tile-bd-h: rgba(95, 212, 255, .26);
-            --item-bg: rgba(255, 255, 255, .05);
-            --item-bd: rgba(255, 255, 255, .08);
-            --item-hover-bg: rgba(63, 201, 242, .12);
-            --item-hover-bd: rgba(95, 212, 255, .32);
-            --tag-bg: rgba(95, 212, 255, .07);
-            --tag-bd: rgba(95, 212, 255, .13);
-            --tag-bg-h: rgba(95, 212, 255, .13);
-            --tag-bd-h: rgba(95, 212, 255, .34);
-            --link-blue: #5bd4ff;
-            --link-blue-h: #a9ecff;
-            --cta-blue-bd: rgba(95, 212, 255, .4);
-            --cta-blue-bg: rgba(95, 212, 255, .1);
-            --cta-blue-txt: #7fe0ff;
-            --cta-blue-bd-h: rgba(95, 212, 255, .6);
-            --cta-blue-bg-h: rgba(95, 212, 255, .18);
-            --cta-glow: rgba(95, 212, 255, .4);
-            --cta-shadow: 0 12px 16px rgba(4, 26, 44, .4), 0 0 16px rgba(63, 201, 242, .3);
-            --gold-glow: rgba(143, 225, 255, .5);
-            --blue-glow: rgba(63, 201, 242, .45);
-            --grid-line: rgba(255, 255, 255, .022);
-            --glow-opacity: .3;
-            --inner-hi: rgba(255, 255, 255, .08);
-            --dark-hi: rgba(0, 0, 0, .4);
-            --shadow: 0 18px 50px rgba(0, 0, 0, .4);
-            --shadow-hover: 0 22px 52px rgba(0, 0, 0, .45);
-            --bg-grad:
-                radial-gradient(circle at 50% 16%, rgba(63, 201, 242, .07) 0%, rgba(47, 143, 224, .05) 18%, transparent 52%),
-                linear-gradient(180deg, rgba(14, 44, 72, .25) 0%, rgba(8, 19, 31, .6) 40%, rgba(4, 11, 19, 1) 100%);
-            --font-p: 'Poppins', ui-sans-serif, system-ui, sans-serif;
-            --font-b: 'Inter', ui-sans-serif, system-ui, sans-serif;
+            --bg-primary: #09090b;
+            --bg-secondary: #18181b;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #fafafa;
+            --text-secondary: #fff4d6;
+            --text-muted: #ffd98f;
+            
+            /* Mojo Fire & Tech Gradients */
+            --accent-fire: #ff4500;
+            --accent-orange: #ff8c00;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            
+            --gradient-mojo: linear-gradient(135deg, #ff4500 0%, #ff8c00 100%);
+            --gradient-tech: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --gradient-text: linear-gradient(90deg, #ff8c00 0%, #ff4500 50%, #8b5cf6 100%);
         }
 
-        html[data-theme="dark"] {
-            color-scheme: dark;
-            --bg: #06101b;
-            --bg-deep: #030810;
-            --ink: #dfeef9;
-            --muted: rgba(223, 238, 249, .55);
-            --desc: rgba(223, 238, 249, .72);
-            --glass: rgba(255, 255, 255, .05);
-            --glass-hover: rgba(255, 255, 255, .1);
-            --line: rgba(255, 255, 255, .07);
-            --c-green: #4ecfac;
-            --c-blue: #3fa6e8;
-            --c-gold: #7ad4f7;
-            --c-red: #eb7a64;
-            --grad-text: linear-gradient(92.72deg, #d6f2ff 1.22%, #2f8fe0 96.05%);
-            --grad-brand: linear-gradient(92.72deg, #4bb8e8, #1f6faa);
-            --grad-index: linear-gradient(320.12deg, #84d8f7 -6.62%, #2f8fe0 107.08%);
-            --grad-cta: linear-gradient(181deg, #74cff2 1.02%, #1f6faa 123.28%);
-            --orb-green: rgba(63, 201, 242, .22);
-            --orb-gold: rgba(122, 212, 247, .18);
-            --orb-blue: rgba(31, 111, 170, .2);
-            --nav-bg: rgba(4, 9, 15, .8);
-            --nav-border: rgba(255, 255, 255, .07);
-            --pill-active-bg: linear-gradient(180deg, rgba(63, 201, 242, .16), rgba(122, 212, 247, .1));
-            --pill-active-bd: rgba(63, 201, 242, .38);
-            --gold-tint-bg: rgba(122, 212, 247, .1);
-            --gold-tint-bd: rgba(122, 212, 247, .42);
-            --ghost-bd: rgba(255, 255, 255, .18);
-            --ghost-bg: rgba(255, 255, 255, .06);
-            --ghost-bd-h: rgba(255, 255, 255, .3);
-            --ghost-bg-h: rgba(255, 255, 255, .12);
-            --icon-bg: linear-gradient(180deg, rgba(63, 201, 242, .18), rgba(122, 212, 247, .12));
-            --icon-bd: rgba(255, 255, 255, .1);
-            --surface1: rgba(255, 255, 255, .045);
-            --surface2: rgba(8, 20, 34, .82);
-            --surface1-h: rgba(255, 255, 255, .09);
-            --panel-tint: rgba(63, 201, 242, .12);
-            --panel-border: rgba(63, 201, 242, .14);
-            --panel-glow-a: rgba(63, 201, 242, .45);
-            --panel-glow-b: rgba(122, 212, 247, .3);
-            --card-border: rgba(95, 212, 255, .12);
-            --tile-bg: linear-gradient(180deg, rgba(7, 22, 37, .82), rgba(4, 15, 28, .88));
-            --tile-bg-h: linear-gradient(180deg, rgba(10, 28, 46, .9), rgba(6, 19, 33, .94));
-            --tile-bd: rgba(95, 212, 255, .1);
-            --tile-bd-h: rgba(95, 212, 255, .24);
-            --item-bg: rgba(255, 255, 255, .05);
-            --item-bd: rgba(255, 255, 255, .08);
-            --item-hover-bg: rgba(63, 201, 242, .11);
-            --item-hover-bd: rgba(95, 212, 255, .3);
-            --tag-bg: rgba(95, 212, 255, .06);
-            --tag-bd: rgba(95, 212, 255, .12);
-            --tag-bg-h: rgba(95, 212, 255, .12);
-            --tag-bd-h: rgba(95, 212, 255, .32);
-            --link-blue: #5bd4ff;
-            --link-blue-h: #84d8f7;
-            --cta-blue-bd: rgba(95, 212, 255, .4);
-            --cta-blue-bg: rgba(95, 212, 255, .1);
-            --cta-blue-txt: #7ad4f7;
-            --cta-blue-bd-h: rgba(95, 212, 255, .6);
-            --cta-blue-bg-h: rgba(95, 212, 255, .18);
-            --cta-glow: rgba(95, 212, 255, .45);
-            --cta-shadow: 0 12px 16px rgba(4, 18, 32, .5), 0 0 16px rgba(63, 201, 242, .38);
-            --gold-glow: rgba(122, 212, 247, .5);
-            --blue-glow: rgba(63, 201, 242, .45);
-            --grid-line: rgba(255, 255, 255, .022);
-            --glow-opacity: .3;
-            --inner-hi: rgba(255, 255, 255, .08);
-            --dark-hi: rgba(0, 0, 0, .4);
-            --shadow: 0 18px 50px rgba(0, 0, 0, .45);
-            --shadow-hover: 0 22px 52px rgba(0, 0, 0, .5);
-            --bg-grad:
-                radial-gradient(circle at 50% 16%, rgba(63, 201, 242, .05) 0%, rgba(31, 111, 170, .04) 18%, transparent 52%),
-                linear-gradient(180deg, rgba(10, 33, 54, .3) 0%, rgba(6, 16, 26, .7) 40%, rgba(3, 8, 16, 1) 100%);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        a, a:visited, a:hover, a:active { text-decoration: none; }
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: var(--font-b);
-            background: var(--bg);
-            color: var(--ink);
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            line-height: 1.5;
-            transition: background .3s ease, color .3s ease;
         }
 
-        .site-bg {
-            position: fixed; inset: 0; z-index: -2; pointer-events: none;
-            background: var(--bg-grad);
-            transition: background .3s ease;
-        }
-        .site-bg::after {
-            content: ""; position: absolute; inset: 0;
-            background-image:
-                linear-gradient(var(--grid-line) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 48px 48px;
-            -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, .5), transparent 82%);
-            mask-image: linear-gradient(180deg, rgba(0, 0, 0, .5), transparent 82%);
-        }
-        .orb { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; pointer-events: none; transition: background .3s ease; }
-        .orb-1 { top: 5vh; left: 12%; width: 44vw; height: 44vw; background: var(--orb-green); }
-        .orb-2 { top: 18vh; left: 46%; width: 28vw; height: 28vw; background: var(--orb-gold); }
-        .orb-3 { top: 30vh; right: 14%; width: 24vw; height: 24vw; background: var(--orb-blue); }
-
-        .wrap { width: min(100% - 3rem, 1240px); margin-inline: auto; }
-
-        /* ---------- header ---------- */
-        .nav {
-            position: sticky; top: 0; z-index: 50;
-            display: flex; align-items: center; gap: 1.25rem;
-            padding: .85rem 1.5rem;
-            background: var(--nav-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--nav-border);
-            transition: background .3s ease, border-color .3s ease;
-        }
-        .brand { display: flex; align-items: center; gap: .6rem; font-family: var(--font-p); font-weight: 700; font-size: 1.15rem; text-decoration: none; color: var(--ink); white-space: nowrap; }
-        .brand .logo { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; background: var(--grad-cta); color: #04222f; box-shadow: 0 0 14px var(--blue-glow); }
-        .brand .logo svg { width: 15px; height: 15px; }
-        .brand .g { background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .brand .flame { display: inline-block; }
-        .brand:hover .flame { animation: flame-dance .5s ease-in-out infinite; transform-origin: bottom center; }
-        @keyframes flame-dance {
-            0%, 100% { transform: rotate(-8deg) scale(1); }
-            25% { transform: rotate(7deg) scale(1.15); }
-            50% { transform: rotate(-5deg) scale(.95) translateY(-2px); }
-            75% { transform: rotate(9deg) scale(1.1); }
+        /* --- Utilities --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
 
-        .navlinks { display: flex; gap: .3rem; margin-left: auto; flex-wrap: wrap; }
-        .pill {
-            display: inline-flex; align-items: center; gap: .35rem;
-            padding: .45rem .85rem; border-radius: 999px; white-space: nowrap;
-            font-size: .86rem; font-weight: 500; color: var(--desc);
-            border: 1px solid transparent; background: transparent; cursor: pointer; text-decoration: none;
-            transition: background .18s ease, color .18s ease, border-color .18s ease;
+        .gradient-text {
+            background: var(--gradient-text);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .pill:hover { background: var(--glass); color: var(--ink); }
-        .pill.active {
-            background: var(--pill-active-bg);
-            border-color: var(--pill-active-bd);
-            color: var(--ink);
-        }
-        .theme-toggle {
-            display: inline-flex; align-items: center; justify-content: center;
-            min-width: 2.4rem; height: 2.4rem; padding: 0 .6rem; border-radius: 999px;
-            font-size: 1rem; line-height: 1; cursor: pointer;
-            color: var(--c-gold); background: var(--gold-tint-bg);
-            border: 1px solid var(--gold-tint-bd);
-            transition: background .18s ease, border-color .18s ease, transform .18s ease;
-        }
-        .theme-toggle:hover { background: var(--glass-hover); transform: translateY(-1px); }
 
-        /* ---------- hero ---------- */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(255, 69, 0, 0.1);
+            border: 1px solid rgba(255, 69, 0, 0.2);
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--accent-orange);
+            margin-bottom: 24px;
+        }
+
+        /* --- Navigation --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 72px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+            color: var(--accent-orange);
+        }
+
+        .logo span {
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient-mojo);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 69, 0, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- Hero Section --- */
         .hero {
-            display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(21rem, .65fr);
-            align-items: center; gap: clamp(2rem, 4vw, 4.5rem);
-            min-height: min(68vh, 42rem);
-            padding: clamp(2.5rem, 5vw, 5rem) 0 1rem;
+            position: relative;
+            padding: 160px 0 100px;
+            text-align: center;
+            overflow: hidden;
         }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(255, 69, 0, 0.15) 0%, rgba(139, 92, 246, 0.05) 40%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
         .hero h1 {
-            font-family: var(--font-p); font-weight: 700;
-            font-size: clamp(2.6rem, 5vw, 4rem); line-height: 1.1; letter-spacing: -.01em;
-            margin: 0; text-wrap: balance;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
         }
-        .hero h1 .g {
-            background: var(--grad-text);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-        .hero .sub { max-width: 34rem; margin-top: 1.2rem; color: var(--desc); font-size: 1.05rem; line-height: 1.7; }
-        .hero-actions { display: flex; flex-wrap: wrap; gap: .9rem; margin-top: 1.9rem; }
 
-        .btn-cta {
-            display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
-            min-height: 3.4rem; padding: .85rem 1.7rem; border-radius: 999px;
-            background: var(--grad-cta); color: #04222f; text-decoration: none;
-            font-family: var(--font-p); font-weight: 700; font-size: 1.02rem; line-height: 1;
-            box-shadow: 0 0 20px var(--cta-glow);
-            transition: transform .25s ease, box-shadow .25s ease;
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 40px;
         }
-        .btn-cta:hover { transform: translateY(-2px); box-shadow: var(--cta-shadow); }
-        .btn-ghost {
-            display: inline-flex; align-items: center; justify-content: center;
-            min-height: 3.4rem; padding: .85rem 1.5rem; border-radius: 999px;
-            border: 1px solid var(--ghost-bd); background: var(--ghost-bg);
-            color: var(--ink); text-decoration: none; font-weight: 600; font-size: .98rem;
-            font-family: var(--font-b); backdrop-filter: blur(14px);
-            transition: background .2s ease, border-color .2s ease, transform .2s ease;
-        }
-        .btn-ghost:hover { background: var(--ghost-bg-h); border-color: var(--ghost-bd-h); transform: translateY(-2px); }
 
-        /* ---------- side panel ---------- */
-        .side-panel {
-            position: relative; display: flex; flex-direction: column; gap: 1rem;
-            padding: 1.5rem; border-radius: 28px; overflow: hidden;
-            border: 1px solid var(--panel-border);
-            background:
-                radial-gradient(circle at 100% 0%, var(--panel-tint), transparent 55%),
-                linear-gradient(180deg, var(--surface1), var(--surface2));
-            box-shadow: inset 0 1px var(--inner-hi), 0 18px 50px var(--shadow);
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
-        .side-panel::before { content: ""; position: absolute; left: 18%; bottom: -46%; width: 220px; height: 220px; border-radius: 50%; background: var(--panel-glow-a); filter: blur(120px); pointer-events: none; }
-        .side-panel::after { content: ""; position: absolute; right: -30%; top: -30%; width: 200px; height: 200px; border-radius: 50%; background: var(--panel-glow-b); filter: blur(110px); pointer-events: none; }
-        .panel-title { position: relative; font-family: var(--font-p); font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: .5rem; color: var(--ink); }
-        .panel-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grad-cta); box-shadow: 0 0 10px var(--blue-glow); }
-        .panel-desc { position: relative; color: var(--desc); font-size: .9rem; line-height: 1.6; }
 
-        .side-items { position: relative; display: flex; flex-direction: column; gap: .6rem; margin-top: .2rem; }
-        .side-item {
-            display: flex; align-items: center; gap: .8rem;
-            padding: .7rem .8rem; border-radius: 16px; text-decoration: none;
-            border: 1px solid var(--item-bd); background: var(--item-bg);
-            transition: background .18s ease, border-color .18s ease, transform .18s ease;
+        /* --- Sections --- */
+        section {
+            padding: 100px 0;
         }
-        .side-item:hover { background: var(--item-hover-bg); border-color: var(--item-hover-bd); transform: translateY(-2px); }
-        .side-icon { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border-radius: 12px; font-size: 1.1rem; background: var(--icon-bg); border: 1px solid var(--icon-bd); }
-        .side-copy { min-width: 0; }
-        .side-copy b { display: block; font-size: .9rem; font-weight: 600; color: var(--ink); }
-        .side-copy span { display: block; font-size: .75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .side-item .arrow { margin-left: auto; color: var(--muted); font-size: .9rem; transition: color .18s ease, transform .18s ease; }
-        .side-item:hover .arrow { color: var(--c-gold); transform: translateX(3px); }
 
-        .side-cta {
-            position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
-            margin-top: .3rem; padding: .8rem 1rem; border-radius: 18px; text-decoration: none;
-            border: 1px solid var(--cta-blue-bd); background: var(--cta-blue-bg);
-            color: var(--cta-blue-txt); font-size: .92rem; font-weight: 600;
-            transition: background .2s ease, border-color .2s ease;
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
         }
-        .side-cta:hover { background: var(--cta-blue-bg-h); border-color: var(--cta-blue-bd-h); }
 
-        .fold-toggle {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 2rem; height: 2rem; margin-left: auto; flex: 0 0 auto;
-            border-radius: 999px; border: 1px solid var(--item-bd); background: var(--item-bg);
-            color: var(--muted); cursor: pointer;
-            transition: background .18s ease, color .18s ease, border-color .18s ease;
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
         }
-        .fold-toggle:hover { background: var(--item-hover-bg); border-color: var(--item-hover-bd); color: var(--ink); }
-        .fold-toggle svg { width: 15px; height: 15px; transition: transform .25s ease; }
-        .hero.folded { grid-template-columns: minmax(0, 1fr); }
-        .hero.folded .side-panel {
-            flex-direction: row; align-items: center; gap: .6rem;
-            padding: .7rem 1.1rem; border-radius: 999px; max-width: fit-content;
-            box-shadow: inset 0 1px var(--inner-hi), 0 8px 30px var(--shadow);
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
         }
-        .hero.folded .panel-title { margin: 0; font-size: 1rem; }
-        .hero.folded .panel-desc, .hero.folded .side-items, .hero.folded .side-cta { display: none; }
-        .hero.folded .fold-toggle svg { transform: rotate(180deg); }
-        .hero.folded .side-panel { cursor: pointer; transition: border-color .18s ease, box-shadow .18s ease; }
-        .hero.folded .side-panel:hover { border-color: var(--item-hover-bd); box-shadow: inset 0 1px var(--inner-hi), 0 12px 40px var(--shadow-hover); }
 
-        /* ---------- sections ---------- */
-        section.norm { padding: clamp(3rem, 6vw, 5rem) 0; }
-        .sechead { display: flex; align-items: baseline; gap: 1rem; margin-bottom: .6rem; }
-        .index { font-family: var(--font-p); font-weight: 700; font-size: .95rem; background: var(--grad-index); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: .06em; }
-        .sechead h2 { font-family: var(--font-p); font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 600; color: var(--ink); }
-        .sechead-sub { max-width: 42rem; color: var(--desc); margin-bottom: 2rem; }
-
-        /* hub cards (mirror trial portal-card) */
-        .hubgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1.4rem; }
-        .hubcard {
-            position: relative; display: flex; flex-direction: column; min-height: 300px;
-            overflow: hidden; border-radius: 22px; padding: 12px;
-            border: 1px solid var(--card-border);
-            background: linear-gradient(180deg, var(--surface1), var(--surface2));
-            transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .3s ease;
+        /* --- Tracks Grid --- */
+        .tracks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
         }
-        .hubcard:hover { transform: translateY(-4px); border-color: var(--card-border); box-shadow: 0 22px 52px var(--shadow-hover); }
-        .hubcard .glow { position: absolute; right: -22%; bottom: -48%; width: 260px; height: 260px; border-radius: 50%; opacity: var(--glow-opacity); filter: blur(90px); pointer-events: none; }
-        .hubcard-head {
-            position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) 54px; align-items: center; gap: 14px;
-            min-height: 84px; overflow: hidden; border-radius: 30px; padding: 14px 18px;
-            background: linear-gradient(90deg, transparent 50%, var(--panel-tint)), var(--surface1-h);
+
+        .track-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: block;
+            text-decoration: none;
+            color: inherit;
         }
-        .hubcard-icon { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 15px; background: var(--glass-hover); font-size: 1.4rem; }
-        .hubcard-title { font-family: var(--font-p); font-size: 1.2rem; font-weight: 600; line-height: 1.15; margin-top: .15rem; color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
-        .hubcard-arrow { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 15px; justify-self: end; background: var(--glass-hover); color: var(--ink); transition: transform .15s ease, background .15s ease; }
-        .hubcard-arrow svg { width: 22px; height: 22px; }
-        .hubcard:hover .hubcard-arrow { background: var(--glass-hover); transform: scale(1.08); }
-        .hubcard-k { display: inline-flex; width: fit-content; padding: 6px 12px; margin: 13px 8px 0; border-radius: 999px; font-size: .76rem; font-weight: 600; letter-spacing: .02em; }
-        .hubcard-k.k-green { background: rgba(87, 230, 184, .14); color: var(--c-green); }
-        .hubcard-k.k-blue { background: rgba(79, 179, 255, .14); color: var(--c-blue); }
-        .hubcard-k.k-gold { background: rgba(143, 225, 255, .14); color: var(--c-gold); }
-        .hubcard-k.k-red { background: rgba(255, 141, 122, .14); color: var(--c-red); }
-        html[data-theme="dark"] .hubcard-k.k-green { background: rgba(78, 207, 172, .14); }
-        html[data-theme="dark"] .hubcard-k.k-blue { background: rgba(63, 166, 232, .16); }
-        html[data-theme="dark"] .hubcard-k.k-gold { background: rgba(122, 212, 247, .14); }
-        html[data-theme="dark"] .hubcard-k.k-red { background: rgba(235, 122, 100, .16); }
-        .hubcard-desc { margin: 9px 8px 0; color: var(--desc); font-size: .93rem; line-height: 1.62; }
-        .hubcard-goto { margin: auto 8px 8px; padding-top: 14px; color: var(--link-blue); font-size: .92rem; font-weight: 600; text-decoration: none; }
-        .hubcard-goto:hover { color: var(--link-blue-h); }
 
-        /* tile links */
-        .tilegrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1.2rem; }
-        .tile {
-            padding: 1.3rem 1.4rem; border-radius: 24px;
-            border: 1px solid var(--tile-bd); background: var(--tile-bg);
-            transition: background .18s ease, border-color .18s ease;
+        .track-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-mojo);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
-        .tile:hover { background: var(--tile-bg-h); border-color: var(--tile-bd-h); }
-        .tile h3 { font-family: var(--font-p); font-size: 1.05rem; font-weight: 600; margin-bottom: .3rem; color: var(--ink); overflow-wrap: anywhere; }
-        .tile > p { color: var(--desc); font-size: .88rem; margin-bottom: 1rem; }
-        .tags { display: flex; flex-wrap: wrap; gap: .45rem; }
-        .tags .pill { padding: .35rem .7rem; font-size: .8rem; background: var(--tag-bg); border-color: var(--tag-bd); }
-        .tags .pill:hover { background: var(--tag-bg-h); border-color: var(--tag-bd-h); color: var(--ink); }
 
-        /* ---------- footer ---------- */
-        footer { border-top: 1px solid var(--nav-border); padding: 2.4rem 0 3rem; margin-top: 2rem; }
-        .footgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 2rem; margin-bottom: 2.2rem; }
-        .footgrid h4 { font-family: var(--font-p); font-size: .85rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .8rem; }
-        .footgrid a { display: block; color: var(--desc); text-decoration: none; font-size: .9rem; padding: .28rem 0; transition: color .16s ease; }
-        .footgrid a:hover { color: var(--ink); }
-        .small { color: var(--muted); font-size: .84rem; }
+        .track-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+        }
 
+        .track-card:hover::before {
+            opacity: 1;
+        }
+
+        .track-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .icon-mojo { background: rgba(255, 69, 0, 0.15); color: var(--accent-fire); }
+        .icon-ds { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .icon-praxis { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+        .icon-domain { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+
+        .track-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .track-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* --- Domains Section --- */
+        .domains-section {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .domains-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .domain-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .domain-card:hover {
+            border-color: rgba(255, 140, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .domain-emoji {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .domain-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .domain-card p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .domain-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* --- Footer --- */
+        footer {
+            padding: 60px 0 40px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* --- Search --- */
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-btn svg {
+            flex-shrink: 0;
+        }
+
+        .search-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(9, 9, 11, 0.7);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 120px 24px 24px;
+        }
+
+        .search-overlay.open {
+            display: flex;
+        }
+
+        .search-dialog {
+            width: 100%;
+            max-width: 640px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            align-self: flex-start;
+        }
+
+        .search-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input-wrap svg {
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1.05rem;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-results {
+            list-style: none;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .search-result {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: background 0.15s;
+        }
+
+        .search-result:hover,
+        .search-result.active {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .search-result.active {
+            box-shadow: inset 2px 0 0 var(--accent-orange);
+        }
+
+        .sr-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sr-section {
+            flex-shrink: 0;
+            padding: 3px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .search-empty {
+            padding: 28px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .search-footer {
+            display: flex;
+            gap: 16px;
+            padding: 10px 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .search-footer kbd {
+            padding: 1px 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+        }
+
+        /* --- Code Showcase --- */
+        .showcase {            padding: 100px 0 0;
+        }
+
+        .showcase-inner {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: 56px;
+            align-items: center;
+        }
+
+        .showcase-kicker {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent-orange);
+            margin-bottom: 14px;
+        }
+
+        .showcase-copy h2 {
+            font-size: clamp(1.75rem, 3.4vw, 2.6rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 18px;
+        }
+
+        .showcase-copy p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 46ch;
+            margin-bottom: 30px;
+        }
+
+        .showcase-code {
+            margin: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            background: #0d0d12;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+        }
+
+        .showcase-code figcaption {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.02);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .showcase-code figcaption::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex: none;
+            background: var(--accent-fire);
+        }
+
+        .showcase-code pre {
+            margin: 0;
+            padding: 20px 22px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        /* Spans are baked in, so the palette has to live here too: the audit harness (and
+           any file:// checkout) cannot resolve a relative <script src>, and the landing page
+           must not depend on one. These are the same values public/mojo-hl.js injects. */
+        .showcase-code pre .kw { color: #c084fc; }
+        .showcase-code pre .fn { color: #60a5fa; }
+        .showcase-code pre .str { color: #4ade80; }
+        .showcase-code pre .num { color: #fbbf24; }
+        .showcase-code pre .cmt { color: #a8b6d4; font-style: italic; }
+        .showcase-code pre .op { color: #f472b6; }
+        .showcase-code pre .type { color: #34d399; }
+        .showcase-code pre .var { color: #fcd34d; }
+
+        /* --- Corpus Stats --- */
+        .stats {
+            padding: 80px 0 100px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .stat {
+            /* dt precedes dd in the DOM for valid description-list semantics;
+               column-reverse puts the number on top visually. */
+            display: flex;
+            flex-direction: column-reverse;
+            background: var(--bg-primary);
+            padding: 30px 22px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: clamp(1.65rem, 3vw, 2.25rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            background: var(--gradient-mojo);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            margin-top: 9px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Responsive --- */
         @media (max-width: 900px) {
-            .hero { grid-template-columns: 1fr; min-height: 0; }
-            .side-panel { max-width: 30rem; }
+            .showcase-inner {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 40px;
+            }
         }
-        @media (max-width: 640px) {
-            .wrap { width: min(100% - 2rem, 1240px); }
-            .nav { flex-wrap: wrap; }
-            .navlinks { width: 100%; justify-content: flex-start; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            * { animation: none !important; transition: none !important; }
+
+        @media (max-width: 768px) {
+            .search-btn-label {
+                display: none;
+            }
+            .search-btn {
+                padding: 12px;
+                width: auto;
+                max-width: none;
+            }
+            .nav-links {
+                display: none;
+            }
+            .hero {
+                padding: 120px 0 60px;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+            section {
+                padding: 60px 0;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="site-bg" aria-hidden="true"></div>
-    <div class="orb orb-1" aria-hidden="true"></div>
-    <div class="orb orb-2" aria-hidden="true"></div>
-    <div class="orb orb-3" aria-hidden="true"></div>
 
-    <nav class="nav">
-        <a class="brand" href="index.html">
-            <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span>
-            <span>TutMe<span class="flame">🔥</span> <span class="g">Learning Hub</span></span>
-        </a>
-        <div class="navlinks">
-            <a class="pill active" href="index.html">Home</a>
-            <a class="pill" href="mojo_v1/index.html">Mojo</a>
-            <a class="pill" href="data_science/index.html">Data Science</a>
-            <a class="pill" href="applications/index.html">Applications</a>
-            <a class="pill" href="praxis/index.html">Praxis</a>
-            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle colour theme" title="Toggle colour theme">🌙</button>
+    <!-- Navigation -->
+    <nav>
+        <div class="container nav-inner">
+            <a href="#" class="logo">Tut<span>Me</span>🔥</a>
+            <ul class="nav-links">
+                <li><a href="mojo_v1/index.html">Fundamentals</a></li>
+                <li><a href="data_science/index.html">Data Science</a></li>
+                <li><a href="applications/index.html">Applications</a></li>
+                <li><a href="praxis/index.html">Praxis</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn btn-secondary search-btn" id="search-open" aria-label="Search topics" title="Search (Ctrl+K)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span class="search-btn-label">Search</span>
+                </button>
+                <a href="mojo_v1/index.html" class="btn btn-primary">Start Learning</a>
+            </div>
         </div>
     </nav>
 
-    <main>
-        <div class="wrap">
-            <!-- ===== HERO + SMALL SIDE PANEL ===== -->
-            <section class="hero" id="hero">
-                <div>
-                    <h1>Learn programming. <span class="g">Build with Mojo.</span></h1>
-                    <p class="sub">One language, four connected spaces: learn Mojo, apply it to real domains, then train it in practice.</p>
-                    <div class="hero-actions">
-                        <a class="btn-cta" href="mojo_v1/index.html">Start with Mojo →</a>
-                        <a class="btn-ghost" href="#browse">Browse the library</a>
-                    </div>
-                </div>
-
-                <aside class="side-panel" id="sidePanel" aria-label="Front doors">
-                    <p class="panel-title"><span class="dot"></span> Front doors
-                        <button class="fold-toggle" id="foldSide" type="button" aria-label="Collapse side panel" aria-expanded="true" title="Collapse side panel">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                        </button>
-                    </p>
-                    <p class="panel-desc">Every shelf keeps its own full table of contents — these are the quickest way in.</p>
-                    <div class="side-items">
-                        <a class="side-item" href="mojo_v1/mojo_book_1.html">
-                            <span class="side-icon">🔥</span>
-                            <span class="side-copy"><b>Textbook · Cover &amp; TOC</b><span>Mojo 1.x Textbook</span></span>
-                            <span class="arrow">→</span>
-                        </a>
-                        <a class="side-item" href="mojo_v1/mojo_01_intro.html">
-                            <span class="side-icon">🚀</span>
-                            <span class="side-copy"><b>Begin Chapter 01</b><span>Start with Mojo</span></span>
-                            <span class="arrow">→</span>
-                        </a>
-                        <a class="side-item" href="praxis/drill_01.html">
-                            <span class="side-icon">💪</span>
-                            <span class="side-copy"><b>Drill 01</b><span>First practical exercise</span></span>
-                            <span class="arrow">→</span>
-                        </a>
-                        <a class="side-item" href="progressive.html">
-                            <span class="side-icon">🎯</span>
-                            <span class="side-copy"><b>Progressive Course</b><span>Scope &amp; shadowing, 8 chapters</span></span>
-                            <span class="arrow">→</span>
-                        </a>
-                    </div>
-                    <a class="side-cta" href="mojo_v1/advisory.html">🧠 Algorithms &amp; Equations →</a>
-                </aside>
-            </section>
-
-            <!-- ===== EXPLORE THE HUB ===== -->
-            <section id="explore" class="norm">
-                <div class="sechead"><span class="index">01</span><h2>Explore the hub</h2></div>
-                <p class="sechead-sub">Four connected spaces: learn the language, apply it to real domains, then train it in practice.</p>                <div class="hubgrid">
-                    <a class="hubcard" href="mojo_v1/index.html">
-                        <div class="hubcard-head">
-                            <span class="hubcard-icon">🔥</span>
-                            <span class="hubcard-title">Mojo</span>
-                            <span class="hubcard-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-                        </div>
-                        <span class="hubcard-k k-green">Begin here</span>
-                        <div class="glow" style="background:var(--c-green)"></div>
-                        <p class="hubcard-desc">Fifteen chapters of the Mojo 1.x Textbook plus a browseable library of algorithms, equations and programming essentials.</p>
-                        <span class="hubcard-goto">Open Mojo →</span>
-                    </a>
-                    <a class="hubcard" href="data_science/index.html">
-                        <div class="hubcard-head">
-                            <span class="hubcard-icon">📊</span>
-                            <span class="hubcard-title">Data Science</span>
-                            <span class="hubcard-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-                        </div>
-                        <span class="hubcard-k k-blue">Numerical &amp; analytical</span>
-                        <div class="glow" style="background:var(--c-blue)"></div>
-                        <p class="hubcard-desc">Three complete books — from tensors and PyTorch interop to systems-scale ML with MLIR — plus nine topic guides.</p>
-                        <span class="hubcard-goto">Open Data Science →</span>
-                    </a>
-                    <a class="hubcard" href="applications/index.html">
-                        <div class="hubcard-head">
-                            <span class="hubcard-icon">⚒</span>
-                            <span class="hubcard-title">Applications</span>
-                            <span class="hubcard-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-                        </div>
-                        <span class="hubcard-k k-gold">Real problems</span>
-                        <div class="glow" style="background:var(--c-gold)"></div>
-                        <p class="hubcard-desc">Finance, geomatics and operations research. One language, three domains — the same Mojo in action.</p>
-                        <span class="hubcard-goto">Open Applications →</span>
-                    </a>
-                    <a class="hubcard" href="praxis/index.html">
-                        <div class="hubcard-head">
-                            <span class="hubcard-icon">💪</span>
-                            <span class="hubcard-title">Praxis</span>
-                            <span class="hubcard-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
-                        </div>
-                        <span class="hubcard-k k-red">Train it</span>
-                        <div class="glow" style="background:var(--c-red)"></div>
-                        <p class="hubcard-desc">Twenty-five drills, a progressive scope course, thirteen topic ladders and three mini-projects. Don't just read — practise.</p>
-                        <span class="hubcard-goto">Open Praxis →</span>
-                    </a>
-                </div>
-            </section>
-
-            <!-- ===== JUMP STRAIGHT IN ===== -->
-            <section id="start" class="norm" style="padding-top:0">
-                <div class="sechead"><span class="index">02</span><h2>Jump straight in</h2></div>
-                <p class="sechead-sub">Every shelf keeps its own full table of contents — these are the front doors.</p>                <div class="tilegrid">
-                    <div class="tile">
-                        <h3>🔥 Mojo</h3>
-                        <p>Fifteen-chapter Mojo 1.x Textbook plus the library.</p>
-                        <div class="tags">
-                            <a class="pill" href="mojo_v1/mojo_book_1.html">Textbook · Cover &amp; TOC</a>
-                            <a class="pill" href="mojo_v1/mojo_01_intro.html">Begin Chapter 01</a>
-                            <a class="pill" href="mojo_v1/mojo_101.html">Mojo 101</a>
-                            <a class="pill" href="mojo_v1/advisory.html">Algorithms &amp; Equations</a>
-                            <a class="pill" href="mojo_v1/mojo_book_2.html">Companion Book</a>
-                            <a class="pill" href="mojo_v1/index.html">Full shelf →</a>
-                        </div>
-                    </div>
-                    <div class="tile">
-                        <h3>📊 Data Science</h3>
-                        <p>Three books plus nine topic guides.</p>
-                        <div class="tags">
-                            <a class="pill" href="data_science/ds_textbook_00_cover.html">ds-textbook</a>
-                            <a class="pill" href="data_science/ds_ml_textbook_00_cover.html">ds-ml-textbook</a>
-                            <a class="pill" href="data_science/ds_advanced_00_cover.html">ds-advanced</a>
-                            <a class="pill" href="data_science/perceptrons_and_activation.html">Perceptrons</a>
-                            <a class="pill" href="data_science/time_series_analytics.html">Time Series</a>
-                            <a class="pill" href="data_science/fine_tuning_llms.html">Fine-tuning LLMs</a>
-                            <a class="pill" href="data_science/ai_agents_python_vs_mojo.html">AI Agents</a>
-                            <a class="pill" href="data_science/index.html">Full shelf →</a>
-                        </div>
-                    </div>
-                    <div class="tile">
-                        <h3>⚒ Applications</h3>
-                        <p>Finance, geomatics and operations research.</p>
-                        <div class="tags">
-                            <a class="pill" href="applications/finance/the_annuity_codex.html">Annuity Codex</a>
-                            <a class="pill" href="applications/finance/npv_amortisation.html">NPV &amp; Amortisation</a>
-                            <a class="pill" href="applications/geomatics/gnss_surveying.html">GNSS Surveying</a>
-                            <a class="pill" href="applications/geomatics/karney_krueger_equations.html">Karney-Krüger</a>
-                            <a class="pill" href="applications/geomatics/geo_computations.html">Mojo Computations</a>
-                            <a class="pill" href="applications/operations_research/operations_research.html">OR</a>
-                            <a class="pill" href="applications/operations_research/simplex_algorithm.html">Simplex Method</a>
-                            <a class="pill" href="applications/index.html">Full shelf →</a>
-                        </div>
-                    </div>
-                    <div class="tile">
-                        <h3>💪 Praxis</h3>
-                        <p>Twenty-five drills, a progressive course and thirteen topic ladders.</p>
-                        <div class="tags">
-                            <a class="pill" href="praxis/drill_01.html">Drill 01</a>
-                            <a class="pill" href="praxis/drill_18.html">Application drills</a>
-                            <a class="pill" href="progressive.html">Progressive Course</a>
-                            <a class="pill" href="praxis/progressive/prog_01_moves.html">Progressive Ladders</a>
-                            <a class="pill" href="praxis/mini_project_01.html">Mini Project 01</a>
-                            <a class="pill" href="praxis/mini_project_02.html">Mini Project 02</a>
-                            <a class="pill" href="praxis/mini_project_03.html">Mini Project 03</a>
-                            <a class="pill" href="praxis/index.html">Full floor →</a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== BROWSE THE FULL LIBRARY ===== -->
-            <section id="browse" class="norm" style="padding-top:0">
-                <div class="sechead"><span class="index">03</span><h2>Browse the full library</h2></div>
-                <p class="sechead-sub">Everything on the hub, grouped by shelf — jump to any page directly.</p>                <div class="tilegrid">
-                    <div class="tile">
-                        <h3>🔥 Mojo <span class="index">Chapter-by-chapter</span></h3>
-                        <p>Mojo 1.x Textbook — follow in order or hop to any topic.</p>
-                        <div class="tags">
-                            <a class="pill" href="mojo_v1/mojo_01_intro.html">01 · Intro</a>
-                            <a class="pill" href="mojo_v1/mojo_04_functions.html">04 · Functions</a>
-                            <a class="pill" href="mojo_v1/mojo_06_structs.html">06 · Structs &amp; Traits</a>
-                            <a class="pill" href="mojo_v1/mojo_07_ownership.html">07 · Ownership</a>
-                            <a class="pill" href="mojo_v1/mojo_08_metaprogramming.html">08 · Metaprogramming</a>
-                            <a class="pill" href="mojo_v1/mojo_11_interop.html">11 · Interop</a>
-                            <a class="pill" href="mojo_v1/mojo_15_docstrings.html">15 · Docstrings</a>
-                            <a class="pill" href="mojo_v1/mojo_book_1.html">All chapters · TOC</a>
-                        </div>
-                    </div>
-                    <div class="tile">
-                        <h3>📊 Data Science <span class="index">Three books</span></h3>
-                        <p>From tensors and PyTorch interop to systems-scale ML with MLIR.</p>
-                        <div class="tags">
-                            <a class="pill" href="data_science/ds_textbook_05_tensors.html">Tensors</a>
-                            <a class="pill" href="data_science/ds_textbook_10_gpu.html">GPU Kernels</a>
-                            <a class="pill" href="data_science/ds_textbook_12_pytorch.html">PyTorch &amp; ONNX</a>
-                            <a class="pill" href="data_science/ds_ml_textbook_05_ml_fundamentals.html">ML Fundamentals</a>
-                            <a class="pill" href="data_science/ds_advanced_10_tensors.html">Deep Tensors</a>
-                            <a class="pill" href="data_science/ds_advanced_17_mlir.html">MLIR</a>
-                            <a class="pill" href="data_science/linear_regression.html">Linear Regression</a>
-                            <a class="pill" href="data_science/decision_aware_ml.html">Decision-aware ML</a>
-                            <a class="pill" href="data_science/ai_agents_python_vs_mojo.html">AI Agents · PvM</a>
-                        </div>
-                    </div>
-                    <div class="tile">
-                        <h3>⚒ Applications <span class="index">Three domains</span></h3>
-                        <p>Finance, geomatics and operations research in actual code.</p>
-                        <div class="tags">
-                            <a class="pill" href="applications/finance/future_value_and_annuities.html">Future Value &amp; Annuities</a>
-                            <a class="pill" href="applications/finance/the_annuity_codex.html">Annuity Codex</a>
-                            <a class="pill" href="applications/geomatics/karney_krueger_equations.html">Karney-Krüger Equations</a>
-                            <a class="pill" href="applications/geomatics/gnss_surveying.html">GNSS Surveying</a>
-                            <a class="pill" href="applications/operations_research/operations_research.html">Operations Research</a>
-                            <a class="pill" href="applications/operations_research/simplex_algorithm.html">The Simplex Method</a>
-                        </div>
-                    </div>
-                    <div class="tile">
-                        <h3>💪 Praxis <span class="index">27 drills + 3 projects</span></h3>
-                        <p>MCQ drills mapped chapter-by-chapter, plus a progressive course, topic ladders and mini-projects.</p>
-                        <div class="tags">
-                            <a class="pill" href="praxis/drill_01.html">Drill 01</a>
-                            <a class="pill" href="praxis/drill_05.html">Drill 05</a>
-                            <a class="pill" href="praxis/drill_10.html">Drill 10</a>
-                            <a class="pill" href="praxis/drill_15.html">Drill 15</a>
-                            <a class="pill" href="praxis/drill_18.html">Drill 18</a>
-                            <a class="pill" href="praxis/drill_21.html">Drill 21</a>
-                            <a class="pill" href="praxis/drill_25.html">Drill 25</a>
-                            <a class="pill" href="praxis/drill_27.html">Drill 27 · AI Agents</a>
-                            <a class="pill" href="progressive.html">Progressive Course</a>
-                            <a class="pill" href="praxis/progressive/prog_01_moves.html">Progressive Ladders</a>
-                            <a class="pill" href="praxis/mini_project_03.html">Mini Project 03</a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <footer>
-        <div class="wrap">
-            <div class="footgrid">
-                <div><h4>Learn</h4><a href="mojo_v1/index.html">Mojo</a><a href="mojo_v1/mojo_book_1.html">Mojo 1.x Textbook</a><a href="mojo_v1/advisory.html">Algorithms &amp; Equations</a></div>
-                <div><h4>Apply</h4><a href="data_science/index.html">Data Science</a><a href="applications/index.html">Applications</a><a href="applications/finance/index.html">Finance</a><a href="applications/geomatics/index.html">Geomatics</a><a href="applications/geomatics/gnss_surveying.html">GNSS Surveying</a><a href="applications/geomatics/karney_krueger_equations.html">Karney-Krüger</a></div>
-                <div><h4>Practise</h4><a href="praxis/index.html">Praxis</a><a href="praxis/drill_01.html">Drill 01</a><a href="progressive.html">Progressive Course</a><a href="praxis/progressive/prog_01_moves.html">Progressive Ladders</a><a href="praxis/mini_project_01.html">Mini Project 01</a><a href="praxis/mini_project_02.html">Mini Project 02</a></div>
-                <div><h4>Home</h4><a href="index.html">Learning Hub</a><a href="data_science/index.html">Data Science</a><a href="applications/index.html">Applications</a></div>
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container hero-content">
+            <div class="badge">
+                <span>🔥</span> Mojo v1 Tutorial & Interactive Platform
             </div>
-            <p class="small">TutMe🔥 · A structured path from syntax → Mojo → applications → practice.</p>
+            <h1>Master <span class="gradient-text">Mojo v1</span>.<br>Build the Future of Computing.</h1>
+            <p>The ultimate interactive learning hub for Mojo. Explore core language fundamentals, advanced data science, and high-performance applications in Geomatics, Finance, and Operations Research.</p>
+            <div class="hero-buttons">
+                <a href="mojo_v1/index.html" class="btn btn-primary">
+                    Explore Fundamentals
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
+                <a href="#tracks" class="btn btn-secondary">Explore Tracks</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Code Showcase -->
+    <section id="showcase" class="showcase">
+        <div class="container showcase-inner">
+            <div class="showcase-copy">
+                <p class="showcase-kicker">Mojo v1 &middot; in every tutorial</p>
+                <h2>Python's syntax.<br>Systems-level speed.</h2>
+                <p>Every code listing on this site is Mojo 1.x &mdash; and not one Python
+                    block. When a library only exists in Python, Mojo calls it in-process
+                    through <code>std.python</code>: no FFI shim, no subprocess, no
+                    re-implementation.</p>
+                <a href="mojo_v1/mojo_11_interop.html" class="btn btn-secondary">
+                    Read the interop chapter
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
+            </div>
+            <figure class="showcase-code">
+                <figcaption>main.mojo</figcaption>
+                <pre><span class="kw">from</span> std.python <span class="kw">import</span> <span class="type">Python</span>
+
+<span class="kw">def</span> <span class="fn">main</span>() <span class="kw">raises</span>:
+    <span class="cmt"># Reach any Python library without leaving Mojo</span>
+    <span class="kw">var</span> <span class="var">np</span> <span class="op">=</span> <span class="type">Python</span>.import_module(<span class="str">"numpy"</span>)
+    <span class="kw">var</span> <span class="var">v</span> <span class="op">=</span> np.<span class="fn">array</span>([<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>])
+    <span class="fn">print</span>(<span class="str">"mean:"</span>, np.<span class="fn">mean</span>(v))</pre>
+            </figure>
+        </div>
+    </section>
+
+    <!-- Corpus Stats -->
+    <section id="stats" class="stats">
+        <div class="container">
+            <!-- landing-stats:start — regenerated by library/tools/build/landing_stats.js -->
+            <dl class="stats-grid">
+                <div class="stat">
+                    <dt class="stat-label">Tutorial pages</dt>
+                    <dd class="stat-value" data-stat="pages">137</dd>
+                </div>
+                <div class="stat">
+                    <dt class="stat-label">Mojo code blocks</dt>
+                    <dd class="stat-value" data-stat="mojo">703</dd>
+                </div>
+                <div class="stat">
+                    <dt class="stat-label">Python interop examples</dt>
+                    <dd class="stat-value" data-stat="interop">55</dd>
+                </div>
+                <div class="stat">
+                    <dt class="stat-label">Python code blocks</dt>
+                    <dd class="stat-value" data-stat="python">0</dd>
+                </div>
+                <div class="stat">
+                    <dt class="stat-label">Interactive drills</dt>
+                    <dd class="stat-value" data-stat="drills">28</dd>
+                </div>
+            </dl>
+            <!-- landing-stats:end -->
+        </div>
+    </section>
+
+    <!-- Learning Tracks -->
+    <section id="tracks">
+        <div class="container">
+            <div class="section-header">
+                <h2>Structured Learning Tracks</h2>
+                <p>Progress from language fundamentals to complex, real-world applications through our carefully curated learning paths.</p>
+            </div>
+            <div class="tracks-grid">
+                <a href="mojo_v1/index.html" class="track-card">
+                    <div class="track-icon icon-mojo">⚡</div>
+                    <h3>Mojo Core</h3>
+                    <p>Master the Mojo v1 language from the ground up. Cover syntax, memory management, metaprogramming, and Python interoperability.</p>
+                </a>
+                <a href="data_science/index.html" class="track-card">
+                    <div class="track-icon icon-ds">📊</div>
+                    <h3>Data Science & Analytics</h3>
+                    <p>Dive into advanced analytics, numerical computing, predictive modeling, and deep learning architectures using Mojo's blazing speed.</p>
+                </a>
+                <a href="applications/index.html" class="track-card">
+                    <div class="track-icon icon-domain">🌍</div>
+                    <h3>Applied Domains</h3>
+                    <p>Apply high-performance computing to specialized fields. Explore Geomatics, Quantitative Finance, and Operations Research.</p>
+                </a>
+                <a href="praxis/index.html" class="track-card">
+                    <div class="track-icon icon-praxis">🛠️</div>
+                    <h3>Praxis & Drills</h3>
+                    <p>Reinforce your knowledge with hands-on coding drills, interactive quizzes, and mini-projects designed to build muscle memory.</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Application Domains -->
+    <section id="domains" class="domains-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Application Domains</h2>
+                <p>See how Mojo's performance unlocks new possibilities in specialized, compute-heavy industries.</p>
+            </div>
+            <div class="domains-grid">
+                <a href="applications/geomatics/index.html" class="domain-card">
+                    <span class="domain-emoji">📡</span>
+                    <h3>Geomatics</h3>
+                    <p>High-precision spatial computations, coordinate transformations, and geodetic algorithms optimized for massive datasets.</p>
+                    <div class="domain-tags">
+                        <span class="tag">geo_computations</span>
+                        <span class="tag">gnss_surveying</span>
+                        <span class="tag">karney_krueger</span>
+                    </div>
+                </a>
+                <a href="applications/finance/index.html" class="domain-card">
+                    <span class="domain-emoji">💹</span>
+                    <h3>Finance</h3>
+                    <p>Ultra-fast quantitative modeling, risk analysis, and time-series forecasting for modern financial engineering.</p>
+                    <div class="domain-tags">
+                        <span class="tag">npv_amortisation</span>
+                        <span class="tag">future_value</span>
+                    </div>
+                </a>
+                <a href="applications/operations_research/index.html" class="domain-card">
+                    <span class="domain-emoji">📈</span>
+                    <h3>Operations Research</h3>
+                    <p>Solve complex optimization problems, linear programming, and resource allocation with unprecedented solver speeds.</p>
+                    <div class="domain-tags">
+                        <span class="tag">simplex_algorithm</span>
+                        <span class="tag">optimization</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="mojo_v1/index.html">Fundamentals</a>
+                <a href="data_science/index.html">Data Science</a>
+                <a href="data_science/ai_agents_python_vs_mojo.html">AI Agents · Python vs Mojo</a>
+                <a href="applications/index.html">Applications</a>
+                <a href="applications/geomatics/geo_computations.html">Geomatics Computations</a>
+                <a href="praxis/index.html">Praxis</a>
+            </div>
+            <p class="copyright">© 2024 TutMe. Built for Mojo v1. Designed for speed.</p>
         </div>
     </footer>
-<script>
-    (function () {
-        const root = document.documentElement;
-        const btn = document.getElementById('themeToggle');
-        const saved = (() => { try { return localStorage.getItem('tutme-theme'); } catch (e) { return null; } })();
-        let theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
-        root.setAttribute('data-theme', theme);
-        if (btn) {
-            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-            btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-            btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
-            btn.addEventListener('click', function () {
-                theme = theme === 'dark' ? 'light' : 'dark';
-                root.setAttribute('data-theme', theme);
-                btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-                btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-                btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
-                try { localStorage.setItem('tutme-theme', theme); } catch (e) {}
-            });
-        }
-        const hero = document.getElementById('hero');
-        const sidePanel = document.getElementById('sidePanel');
-        const foldBtn = document.getElementById('foldSide');
-        if (hero && foldBtn) {
-            const sync = function () {
-                const folded = hero.classList.contains('folded');
-                foldBtn.setAttribute('aria-expanded', String(!folded));
-                foldBtn.title = folded ? 'Expand side panel' : 'Collapse side panel';
-            };
-            foldBtn.addEventListener('click', function () {
-                hero.classList.toggle('folded');
-                sync();
-            });
-            if (sidePanel) {
-                sidePanel.addEventListener('click', function (e) {
-                    if (e.target === foldBtn || foldBtn.contains(e.target)) return;
-                    if (hero.classList.contains('folded')) {
-                        hero.classList.remove('folded');
-                        sync();
-                    }
-                });
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label="Search topics">
+        <div class="search-dialog">
+            <div class="search-input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-input" id="search-input" placeholder="Search topics, chapters, drills…" autocomplete="off" spellcheck="false">
+            </div>
+            <ul class="search-results" id="search-results"></ul>
+            <div class="search-footer">
+                <span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span>
+                <span><kbd>Enter</kbd> open</span>
+                <span><kbd>Esc</kbd> close</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="search.js"></script>
+<script src="mojo-hl.js"></script>
+    <script>
+        (function () {
+            var overlay = document.getElementById('search-overlay');
+            var input = document.getElementById('search-input');
+            var resultsEl = document.getElementById('search-results');
+            var INDEX = window.TUTME_SEARCH_INDEX || [];
+            var activeIndex = -1;
+
+            function openSearch() {
+                overlay.classList.add('open');
+                input.value = '';
+                renderResults([]);
+                setTimeout(function () { input.focus(); }, 0);
             }
-        }
-    })();
+
+            function closeSearch() {
+                overlay.classList.remove('open');
+                activeIndex = -1;
+            }
+
+            function score(entry, tokens) {
+                var title = entry.t.toLowerCase();
+                var section = entry.s.toLowerCase();
+                var url = entry.u.toLowerCase();
+                var total = 0;
+                for (var i = 0; i < tokens.length; i++) {
+                    var tk = tokens[i];
+                    var s = 0;
+                    if (title.startsWith(tk)) s = 5;
+                    else if (title.includes(tk)) s = 3;
+                    else if (section.includes(tk)) s = 2;
+                    else if (url.includes(tk)) s = 1;
+                    else return 0;
+                    total += s;
+                }
+                return total;
+            }
+
+            function search(query) {
+                var tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
+                if (!tokens.length) return [];
+                return INDEX
+                    .map(function (e) { return { e: e, s: score(e, tokens) }; })
+                    .filter(function (x) { return x.s > 0; })
+                    .sort(function (a, b) { return b.s - a.s; })
+                    .slice(0, 12)
+                    .map(function (x) { return x.e; });
+            }
+
+            function renderResults(results) {
+                activeIndex = -1;
+                resultsEl.innerHTML = '';
+                if (!results.length) {
+                    if (input.value.trim()) {
+                        resultsEl.innerHTML = '<li class="search-empty">No topics found. Try “ownership”, “regression”, “simplex”…</li>';
+                    }
+                    return;
+                }
+                results.forEach(function (r, i) {
+                    var li = document.createElement('li');
+                    var a = document.createElement('a');
+                    a.className = i === 0 ? 'search-result active' : 'search-result';
+                    a.href = r.u;
+                    a.innerHTML = '<span class="sr-title"></span><span class="sr-section"></span>';
+                    a.querySelector('.sr-title').textContent = r.t;
+                    a.querySelector('.sr-section').textContent = r.s;
+                    a.addEventListener('click', closeSearch);
+                    li.appendChild(a);
+                    resultsEl.appendChild(li);
+                });
+                activeIndex = 0;
+            }
+
+            function moveActive(delta) {
+                var items = resultsEl.querySelectorAll('.search-result');
+                if (!items.length) return;
+                activeIndex = (activeIndex + delta + items.length) % items.length;
+                items.forEach(function (el, i) { el.classList.toggle('active', i === activeIndex); });
+                items[activeIndex].scrollIntoView({ block: 'nearest' });
+            }
+
+            document.getElementById('search-open').addEventListener('click', openSearch);
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeSearch();
+            });
+
+            input.addEventListener('input', function () {
+                renderResults(search(input.value));
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1); }
+                else if (e.key === 'Enter') {
+                    var items = resultsEl.querySelectorAll('.search-result');
+                    if (activeIndex >= 0 && items[activeIndex]) {
+                        e.preventDefault();
+                        window.location.href = items[activeIndex].getAttribute('href');
+                    }
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    overlay.classList.contains('open') ? closeSearch() : openSearch();
+                }
+                if (e.key === '/' && !overlay.classList.contains('open') &&
+                    !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
+                    e.preventDefault();
+                    openSearch();
+                }
+            });
+        })();
     </script>
 </body>
 </html>

@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
 
 <style>
-:root{--bg:#0c0906;--bg-1:#120c08;--bg-2:#191009;--paper:#fdf8ea;--paper-dim:#e8dcc0;--paper-faint:#c9b898;--ember-1:#ff7a1a;--ember-2:#ffb238;--ember-3:#c2360c;--py-blue:#4b8bbe;--py-yellow:#ffd43b;--line:rgba(244,234,215,0.24);--line-strong:rgba(244,234,215,0.48);--good:#9fe6a8;--bad:#e88b8b}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--paper);font-family:'Newsreader',serif;font-size:19px;line-height:1.7}::selection{background:var(--ember-1);color:#1a0d04}.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--ember-1),var(--ember-2));z-index:100;width:0%;transition:width .1s}nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:16px 5vw;background:rgba(12,9,6,0.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.brand{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;color:var(--paper-dim);text-decoration:none;display:flex;align-items:center;gap:8px}.brand:hover{color:var(--paper)}.chnum{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--ember-2);letter-spacing:0.06em}.wrap{max-width:760px;margin:0 auto;padding:5rem 6vw 8rem}.kicker{font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05;margin:0 0 1.4rem}.dek{font-style:italic;color:var(--paper-dim);font-size:1.2rem;max-width:52ch;margin-bottom:3rem}h2{font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;margin:3.2rem 0 1rem;padding-top:0.4rem;border-top:1px solid var(--line)}h2:first-of-type{border-top:none}h3{font-family:'Fraunces',serif;font-weight:600;font-size:1.25rem;margin:2rem 0 0.8rem;color:var(--paper)}p{color:var(--paper-dim);margin:0 0 1.1rem}p b,li b{color:var(--paper)}a.inline{color:var(--ember-2);text-decoration-color:rgba(255,178,56,0.4)}ul,ol{color:var(--paper-dim);padding-left:1.3rem}li{margin-bottom:0.5rem}code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:rgba(244,234,215,0.06);padding:0.1em 0.4em;border-radius:4px;color:var(--paper);border:1px solid var(--line)}.callout{border-left:3px solid var(--ember-2);background:rgba(255,122,26,0.06);padding:1rem 1.3rem;border-radius:0 6px 6px 0;margin:1.6rem 0}.callout .lbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ember-2);margin-bottom:0.4rem;display:block}.callout p{margin:0;color:var(--paper-dim);font-size:0.98rem}.callout.beta{border-left-color:var(--paper-faint);background:rgba(244,234,215,0.03)}.callout.beta .lbl{color:var(--paper-faint)}.demo{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.6rem 0 2rem;box-shadow:0 20px 60px rgba(0,0,0,0.35)}.tabbar{display:flex;border-bottom:1px solid var(--line);background:var(--bg-2);overflow-x:auto}.tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s}.tab .sw{width:7px;height:7px;border-radius:50%;flex:none}.tab[data-lang="mojo"] .sw{background:var(--ember-2)}.tab[data-lang="python"] .sw{background:var(--py-blue)}.tab.active{color:var(--paper);background:var(--bg)}.tab:hover{color:var(--paper)}.pane{display:none;padding:1.3rem 1.5rem}.pane.active{display:block}pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:0.82rem;line-height:1.6;color:var(--paper-dim);overflow-x:auto}.tok-kw{color:var(--ember-2)}.tok-str{color:#9fd9a0}.tok-com{color:var(--paper-faint);font-style:italic}.tok-fn{color:#7fc8e8}.tok-num{color:#e8b774}.tok-ty{color:#d3a4e8}.cap{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--paper-faint);margin-top:-1rem;margin-bottom:2rem}.code-block{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.4rem 0 1.8rem}.code-block .head{display:flex;align-items:center;gap:8px;padding:0.7rem 1.1rem;background:var(--bg-2);border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--paper-faint)}.code-block pre{padding:1.2rem 1.4rem}table{width:100%;border-collapse:collapse;margin:1.6rem 0 2rem;font-size:0.94rem}th,td{text-align:left;padding:0.65rem 0.9rem;border-bottom:1px solid var(--line);color:var(--paper-dim)}th{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--paper-faint);font-weight:500}td:first-child,th:first-child{color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:0.85rem}.quiz{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);padding:1.8rem;margin:2.4rem 0}.quiz .qlbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}.qtext{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--paper);margin-bottom:1.2rem}.opts{display:flex;flex-direction:column;gap:0.6rem}.opt{text-align:left;border:1px solid var(--line-strong);background:transparent;color:var(--paper-dim);font-family:'Newsreader',serif;font-size:1rem;padding:0.75rem 1rem;border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}.opt:hover{border-color:var(--ember-2);color:var(--paper)}.opt.correct{border-color:var(--good);background:rgba(159,230,168,0.08);color:var(--good)}.opt.wrong{border-color:var(--bad);background:rgba(232,139,139,0.08);color:var(--bad)}.feedback{margin-top:1rem;font-size:0.92rem;color:var(--paper-dim);display:none;font-family:'JetBrains Mono',monospace}.feedback.show{display:block}.mini-toc{position:fixed;right:2.4vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:30}.mini-toc a{width:8px;height:8px;border-radius:50%;background:var(--line-strong);display:block;transition:background .2s,transform .2s}.mini-toc a.active{background:var(--ember-2);transform:scale(1.3)}@media(max-width:900px){.mini-toc{display:none}}.chapnav{display:flex;justify-content:space-between;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--line);gap:1rem;flex-wrap:wrap}.navbtn{font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--paper-dim);text-decoration:none;border:1px solid var(--line-strong);padding:0.8rem 1.3rem;border-radius:6px;transition:border-color .15s,color .15s}.navbtn:hover{border-color:var(--ember-2);color:var(--paper)}.navbtn.disabled{opacity:0.4;pointer-events:none}.exercises{border:1px solid var(--line);border-radius:8px;padding:1.6rem 1.8rem;background:var(--bg-1);margin:2rem 0}.exercises ol{margin:0}
+:root{--bg:#0c0906;--bg-1:#120c08;--bg-2:#191009;--paper:#fdf8ea;--paper-dim:#e8dcc0;--paper-faint:#c9b898;--ember-1:#ff7a1a;--ember-2:#ffb238;--ember-3:#c2360c;--line:rgba(244,234,215,0.24);--line-strong:rgba(244,234,215,0.48);--good:#9fe6a8;--bad:#e88b8b}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--paper);font-family:'Newsreader',serif;font-size:19px;line-height:1.7}::selection{background:var(--ember-1);color:#1a0d04}.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--ember-1),var(--ember-2));z-index:100;width:0%;transition:width .1s}nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:16px 5vw;background:rgba(12,9,6,0.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.brand{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;color:var(--paper-dim);text-decoration:none;display:flex;align-items:center;gap:8px}.brand:hover{color:var(--paper)}.chnum{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--ember-2);letter-spacing:0.06em}.wrap{max-width:760px;margin:0 auto;padding:5rem 6vw 8rem}.kicker{font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05;margin:0 0 1.4rem}.dek{font-style:italic;color:var(--paper-dim);font-size:1.2rem;max-width:52ch;margin-bottom:3rem}h2{font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;margin:3.2rem 0 1rem;padding-top:0.4rem;border-top:1px solid var(--line)}h2:first-of-type{border-top:none}h3{font-family:'Fraunces',serif;font-weight:600;font-size:1.25rem;margin:2rem 0 0.8rem;color:var(--paper)}p{color:var(--paper-dim);margin:0 0 1.1rem}p b,li b{color:var(--paper)}a.inline{color:var(--ember-2);text-decoration-color:rgba(255,178,56,0.4)}ul,ol{color:var(--paper-dim);padding-left:1.3rem}li{margin-bottom:0.5rem}code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:rgba(244,234,215,0.06);padding:0.1em 0.4em;border-radius:4px;color:var(--paper);border:1px solid var(--line)}.callout{border-left:3px solid var(--ember-2);background:rgba(255,122,26,0.06);padding:1rem 1.3rem;border-radius:0 6px 6px 0;margin:1.6rem 0}.callout .lbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ember-2);margin-bottom:0.4rem;display:block}.callout p{margin:0;color:var(--paper-dim);font-size:0.98rem}.callout.beta{border-left-color:var(--paper-faint);background:rgba(244,234,215,0.03)}.callout.beta .lbl{color:var(--paper-faint)}.demo{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.6rem 0 2rem;box-shadow:0 20px 60px rgba(0,0,0,0.35)}.tabbar{display:flex;border-bottom:1px solid var(--line);background:var(--bg-2);overflow-x:auto}.tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s}.tab .sw{width:7px;height:7px;border-radius:50%;flex:none}.tab[data-lang="mojo"] .sw{background:var(--ember-2)}.tab.active{color:var(--paper);background:var(--bg)}.tab:hover{color:var(--paper)}.pane{display:none;padding:1.3rem 1.5rem}.pane.active{display:block}pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:0.82rem;line-height:1.6;color:var(--paper-dim);overflow-x:auto}.tok-kw{color:var(--ember-2)}.tok-str{color:#9fd9a0}.tok-com{color:var(--paper-faint);font-style:italic}.tok-fn{color:#7fc8e8}.tok-num{color:#e8b774}.tok-ty{color:#d3a4e8}.cap{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--paper-faint);margin-top:-1rem;margin-bottom:2rem}.code-block{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.4rem 0 1.8rem}.code-block .head{display:flex;align-items:center;gap:8px;padding:0.7rem 1.1rem;background:var(--bg-2);border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--paper-faint)}.code-block pre{padding:1.2rem 1.4rem}table{width:100%;border-collapse:collapse;margin:1.6rem 0 2rem;font-size:0.94rem}th,td{text-align:left;padding:0.65rem 0.9rem;border-bottom:1px solid var(--line);color:var(--paper-dim)}th{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--paper-faint);font-weight:500}td:first-child,th:first-child{color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:0.85rem}.quiz{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);padding:1.8rem;margin:2.4rem 0}.quiz .qlbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}.qtext{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--paper);margin-bottom:1.2rem}.opts{display:flex;flex-direction:column;gap:0.6rem}.opt{text-align:left;border:1px solid var(--line-strong);background:transparent;color:var(--paper-dim);font-family:'Newsreader',serif;font-size:1rem;padding:0.75rem 1rem;border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}.opt:hover{border-color:var(--ember-2);color:var(--paper)}.opt.correct{border-color:var(--good);background:rgba(159,230,168,0.08);color:var(--good)}.opt.wrong{border-color:var(--bad);background:rgba(232,139,139,0.08);color:var(--bad)}.feedback{margin-top:1rem;font-size:0.92rem;color:var(--paper-dim);display:none;font-family:'JetBrains Mono',monospace}.feedback.show{display:block}.mini-toc{position:fixed;right:2.4vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:30}.mini-toc a{width:8px;height:8px;border-radius:50%;background:var(--line-strong);display:block;transition:background .2s,transform .2s}.mini-toc a.active{background:var(--ember-2);transform:scale(1.3)}@media(max-width:900px){.mini-toc{display:none}}.chapnav{display:flex;justify-content:space-between;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--line);gap:1rem;flex-wrap:wrap}.navbtn{font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--paper-dim);text-decoration:none;border:1px solid var(--line-strong);padding:0.8rem 1.3rem;border-radius:6px;transition:border-color .15s,color .15s}.navbtn:hover{border-color:var(--ember-2);color:var(--paper)}.navbtn.disabled{opacity:0.4;pointer-events:none}.exercises{border:1px solid var(--line);border-radius:8px;padding:1.6rem 1.8rem;background:var(--bg-1);margin:2rem 0}.exercises ol{margin:0}
 </style>
 </head>
 <body>
@@ -19,7 +19,7 @@
 <div class="wrap">
 <div class="kicker">Part II — Interop · Chapter 6</div>
 <h1>🤝 The Python Interop Bridge</h1>
-<p class="dek">Mojo's killer feature for data scientists: call any Python library directly from Mojo, use NumPy and pandas in Mojo code, and expose Mojo functions back to Python — all with zero-copy type mapping.</p>
+<p class="dek">Mojo's killer feature for data scientists: call any Python library directly from Mojo, use NumPy and pandas in Mojo code, and expose Mojo functions back to Python — all through one explicit interop module, where values crossing the boundary are copied.</p>
 
 <section id="calling-python">
 <h2>Calling Python from Mojo</h2>
@@ -27,49 +27,31 @@
 <div class="demo">
 <div class="tabbar">
 <div class="tab active" data-lang="mojo" data-group="pycall"><span class="sw"></span>python_interop.mojo</div>
-<div class="tab" data-lang="python" data-group="pycall"><span class="sw"></span>native_python.py</div>
 </div>
 <div class="panes" data-group="pycall">
-<div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — call Python directly</span>
-<span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
+<div class="pane active" data-lang="mojo"><pre><span class="tok-com">// Mojo — call Python directly</span>
+<span class="tok-kw">from</span> std.python <span class="tok-kw">import</span> Python
 
-<span class="tok-com"># Import any Python module</span>
+<span class="tok-com">// Import any Python module</span>
 <span class="tok-kw">var</span> os = Python.import_module(<span class="tok-str">"os"</span>)
 <span class="tok-kw">var</span> sys = Python.import_module(<span class="tok-str">"sys"</span>)
-print(os.getcwd())           <span class="tok-com"># works!</span>
-print(sys.version)           <span class="tok-com"># Python version string</span>
+print(os.getcwd())           <span class="tok-com">// works!</span>
+print(sys.version)           <span class="tok-com">// Python version string</span>
 
-<span class="tok-com"># Call Python functions</span>
+<span class="tok-com">// Call Python functions</span>
 <span class="tok-kw">var</span> math = Python.import_module(<span class="tok-str">"math"</span>)
-<span class="tok-kw">var</span> pi = math.pi
 <span class="tok-kw">var</span> root = math.sqrt(<span class="tok-num">144.0</span>)
-print(root)                  <span class="tok-com"># 12.0</span>
+print(root)                  <span class="tok-com">// 12.0</span>
 
-<span class="tok-com"># Use Python's json module</span>
+<span class="tok-com">// Use Python's json module</span>
 <span class="tok-kw">var</span> json = Python.import_module(<span class="tok-str">"json"</span>)
 <span class="tok-kw">var</span> data = json.loads(<span class="tok-str">'{"name": "Mojo", "version": 1}'</span>)
-print(data[<span class="tok-str">"name"</span>])        <span class="tok-com"># Mojo</span>
+print(data[<span class="tok-str">"name"</span>])        <span class="tok-com">// Mojo</span>
 
-<span class="tok-com"># Python exceptions become Mojo errors</span>
-<span class="tok-kw">try</span>:
-    <span class="tok-kw">var</span> result = json.loads(<span class="tok-str">"not json"</span>)
-<span class="tok-kw">except</span> <span class="tok-ty">e</span>:
-    print(<span class="tok-str">f"Python error: {e}"</span>)</pre></div>
-<div class="pane" data-lang="python"><pre><span class="tok-com"># Python — the native version</span>
-<span class="tok-kw">import</span> os
-<span class="tok-kw">import</span> sys
-<span class="tok-kw">import</span> math
-<span class="tok-kw">import</span> json
-
-<span class="tok-fn">print</span>(os.getcwd())
-<span class="tok-fn">print</span>(sys.version)
-
-pi = math.pi
-root = math.sqrt(<span class="tok-num">144.0</span>)
-<span class="tok-fn">print</span>(root)
-
-data = json.loads(<span class="tok-str">'{"name": "Mojo", "version": 1}'</span>)
-<span class="tok-fn">print</span>(data[<span class="tok-str">"name"</span>])</pre></div>
+<span class="tok-com">// A Python exception surfaces as a Mojo error, so any</span>
+<span class="tok-com">// function that calls into Python declares `raises`</span>
+<span class="tok-kw">def</span> <span class="tok-fn">load_bad_json</span>() raises:
+    <span class="tok-kw">return</span> json.loads(<span class="tok-str">"not json"</span>)</pre></div>
 </div>
 </div>
 <p class="cap">Mojo's Python interop is built-in — no wrappers, no external build configuration, no manual GIL management.</p>
@@ -81,28 +63,30 @@ data = json.loads(<span class="tok-str">'{"name": "Mojo", "version": 1}'</span>)
 <p>The real power of Python interop is using the vast Python data science ecosystem from Mojo code. You can load data with pandas, manipulate it with NumPy, and train models with scikit-learn — all while writing Mojo for the performance-critical parts.</p>
 <div class="code-block">
 <div class="head">using Python data science libraries from Mojo</div>
-<pre><span class="tok-com"># Import the Python data science stack</span>
+<pre><span class="tok-com">// Import the Python data science stack</span>
+<span class="tok-kw">from</span> std.python <span class="tok-kw">import</span> Python
+
 <span class="tok-kw">var</span> np = Python.import_module(<span class="tok-str">"numpy"</span>)
 <span class="tok-kw">var</span> pd = Python.import_module(<span class="tok-str">"pandas"</span>)
 <span class="tok-kw">var</span> plt = Python.import_module(<span class="tok-str">"matplotlib.pyplot"</span>)
 
-<span class="tok-com"># Load a CSV with pandas</span>
+<span class="tok-com">// Load a CSV with pandas</span>
 <span class="tok-kw">var</span> df = pd.read_csv(<span class="tok-str">"data/housing.csv"</span>)
 print(df.head())
 print(df.shape)
 
-<span class="tok-com"># Convert to NumPy for computation</span>
+<span class="tok-com">// Hand the frame to NumPy for computation</span>
 <span class="tok-kw">var</span> features = df[[<span class="tok-str">"sqft"</span>, <span class="tok-str">"beds"</span>, <span class="tok-str">"baths"</span>]].to_numpy()
 <span class="tok-kw">var</span> target = df[<span class="tok-str">"price"</span>].to_numpy()
 
-<span class="tok-com"># Use scikit-learn for quick ML</span>
+<span class="tok-com">// Use scikit-learn for quick ML</span>
 <span class="tok-kw">var</span> sklearn = Python.import_module(<span class="tok-str">"sklearn.linear_model"</span>)
 <span class="tok-kw">var</span> model = sklearn.LinearRegression()
 model.fit(features, target)
 print(model.score(features, target))
 
-<span class="tok-com"># Plot with matplotlib</span>
-plt.scatter(features[Python.Slice(<span class="tok-num">0</span>, <span class="tok-kw">None</span>), <span class="tok-num">0</span>], target)
+<span class="tok-com">// Plot with matplotlib — pandas columns go straight in</span>
+plt.scatter(df[<span class="tok-str">"sqft"</span>], df[<span class="tok-str">"price"</span>])
 plt.xlabel(<span class="tok-str">"Square Feet"</span>)
 plt.ylabel(<span class="tok-str">"Price"</span>)
 plt.savefig(<span class="tok-str">"scatter.png"</span>)</pre>
@@ -112,48 +96,38 @@ plt.savefig(<span class="tok-str">"scatter.png"</span>)</pre>
 
 <section id="calling-mojo">
 <h2>Calling Mojo from Python</h2>
-<p>The interop bridge works both ways. You can write performance-critical functions in Mojo and call them from Python using the <code class="inline"> mojo</code> module. This lets you keep your existing Python data pipeline while replacing the slow parts with Mojo.</p>
+<p>The interop bridge works both ways. You can write performance-critical functions in Mojo and expose them to Python by building a shared library that Python loads with <code class="inline">ctypes</code>. This lets you keep your existing Python data pipeline while replacing the slow parts with Mojo.</p>
 <div class="demo">
 <div class="tabbar">
 <div class="tab active" data-lang="mojo" data-group="py2mojo"><span class="sw"></span>fast_kernel.mojo</div>
-<div class="tab" data-lang="python" data-group="py2mojo"><span class="sw"></span>use_mojo.py</div>
 </div>
 <div class="panes" data-group="py2mojo">
-<div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — export functions for Python</span>
-<span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
-<span class="tok-kw">from</span> python <span class="tok-kw">import</span> PythonObject
+<div class="pane active" data-lang="mojo"><pre><span class="tok-com">// Mojo — the fast function, written once</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
 
-<span class="tok-com"># Define a fast function</span>
-<span class="tok-kw">def</span> <span class="tok-fn">fast_normalize</span>(
-    data: <span class="tok-ty">Tensor</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>]
-) -&gt; <span class="tok-ty">Tensor</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>]:
-    <span class="tok-kw">var</span> mean = data.reduce_add() / <span class="tok-ty">Float32</span>(data.num_elements())
-    <span class="tok-kw">var</span> result = data - mean
-    <span class="tok-kw">var</span> std = sqrt((result * result).reduce_add()
-                  / <span class="tok-ty">Float32</span>(data.num_elements()))
-    <span class="tok-kw">return</span> result / std
+<span class="tok-com">// A plain SIMD loop — this is the code worth moving</span>
+<span class="tok-kw">def</span> <span class="tok-fn">fast_normalize</span>(data: <span class="tok-ty">Span</span>[<span class="tok-ty">Float32</span>]) -&gt; <span class="tok-ty">List</span>[<span class="tok-ty">Float32</span>]:
+    <span class="tok-kw">var</span> count = <span class="tok-ty">Float32</span>(len(data))
 
-<span class="tok-com"># Mojo can also expose a Python module</span>
-<span class="tok-kw">def</span> <span class="tok-fn">register</span>():
-    <span class="tok-kw">var</span> mojo_module = Python.import_module(<span class="tok-str">"mojo_fast"</span>)
-    mojo_module.normalize = fast_normalize</pre></div>
-<div class="pane" data-lang="python"><pre><span class="tok-com"># Python — call Mojo from Python</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-<span class="tok-kw">from</span> mojo_fast <span class="tok-kw">import</span> normalize
+    <span class="tok-kw">var</span> total = <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> v <span class="tok-kw">in</span> data:
+        total += v
+    <span class="tok-kw">var</span> mean = total / count
 
-<span class="tok-com"># Generate data</span>
-data = np.random.randn(<span class="tok-num">1000000</span>).astype(np.float32)
+    <span class="tok-kw">var</span> variance = <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> v <span class="tok-kw">in</span> data:
+        <span class="tok-kw">var</span> delta = v - mean
+        variance += delta * delta
+    <span class="tok-kw">var</span> std = sqrt(variance / count)
 
-<span class="tok-com"># Call the Mojo function — runs at native speed</span>
-normalized = normalize(data)
-<span class="tok-fn">print</span>(normalized.mean(), normalized.std())
-
-<span class="tok-com"># This is 10-100x faster than a pure Python</span>
-<span class="tok-com"># normalize function, because Mojo compiles</span>
-<span class="tok-com"># the inner loop to native SIMD instructions</span></pre></div>
+    <span class="tok-kw">var</span> result = <span class="tok-ty">List</span>[<span class="tok-ty">Float32</span>]()
+    <span class="tok-kw">for</span> v <span class="tok-kw">in</span> data:
+        result.append((v - mean) / std)
+    <span class="tok-kw">return</span> result</pre></div>
 </div>
 </div>
 <p class="cap">This is the incremental adoption story: keep your Python pipeline, replace slow functions one at a time with Mojo.</p>
+<div class="callout"><span class="lbl">Getting the bridge in place</span><p>Mojo does not inject itself into Python's import system. The supported route is to build the Mojo code into a shared library and load it with <code class="inline">ctypes</code>: compile the <code class="inline">def</code> above with <code class="inline">mojo build</code> into a <code class="inline">.so</code> / <code class="inline">.dll</code>, then call it through a <code class="inline">ctypes</code> function pointer whose argument wraps the NumPy buffer. Keep the exported signature primitive — a pointer to a fixed-width float — because that is what both ABIs agree on; passing Mojo containers across the boundary is what makes this fragile.</p></div>
 </section>
 
 <section id="type-mapping">
@@ -162,52 +136,52 @@ normalized = normalize(data)
 <table>
 <thead><tr><th>Mojo Type</th><th>Python Type</th><th>Notes</th></tr></thead>
 <tbody>
-<tr><td><code class="inline">Int</code></td><td><code class="inline">int</code></td><td>Automatic, zero-cost for small values</td></tr>
-<tr><td><code class="inline">Float64</code></td><td><code class="inline">float</code></td><td>Automatic conversion</td></tr>
-<tr><td><code class="inline">String</code></td><td><code class="inline">str</code></td><td>Automatic, copies the string data</td></tr>
-<tr><td><code class="inline">Bool</code></td><td><code class="inline">bool</code></td><td>Automatic</td></tr>
-<tr><td><code class="inline">List[Int]</code></td><td><code class="inline">list[int]</code></td><td>Converts element-wise</td></tr>
-<tr><td><code class="inline">Dict[String, Int]</code></td><td><code class="inline">dict</code></td><td>Converts keys and values</td></tr>
-<tr><td><code class="inline">Tensor[DType.float32]</code></td><td><code class="inline">numpy.ndarray</code></td><td>Shares memory when possible</td></tr>
-<tr><td><code class="inline">PythonObject</code></td><td>Any Python object</td><td>Opaque handle, call methods on it</td></tr>
+<tr><td><code class="inline">Int</code></td><td><code class="inline">int</code></td><td>Implicit both ways</td></tr>
+<tr><td><code class="inline">Float64</code></td><td><code class="inline">float</code></td><td>Implicit both ways</td></tr>
+<tr><td><code class="inline">String</code></td><td><code class="inline">str</code></td><td>Implicit; copies the string data</td></tr>
+<tr><td><code class="inline">Bool</code></td><td><code class="inline">bool</code></td><td>Implicit</td></tr>
+<tr><td><code class="inline">List[Int]</code></td><td><code class="inline">list</code></td><td>Manual — build a <code class="inline">Python.list()</code> and append</td></tr>
+<tr><td><code class="inline">Span[Float32]</code></td><td><code class="inline">numpy.ndarray</code></td><td>Manual — share the buffer yourself</td></tr>
+<tr><td><code class="inline">PythonObject</code></td><td>Any Python object</td><td>Opaque handle; call methods on it</td></tr>
+<tr><td><code class="inline">raises</code></td><td>Python exception</td><td>Propagates as a Mojo error</td></tr>
 </tbody>
 </table>
 
 <div class="code-block">
 <div class="head">type conversion examples</div>
-<pre><span class="tok-com"># Mojo — type conversions at the boundary</span>
+<pre><span class="tok-com">// Mojo — type conversions at the boundary</span>
+<span class="tok-kw">from</span> std.python <span class="tok-kw">import</span> Python
+
 <span class="tok-kw">var</span> np = Python.import_module(<span class="tok-str">"numpy"</span>)
 
-<span class="tok-com"># NumPy array → Mojo Tensor (shares memory!)</span>
-<span class="tok-kw">var</span> py_array = np.array([<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>], dtype=np.float32)
-<span class="tok-kw">var</span> tensor = <span class="tok-ty">Tensor</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>](py_array)
+<span class="tok-com">// Scalars convert implicitly in both directions</span>
+<span class="tok-kw">var</span> scalar_array = np.array(<span class="tok-num">1.0</span>, dtype=np.float32)
+<span class="tok-kw">var</span> scalar: Float32 = scalar_array.item()
 
-<span class="tok-com"># Mojo Tensor → NumPy array</span>
-<span class="tok-kw">var</span> mojo_tensor = <span class="tok-ty">Tensor</span>[<span class="tok-ty">DType</span>.<span class="tok-ty">float32</span>]([<span class="tok-num">4.0</span>, <span class="tok-num">5.0</span>, <span class="tok-num">6.0</span>])
-<span class="tok-kw">var</span> back_to_python = mojo_tensor.to_numpy()
-
-<span class="tok-com"># PythonObject for opaque handles</span>
-<span class="tok-kw">var</span> pd = Python.import_module(<span class="tok-str">"pandas"</span>)
-<span class="tok-kw">var</span> df: PythonObject = pd.read_csv(<span class="tok-str">"data.csv"</span>)
-<span class="tok-kw">var</span> shape = df.shape  <span class="tok-com"># Python tuple, access as PythonObject</span>
-print(shape[<span class="tok-num">0</span>], shape[<span class="tok-num">1</span>])
-
-<span class="tok-com"># Passing lists across the boundary</span>
+<span class="tok-com">// Containers do not convert — build a Python list</span>
 <span class="tok-kw">var</span> py_list = Python.list()
 py_list.append(<span class="tok-num">42</span>)
 py_list.append(<span class="tok-str">"hello"</span>)
-print(Python.len(py_list))  <span class="tok-com"># 2</span></pre>
+<span class="tok-fn">print</span>(py_list)  <span class="tok-com">// [42, 'hello']</span>
+
+<span class="tok-com">// Mojo List -> Python list, one element at a time</span>
+<span class="tok-kw">var</span> mojo_values = <span class="tok-ty">List</span>[<span class="tok-ty">Float64</span>](<span class="tok-num">1.5</span>, <span class="tok-num">2.5</span>, <span class="tok-num">3.5</span>)
+<span class="tok-kw">var</span> out = Python.list()
+<span class="tok-kw">for</span> v <span class="tok-kw">in</span> mojo_values:
+    out.append(v)
+<span class="tok-kw">var</span> back = np.array(out)
+<span class="tok-fn">print</span>(back.shape)  <span class="tok-com">// (3,)</span>
+
+<span class="tok-com">// PythonObject for opaque handles</span>
+<span class="tok-kw">var</span> pd = Python.import_module(<span class="tok-str">"pandas"</span>)
+<span class="tok-kw">var</span> df = pd.read_csv(<span class="tok-str">"data.csv"</span>)
+<span class="tok-kw">var</span> shape = df.shape  <span class="tok-com">// Python tuple, access as PythonObject</span>
+<span class="tok-fn">print</span>(shape[<span class="tok-num">0</span>], shape[<span class="tok-num">1</span>])</pre>
 </div>
 
-<div class="callout"><span class="lbl">🚚 Zero-copy tensor transfer</span><p>When you convert a NumPy array to a Mojo Tensor (or vice versa), Mojo attempts to <b>share the underlying memory</b> rather than copying. This means you can load data with NumPy, pass it to Mojo for fast processing, and get results back — all without allocating extra memory. This is critical for large ML datasets.</p></div>
+<div class="callout"><span class="lbl">🚚 Sharing memory with NumPy</span><p>There is <b>no implicit bridge</b> between a NumPy array and a Mojo <code class="inline">Span</code> or <code class="inline">Pointer</code>. To avoid a copy you ask CPython for the buffer yourself — call <code class="inline">PyObject_GetBuffer</code> (or read the array's <code class="inline">__array_interface__</code>) through <code class="inline">ctypes</code>, then wrap the resulting address in a <code class="inline">Pointer</code> to the matching fixed-width dtype. That is worth doing for large ML datasets, where a deep copy of the feature matrix dominates the runtime.</p></div>
 
-<div class="callout"><span class="lbl">As of Mojo 1.x final</span><p>Interop got two significant upgrades. First, <code class="inline">PythonObject</code> arithmetic, comparison, and membership operators now dispatch through CPython's abstract protocols (<code class="inline">PyNumber_Add</code>, <code class="inline">PyObject_RichCompare</code>, ...) instead of a Python-level attribute lookup plus bound-method call — roughly <b>12x faster</b> on the interop hot path, with standard Python semantics including reflected operands (<code class="inline">__radd__</code> et al). Second, the new <code class="inline">std.python.numpy</code> module provides <code class="inline">copy_to_numpy_array()</code> (copies a Mojo <code class="inline">Span</code>/<code class="inline">List</code> into a fresh NumPy array) and <code class="inline">from_numpy_array()</code> (borrows the array's buffer zero-copy) for all fixed-width numeric dtypes — no more hand-written <code class="inline">ctypes</code> plumbing:</p>
-<pre><span class="tok-kw">from</span> std.python.numpy <span class="tok-kw">import</span> from_numpy_array, copy_to_numpy_array
-
-<span class="tok-kw">var</span> np = Python.import_module(<span class="tok-str">"numpy"</span>)
-<span class="tok-kw">var</span> py_array = np.arange(<span class="tok-num">1_000_000</span>, dtype=np.float32)
-<span class="tok-kw">var</span> view = <span class="tok-fn">from_numpy_array</span>(py_array)   <span class="tok-com"># Span[Float32], zero-copy</span>
-<span class="tok-kw">var</span> fresh = <span class="tok-fn">copy_to_numpy_array</span>(view)      <span class="tok-com"># independent NumPy array</span></pre></div>
+<div class="callout"><span class="lbl">As of Mojo 1.x final</span><p>Interop got a significant upgrade: <code class="inline">PythonObject</code> arithmetic, comparison, and membership operators now dispatch through CPython's abstract protocols (<code class="inline">PyNumber_Add</code>, <code class="inline">PyObject_RichCompare</code>, ...) instead of a Python-level attribute lookup plus bound-method call — roughly <b>12x faster</b> on the interop hot path, with standard Python semantics including reflected operands (<code class="inline">__radd__</code> et al). The boundary itself is unchanged, though: scalars cross implicitly, containers still have to be built by hand, and buffers still have to be shared deliberately.</p></div>
 </section>
 
 <section id="quiz">
@@ -236,12 +210,12 @@ print(Python.len(py_list))  <span class="tok-com"># 2</span></pre>
 </div>
 <div class="quiz">
 <div class="qlbl">✅ Quick check</div>
-<div class="qtext">When converting a NumPy float32 array to a Mojo Tensor, what happens?</div>
+<div class="qtext">A Mojo <code class="inline">List[Float64]</code> is passed straight to <code class="inline">np.array(...)</code>. What happens?</div>
 <div class="opts" id="quiz3">
-<button class="opt" data-correct="false">The data is always deep-copied for safety</button>
-<button class="opt" data-correct="false">It fails because the types are incompatible</button>
-<button class="opt" data-correct="true">Mojo shares the underlying memory buffer (zero-copy) when possible</button>
-<button class="opt" data-correct="false">The array is converted to Float64 automatically</button>
+<button class="opt" data-correct="false">Mojo converts it automatically, element by element</button>
+<button class="opt" data-correct="true">It fails; you must build a <code class="inline">Python.list()</code> and append each value first</button>
+<button class="opt" data-correct="false">Mojo shares the underlying memory buffer (zero-copy) when possible</button>
+  <button class="opt" data-correct="false">The list is silently converted to a NumPy Float32 array</button>
 </div>
 <div class="feedback" id="feedback3"></div>
 </div>
@@ -254,7 +228,7 @@ print(Python.len(py_list))  <span class="tok-com"># 2</span></pre>
 <li>Write a Mojo function that imports Python's <code class="inline">requests</code> library, fetches a JSON API endpoint, and parses the response into Mojo variables.</li>
 <li>Create a Mojo function <code class="inline">benchmark</code> that takes a Python callable and a Mojo function with the same signature, runs both 1000 times, and prints the speedup ratio using Python's <code class="inline">time</code> module for timing.</li>
 <li>Write a Mojo script that loads a CSV with pandas, converts the relevant columns to a Mojo Tensor, computes the correlation matrix in Mojo (using native loops), and converts the result back to a pandas DataFrame for display.</li>
-<li>Write a Python script that imports a Mojo module and uses its <code class="inline">fast_normalize</code> function to normalize a NumPy array. Verify the result matches <code class="inline">scipy.stats.zscore</code>.</li>
+<li>Build the <code class="inline">fast_normalize</code> function above into a shared library, then call it from Python through <code class="inline">ctypes</code> on a NumPy array, passing the buffer as a <code class="inline">Span[Float32]</code>. Check the result against <code class="inline">scipy.stats.zscore</code>.</li>
 </ol>
 </div>
 </section>

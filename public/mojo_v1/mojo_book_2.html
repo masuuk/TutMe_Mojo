@@ -12,7 +12,7 @@
     --card-hi: #1a2032;
     --line: rgba(255,255,255,.08);
     --text: #e8eaf0;
-    --muted: #9aa3b5;
+    --muted: #ffd98f;
     --fire1: #ff5f2e;
     --fire2: #ff2e63;
     --amber: #ffb84d;
@@ -211,7 +211,7 @@
 
 <div class="wrap">
   <div class="update-note" style="border:1px solid rgba(255,122,26,0.35);background:rgba(255,122,26,0.08);border-radius:12px;padding:16px 20px;margin:0 0 40px;font-size:0.92rem;line-height:1.6;">
-    <b style="color:#ff7a1a;">Updated for Mojo 1.x final</b> (released 11 Aug 2026) — all chapters re-verified against the official release notes and MAX 26.5 docs. Key corrections applied throughout: <code>def</code> is the one function keyword (<code>fn</code> removed), <code>var</code> is mandatory (<code>let</code> removed), <code>mut</code> replaces <code>inout</code>, <code>comptime</code> replaces <code>alias</code>, copy/move constructors unified into <code>__init__</code>, and host-side GPU APIs now live in the <code>max.gpu</code> package (<code>DeviceContext.enqueue_function</code>) with device built-ins staying in <code>std.gpu</code>.
+    <b style="color:#ff7a1a;">Updated for Mojo 1.x final</b> (released 11 Aug 2026) — all chapters re-verified against the official release notes and MAX 26.5 docs. Key corrections applied throughout: <code>var</code> is mandatory, mutable arguments take <code>mut</code>, compile-time constants use <code>comptime</code>, copy/move constructors unify into <code>__init__</code>, and host-side GPU APIs now live in the <code>max.gpu</code> package (<code>DeviceContext.enqueue_function</code>) with device built-ins staying in <code>std.gpu</code>.
   </div>
 </div>
 
@@ -265,7 +265,7 @@
     <div class="grid">
       <a class="ch" href="../data_science/ds_textbook_00_cover.html"><span class="num cover">HOME</span><span class="t">Book Cover &amp; Preface<small>Mojo for Data Science</small></span></a>
       <a class="ch" href="../data_science/ds_textbook_01_why_mojo.html"><span class="num">01</span><span class="t">Why Mojo?<small>Motivation &amp; the two-language problem</small></span></a>
-      <a class="ch" href="../data_science/ds_textbook_02_syntax.html"><span class="num">02</span><span class="t">Mojo Syntax for Python Readers<small>fn, struct, let &amp; var</small></span></a>
+      <a class="ch" href="../data_science/ds_textbook_02_syntax.html"><span class="num">02</span><span class="t">Mojo Syntax for Python Readers<small>def, struct, let &amp; var</small></span></a>
       <a class="ch" href="../data_science/ds_textbook_03_type_system.html"><span class="num">03</span><span class="t">The Type System<small>SIMD, traits &amp; comptime</small></span></a>
       <a class="ch" href="../data_science/ds_textbook_04_ownership.html"><span class="num">04</span><span class="t">Ownership &amp; Borrowing<small>Memory model without fear</small></span></a>
       <a class="ch" href="../data_science/ds_textbook_05_tensors.html"><span class="num">05</span><span class="t">Tensors and NDArrays<small>Mojo's numeric core</small></span></a>

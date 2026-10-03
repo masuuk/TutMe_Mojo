@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -118,7 +118,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-stream">Mojo</div>
-        <div class="tab" data-target="python-stream">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -155,24 +154,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
         row_idx += <span class="num">1</span>
 
     f.close()</code></pre>
-        <pre class="code-block" id="python-stream"><code><span class="kw">import</span> csv
-
-<span class="com"># Python's csv module — similar streaming approach</span>
-<span class="kw">def</span> <span class="fn">count_rows</span>(path: str) -&gt; int:
-    count = <span class="num">0</span>
-    <span class="kw">with</span> open(path, <span class="str">"r"</span>) <span class="kw">as</span> f:
-        reader = csv.reader(f)
-        <span class="kw">for</span> row <span class="kw">in</span> reader:
-            count += <span class="num">1</span>
-    <span class="kw">return</span> count
-
-<span class="com"># But pandas loads everything into memory</span>
-<span class="kw">import</span> pandas <span class="kw">as</span> pd
-df = pd.read_csv(<span class="str">"huge.csv"</span>)  <span class="com"># OOM risk on large files!</span>
-
-<span class="com"># Chunked reading in pandas</span>
-<span class="kw">for</span> chunk <span class="kw">in</span> pd.read_csv(<span class="str">"huge.csv"</span>, chunksize=<span class="num">10000</span>):
-    process(chunk)</code></pre>
       </div>
     </div>
 
@@ -194,6 +175,7 @@ df = pd.read_csv(<span class="str">"huge.csv"</span>)  <span class="com"># OOM r
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo-async"><code><span class="com"># Async file reading with double buffering</span>
 <span class="kw">from</span> std.sys.io <span class="kw">import</span> FileHandle
+<span class="kw">from</span> std.collections <span class="kw">import</span> Dict
 
 <span class="kw">struct</span> <span class="type">AsyncReader</span>:
     <span class="kw">var</span> path: String
@@ -244,7 +226,6 @@ df = pd.read_csv(<span class="str">"huge.csv"</span>)  <span class="com"># OOM r
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-memmap">Mojo</div>
-        <div class="tab" data-target="python-memmap">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -285,25 +266,6 @@ df = pd.read_csv(<span class="str">"huge.csv"</span>)  <span class="com"># OOM r
     <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, len(mapped), <span class="num">4096</span>):
         <span class="kw">var</span> page = mapped[i:i+<span class="num">4096</span>]
         <span class="fn">process_page</span>(page)</code></pre>
-        <pre class="code-block" id="python-memmap"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">import</span> mmap
-
-<span class="com"># Pre-allocate with numpy</span>
-<span class="kw">def</span> <span class="fn">load_with_prealloc</span>(path, expected_rows):
-    t = np.empty(expected_rows, dtype=np.float32)
-    idx = <span class="num">0</span>
-    <span class="kw">with</span> open(path) <span class="kw">as</span> f:
-        <span class="kw">for</span> line <span class="kw">in</span> f:
-            t[idx] = float(line.strip())
-            idx += <span class="num">1</span>
-    <span class="kw">return</span> t[:idx]
-
-<span class="com"># Memory-mapped file</span>
-<span class="kw">with</span> open(<span class="str">"large.bin"</span>, <span class="str">"r+b"</span>) <span class="kw">as</span> f:
-    mm = mmap.mmap(f.fileno(), <span class="num">0</span>)
-    <span class="com"># Access mm[offset:offset+size] lazily</span>
-    data = mm[<span class="num">0</span>:<span class="num">4096</span>]
-    mm.close()</code></pre>
       </div>
     </div>
 
@@ -320,7 +282,6 @@ df = pd.read_csv(<span class="str">"huge.csv"</span>)  <span class="com"># OOM r
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-formats">Mojo</div>
-        <div class="tab" data-target="python-formats">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -361,24 +322,6 @@ df = pd.read_csv(<span class="str">"huge.csv"</span>)  <span class="com"># OOM r
         <span class="kw">return</span> <span class="str">"gzip"</span>
     <span class="kw">else</span>:
         <span class="kw">return</span> <span class="str">"unknown"</span></code></pre>
-        <pre class="code-block" id="python-formats"><code><span class="kw">import</span> struct
-
-<span class="com"># Binary tensor format: [num_elements: u32][data: f32 * N]</span>
-<span class="kw">def</span> <span class="fn">read_binary_tensor</span>(path):
-    <span class="kw">with</span> open(path, <span class="str">"rb"</span>) <span class="kw">as</span> f:
-        n = struct.unpack(<span class="str">"&lt;I"</span>, f.read(<span class="num">4</span>))[<span class="num">0</span>]
-        data = struct.unpack(<span class="str">f"&lt;{n}f"</span>, f.read(n * <span class="num">4</span>))
-    <span class="kw">return</span> list(data)
-
-<span class="com"># Format detection</span>
-<span class="kw">def</span> <span class="fn">detect_format</span>(path):
-    <span class="kw">with</span> open(path, <span class="str">"rb"</span>) <span class="kw">as</span> f:
-        magic = f.read(<span class="num">4</span>)
-    <span class="kw">if</span> magic[:<span class="num">2</span>] == b<span class="str">"PA"</span>:
-        <span class="kw">return</span> <span class="str">"parquet"</span>
-    <span class="kw">elif</span> magic[:<span class="num">2</span>] == b<span class="str">"\x1f\x8b"</span>:
-        <span class="kw">return</span> <span class="str">"gzip"</span>
-    <span class="kw">return</span> <span class="str">"unknown"</span></code></pre>
       </div>
     </div>
 

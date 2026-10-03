@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Modules and packages · Mojo v1 The Language Manual</title>
+<meta name="description" content="Splitting a codebase across modules and packages.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part VI · Projects &amp; Tooling</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part VI</span><span class="sep">/</span><span>Projects &amp; Tooling</span><span class="sep">/</span><span class="num">34</span></nav><h1>Modules and packages</h1>
+<p class="dek">Splitting a codebase across modules and packages.</p><p class="byline">Chapter 34 · 1,245 words · 20 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/packages/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>This page describes how to organize your project into modules (files) and
+packages (directories) that you can import into other Mojo code (and
+<a href="../pages/27_calling-mojo-from-python.html">into Python code</a>).</p>
+<p>If you want to package your project for distribution, instead see the
+<a href="../pages/35_packaging.html">Packaging guide</a>.</p>
+<h2 class="h h--2" data-level="2" id="mojo-modules">Mojo modules<a aria-label="Link to Mojo modules" class="h__link" href="#mojo-modules"></a></h2>
+<p>To understand Mojo packages, you first need to understand Mojo modules. A
+Mojo module is a single Mojo source file that includes code suitable for use
+by other files that import it. For example, you can create a module
+to define a struct such as this one:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">mymodule.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> second<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> first<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> second<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first <span class="tk-operator">=</span> first</span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second <span class="tk-operator">=</span> second</span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">dump</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Notice that this code has no <code>main()</code> function, so you can't execute
+<code>mymodule.mojo</code>. However, you can import this into another file with a
+<code>main()</code> function and use it there.</p>
+<p>For example, here's how you can import <code>MyPair</code> into a file named <code>main.mojo</code>
+that's in the same directory as <code>mymodule.mojo</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">main.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> mymodule <span class="tk-keyword">import</span> MyPair</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> mine <span class="tk-operator">=</span> MyPair<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">    mine<span class="tk-punctuation">.</span>dump<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Alternatively, you can import the whole module and then access its members
+through the module name. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">main.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> mymodule</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> mine <span class="tk-operator">=</span> mymodule<span class="tk-punctuation">.</span>MyPair<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">    mine<span class="tk-punctuation">.</span>dump<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You can also create an alias for an imported member with <code>as</code>, like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">main.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> mymodule <span class="tk-keyword">as</span> my</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> mine <span class="tk-operator">=</span> my<span class="tk-punctuation">.</span>MyPair<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">    mine<span class="tk-punctuation">.</span>dump<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>In this example, it only works when <code>mymodule.mojo</code> is in the same directory as
+<code>main.mojo</code>. Currently, you can't import <code>.mojo</code> files as modules if they
+reside in other directories. That is, unless you treat the directory as a Mojo
+package, as described in the next section.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>A Mojo module may include a <code>main()</code> function and may also be
+executable, but that's generally not the practice and modules typically include
+APIs to be imported and used in other Mojo programs.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="mojo-packages">Mojo packages<a aria-label="Link to Mojo packages" class="h__link" href="#mojo-packages"></a></h2>
+<p>A Mojo package is just a collection of Mojo modules in a directory that
+includes an <code>__init__.mojo</code> file. By organizing modules together in a
+directory, you can then import all the modules together or individually.
+Optionally, you can also compile the package into a precompiled <code>.mojoc</code> file
+that's quicker to load when used as a dependency to another Mojo compile.</p>
+<p>You can import a package and its modules either directly from source files or
+from a compiled <code>.mojoc</code> file. It makes no real difference to Mojo
+which way you import a package. When importing from source files, the directory
+name works as the package name, whereas when importing from a compiled package,
+the filename is the package name (which you specify with the <a class="ext" data-external="" href="https://mojolang.org/docs/cli/precompile/" rel="noopener noreferrer"><code>mojo precompile</code></a> command—it can differ from the directory
+name). For examples, see the section below about
+<a href="../pages/34_modules-and-packages.html#package-naming-and-identifiers">naming and identifiers</a>.</p>
+<p>For example, consider a project with these files:</p>
+<figure class="cb" data-lang="ini"><figcaption class="cb__bar"><span class="cb__lang">INI</span><span class="cb__spacer"></span><button aria-label="Copy INI code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">main.mojo</span>
+<span class="cl" data-line="2">mypackage/</span>
+<span class="cl" data-line="3">    __init__.mojo</span>
+<span class="cl" data-line="4">    mymodule.mojo</span>
+</code></pre></figure>
+<p><code>mymodule.mojo</code> is the same code from examples above (with the <code>MyPair</code>
+struct) and <code>__init__.mojo</code> is empty.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>The <code>__init__.mojo</code> file is essential. If you don't have it, Mojo won't
+recognize the directory as a package and you can't import <code>mymodule</code>.</p></div></aside>
+<p>In this case, the <code>main.mojo</code> file can now import <code>MyPair</code> through the package
+name like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">main.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> mypackage<span class="tk-punctuation">.</span>mymodule <span class="tk-keyword">import</span> MyPair</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> mine <span class="tk-operator">=</span> MyPair<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">    mine<span class="tk-punctuation">.</span>dump<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>This immediately works:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo main.mojo</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">2 4</span>
+</code></pre></figure>
+<p>However, if you don't want the <code>mypackage</code> source code in the same location
+as <code>main.mojo</code>, you can compile it into a precompiled file like this:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo precompile mypackage -o mypack.mojoc</span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>A <code>.mojoc</code> file contains non-elaborated code, so you <em>can</em> share it across
+systems. The code becomes an architecture-specific executable only after it's
+imported into a Mojo program that's then compiled with <code>mojo build</code>.</p><p>The <code>.mojoc</code> format is not intended as a generic distributable format, however,
+as it is tied to the exact version of the compiler that produced it. Loading a
+<code>.mojoc</code> file produced by one version of the compiler into another version of
+the compiler will result in a compiler error.</p></div></aside>
+<p>Now, you can move the <code>mypackage</code> source somewhere else, and the project files
+now look like this:</p>
+<figure class="cb" data-lang="ini"><figcaption class="cb__bar"><span class="cb__lang">INI</span><span class="cb__spacer"></span><button aria-label="Copy INI code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">main.mojo</span>
+<span class="cl" data-line="2">mypack.mojoc</span>
+</code></pre></figure>
+<p>Because we named the package <code>mypack</code>, we need to fix
+the import statement:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">main.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> mypack<span class="tk-punctuation">.</span>mymodule <span class="tk-keyword">import</span> MyPair</span>
+</code></pre></figure>
+<p>And the code works the same:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo main.mojo</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">2 4</span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>If you want to rename your package, you cannot simply edit the
+<code>.mojoc</code> filename, because the package name is encoded in the file.
+You must instead run <code>mojo precompile</code> again to specify a new name.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="the-__init__-file">The <code>__init__</code> file<a aria-label="Link to The __init__ file" class="h__link" href="#the-__init__-file"></a></h3>
+<p>As mentioned above, the <code>__init__.mojo</code> file is required to indicate that a
+directory should be treated as a Mojo package, and it can be empty.</p>
+<p>Currently, top-level code is not supported in <code>.mojo</code> files, so unlike Python,
+you can't write code in <code>__init__.mojo</code> that executes upon import. You can,
+however, add structs and functions, which you can then import from the package
+name.</p>
+<p>However, instead of adding APIs in the <code>__init__.mojo</code> file, you can import
+module members, which has the same effect by making your APIs accessible from
+the package name, instead of requiring the <code>&lt;package_name&gt;.&lt;module_name&gt;</code>
+notation.</p>
+<p>For example, again let's say you have these files:</p>
+<figure class="cb" data-lang="ini"><figcaption class="cb__bar"><span class="cb__lang">INI</span><span class="cb__spacer"></span><button aria-label="Copy INI code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">main.mojo</span>
+<span class="cl" data-line="2">mypackage/</span>
+<span class="cl" data-line="3">    __init__.mojo</span>
+<span class="cl" data-line="4">    mymodule.mojo</span>
+</code></pre></figure>
+<p>Let's now add the following line in <code>__init__.mojo</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">__init__.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> <span class="tk-punctuation">.</span>mymodule <span class="tk-keyword">import</span> MyPair</span>
+</code></pre></figure>
+<p>That's all that's in there. Now, we can simplify the import statement in
+<code>main.mojo</code> like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">main.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> mypackage <span class="tk-keyword">import</span> MyPair</span>
+</code></pre></figure>
+<p>This feature explains why some members in the Mojo standard library can be
+imported from their package name, while others required the
+<code>&lt;package_name&gt;.&lt;module_name&gt;</code> notation. For example, the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/algorithm/functional/" rel="noopener noreferrer"><code>functional</code></a> module resides in the
+<code>std.algorithm</code> package, so you can import members of that module (such as the
+<code>map()</code> function) like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>algorithm<span class="tk-punctuation">.</span>functional <span class="tk-keyword">import</span> <span class="tk-builtin">map</span></span>
+</code></pre></figure>
+<p>However, the <code>algorithm/__init__.mojo</code> file also includes these lines:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">algorithm/__init__.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> <span class="tk-punctuation">.</span>functional <span class="tk-keyword">import</span> <span class="tk-operator">*</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> <span class="tk-punctuation">.</span>reduction <span class="tk-keyword">import</span> <span class="tk-operator">*</span></span>
+</code></pre></figure>
+<p>So you can actually import anything from <code>functional</code> or <code>reduction</code> simply by
+naming the package. That is, you can drop the <code>functional</code> name from the import
+statement, and it also works:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>algorithm <span class="tk-keyword">import</span> <span class="tk-builtin">map</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Which modules in the standard library are imported to the package
+scope varies, and is subject to change. Refer to the <a class="ext" data-external="" href="https://mojolang.org/docs/std/" rel="noopener noreferrer">documentation for each
+module</a> to see how you can import its members.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="package-naming-and-identifiers">Package naming and identifiers<a aria-label="Link to Package naming and identifiers" class="h__link" href="#package-naming-and-identifiers"></a></h3>
+<p>Package names are taken from directory names in the case of source packages, or
+the precompiled (<code>.mojoc</code>) filename for binary ones.</p>
+<p>Note that if the package name is not a valid identifier, an escaped identifier
+may be used instead:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> `модул`</span>
+<span class="cl" data-line="2"><span class="tk-keyword">import</span> `package<span class="tk-operator">-</span><span class="tk-keyword">with</span><span class="tk-operator">-</span>hyphens <span class="tk-keyword">and</span> a space!` <span class="tk-keyword">as</span> package_without_hyphens_or_a_space</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    `модул`<span class="tk-punctuation">.</span>`здрасти`<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6">    package_without_hyphens_or_a_space<span class="tk-punctuation">.</span>hello<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/packages/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/packages/</a>, saved Thu, 01 Oct 2026 15:36:44 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/33_reflection.html"><span class="pager__dir">← Previous</span><span class="pager__title">Reflection</span></a><a class="pager__link pager__link--next" href="../pages/35_packaging.html"><span class="pager__dir">Next →</span><span class="pager__title">Packaging</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#mojo-modules">Mojo modules</a></li><li class="rail__depth-2"><a href="#mojo-packages">Mojo packages</a></li><li class="rail__depth-3"><a href="#the-__init__-file">The __init__ file</a></li><li class="rail__depth-3"><a href="#package-naming-and-identifiers">Package naming and identifiers</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#mojo-modules">Mojo modules</a></li><li class="rail__depth-2"><a href="#mojo-packages">Mojo packages</a></li><li class="rail__depth-3"><a href="#the-__init__-file">The __init__ file</a></li><li class="rail__depth-3"><a href="#package-naming-and-identifiers">Package naming and identifiers</a></li></ol>
+<p class="rail__meta">Chapter 34 of 38 · Part VI, Projects &amp; Tooling.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

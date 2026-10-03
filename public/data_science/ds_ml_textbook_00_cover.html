@@ -39,7 +39,7 @@
 
             --text-primary: #ffffff;
             --text-secondary: #d8def0;
-            --text-muted: #a8b6d4;
+            --text-muted: #ffd98f;
 
             --accent-1: #6c5ce7;
             --accent-2: #00b4d8;
@@ -992,7 +992,7 @@
 
             <p>
                 The definitive guide to building high-performance AI systems with Mojo 1.x.
-                Featuring side-by-side examples in Mojo and Python for complete context.
+                Every example is written in Mojo, with the Python ecosystem reachable through interop.
             </p>
 
             <div class="hero-actions">
@@ -1014,8 +1014,8 @@
                     <span class="label">Code Examples</span>
                 </div>
                 <div class="hero-stat">
-                    <span class="number">2</span>
-                    <span class="label">Languages (Mojo · Python)</span>
+                    <span class="number">1</span>
+                    <span class="label">Language (Mojo 1.x)</span>
                 </div>
             </div>
         </div>
@@ -1031,7 +1031,7 @@
                 <h2 class="section-title">Complete <span class="highlight">Table of Contents</span></h2>
                 <p class="section-subtitle mx-auto">
                     A comprehensive journey from Mojo basics to production-grade ML systems.
-                    Each chapter includes practical examples in Mojo and Python.
+                    Each chapter includes practical examples in Mojo.
                 </p>
             </div>
 
@@ -1044,7 +1044,6 @@
                     <p>Why Mojo for data science? The Python + systems programming bridge.</p>
                     <div class="lang-tags">
                         <span class="lang-tag mojo">Mojo</span>
-                        <span class="lang-tag python">Python</span>
                     </div>
                     <span class="arrow">→</span>
                 </div>
@@ -1067,7 +1066,6 @@
                     <p>Arrays, tensors, and vectorized computations in Mojo.</p>
                     <div class="lang-tags">
                         <span class="lang-tag mojo">Mojo</span>
-                        <span class="lang-tag python">Python</span>
                     </div>
                     <span class="arrow">→</span>
                 </div>
@@ -1079,7 +1077,6 @@
                     <p>Linear algebra, statistics, and performance benchmarks.</p>
                     <div class="lang-tags">
                         <span class="lang-tag mojo">Mojo</span>
-                        <span class="lang-tag python">Python</span>
                     </div>
                     <span class="arrow">→</span>
                 </div>
@@ -1091,7 +1088,6 @@
                     <p>Gradient descent, loss functions, and training loops.</p>
                     <div class="lang-tags">
                         <span class="lang-tag mojo">Mojo</span>
-                        <span class="lang-tag python">Python</span>
                     </div>
                     <span class="arrow">→</span>
                 </div>
@@ -1103,7 +1099,6 @@
                     <p>Linear regression, neural networks, and model evaluation.</p>
                     <div class="lang-tags">
                         <span class="lang-tag mojo">Mojo</span>
-                        <span class="lang-tag python">Python</span>
                     </div>
                     <span class="arrow">→</span>
                 </div>
@@ -1126,7 +1121,6 @@
                     <p>GPU acceleration, deployment, and production pipelines.</p>
                     <div class="lang-tags">
                         <span class="lang-tag mojo">Mojo</span>
-                        <span class="lang-tag python">Python</span>
                     </div>
                     <span class="arrow">→</span>
                 </div>
@@ -1138,7 +1132,6 @@
                     <p>Same algorithms side-by-side: quadratic equations, compound interest, NPV, and more.</p>
                     <div class="lang-tags">
                         <span class="lang-tag mojo">Mojo</span>
-                        <span class="lang-tag python">Python</span>
                     </div>
                     <span class="arrow">→</span>
                 </div>
@@ -1193,30 +1186,17 @@
                 <div class="code-tabs">
                     <div class="tabs-header">
                         <button class="tab-btn active" data-tab="ch1-mojo">Mojo</button>
-                        <button class="tab-btn" data-tab="ch1-python">Python</button>
                     </div>
                     <div class="tab-content active" id="ch1-mojo">
-                        <pre><span class="cmt"># Hello, world! in Mojo</span>
+                        <pre><span class="cmt">// Hello, world! in Mojo</span>
 <span class="kw">def</span> <span class="fn">main</span>():
     <span class="kw">var</span> msg = <span class="str">"Hello from Mojo!"</span>
     <span class="fn">print</span>(msg)
 
-<span class="cmt"># A simple tensor operation</span>
+<span class="cmt">// A simple tensor operation</span>
 <span class="kw">var</span> a = <span class="fn">Tensor</span>(<span class="type">Float32</span>, [<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>])
 <span class="kw">var</span> b = a <span class="op">*</span> <span class="num">2.0</span>
-<span class="fn">print</span>(b)  <span class="cmt"># [2.0, 4.0, 6.0]</span></pre>
-                    </div>
-                    <div class="tab-content" id="ch1-python">
-                        <pre><span class="cmt"># Hello, world! in Python</span>
-<span class="kw">def</span> <span class="fn">main</span>():
-    msg = <span class="str">"Hello from Python!"</span>
-    <span class="fn">print</span>(msg)
-
-<span class="cmt"># A simple array operation</span>
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-a = np.array([<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>])
-b = a <span class="op">*</span> <span class="num">2.0</span>
-<span class="fn">print</span>(b)  <span class="cmt"># [2.0, 4.0, 6.0]</span></pre>
+<span class="fn">print</span>(b)  <span class="cmt">// [2.0, 4.0, 6.0]</span></pre>
                     </div>
                 </div>
 
@@ -1229,8 +1209,9 @@ b = a <span class="op">*</span> <span class="num">2.0</span>
                 </div>
 
                 <p>
-                    Throughout this textbook, we'll explore Mojo's capabilities for data science and ML,
-                    always providing context with Python examples so you can see the full picture.
+                    Throughout this textbook, we'll explore Mojo's capabilities for data science and ML.
+                    Where NumPy or PyTorch is the natural tool for a reader coming from Python, the
+                    chapter says so in prose and shows the Mojo equivalent instead.
                 </p>
             </div>
         </div>
@@ -1258,7 +1239,7 @@ b = a <span class="op">*</span> <span class="num">2.0</span>
 
                 <div class="info-box">
                     <strong>💻 Quick Install (prebuilt):</strong>
-                    <pre style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-secondary);margin-top:6px;background:rgba(0,0,0,0.3);padding:12px 16px;border-radius:8px;overflow-x:auto;">curl -sSL https:#get.modular.com | sh
+                    <pre style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-secondary);margin-top:6px;background:rgba(0,0,0,0.3);padding:12px 16px;border-radius:8px;overflow-x:auto;">curl -sSL https://get.modular.com | sh
 mojo init my_project
 cd my_project
 mojo run main.mojo</pre>
@@ -1266,7 +1247,7 @@ mojo run main.mojo</pre>
 
                 <div class="info-box">
                     <strong>🔓 Or build from source (Mojo is open source):</strong>
-                    <pre style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-secondary);margin-top:6px;background:rgba(0,0,0,0.3);padding:12px 16px;border-radius:8px;overflow-x:auto;">git clone https:#github.com/modular/modular.git
+                    <pre style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-secondary);margin-top:6px;background:rgba(0,0,0,0.3);padding:12px 16px;border-radius:8px;overflow-x:auto;">git clone https://github.com/modular/modular.git
 cd modular
 ./bazelw run --config=build-mojo KGEN:mojo -- run hello.mojo</pre>
                 </div>
@@ -1288,7 +1269,7 @@ cd modular
                         <button class="tab-btn active" data-tab="ch2-mojo">Mojo</button>
                     </div>
                     <div class="tab-content active" id="ch2-mojo">
-                        <pre><span class="cmt"># Mojo — typed variables and control flow</span>
+                        <pre><span class="cmt">// Mojo — typed variables and control flow</span>
 <span class="kw">def</span> <span class="fn">compute_mean</span>(data: <span class="type">List</span>[<span class="type">Float32</span>]) -&gt; <span class="type">Float32</span>:
     <span class="kw">var</span> sum: <span class="type">Float32</span> = <span class="num">0.0</span>
     <span class="kw">for</span> x <span class="kw">in</span> data:
@@ -1346,46 +1327,26 @@ cd modular
                 <div class="code-tabs">
                     <div class="tabs-header">
                         <button class="tab-btn active" data-tab="ch3-mojo">Mojo</button>
-                        <button class="tab-btn" data-tab="ch3-python">Python (NumPy)</button>
                     </div>
                     <div class="tab-content active" id="ch3-mojo">
-                        <pre><span class="cmt"># Mojo — tensor creation and operations</span>
+                        <pre><span class="cmt">// Mojo — tensor creation and operations</span>
 <span class="kw">from</span> tensor <span class="kw">import</span> Tensor
 
 <span class="kw">def</span> <span class="fn">main</span>():
-    <span class="cmt"># Create a 2x3 tensor</span>
+    <span class="cmt">// Create a 2x3 tensor</span>
     <span class="kw">var</span> a = <span class="fn">Tensor</span>[<span class="type">Float32</span>](<span class="fn">shape</span>=[<span class="num">2</span>, <span class="num">3</span>], <span class="fn">values</span>=[<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>,
         <span class="num">4.0</span>, <span class="num">5.0</span>, <span class="num">6.0</span>])
 
-    <span class="cmt"># Element-wise operations</span>
-    <span class="kw">var</span> b = a <span class="op">+</span> <span class="num">10.0</span>                 <span class="cmt"># broadcast add</span>
-    <span class="kw">var</span> c = a <span class="op">*</span> <span class="fn">Tensor</span>[<span class="type">Float32</span>]([<span class="num">2.0</span>, <span class="num">3.0</span>, <span class="num">4.0</span>])  <span class="cmt"># broadcast multiply</span>
+    <span class="cmt">// Element-wise operations</span>
+    <span class="kw">var</span> b = a <span class="op">+</span> <span class="num">10.0</span>                 <span class="cmt">// broadcast add</span>
+    <span class="kw">var</span> c = a <span class="op">*</span> <span class="fn">Tensor</span>[<span class="type">Float32</span>]([<span class="num">2.0</span>, <span class="num">3.0</span>, <span class="num">4.0</span>])  <span class="cmt">// broadcast multiply</span>
 
-    <span class="cmt"># Matrix multiplication</span>
+    <span class="cmt">// Matrix multiplication</span>
     <span class="kw">var</span> d = <span class="fn">matmul</span>(a, <span class="fn">transpose</span>(a))
 
     <span class="fn">print</span>(<span class="str">"a:"</span>, a)
     <span class="fn">print</span>(<span class="str">"b:"</span>, b)
     <span class="fn">print</span>(<span class="str">"d:"</span>, d)</pre>
-                    </div>
-                    <div class="tab-content" id="ch3-python">
-                        <pre><span class="cmt"># Python — NumPy equivalents</span>
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="cmt"># Create a 2x3 array</span>
-a = np.array([[<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>],
-[<span class="num">4.0</span>, <span class="num">5.0</span>, <span class="num">6.0</span>]])
-
-<span class="cmt"># Element-wise operations</span>
-b = a <span class="op">+</span> <span class="num">10.0</span>
-c = a <span class="op">*</span> np.array([<span class="num">2.0</span>, <span class="num">3.0</span>, <span class="num">4.0</span>])
-
-<span class="cmt"># Matrix multiplication</span>
-d = a <span class="op">@</span> a.T
-
-<span class="fn">print</span>(<span class="str">"a:"</span>, a)
-<span class="fn">print</span>(<span class="str">"b:"</span>, b)
-<span class="fn">print</span>(<span class="str">"d:"</span>, d)</pre>
                     </div>
                 </div>
 
@@ -1429,11 +1390,10 @@ d = a <span class="op">@</span> a.T
 
                 <div class="code-tabs">
                     <div class="tabs-header">
-                        <button class="tab-btn" data-tab="ch4-mojo">Mojo</button>
-                        <button class="tab-btn active" data-tab="ch4-python">Python</button>
+                        <button class="tab-btn active" data-tab="ch4-mojo">Mojo</button>
                     </div>
-                    <div class="tab-content" id="ch4-mojo">
-                        <pre><span class="cmt"># Mojo — linear algebra</span>
+                    <div class="tab-content active" id="ch4-mojo">
+                        <pre><span class="cmt">// Mojo — linear algebra</span>
 <span class="kw">from</span> linalg <span class="kw">import</span> matmul, inverse, svd
 <span class="kw">from</span> stats <span class="kw">import</span> mean, std, corrcoef
 
@@ -1441,35 +1401,17 @@ d = a <span class="op">@</span> a.T
     <span class="kw">var</span> X = <span class="fn">Tensor</span>[<span class="type">Float32</span>](<span class="fn">randn</span>([<span class="num">100</span>, <span class="num">10</span>]))
     <span class="kw">var</span> y = <span class="fn">Tensor</span>[<span class="type">Float32</span>](<span class="fn">randn</span>([<span class="num">100</span>, <span class="num">1</span>]))
 
-    <span class="cmt"># Normal equation: (X^T X)^(-1) X^T y</span>
+    <span class="cmt">// Normal equation: (X^T X)^(-1) X^T y</span>
     <span class="kw">var</span> XtX = <span class="fn">matmul</span>(<span class="fn">transpose</span>(X), X)
     <span class="kw">var</span> Xty = <span class="fn">matmul</span>(<span class="fn">transpose</span>(X), y)
     <span class="kw">var</span> beta = <span class="fn">matmul</span>(<span class="fn">inverse</span>(XtX), Xty)
 
-    <span class="cmt"># Summary statistics</span>
+    <span class="cmt">// Summary statistics</span>
     <span class="kw">var</span> means = <span class="fn">mean</span>(X, <span class="fn">axis</span>=<span class="num">0</span>)
     <span class="kw">var</span> stdevs = <span class="fn">std</span>(X, <span class="fn">axis</span>=<span class="num">0</span>)
 
     <span class="fn">print</span>(<span class="str">"Beta:"</span>, beta)
     <span class="fn">print</span>(<span class="str">"Means:"</span>, means)</pre>
-                    </div>
-                    <div class="tab-content active" id="ch4-python">
-                        <pre><span class="cmt"># Python — with NumPy &amp; SciPy</span>
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">from</span> scipy.linalg <span class="kw">import</span> inv, svd
-
-X = np.random.randn(<span class="num">100</span>, <span class="num">10</span>)
-y = np.random.randn(<span class="num">100</span>, <span class="num">1</span>)
-
-<span class="cmt"># Normal equation</span>
-beta = inv(X.T <span class="op">@</span> X) <span class="op">@</span> X.T <span class="op">@</span> y
-
-<span class="cmt"># Summary statistics</span>
-means = X.mean(<span class="fn">axis</span>=<span class="num">0</span>)
-stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
-
-<span class="fn">print</span>(<span class="str">"Beta:"</span>, beta)
-<span class="fn">print</span>(<span class="str">"Means:"</span>, means)</pre>
                     </div>
                 </div>
 
@@ -1516,40 +1458,26 @@ stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
                 <div class="code-tabs">
                     <div class="tabs-header">
                         <button class="tab-btn active" data-tab="ch5-mojo">Mojo</button>
-                        <button class="tab-btn" data-tab="ch5-python">Python</button>
                     </div>
                     <div class="tab-content active" id="ch5-mojo">
-                        <pre><span class="cmt"># Mojo — linear regression with gradient descent</span>
+                        <pre><span class="cmt">// Mojo — linear regression with gradient descent</span>
 <span class="kw">def</span> <span class="fn">linear_regression</span>(X: <span class="type">Tensor</span>[<span class="type">Float32</span>], y: <span class="type">Tensor</span>[<span class="type">Float32</span>],
     lr: <span class="type">Float32</span>, epochs: <span class="type">Int</span>) -&gt; <span class="type">Tensor</span>[<span class="type">Float32</span>]:
     <span class="kw">var</span> n = X.<span class="fn">shape</span>(<span class="num">0</span>)
     <span class="kw">var</span> p = X.<span class="fn">shape</span>(<span class="num">1</span>)
 
-    <span class="cmt"># Initialize weights to zero</span>
+    <span class="cmt">// Initialize weights to zero</span>
     <span class="kw">var</span> w = <span class="fn">Tensor</span>[<span class="type">Float32</span>](<span class="fn">zeros</span>([p, <span class="num">1</span>]))
 
     <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
-        <span class="cmt"># Forward pass: y_pred = X @ w</span>
+        <span class="cmt">// Forward pass: y_pred = X @ w</span>
         <span class="kw">var</span> y_pred = <span class="fn">matmul</span>(X, w)
 
-        <span class="cmt"># Gradient: (2/n) * X^T @ (y_pred - y)</span>
+        <span class="cmt">// Gradient: (2/n) * X^T @ (y_pred - y)</span>
         <span class="kw">var</span> grad = (<span class="num">2.0</span> <span class="op">/</span> <span class="fn">Float32</span>(n)) <span class="op">*</span>
             <span class="fn">matmul</span>(<span class="fn">transpose</span>(X), y_pred <span class="op">-</span> y)
 
-        <span class="cmt"># Update weights</span>
-        w = w <span class="op">-</span> lr <span class="op">*</span> grad
-
-    <span class="kw">return</span> w</pre>
-                    </div>
-                    <div class="tab-content" id="ch5-python">
-                        <pre><span class="cmt"># Python — with NumPy</span>
-<span class="kw">def</span> <span class="fn">linear_regression</span>(X, y, lr=<span class="num">0.01</span>, epochs=<span class="num">1000</span>):
-    n, p = X.shape
-    w = np.zeros((p, <span class="num">1</span>))
-
-    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(epochs):
-        y_pred = X <span class="op">@</span> w
-        grad = (<span class="num">2.0</span> <span class="op">/</span> n) <span class="op">*</span> X.T <span class="op">@</span> (y_pred <span class="op">-</span> y)
+        <span class="cmt">// Update weights</span>
         w = w <span class="op">-</span> lr <span class="op">*</span> grad
 
     <span class="kw">return</span> w</pre>
@@ -1582,8 +1510,9 @@ stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
             <div class="chapter-body">
                 <p>
                     In this chapter, we'll build a complete <strong>neural network</strong> from
-                    scratch in Mojo, train it on synthetic data, and evaluate its performance.
-                    We'll compare the implementation with Python (PyTorch).
+                    scratch in Mojo, train it on synthetic data, and evaluate its performance —
+                    the same two-layer model you would otherwise write as a PyTorch
+                    <code>nn.Module</code>.
                 </p>
 
                 <h3>A Simple Neural Network</h3>
@@ -1595,10 +1524,9 @@ stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
                 <div class="code-tabs">
                     <div class="tabs-header">
                         <button class="tab-btn active" data-tab="ch6-mojo">Mojo</button>
-                        <button class="tab-btn" data-tab="ch6-python">Python (PyTorch)</button>
                     </div>
                     <div class="tab-content active" id="ch6-mojo">
-                        <pre><span class="cmt"># Mojo — 2-layer neural network</span>
+                        <pre><span class="cmt">// Mojo — 2-layer neural network</span>
 <span class="kw">struct</span> <span class="type">NeuralNet</span>:
     <span class="kw">var</span> w1: <span class="type">Tensor</span>[<span class="type">Float32</span>]
     <span class="kw">var</span> w2: <span class="type">Tensor</span>[<span class="type">Float32</span>]
@@ -1612,24 +1540,8 @@ stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
 
     <span class="kw">def</span> <span class="fn">train_step</span>(<span class="kw">mut</span> <span class="kw">self</span>, X: <span class="type">Tensor</span>[<span class="type">Float32</span>],
         y: <span class="type">Tensor</span>[<span class="type">Float32</span>], lr: <span class="type">Float32</span>):
-        <span class="cmt"># ... gradient computation &amp; update (simplified)</span>
-        <span class="cmt"># In practice, use Mojo's autodiff</span></pre>
-                    </div>
-                    <div class="tab-content" id="ch6-python">
-                        <pre><span class="cmt"># Python — PyTorch equivalent</span>
-<span class="kw">import</span> torch
-<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
-
-<span class="kw">class</span> <span class="type">NeuralNet</span>(nn.Module):
-    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, input_size, hidden_size, output_size):
-        <span class="kw">super</span>().<span class="fn">__init__</span>()
-        <span class="kw">self</span>.fc1 = nn.Linear(input_size, hidden_size)
-        <span class="kw">self</span>.fc2 = nn.Linear(hidden_size, output_size)
-        <span class="kw">self</span>.relu = nn.ReLU()
-
-    <span class="kw">def</span> <span class="fn">forward</span>(<span class="kw">self</span>, X):
-        h = <span class="kw">self</span>.relu(<span class="kw">self</span>.fc1(X))
-        <span class="kw">return</span> <span class="kw">self</span>.fc2(h)</pre>
+        <span class="cmt">// ... gradient computation &amp; update (simplified)</span>
+                        <span class="cmt">// In practice, use Mojo's autodiff</span></pre>
                     </div>
                 </div>
 
@@ -1684,14 +1596,14 @@ stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
                         <button class="tab-btn active" data-tab="ch7-mojo">Mojo</button>
                     </div>
                     <div class="tab-content active" id="ch7-mojo">
-                        <pre><span class="cmt"># Mojo — explicit SIMD with vector types</span>
+                        <pre><span class="cmt">// Mojo — explicit SIMD with vector types</span>
 <span class="kw">from</span> simd <span class="kw">import</span> vector
 
 <span class="kw">def</span> <span class="fn">vector_add</span>(a: <span class="type">Tensor</span>[<span class="type">Float32</span>], b: <span class="type">Tensor</span>[<span class="type">Float32</span>]) -&gt; <span class="type">Tensor</span>[<span class="type">Float32</span>]:
     <span class="kw">var</span> n = a.<span class="fn">size</span>()
     <span class="kw">var</span> result = <span class="fn">Tensor</span>[<span class="type">Float32</span>](<span class="fn">zeros</span>([n]))
 
-    <span class="cmt"># Vectorized loop with 8-wide SIMD</span>
+    <span class="cmt">// Vectorized loop with 8-wide SIMD</span>
     <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, n, <span class="num">8</span>):
         <span class="kw">var</span> va = <span class="fn">load</span>[<span class="type">vector</span>[<span class="type">Float32</span>, <span class="num">8</span>]](a, i)
         <span class="kw">var</span> vb = <span class="fn">load</span>[<span class="type">vector</span>[<span class="type">Float32</span>, <span class="num">8</span>]](b, i)
@@ -1750,10 +1662,9 @@ stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
                 <div class="code-tabs">
                     <div class="tabs-header">
                         <button class="tab-btn active" data-tab="ch8-mojo">Mojo (GPU)</button>
-                        <button class="tab-btn" data-tab="ch8-python">Python (CuPy)</button>
                     </div>
                     <div class="tab-content active" id="ch8-mojo">
-                        <pre><span class="cmt"># Mojo — GPU kernel for matrix multiplication</span>
+                        <pre><span class="cmt">// Mojo — GPU kernel for matrix multiplication</span>
 <span class="kw">from</span> gpu <span class="kw">import</span> cuda
 
 <span class="kw">@cuda</span>
@@ -1769,18 +1680,17 @@ stdevs = X.std(<span class="fn">axis</span>=<span class="num">0</span>)
 
     C[i, j] = sum</pre>
                     </div>
-                    <div class="tab-content" id="ch8-python">
-                        <pre><span class="cmt"># Python — CuPy (NumPy on GPU)</span>
-<span class="kw">import</span> cupy <span class="kw">as</span> cp
+                </div>
 
-<span class="kw">def</span> <span class="fn">matmul_gpu</span>(A, B):
-    <span class="kw">return</span> A <span class="op">@</span> B
-
-<span class="cmt"># CuPy automatically uses GPU</span>
-A = cp.random.randn(<span class="num">1024</span>, <span class="num">1024</span>)
-B = cp.random.randn(<span class="num">1024</span>, <span class="num">1024</span>)
-C = <span class="fn">matmul_gpu</span>(A, B)</pre>
-                    </div>
+                <div class="info-box">
+                    <strong>🔌 The alternative:</strong>
+                    <p>
+                        CuPy takes the opposite approach: <code>cp.random.randn(...)</code> and
+                        <code>A @ B</code> are dispatched to the GPU with no kernel of your own, so
+                        you get the speed without the parallelism. The trade-off is that the
+                        blocking strategy is the library's, not yours — and every one of those
+                        arrays still lives behind a Python object.
+                    </p>
                 </div>
 
                 <div class="info-box">

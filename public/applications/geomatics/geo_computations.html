@@ -52,6 +52,11 @@ header .lede{position:relative;max-width:820px;font-size:1.13rem;opacity:.94;col
   background:rgba(255,255,255,.08);backdrop-filter:blur(4px);color:#eaf1ff;
   border-radius:999px;padding:7px 15px;font-size:.86rem;font-weight:600}
 .chip b{color:#7ce7d4;font-weight:700}
+.hero-links{position:relative;display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.hero-links a{display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);
+  color:#eaf1ff;text-decoration:none;font-size:.86rem;font-weight:600;transition:.15s}
+.hero-links a:hover{background:rgba(255,255,255,.2);border-color:#7ce7d4;transform:translateY(-1px)}
 .term{position:relative;margin-top:30px;max-width:680px;border-radius:12px;overflow:hidden;
   border:1px solid rgba(255,255,255,.22);background:rgba(6,15,35,.72);box-shadow:0 18px 45px rgba(0,0,0,.35)}
 .term .tbar{display:flex;gap:6px;padding:9px 14px;background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.14)}
@@ -59,13 +64,23 @@ header .lede{position:relative;max-width:820px;font-size:1.13rem;opacity:.94;col
 .term .tbar i:nth-child(1){background:#ff5f57}.term .tbar i:nth-child(2){background:#febc2e}
 .term .tbar i:nth-child(3){background:#28c840}
 .term pre{margin:0;padding:14px 16px;color:#69f0dd;font-size:.9rem}
-.course-map{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:7px 12px;margin-top:24px;
-  color:#d7e4ff;font-size:.9rem}
-.course-map strong{color:#7ce7d4}
-.course-map a{color:#b9d2ff;text-decoration:none;border-bottom:1px solid rgba(185,210,255,.45)}
-.course-map a:hover{color:#fff;border-color:#7ce7d4}
 
-/* --- nav ---------------------------------------------------------- */
+/* --- application navigation ---------------------------------------- */
+.app-nav{position:relative;z-index:51;background:#071a33;color:#dbeafe;
+  border-bottom:1px solid #16385a}
+.app-nav-inner{max-width:1180px;margin:0 auto;padding:10px 22px;display:flex;
+  align-items:center;justify-content:space-between;gap:18px}
+.app-nav-brand{display:inline-flex;align-items:center;gap:8px;color:#fff;
+  text-decoration:none;font-family:"Space Grotesk",Inter,sans-serif;font-weight:700;white-space:nowrap}
+.app-nav-brand span{font-size:1.1rem}
+.app-nav-brand small{color:#ffe4a3;font-family:Inter,sans-serif;font-size:.72rem;font-weight:500}
+.app-nav-links{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px}
+.app-nav-links a{padding:6px 11px;border-radius:999px;color:#a9c4e2;
+  text-decoration:none;font-size:.78rem;font-weight:600;transition:.15s}
+.app-nav-links a:hover{color:#fff;background:rgba(255,255,255,.1)}
+.app-nav-links a[aria-current="page"]{color:#071a33;background:#7ce7d4}
+
+/* --- tutorial navigation ------------------------------------------- */
 nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);
   backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
   padding:9px clamp(22px,7vw,60px);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
@@ -74,10 +89,6 @@ nav a{display:inline-block;margin-right:6px;padding:7px 14px;border-radius:999px
   color:var(--muted);text-decoration:none;font-weight:600;font-size:.88rem;transition:.15s}
 nav a:hover{color:var(--brand);background:var(--soft)}
 nav a.active{color:#fff;background:var(--brand)}
-nav.course-nav{position:relative;top:auto;background:transparent;border-bottom:0;
-  padding:13px clamp(22px,7vw,60px) 0;overflow:visible;white-space:normal}
-nav.course-nav a{background:rgba(13,99,224,.06);border:1px solid rgba(13,99,224,.14)}
-nav.course-nav a:hover{background:rgba(13,99,224,.12)}
 
 /* --- layout ------------------------------------------------------- */
 main{max-width:1180px;margin:auto;padding:40px 22px 90px}
@@ -170,11 +181,34 @@ ol.steps>li{margin:9px 0}
 .toTop.show{opacity:1;pointer-events:auto}
 footer{background:var(--deep);color:#b9c8e8;padding:38px clamp(22px,7vw,60px)}
 footer strong{color:#fff;font-family:"Space Grotesk",sans-serif;font-size:1.05rem}
-footer p{margin:6px 0 0;font-size:.9rem;color:#7f92ba}
-footer a{color:#9ec5ff;text-decoration:none}
-footer a:hover{color:#fff;text-decoration:underline}
+footer p{margin:6px 0 0;font-size:.9rem;color:#ffe4a3}
+.footer-inner{max-width:1180px;margin:0 auto;display:flex;align-items:flex-end;
+  justify-content:space-between;gap:28px;flex-wrap:wrap}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px 16px;max-width:540px}
+.footer-links a{color:#a9c4e2;font-size:.86rem;text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:#7ce7d4}
+@media (max-width:700px){ .footer-links{justify-content:flex-start} }
+
+/* --- cross-navigation --------------------------------------------- */
+.next-steps{margin:60px 0 0;padding:26px;border:1px solid var(--line);border-radius:16px;
+  background:linear-gradient(135deg,#fff,#f4f8ff)}
+.next-steps h3{font-size:1.25rem;margin:0 0 6px;color:#16305e}
+.next-steps > p{color:var(--muted);margin:0 0 18px}
+.next-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.next-link{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:16px;
+  border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);
+  text-decoration:none;transition:transform .15s,border-color .15s,box-shadow .15s}
+.next-link:hover{transform:translateY(-2px);border-color:#9cc5ff;box-shadow:0 10px 24px rgba(13,99,224,.1)}
+.next-link .tag{margin:0 0 4px}
+.next-link strong{color:#16305e;font-size:.95rem}
+.next-link small{color:var(--muted);font-size:.8rem;line-height:1.45}
+
 .divider{border:none;border-top:1px dashed #c4d2e8;margin:34px 0}
-@media (max-width:700px){ main{padding-top:24px}.secnum{min-width:32px;height:32px;font-size:.9rem} }
+@media (max-width:700px){ main{padding-top:24px}.secnum{min-width:32px;height:32px;font-size:.9rem}
+  .app-nav-inner{align-items:flex-start;flex-direction:column;gap:8px}
+  .app-nav-links{justify-content:flex-start}
+  .next-steps{padding:20px 16px}
+}
 @media print{
   nav,#progress,.toTop,.copyBtn,.dots{display:none!important}
   .codeblock{box-shadow:none;border:1px solid #bbb;page-break-inside:avoid}
@@ -183,6 +217,20 @@ footer a:hover{color:#fff;text-decoration:underline}
 </style>
 </head>
 <body>
+
+<div class="app-nav" role="navigation" aria-label="TutMe application navigation">
+  <div class="app-nav-inner">
+    <a class="app-nav-brand" href="../../index.html"><span>🔥</span> TutMe <small>Learning Hub</small></a>
+    <div class="app-nav-links">
+      <a href="../../index.html">Home</a>
+      <a href="../../mojo_v1/index.html">Fundamentals</a>
+      <a href="../../data_science/index.html">Data Science</a>
+      <a href="../index.html">Applications</a>
+      <a href="index.html" aria-current="page">Geomatics</a>
+      <a href="../../praxis/index.html">Praxis</a>
+    </div>
+  </div>
+</div>
 
 <div id="progress"></div>
 
@@ -199,30 +247,20 @@ footer a:hover{color:#fff;text-decoration:underline}
     <span class="chip">v 0.7 syntax &bull; t-strings</span>
     <span class="chip">Target <b>land surveyors &amp; geodesists</b></span>
   </div>
-  <div class="course-map">
-    <strong>Course map:</strong>
-    <a href="gnss_surveying.html">GNSS Surveying &mdash; frames &amp; calibration</a>
-    <a href="karney_krueger_equations.html">Karney&ndash;Krueger &mdash; projection</a>
-    <a href="../../praxis/progressive/prog_09_bearing.html">Practice &mdash; bearing &amp; distance</a>
-  </div>
   <div class="term">
-    <div class="tbar"><i></i><i></i><i></i><span style="margin-left:10px;color:#8fa3c8;font-size:.78rem">geomatics.mojo &mdash; run or compile</span></div>
+    <div class="tbar"><i></i><i></i><i></i><span style="margin-left:10px;color:#ffe4a3;font-size:.78rem">geomatics.mojo &mdash; run or compile</span></div>
     <pre>$ mojo run geomatics.mojo        # JIT: compile &amp; run in one step
 $ mojo build geomatics.mojo      # native, optimised binary (release)</pre>
   </div>
+  <div class="hero-links" aria-label="Related application resources">
+    <a href="index.html">Browse the Geomatics shelf →</a>
+    <a href="gnss_surveying.html">GNSS Surveying</a>
+    <a href="karney_krueger_equations.html">Karney–Krueger Equations</a>
+    <a href="../../praxis/drill_22.html">Practice in Praxis</a>
+  </div>
 </header>
 
-<nav class="course-nav" aria-label="Course navigation">
-  <a href="../../index.html">📚 TutMe</a>
-  <a href="../index.html">🧩 Applications</a>
-  <a href="index.html">🌐 Geomatics</a>
-  <a href="../../mojo_v1/index.html">🧠 Mojo Fundamentals</a>
-  <a href="gnss_surveying.html">🛰️ GNSS Surveying</a>
-  <a href="karney_krueger_equations.html">📐 Karney&ndash;Krueger</a>
-  <a href="../../praxis/index.html">💪 Praxis</a>
-</nav>
-
-<nav id="toc" aria-label="On this page">
+<nav id="toc">
   <a href="#why-mojo" class="active">Why Mojo</a>
   <a href="#primer">Mojo Primer</a>
   <a href="#coordinates">Coordinates</a>
@@ -315,7 +353,7 @@ $ mojo build geomatics.mojo      # native, optimised binary (release)</pre>
   <h3><span class="hash">2.1</span> A first honest hello</h3>
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">hello.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">hello.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>def main():
     var station: String = "Camp 07 / RN21"    # UTF-8 text is fine
@@ -343,12 +381,6 @@ E = 526487.12 m   N = 7400152.76 m</pre></div>
   <p class="secsub">The inverse problem &mdash; from two coordinates to distance and azimuth &mdash; is
   the building block of nearly every survey computation that follows.</p>
 
-  <div class="note"><span class="t">Cross-reference</span>
-  For the geodetic-to-ECEF and local-frame foundation, see
-  <a href="gnss_surveying.html#frames" style="color:inherit">GNSS Surveying &sect;1</a>.
-  To carry these coordinates onto a projected grid, continue with
-  <a href="karney_krueger_equations.html#s5" style="color:inherit">Karney&ndash;Krueger &sect;5</a>.</div>
-
   <h3><span class="hash">3.1</span> Distance and azimuth between two points</h3>
   <div class="tablewrap">
   <table>
@@ -365,7 +397,7 @@ E = 526487.12 m   N = 7400152.76 m</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">direct.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">direct.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import atan2, hypot, pi
 
@@ -404,7 +436,7 @@ Azimuth  = 54.2461 degrees</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">dms.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">dms.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import abs
 
@@ -452,7 +484,7 @@ and back   -&gt;  54 deg 15 min 0.0 sec</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">traverse.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">traverse.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import cos, pi, sin
 
@@ -489,7 +521,7 @@ def main():
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">misclosure.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">misclosure.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import hypot
 
@@ -525,7 +557,7 @@ Relative precision = 1 : 1798</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">bowditch.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">bowditch.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import abs
 
@@ -584,7 +616,7 @@ closure check  sum(dE) = 0.0  sum(dN) = 0.0</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">intersect.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">intersect.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import cos, pi, sin
 
@@ -673,7 +705,7 @@ Distance from B  = 176.777 m</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">tienstra.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">tienstra.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import acos, pi, sqrt, tan
 
@@ -748,7 +780,7 @@ Angle closure error = 0.0 arc-seconds</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">danger_circle.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">danger_circle.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import abs, sqrt
 
@@ -812,7 +844,7 @@ Distance from danger circle = 174.322 m</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">free_station.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">free_station.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import abs, atan2, pi, sqrt
 
@@ -993,7 +1025,7 @@ std(z) = 0.434 arc-seconds</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">dist_resection.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">dist_resection.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import abs, max, sqrt
 
@@ -1074,7 +1106,7 @@ def main():
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">parcel.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">parcel.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import abs
 
@@ -1128,12 +1160,6 @@ Centroid = (133.423, 130.541)</pre></div>
   important in practise is the <strong>2D similarity</strong> (Helmert) transformation: translation
   (Tx, Ty), a common rotation &#952; and a uniform scale s.</p>
 
-  <div class="note"><span class="t">Cross-reference</span>
-  The frame-to-frame choices, Helmert variants and control-point fitting are developed in
-  <a href="gnss_surveying.html#transforms" style="color:inherit">GNSS Surveying &sect;2</a>.
-  For the projection step that follows a datum or frame change, use
-  <a href="karney_krueger_equations.html#s5" style="color:inherit">Karney&ndash;Krueger &sect;5</a>.</div>
-
   <div class="formula">
     X = Tx + s (x cos&#952; &minus; y sin&#952;)<br>
     Y = Ty + s (x sin&#952; + y cos&#952;)
@@ -1141,7 +1167,7 @@ Centroid = (133.423, 130.541)</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">similarity.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">similarity.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import cos, pi, sin
 
@@ -1223,11 +1249,6 @@ def main():
   <p class="secsub">The heart of modern survey adjustment. For an overdetermined linear system the
   best estimate (in the &ldquo;minimise v&#7512;Pv&rdquo; sense) is:</p>
 
-  <div class="note"><span class="t">Cross-reference</span>
-  The same normal-equation thinking appears in <a href="gnss_surveying.html#calibration" style="color:inherit">GNSS Surveying &sect;3</a>
-  for site calibration, while the inverse projection uses it in
-  <a href="karney_krueger_equations.html#s6" style="color:inherit">Karney&ndash;Krueger &sect;6</a>.</div>
-
   <div class="formula">
     x&#770; = (A&#7512;P A)&#8315;&#185; A&#7512;P l &nbsp;&nbsp;&nbsp;
     with weights P&#7522; = 1/&#963;&#7522;&#178;
@@ -1247,7 +1268,7 @@ def main():
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">linefit.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">linefit.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import sqrt
 
@@ -1304,7 +1325,7 @@ std(a) = 0.101   std(b) = 0.0041</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">weighted.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">weighted.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>def main():
     var x: List[Float64] = [0.0, 10.0, 20.0, 30.0, 40.0]
@@ -1353,7 +1374,7 @@ std(a) = 0.101   std(b) = 0.0041</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">levelling.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">levelling.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>def main():
     var rlStart = 100.0
@@ -1378,7 +1399,7 @@ std(a) = 0.101   std(b) = 0.0041</pre></div>
 
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">loop.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">loop.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>def main():
     var misclosure = 0.012                           # metres
@@ -1414,18 +1435,13 @@ Check sum = -0.012 m</pre></div>
   <p class="secsub">GNSS delivers Cartesian or geodetic coordinates directly; the geometry is 3D, and
   uncertainty flows through every downstream computation.</p>
 
-  <div class="note"><span class="t">Cross-reference</span>
-  For the receiver-side concepts &mdash; frames, point positioning, DOP and error budgets &mdash; see
-  <a href="gnss_surveying.html#gps" style="color:inherit">GNSS Surveying &sect;5</a>.
-  The matching practice exercise is <a href="../../praxis/drill_25.html" style="color:inherit">Praxis Drill 25</a>.</div>
-
   <h3><span class="hash">12.1</span> 3D Cartesian distance</h3>
   <div class="formula">
     d = &#8730;(&#916;X&#178; + &#916;Y&#178; + &#916;Z&#178;)
   </div>
   <div class="codeblock">
     <div class="codebar"><span class="dots"><i></i><i></i><i></i></span>
-      <span class="slide"><span class="fileName" style="color:#8fa3c8;font-size:.8rem">gnss3d.mojo</span></span>
+      <span class="slide"><span class="fileName" style="color:#ffe4a3;font-size:.8rem">gnss3d.mojo</span></span>
       <button class="copyBtn" type="button">Copy</button></div>
   <pre><code>from std.math import sqrt
 
@@ -1467,11 +1483,6 @@ sigma(distance) = 11.75 mm</pre></div>
   <h2><span class="secnum">13</span> A Practical Survey Computation Workflow</h2>
   <p class="secsub">Automation never replaces professional judgement &mdash; it amplifies it. This is the
   order in which professionals (and good programs) do things.</p>
-
-  <div class="note"><span class="t">Cross-reference</span>
-  For the field-to-office GNSS version of this workflow, including CRS choices, independent checks and
-  RMSE reporting, open <a href="gnss_surveying.html#workflow" style="color:inherit">GNSS Surveying &sect;6</a>.</div>
-
   <div class="card">
   <ol class="steps">
     <li><strong>Define the datum and coordinate system.</strong> Record CRS, units, axis order and vertical datum before anything else.</li>
@@ -1521,11 +1532,7 @@ sigma(distance) = 11.75 mm</pre></div>
 <section id="practice">
   <h2><span class="secnum">15</span> Practice Problems</h2>
   <p class="secsub">Work these in Mojo &mdash; each is a natural <code>def</code> plus a <code>main()</code>
-  block, and each builds on the sections above. For guided drills, continue with
-  <a href="../../praxis/progressive/prog_03_dms.html">Degrees, Minutes, Seconds</a>,
-  <a href="../../praxis/progressive/prog_09_bearing.html">Planar Distance &amp; Bearing</a>,
-  <a href="../../praxis/progressive/prog_12_ecef.html">Geodetic to ECEF</a>, and
-  <a href="../../praxis/drill_25.html">GNSS Surveying</a>.</p>
+  block, and each builds on the sections above.</p>
   <div class="card">
   <ol class="steps">
     <li>Given two coordinates, compute distance, azimuth and the reverse azimuth.</li>
@@ -1545,18 +1552,40 @@ sigma(distance) = 11.75 mm</pre></div>
   </div>
 </section>
 
+<div class="next-steps" aria-labelledby="next-steps-title">
+  <h3 id="next-steps-title">Continue through the TutMe path</h3>
+  <p>Use this tutorial as the computation layer, then move into the field workflow, projection theory, or guided practice in
+    <a href="../../praxis/progressive/prog_03_dms.html">DMS arithmetic</a>,
+    <a href="../../praxis/progressive/prog_09_bearing.html">distance and bearings</a>, and
+    <a href="../../praxis/progressive/prog_12_ecef.html">geodetic–ECEF conversion</a>.</p>
+  <div class="next-links">
+    <a class="next-link" href="gnss_surveying.html"><span class="tag">PART 1</span><strong>GNSS Surveying</strong><small>Frames, calibration, georeferencing, and field-to-grid workflow.</small></a>
+    <a class="next-link" href="karney_krueger_equations.html"><span class="tag">PART 2</span><strong>Karney–Krueger Equations</strong><small>Transverse Mercator, UTM, and Southern African grid practice.</small></a>
+    <a class="next-link" href="../../praxis/drill_21.html"><span class="tag">PRAXIS 21</span><strong>Karney–Krueger Drill</strong><small>Practice trigonometric series and projection round trips.</small></a>
+    <a class="next-link" href="../../praxis/drill_22.html"><span class="tag">PRAXIS 22</span><strong>Coordinate Records</strong><small>Model points, distances, bounding boxes, and neighbours.</small></a>
+  </div>
+</div>
+
 </main>
 
 <button class="toTop" id="toTop" aria-label="Back to top">&#8593;</button>
 
 <footer>
-  <strong>Geomatics Computations Tutorial &mdash; Mojo 1.x Edition</strong>
-  <p>Land surveying mathematics &bull; coordinate geometry &bull; traverse computation &bull; intersection and
-  resection &bull; similarity transformations &bull; least squares &bull; levelling &bull; GNSS error propagation.</p>
-  <p><a href="index.html">Geomatics shelf</a> &bull;
-  <a href="gnss_surveying.html">GNSS Surveying</a> &bull;
-  <a href="karney_krueger_equations.html">Karney&ndash;Krueger Equations</a> &bull;
-  <a href="../../praxis/index.html">Praxis</a></p>
+  <div class="footer-inner">
+    <div>
+      <strong>Geomatics Computations Tutorial &mdash; Mojo 1.x Edition</strong>
+      <p>Land surveying mathematics &bull; coordinate geometry &bull; traverse computation &bull; intersection and
+      resection &bull; similarity transformations &bull; least squares &bull; levelling &bull; GNSS error propagation.</p>
+    </div>
+    <div class="footer-links" aria-label="Page navigation">
+      <a href="../../index.html">TutMe Home</a>
+      <a href="../index.html">Applications</a>
+      <a href="index.html">Geomatics shelf</a>
+      <a href="gnss_surveying.html">GNSS Surveying</a>
+      <a href="karney_krueger_equations.html">Karney–Krueger</a>
+      <a href="../../praxis/index.html">Praxis</a>
+    </div>
+  </div>
 </footer>
 
 <script>
@@ -1619,7 +1648,7 @@ document.getElementById("toTop").addEventListener("click", function(){
 });
 
 // active nav link
-var links = Array.prototype.slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+var links = Array.prototype.slice.call(document.querySelectorAll("#toc a"));
 var map = {};
 links.forEach(function(a){ map[a.getAttribute("href").slice(1)] = a; });
 var obs = new IntersectionObserver(function(entries){

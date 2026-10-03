@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Reflection · Mojo v1 The Language Manual</title>
+<meta name="description" content="Introspecting types, functions, and their parameters.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part V · Compile-Time Programming</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part V</span><span class="sep">/</span><span>Compile-Time Programming</span><span class="sep">/</span><span class="num">33</span></nav><h1>Reflection</h1>
+<p class="dek">Introspecting types, functions, and their parameters.</p><p class="byline">Chapter 33 · 2,203 words · 17 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/reflection/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Reflection helps you write code that inspects its own structure at
+compile time and reports information about types. This makes it
+possible to build features like structural validation, automatic
+comparisons, serialization, safer assertions, and richer error
+messages without hardcoding details for specific type
+implementations.</p>
+<aside class="callout callout--caution"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">▲</span>Caution</p><div class="callout__body"><p>Mojo reflection is newly introduced and currently incomplete. Some reflection
+capabilities are limited, unstable, or not yet fully exposed through the
+language interface. This page describes the direction of the feature as well
+as the parts that are available today.</p><p>All examples reflect the state of the language at the time this page was
+published. They may change as reflection support matures.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="why-reflection">Why reflection?<a aria-label="Link to Why reflection?" class="h__link" href="#why-reflection"></a></h2>
+<p>Reflection is one of Mojo's powerful compile-time features. It lets
+you inspect types, access fields, and generate code that adapts to a
+struct's shape.</p>
+<p>For example, define a struct, conform it to <code>Equatable</code>, and the <code>==</code>
+operator automatically works:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Sensor</span><span class="tk-punctuation">(</span>Equatable<span class="tk-punctuation">,</span> Hashable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> <span class="tk-builtin">id</span><span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> label<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> reading<span class="tk-punctuation">:</span> Float64</span>
+</code></pre></figure>
+<p>This code uses no operator overload or boilerplate.</p>
+<p>Mojo inspects the struct at compile time, checks that each field supports
+equality, and generates the comparison code. That is what reflection does.</p>
+<p>Reflection has no runtime cost. The compiler does the work up front and
+emits code as efficient as manually written code.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>In this example, <code>Sensor</code> also conforms to <code>Hashable</code> and <code>Writable</code>.
+By conforming, instances work as <code>Dict</code> keys or <code>Set</code> elements, and print
+cleanly, without extra code.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="inspect-a-type">Inspect a type<a aria-label="Link to Inspect a type" class="h__link" href="#inspect-a-type"></a></h2>
+<p>Use the <code>reflect[T]</code> alias to inspect a type at compile time. Built into
+Mojo, it resolves to <code>Reflected[T]</code>, a handle type with static methods
+for querying a type.</p>
+<p>This code uses <code>reflect[T]</code> to inspect a type's structure:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> show_type<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> type_name <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>name<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">comptime</span> field_count <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_count<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> field_names <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_names<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> field_types <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_types<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"struct"</span><span class="tk-punctuation">,</span> type_name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> idx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>field_count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">comptime</span> field_name <span class="tk-operator">=</span> field_names<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">comptime</span> field_type <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>field_types<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>name<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> intro <span class="tk-operator">=</span> <span class="tk-string">"├──"</span> <span class="tk-keyword">if</span> idx <span class="tk-operator">&lt;</span> <span class="tk-punctuation">(</span>field_count <span class="tk-operator">-</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span> <span class="tk-keyword">else</span> <span class="tk-string">"└──"</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>intro<span class="tk-punctuation">,</span> <span class="tk-string">" var "</span><span class="tk-punctuation">,</span> field_name<span class="tk-punctuation">,</span> <span class="tk-string">": "</span><span class="tk-punctuation">,</span> field_type<span class="tk-punctuation">,</span> sep<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Create some types to test this with:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> y<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">comptime</span> DefaultItemCount <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">struct</span> <span class="tk-class-name">ParameterizedStruct</span><span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="9">    T<span class="tk-punctuation">:</span> Movable <span class="tk-operator">&amp;</span> Deinitable<span class="tk-punctuation">,</span> item_count<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> DefaultItemCount</span>
+<span class="cl" data-line="10"><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">list</span> <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>capacity<span class="tk-operator">=</span>Self<span class="tk-punctuation">.</span>item_count<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16">    show_type<span class="tk-punctuation">[</span>MyStruct<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">;</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17">    show_type<span class="tk-punctuation">[</span>Optional<span class="tk-punctuation">[</span>Float64<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">;</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18">    show_type<span class="tk-punctuation">[</span>Dict<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> String<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">;</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19">    show_type<span class="tk-punctuation">[</span>ParameterizedStruct<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> item_count<span class="tk-operator">=</span><span class="tk-number">5</span><span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>When run, this code prints each struct's name and fields with their types.
+The <code>comptime for</code> loop over fields resolves at compile time. At runtime,
+only the resulting <code>print()</code> calls execute:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">struct tests.MyStruct</span>
+<span class="cl" data-line="2">├── var x: String</span>
+<span class="cl" data-line="3">└── var y: std.collections.optional.Optional[SIMD[DType.int, 1]]</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5">struct std.collections.optional.Optional[SIMD[DType.float64, 1]]</span>
+<span class="cl" data-line="6">└── var _value: std.utils.variant.Variant[&lt;unprintable&gt;, {}]</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8">struct std.collections.dict.Dict[SIMD[DType.int, 1], String, \</span>
+<span class="cl" data-line="9">    std.hashlib._ahash.AHasher[[0, 0, 0, 0] : SIMD[DType.uint64, 4]]]</span>
+<span class="cl" data-line="10">├── var _table: std.collections._swisstable.SwissTable[\</span>
+<span class="cl" data-line="11">    SIMD[DType.int, 1], String, std.hashlib._ahash.AHasher[\</span>
+<span class="cl" data-line="12">    [0, 0, 0, 0] : SIMD[DType.uint64, 4]]]</span>
+<span class="cl" data-line="13">└── var _order: List[SIMD[DType.int32, 1]]</span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15">struct tests.ParameterizedStruct[String, 5 : SIMD[DType.int, 1]]</span>
+<span class="cl" data-line="16">└── var list: List[String]</span>
+</code></pre></figure>
+<p>The output uses compiler-resolved names, and the exact rendering may drift
+as the compiler evolves.</p>
+<p>Names appear with their parameters applied. Some print bare and others carry
+a module path: <code>Int</code>, <code>Float64</code>, <code>Bool</code>, <code>String</code>, and <code>List</code> show no path,
+while <code>Dict</code>, <code>Optional</code>, and <code>Set</code> show theirs. Your own structs carry the
+name of the module that declares them. Aliases resolve to what they alias,
+so <code>Int</code> and <code>Float64</code> show up as the one-element SIMD types underneath.
+Parameter values print with their type attached.</p>
+<p>If you only need the base type name, use <code>base_name()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>reflect<span class="tk-punctuation">[</span>List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>base_name<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># List</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>reflect<span class="tk-punctuation">[</span>Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>base_name<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Dict</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>When you need one field, access it by name instead of iterating:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> host_handle <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>Config<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field<span class="tk-punctuation">[</span><span class="tk-string">"host"</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> default_host<span class="tk-punctuation">:</span> host_handle<span class="tk-punctuation">.</span>T <span class="tk-operator">=</span> <span class="tk-string">"localhost"</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>default_host<span class="tk-punctuation">)</span> <span class="tk-comment"># localhost</span></span>
+</code></pre></figure><p>Name-based lookup requires a concrete type. If <code>T</code> is parameterized, use
+index-based iteration instead.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="detect-field-level-changes-between-two-values">Detect field-level changes between two values<a aria-label="Link to Detect field-level changes between two values" class="h__link" href="#detect-field-level-changes-between-two-values"></a></h2>
+<p>Compare two values and list which fields differ. Use this for test
+assertions, audit logs, change tracking, or debugging.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> diff_fields<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> T<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> names <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_names<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">comptime</span> types <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_types<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> diffs <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> idx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_count<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> conforms_to<span class="tk-punctuation">(</span>types<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> Equatable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">ref</span> a_val <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_ref<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">ref</span> b_val <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_ref<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>b<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">if</span> a_val <span class="tk-operator">!=</span> b_val<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11">                diffs<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>String<span class="tk-punctuation">(</span><span class="tk-keyword">comptime</span> <span class="tk-punctuation">(</span>names<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">return</span> diffs<span class="tk-operator">^</span></span>
+</code></pre></figure>
+<p>For example, consider a configuration type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">Config</span><span class="tk-punctuation">(</span>Equatable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> host<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> port<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> verbose<span class="tk-punctuation">:</span> Bool</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> timeout<span class="tk-punctuation">:</span> Float64</span>
+</code></pre></figure>
+<p><code>diff_fields()</code> compares two <code>Config</code> values and returns the field names
+that differ:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> old <span class="tk-operator">=</span> Config<span class="tk-punctuation">(</span><span class="tk-string">"localhost"</span><span class="tk-punctuation">,</span> <span class="tk-number">8080</span><span class="tk-punctuation">,</span> <span class="tk-boolean">False</span><span class="tk-punctuation">,</span> <span class="tk-number">30.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> new <span class="tk-operator">=</span> Config<span class="tk-punctuation">(</span><span class="tk-string">"localhost"</span><span class="tk-punctuation">,</span> <span class="tk-number">9090</span><span class="tk-punctuation">,</span> <span class="tk-boolean">True</span><span class="tk-punctuation">,</span> <span class="tk-number">30.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> changes <span class="tk-operator">=</span> diff_fields<span class="tk-punctuation">(</span>old<span class="tk-punctuation">,</span> new<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">for</span> name <span class="tk-keyword">in</span> changes<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"changed:"</span><span class="tk-punctuation">,</span> name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># changed: port</span></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># changed: verbose</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="write-once-reuse-everywhere-with-traits">Write once, reuse everywhere with traits<a aria-label="Link to Write once, reuse everywhere with traits" class="h__link" href="#write-once-reuse-everywhere-with-traits"></a></h2>
+<p>Reflection is powerful when used in traits with provided methods. The
+method runs for any conforming struct that meets the trait requirements.</p>
+<p><code>MakeCopyable</code> duplicates every copyable field from one instance to another:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> MakeCopyable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">copy_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> other<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">comptime</span> field_count <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_count<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> field_types <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_types<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">comptime</span> Usable <span class="tk-operator">=</span> Copyable <span class="tk-operator">&amp;</span> Deinitable</span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> idx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>field_count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">comptime</span> field_type <span class="tk-operator">=</span> field_types<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> conforms_to<span class="tk-punctuation">(</span>field_type<span class="tk-punctuation">,</span> Usable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10">                reflect<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_ref<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>other<span class="tk-punctuation">)</span> <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_ref<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="11">                    idx</span>
+<span class="cl" data-line="12"> <span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>copy<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Conforming structs receive <code>copy_to()</code> without writing an implementation.
+As a trait method, <code>copy_to()</code> has direct access to <code>Self</code>. You don't
+need a type parameter.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">MultiType</span><span class="tk-punctuation">(</span>MakeCopyable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> w<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> y<span class="tk-punctuation">:</span> Bool</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> z<span class="tk-punctuation">:</span> Float64</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> write_to<span class="tk-punctuation">[</span>W<span class="tk-punctuation">:</span> Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> W<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span>String<span class="tk-punctuation">(</span>t<span class="tk-string">"[{self.w}, {self.x}, {self.y}, {self.z}]"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">var</span> original <span class="tk-operator">=</span> MultiType<span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-boolean">True</span><span class="tk-punctuation">,</span> <span class="tk-number">2.5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">var</span> target <span class="tk-operator">=</span> MultiType<span class="tk-punctuation">(</span><span class="tk-string">""</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-boolean">False</span><span class="tk-punctuation">,</span> <span class="tk-number">0.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"></span>
+<span class="cl" data-line="16">    original<span class="tk-punctuation">.</span>copy_to<span class="tk-punctuation">(</span>target<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>target<span class="tk-punctuation">)</span> <span class="tk-comment"># [Hello, 1, True, 2.5]</span></span>
+</code></pre></figure>
+<p>You define the behavior once. Every conforming struct gets it as a
+provided method.</p>
+<h2 class="h h--2" data-level="2" id="layout-source-locations-and-type-utilities">Layout, source locations, and type utilities<a aria-label="Link to Layout, source locations, and type utilities" class="h__link" href="#layout-source-locations-and-type-utilities"></a></h2>
+<p>These tools expose lower-level details such as layout, lifetimes, and
+source information.</p>
+<h3 class="h h--3" data-level="3" id="field-layout-and-byte-offsets">Field layout and byte offsets<a aria-label="Link to Field layout and byte offsets" class="h__link" href="#field-layout-and-byte-offsets"></a></h3>
+<p>When you need field layout for zero-copy serialization, C interop, or
+alignment, use <code>field_offset()</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Packet</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> flags<span class="tk-punctuation">:</span> UInt8</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> <span class="tk-builtin">id</span><span class="tk-punctuation">:</span> UInt32</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> payload<span class="tk-punctuation">:</span> UInt64</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> show_layout<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> names <span class="tk-operator">=</span> materialize<span class="tk-punctuation">[</span>reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_names<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_count<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">comptime</span> off <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>field_offset<span class="tk-punctuation">[</span>index<span class="tk-operator">=</span>i<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>names<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> <span class="tk-string">"at byte"</span><span class="tk-punctuation">,</span> off<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13">    show_layout<span class="tk-punctuation">[</span>Packet<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># flags at byte 0</span></span>
+<span class="cl" data-line="15"> <span class="tk-comment"># id at byte 4     (alignment padding: 3 bytes)</span></span>
+<span class="cl" data-line="16"> <span class="tk-comment"># payload at byte 8</span></span>
+</code></pre></figure>
+<p><code>field_offset</code> accepts <code>name=</code> or <code>index=</code> and accounts for alignment
+padding. The gap between <code>flags</code> (1 byte) and <code>id</code> (byte 4) shows the
+compiler inserting 3 bytes of padding so <code>id</code> aligns to a 4-byte boundary.</p>
+<h3 class="h h--3" data-level="3" id="types-and-origins">Types and origins<a aria-label="Link to Types and origins" class="h__link" href="#types-and-origins"></a></h3>
+<p>Two functions provide compile-time access to type and lifetime
+information from expressions:</p>
+<p><strong><code>type_of(x)</code></strong> returns the type of an expression for use in parameter
+positions:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> make_default<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Defaultable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> T<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> T<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">42</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> y <span class="tk-operator">=</span> make_default<span class="tk-punctuation">[</span>type_of<span class="tk-punctuation">(</span>x<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>y<span class="tk-punctuation">)</span> <span class="tk-comment"># 0</span></span>
+</code></pre></figure>
+<p><strong><code>origin_of(x)</code></strong> captures the origin (lifetime and mutability) of a
+reference.</p>
+<p>In Mojo, every reference has an <em>origin</em> that tracks which value it reads
+from and whether it can mutate that value. <code>origin_of(x)</code> captures this
+information at compile time so you can thread it through function
+signatures.</p>
+<p>It appears in signatures where a returned reference must be tied to an
+input's lifetime:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>os <span class="tk-keyword">import</span> abort</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> first_ref<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="4">    T<span class="tk-punctuation">:</span> Movable</span>
+<span class="cl" data-line="5"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-keyword">ref</span><span class="tk-punctuation">[</span><span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">]</span> T<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">        abort<span class="tk-punctuation">(</span><span class="tk-string">"empty list"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> l<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">ref</span> x <span class="tk-operator">=</span> first_ref<span class="tk-punctuation">(</span>l<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">)</span> <span class="tk-comment"># 1</span></span>
+<span class="cl" data-line="14">    x <span class="tk-operator">+=</span> <span class="tk-number">10</span> <span class="tk-comment"># modifies the original list through the reference</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>l<span class="tk-punctuation">)</span> <span class="tk-comment"># [11, 2, 3]</span></span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17">    l <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="18">    first_ref<span class="tk-punctuation">(</span>l<span class="tk-punctuation">)</span> <span class="tk-comment"># aborts with "empty list"</span></span>
+</code></pre></figure>
+<p>The returned reference shares its origin with <code>list</code>, so the compiler
+knows it is valid as long as <code>list</code> is. Both are available without
+imports.</p>
+<h3 class="h h--3" data-level="3" id="source-locations">Source locations<a aria-label="Link to Source locations" class="h__link" href="#source-locations"></a></h3>
+<p><strong><code>call_location()</code></strong> returns the caller's source location, not the
+location of the <code>call_location()</code> call itself. When building assertions or
+validators, error messages are more useful when they point to the call
+site:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>reflection <span class="tk-keyword">import</span> call_location</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">@always_inline</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">require</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="5">    cond<span class="tk-punctuation">:</span> Bool<span class="tk-punctuation">,</span> msg<span class="tk-punctuation">:</span> String <span class="tk-operator">=</span> <span class="tk-string">"requirement failed"</span></span>
+<span class="cl" data-line="6"><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> cond<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span>call_location<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>prefix<span class="tk-punctuation">(</span>msg<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">5</span></span>
+<span class="cl" data-line="12">    require<span class="tk-punctuation">(</span>x <span class="tk-operator">&gt;</span> <span class="tk-number">10</span><span class="tk-punctuation">,</span> <span class="tk-string">"x must be &gt; 10"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-comment"># Error: At /path/to/file.mojo:10:5: x must be &gt; 10</span></span>
+</code></pre></figure>
+<p>Mark the enclosing function <code>@always_inline</code> (or
+<code>@always_inline("nodebug")</code>). The decorator is what guarantees the location
+the function reports; without it, the result depends on whether the compiler
+inlined the call anyway. <code>call_location()</code> also accepts an optional
+<code>inline_count</code> parameter. The default (1) reports the immediate caller's
+call site. Higher values skip additional levels, and the compiler must
+inline every level in the chain.</p>
+<p><strong><code>source_location()</code></strong> returns the location where <code>source_location()</code> is
+called. This is less useful for debugging because it reports the location of
+the call, not the caller:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>reflection <span class="tk-keyword">import</span> source_location</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">log</span><span class="tk-punctuation">(</span>msg<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> loc <span class="tk-operator">=</span> source_location<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="6"> <span class="tk-string">"["</span><span class="tk-punctuation">,</span> loc<span class="tk-punctuation">.</span>file_name<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-string">":"</span><span class="tk-punctuation">,</span> loc<span class="tk-punctuation">.</span>line<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-string">"] "</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="7">        msg<span class="tk-punctuation">,</span> sep<span class="tk-operator">=</span><span class="tk-string">""</span></span>
+<span class="cl" data-line="8"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11">    log<span class="tk-punctuation">(</span><span class="tk-string">"starting up"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-comment"># [/path/to/file.mojo:4:15] starting up</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="function-names">Function names<a aria-label="Link to Function names" class="h__link" href="#function-names"></a></h3>
+<p>Retrieve a function's source name or linker symbol at compile time. Use
+this for logging, tracing, or dispatch:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>reflection <span class="tk-keyword">import</span> get_function_name<span class="tk-punctuation">,</span> get_linkage_name</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">process_data</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">pass</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>get_function_name<span class="tk-punctuation">[</span>process_data<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># process_data</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>get_linkage_name<span class="tk-punctuation">[</span>process_data<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># mangled symbol</span></span>
+</code></pre></figure>
+<ul>
+<li class=""><strong><code>get_function_name[func]()</code></strong> returns the name as written in source code.</li>
+<li class=""><strong><code>get_linkage_name[func]()</code></strong> returns the mangled symbol name.</li>
+</ul>
+<p>Both take the function as a parameter value.</p>
+<h2 class="h h--2" data-level="2" id="learn-more">Learn more<a aria-label="Link to Learn more" class="h__link" href="#learn-more"></a></h2>
+<ul>
+<li class="">Visit the reflection
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/reflection/" rel="noopener noreferrer">package documentation</a>
+for API details.</li>
+<li class="">Learn more about <a href="../pages/16_traits.html">traits</a>.</li>
+</ul>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/reflection/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/metaprogramming/reflection/</a>, saved Thu, 01 Oct 2026 15:41:42 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/32_materializing-comptime-values.html"><span class="pager__dir">← Previous</span><span class="pager__title">Materializing compile-time values at run time</span></a><a class="pager__link pager__link--next" href="../pages/34_modules-and-packages.html"><span class="pager__dir">Next →</span><span class="pager__title">Modules and packages</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#why-reflection">Why reflection?</a></li><li class="rail__depth-2"><a href="#inspect-a-type">Inspect a type</a></li><li class="rail__depth-2"><a href="#detect-field-level-changes-between-two-values">Detect field-level changes between two values</a></li><li class="rail__depth-2"><a href="#write-once-reuse-everywhere-with-traits">Write once, reuse everywhere with traits</a></li><li class="rail__depth-2"><a href="#layout-source-locations-and-type-utilities">Layout, source locations, and type utilities</a></li><li class="rail__depth-2"><a href="#learn-more">Learn more</a></li><li class="rail__depth-3"><a href="#field-layout-and-byte-offsets">Field layout and byte offsets</a></li><li class="rail__depth-3"><a href="#types-and-origins">Types and origins</a></li><li class="rail__depth-3"><a href="#source-locations">Source locations</a></li><li class="rail__depth-3"><a href="#function-names">Function names</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#why-reflection">Why reflection?</a></li><li class="rail__depth-2"><a href="#inspect-a-type">Inspect a type</a></li><li class="rail__depth-2"><a href="#detect-field-level-changes-between-two-values">Detect field-level changes between two values</a></li><li class="rail__depth-2"><a href="#write-once-reuse-everywhere-with-traits">Write once, reuse everywhere with traits</a></li><li class="rail__depth-2"><a href="#layout-source-locations-and-type-utilities">Layout, source locations, and type utilities</a></li><li class="rail__depth-2"><a href="#learn-more">Learn more</a></li><li class="rail__depth-3"><a href="#field-layout-and-byte-offsets">Field layout and byte offsets</a></li><li class="rail__depth-3"><a href="#types-and-origins">Types and origins</a></li><li class="rail__depth-3"><a href="#source-locations">Source locations</a></li><li class="rail__depth-3"><a href="#function-names">Function names</a></li></ol>
+<p class="rail__meta">Chapter 33 of 38 · Part V, Compile-Time Programming.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

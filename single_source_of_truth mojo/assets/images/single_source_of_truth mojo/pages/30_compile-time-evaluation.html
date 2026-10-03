@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Compile-time evaluation · Mojo v1 The Language Manual</title>
+<meta name="description" content="Compiling code as a value, with alias and let.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part V · Compile-Time Programming</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part V</span><span class="sep">/</span><span>Compile-Time Programming</span><span class="sep">/</span><span class="num">30</span></nav><h1>Compile-time evaluation</h1>
+<p class="dek">Compiling code as a value, with alias and let.</p><p class="byline">Chapter 30 · 1,448 words · 10 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/comptime-evaluation/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>To understand Mojo's metaprogramming, you need to understand how Mojo runs
+code at compile time. Several things can trigger compile-time code execution:</p>
+<ul>
+<li class="">Assigning an expression to a <code>comptime</code> value.</li>
+<li class="">Evaluating a <code>comptime</code> conditional or loop.</li>
+<li class="">Assigning an expression to a compile-time parameter.</li>
+<li class="">And a few less common cases, all identified with the <code>comptime</code> keyword.</li>
+</ul>
+<p>Here are some examples:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> SIZE <span class="tk-operator">=</span> <span class="tk-number">1024</span> <span class="tk-operator">//</span> <span class="tk-number">32</span></span>
+</code></pre></figure>
+<p>Here the expression <code>1024 // 32</code> invokes the <code>IntLiteral.__floordiv__()</code>
+method. Since it occurs in a <code>comptime</code> assignment, the method must be run
+at compile time.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Here the <code>range(4)</code> function needs to run to produce an iterator for the
+<code>comptime for</code> statement.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> array <span class="tk-operator">=</span> Array<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> get_array_size<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>In this example, the <code>get_array_size()</code> function needs to run at compile
+time to determine the <code>length</code> parameter, which forms part of the type of
+<code>array</code>. (For example, if <code>get_array_size()</code> returns 32, the type of the
+<code>array</code> variable is <code>Array[Int, 32]</code>.)</p>
+<p>When the compiler encounters a function call in a compile-time context, the
+compiler runs the function separately, as if it was a small separate
+program. This is similar in concept to how C++ evaluates a <code>constexpr</code>.
+(For a slightly deeper look at this process, see <a href="../pages/30_compile-time-evaluation.html#how-the-compiler-runs-code">How the compiler runs
+code</a>.)</p>
+<p>While most code can run at compile time, Mojo won't run code that depends
+on the execution environment. The following are examples of code that Mojo
+won't run at compile time:</p>
+<ul>
+<li class="">File I/O.</li>
+<li class="">Foreign function calls (for example, to external libraries).</li>
+<li class="">Functions that can
+<a href="../pages/08_functions.html#raising-and-non-raising-functions">raise errors</a>.</li>
+</ul>
+<p>In addition, the compiler can't run functions on the GPU. Compile-time
+functions in GPU code are actually run on the CPU.</p>
+<p>When running code, the compiler can allocate memory and instantiate types
+that allocate memory, such as strings and collections. With some
+limitations, it can pass compile-time values on to run-time code, a process
+called <em>materialization</em>. For more information, see the section on
+<a href="../pages/32_materializing-comptime-values.html">materialization</a>.</p>
+<h2 class="h h--2" data-level="2" id="comptime-values"><code>comptime</code> values<a aria-label="Link to comptime values" class="h__link" href="#comptime-values"></a></h2>
+<p>It is very common to want to <em>name</em> compile-time values. Whereas <code>var</code>
+defines a runtime value, we need a way to define a named compile-time
+constant. For this, Mojo uses a <code>comptime</code> declaration. At its simplest,
+<code>comptime</code> can be used to define a constant value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> rows <span class="tk-operator">=</span> <span class="tk-number">512</span></span>
+</code></pre></figure>
+<p>A <code>comptime</code> value is always evaluated at compile time, so you can use
+<code>comptime</code> to force a function to run at compile time. You can use this to
+calculate constant values based on information available at compile time,
+such as hardware parameters.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> block_size <span class="tk-operator">=</span> _calculate_block_size<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Types are another common use for <code>comptime</code> values. Because types are
+compile-time expressions, you can use a <code>comptime</code> value as a shorthand (a
+type alias or "typedef") for a parameterized type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> Float16 <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>float16<span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">comptime</span> UInt8 <span class="tk-operator">=</span> SIMD<span class="tk-punctuation">[</span>DType<span class="tk-punctuation">.</span>uint8<span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> Float16 <span class="tk-operator">=</span> <span class="tk-number">0</span> <span class="tk-comment"># Float16 works like a "typedef"</span></span>
+</code></pre></figure>
+<p>(These aliases and others are actually defined in the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/#comptime-values" rel="noopener noreferrer"><code>simd</code> module</a>.)</p>
+<p>You can also parameterize a <code>comptime</code> value to express more complicated
+relationships. For details, see
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/#parameterized-comptime-values" rel="noopener noreferrer">Parameterized <code>comptime</code>
+values</a>.</p>
+<h3 class="h h--3" data-level="3" id="compile-time-scope">Compile-time scope<a aria-label="Link to Compile-time scope" class="h__link" href="#compile-time-scope"></a></h3>
+<p>Like <code>var</code> variables, <code>comptime</code> values obey scope, and you can use local
+<code>comptime</code> values within functions as you'd expect. Unlike <code>var</code> variables,
+<code>comptime</code> values can be defined at the module level, outside of any function.</p>
+<p>The following constructs create a new compile-time scope:</p>
+<ul>
+<li class="">Functions. The body of a function creates a new compile-time scope.</li>
+<li class="">Compile-time flow control. Each branch of a compile-time conditional creates
+its own scope. The body of a <code>comptime for</code> loop also creates its own scope.</li>
+</ul>
+<p>You can only assign a <code>comptime</code> value to a given identifier once in a given
+scope.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> VALUE <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">scope_me</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>VALUE<span class="tk-punctuation">)</span> <span class="tk-comment"># prints 10</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">comptime</span> VALUE <span class="tk-operator">=</span> <span class="tk-number">20</span></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># comptime VALUE = 30  # error: invalid redeclaration of VALUE</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> <span class="tk-boolean">True</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">comptime</span> VALUE <span class="tk-operator">=</span> <span class="tk-number">40</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>VALUE<span class="tk-punctuation">)</span> <span class="tk-comment"># prints 40</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>VALUE<span class="tk-punctuation">)</span> <span class="tk-comment"># prints 20</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="compile-time-flow-control">Compile-time flow control<a aria-label="Link to Compile-time flow control" class="h__link" href="#compile-time-flow-control"></a></h2>
+<p>One of the simplest things you can do with metaprogramming is using compile-time
+flow control to conditionalize or repeat code. Some sample uses include:</p>
+<ul>
+<li class="">Conditionalizing platform-specific code (CPU vs. GPU, Linux vs. macOS) without
+runtime overhead.</li>
+<li class="">Unrolling loops to eliminate runtime branches.</li>
+<li class="">Handling different data types in parameterized code.</li>
+</ul>
+<p>Unlike run-time flow control constructs, compile-time flow control constructs
+are evaluated once, at compile time, and determine what code is actually
+compiled.</p>
+<h3 class="h h--3" data-level="3" id="comptime-if">Compile-time conditionals<a aria-label="Link to Compile-time conditionals" class="h__link" href="#comptime-if"></a></h3>
+<p>You can add the <code>comptime</code> keyword to any <code>if</code> condition that's based on a valid
+compile-time expression (an expression that can be evaluated at compile time).
+This ensures that only the live branch of the <code>if</code> statement is compiled into
+the program, which can reduce your final binary size. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>sys <span class="tk-keyword">import</span> has_accelerator</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> has_accelerator<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">        run_on_gpu<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">        run_on_cpu<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>In this example, if no accelerator is available, the <code>run_on_gpu()</code> function is
+never called, or even compiled.</p>
+<p>The <code>comptime if</code> statement can include <code>elif</code> and <code>else</code> branches just like a
+standard <code>if</code> statement.</p>
+<h3 class="h h--3" data-level="3" id="comptime-for">Compile-time loop unrolling<a aria-label="Link to Compile-time loop unrolling" class="h__link" href="#comptime-for"></a></h3>
+<p>You can add the <code>comptime</code> keyword to a <code>for</code> loop to create a loop that's
+fully unrolled at compile time. You should generally use this only for loops
+with small loop bodies and low iteration counts.</p>
+<p>The loop sequence must be a valid compile-time expression (that is, an
+expression that can be evaluated at compile time). For example, if you use
+<code>for i in range(LIMIT)</code>, the expression <code>range(LIMIT)</code> defines the loop
+sequence. This is a valid compile-time expression if <code>LIMIT</code> is a parameter,
+<code>comptime</code> value, or integer literal.</p>
+<p>The compiler fully unrolls the loop by replacing the <code>for</code> loop with
+<code>LIMIT</code> copies of the loop body. The induction variable is replaced with a
+compile-time constant value for each "iteration." For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    b<span class="tk-punctuation">[</span>i<span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> a<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">+</span> a<span class="tk-punctuation">[</span>i<span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>This is effectively unrolled to the following run-time code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">b<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> a<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">+</span> a<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2">b<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> a<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span> <span class="tk-operator">+</span> a<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3">b<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> a<span class="tk-punctuation">[</span><span class="tk-number">3</span><span class="tk-punctuation">]</span> <span class="tk-operator">+</span> a<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4">b<span class="tk-punctuation">[</span><span class="tk-number">3</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> a<span class="tk-punctuation">[</span><span class="tk-number">4</span><span class="tk-punctuation">]</span> <span class="tk-operator">+</span> a<span class="tk-punctuation">[</span><span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>This unrolled loop compiles to branchless machine code, unlike a normal <code>for</code>
+loop, which includes a bounds test at every iteration. This can be especially
+important on GPU, to avoid
+<a class="ext" data-external="" href="https://max.modular.com/gpu/block-and-warp/#warp-level-synchronization" rel="noopener noreferrer">thread divergence</a>.</p>
+<p>The <code>comptime for</code> construct unrolls at the beginning of compilation, which can
+greatly expand both the code size and the compilation time.</p>
+<h2 class="h h--2" data-level="2" id="how-the-compiler-runs-code">How the compiler runs code<a aria-label="Link to How the compiler runs code" class="h__link" href="#how-the-compiler-runs-code"></a></h2>
+<p>The process of evaluating compile-time code involves three components of the
+compiler:</p>
+<ul>
+<li class="">Parser. Parses the code into an intermediate representation (IR) and performs
+type checking.</li>
+<li class="">Interpreter. Runs code at compile time.</li>
+<li class="">Elaborator. Substitutes concrete values for compile-time parameters and
+produces concrete versions of parameterized functions and structs.</li>
+</ul>
+<p>When the parser turns code into IR, it also replaces some very simple <code>comptime</code>
+expressions with their values, a process called <em>constant folding</em>. For example,
+the compiler can constant fold the expression <code>2 + 3</code> to <code>5</code>. Standard library
+functions that are marked <code>@always_inline("builtin")</code> are constant foldable.
+Compile-time expressions that can't be constant folded persist and are evaluated
+in the elaborator.</p>
+<p>When the elaborator encounters a function call in a compile-time context, it
+invokes the interpreter to run the function. The interpreter then checks whether
+the function being called has already been <em>elaborated</em> to produce a concrete,
+executable function. If not, the interpreter adds that function to the
+elaborator's work queue, and waits until it's done. Finally, the interpreter
+runs the concrete function—almost like it was a small separate program—and
+passes the return value back to the elaborator, which integrates it into the
+parsed IR.</p>
+<p>When reading code, it's important to remember that when a function is being
+interpreted at compile time, the function has been concretized: compile-time
+conditionals have been processed, and compile-time constraints and assertions
+have been tested. This sometimes <em>appears</em> to contradict the expectation that
+your code runs in the order it appears in the function. For example, if your
+function includes a compile-time assertion that fails, compilation fails before
+the interpreter enters the function, so no part of the function is
+evaluated—even code that occurs <em>before</em> the assertion.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/comptime-evaluation/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/metaprogramming/comptime-evaluation/</a>, saved Thu, 01 Oct 2026 15:39:57 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/29_intro-to-metaprogramming.html"><span class="pager__dir">← Previous</span><span class="pager__title">Intro to metaprogramming</span></a><a class="pager__link pager__link--next" href="../pages/31_comptime-constraints-and-assertions.html"><span class="pager__dir">Next →</span><span class="pager__title">Comptime constraints and assertions</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#comptime-values">comptime values</a></li><li class="rail__depth-2"><a href="#compile-time-flow-control">Compile-time flow control</a></li><li class="rail__depth-2"><a href="#how-the-compiler-runs-code">How the compiler runs code</a></li><li class="rail__depth-3"><a href="#compile-time-scope">Compile-time scope</a></li><li class="rail__depth-3"><a href="#comptime-if">Compile-time conditionals</a></li><li class="rail__depth-3"><a href="#comptime-for">Compile-time loop unrolling</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#comptime-values">comptime values</a></li><li class="rail__depth-2"><a href="#compile-time-flow-control">Compile-time flow control</a></li><li class="rail__depth-2"><a href="#how-the-compiler-runs-code">How the compiler runs code</a></li><li class="rail__depth-3"><a href="#compile-time-scope">Compile-time scope</a></li><li class="rail__depth-3"><a href="#comptime-if">Compile-time conditionals</a></li><li class="rail__depth-3"><a href="#comptime-for">Compile-time loop unrolling</a></li></ol>
+<p class="rail__meta">Chapter 30 of 38 · Part V, Compile-Time Programming.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

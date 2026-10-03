@@ -17,8 +17,8 @@
   --border:#232a38;
   --border-soft:#1a202c;
   --ink:#e7e9f0;
-  --muted:#8892a4;
-  --muted2:#5c6478;
+  --muted:#ffd98f;
+  --muted2:#e0a83c;
   --accent:#ff6a39;
   --accent-dim:#ff6a3922;
   --accent2:#ffb238;
@@ -76,7 +76,7 @@ h1{
   color:#f5f1ea;
 }
 .subtitle{color:var(--muted);max-width:700px;font-size:1rem}
-.backlink{display:inline-block;margin-bottom:6px;color:#a9b1c9;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
+.backlink{display:inline-block;margin-bottom:6px;color:#ffe4a3;text-decoration:none;font-size:.82rem;opacity:.8;transition:opacity .15s}
 .backlink:hover{opacity:1;color:var(--accent2)}
 
 .progress-wrap{
@@ -124,7 +124,7 @@ h1{
 .mastered .lvl-check{background:var(--ok);border-color:var(--ok);color:#0a0c12}
 .meta{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 20px}
 .tag{background:#ff6a3915;color:var(--accent2);padding:4px 11px;border-radius:999px;font-size:.72rem;border:1px solid #ff6a3930;letter-spacing:.02em}
-p{color:#c9cedb}
+p{color:#fff4d6}
 strong{color:var(--ink)}
 
 pre{
@@ -159,7 +159,7 @@ button{
 }
 .primary{background:var(--accent);color:#150a05}
 .primary:hover{background:var(--accent2);transform:translateY(-1px)}
-.secondary{background:var(--surface);color:#c9cedb;border:1px solid var(--border)}
+.secondary{background:var(--surface);color:#fff4d6;border:1px solid var(--border)}
 .secondary:hover{border-color:var(--accent2);color:var(--accent2)}
 .ghost{background:transparent;color:var(--muted2);border:1px dashed var(--border);padding:9px 14px;font-size:.78rem}
 .ghost:hover{color:var(--accent2);border-color:var(--accent2)}
@@ -178,7 +178,7 @@ button{
 .tip{background:#12100a;border:1px solid #3a2a10;padding:16px 18px;border-radius:12px;color:#ecd9ad}
 .tip code{color:var(--accent2)}
 
-.mastery li{margin:9px 0;color:#c9cedb}
+.mastery li{margin:9px 0;color:#ffe4a3}
 .mastery textarea{margin-top:14px;min-height:70px}
 
 .summary-card{
@@ -234,14 +234,14 @@ footer a:hover{text-decoration:underline}
 <h2><span class="lvl-check">1</span>Level 1 — The Mean</h2>
 <div class="meta"><span class="tag">Beginner</span><span class="tag">Arithmetic</span></div>
 <p><strong>Challenge:</strong> What is printed?</p>
-<pre><code>from std.collections import List
+<pre><code><span class="kw">from</span> std.collections <span class="kw">import</span> <span class="tp">List</span>
 
-def main():
-    var xs: List[Float64] = [2.0, 4.0, 6.0]
-    var total = 0.0
-    for x in xs:
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> xs = <span class="tp">List</span>[<span class="tp">Float64</span>](2.0, 4.0, 6.0)
+    <span class="kw">var</span> total = 0.0
+    <span class="kw">for</span> x <span class="kw">in</span> xs:
         total += x
-    print(total / Float64(len(xs)))</code></pre>
+    <span class="fn">print</span>(total / <span class="tp">Float64</span>(<span class="fn">len</span>(xs)))</code></pre>
 <textarea id="a1" placeholder="Write the output or answer here..." onkeydown="onKey(event,1,'4')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(1,'4')">Check Answer</button>
@@ -262,16 +262,15 @@ def main():
 <h2><span class="lvl-check">2</span>Level 2 — Squared Deviations</h2>
 <div class="meta"><span class="tag">Beginner+</span><span class="tag">Variance Build-up</span></div>
 <p><strong>Challenge:</strong> What is the sum of squared deviations from the mean for 2, 4, 6?</p>
-<pre><code>from std.collections import List
+<pre><code><span class="kw">from</span> std.collections <span class="kw">import</span> <span class="tp">List</span>
 
-def main():
-    var mean = 4.0
-    var ss = 0.0
-    var xs: List[Float64] = [2.0, 4.0, 6.0]
-    for x in xs:
-        var d = x - mean
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> mean = 4.0
+    <span class="kw">var</span> ss = 0.0
+    <span class="kw">for</span> x <span class="kw">in</span> <span class="tp">List</span>[<span class="tp">Float64</span>](2.0, 4.0, 6.0):
+        <span class="kw">var</span> d = x - mean
         ss += d * d
-    print(ss)</code></pre>
+    <span class="fn">print</span>(ss)</code></pre>
 <textarea id="a2" placeholder="Write the output or answer here..." onkeydown="onKey(event,2,'8')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(2,'8')">Check Answer</button>
@@ -340,11 +339,11 @@ def main():
 <h2><span class="lvl-check">5</span>Level 5 — Standard Deviation</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Square Root</span></div>
 <p><strong>Challenge:</strong> Using the sample variance of 4.0, what is printed?</p>
-<pre><code>from std.math import sqrt
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">sqrt</span>
 
-def main():
-    var variance = 4.0
-    print(sqrt(variance))</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> variance = 4.0
+    <span class="fn">print</span>(<span class="fn">sqrt</span>(variance))</code></pre>
 <textarea id="a5" placeholder="Write the output or answer here..." onkeydown="onKey(event,5,'2')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(5,'2')">Check Answer</button>
@@ -365,16 +364,16 @@ def main():
 <h2><span class="lvl-check">6</span>Level 6 — Expert Challenge</h2>
 <div class="meta"><span class="tag">Advanced</span><span class="tag">Code Reasoning Modification</span></div>
 <p><strong>Challenge:</strong> Complete the z-score loop so the program prints the z-scores of 2, 4 and 6 (mean 4, sample standard deviation 2). What will the three printed values be?</p>
-<pre><code>from std.math import sqrt
-from std.collections import List
+<pre><code><span class="kw">from</span> math <span class="kw">import</span> <span class="fn">sqrt</span>
+<span class="kw">from</span> std.collections <span class="kw">import</span> <span class="tp">List</span>
 
-def main():
-    var xs: List[Float64] = [2.0, 4.0, 6.0]
-    var mean = 4.0
-    var sd = sqrt(4.0)
-    for x in xs:
-        var z = (x - mean) / sd   # your line
-        print(z)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> xs = <span class="tp">List</span>[<span class="tp">Float64</span>](2.0, 4.0, 6.0)
+    <span class="kw">var</span> mean = 4.0
+    <span class="kw">var</span> sd = <span class="fn">sqrt</span>(4.0)
+    <span class="kw">for</span> x <span class="kw">in</span> xs:
+        <span class="kw">var</span> z = (x - mean) / sd   <span class="cm"># your line</span>
+        <span class="fn">print</span>(z)</code></pre>
 <textarea id="a6" placeholder="Write the output or answer here..." onkeydown="onKey(event,6,'-1\n0\n1')"></textarea>
 <div class="btnrow">
 <button class="primary" onclick="check(6,'-1\n0\n1')">Check Answer</button>
@@ -415,7 +414,10 @@ def main():
 
 <footer>
 Data Science Programming Praxis &bull; Learn &rarr; Attempt &rarr; Check &rarr; Retry &rarr; Master<br>
-<a href="prog_01_moves.html">&larr; Previous: Ownership: Borrow, Mutate, Move</a><br><a href="prog_03_dms.html">Next: Degrees, Minutes, Seconds &rarr;</a><br><a href="../../progressive.html">Also: Scope &amp; Shadowing course &rarr;</a><br><a href="../index.html">Back to the Praxis shelf</a>
+<nav style="display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:12px auto 10px;max-width:660px">
+<a href="prog_01_moves.html">← Previous</a> <a href="progressive.html">All 13 drills</a> <a href="prog_03_dms.html">Next drill →</a>
+</nav>
+<a href="../index.html">Back to the Praxis shelf</a>
 </footer>
 
 <script>

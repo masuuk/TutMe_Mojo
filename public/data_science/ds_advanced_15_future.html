@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -123,23 +123,23 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo"><code><span class="com"># The compiler decides the best backend automatically</span>
+        <pre class="code-block active" id="mojo"><code><span class="com">// The compiler decides the best backend automatically</span>
 <span class="kw">from</span> nn <span class="kw">import</span> Transformer, compile_for
 
 <span class="kw">var</span> model = Transformer(n_layers=<span class="num">32</span>, d_model=<span class="num">4096</span>)
 
-<span class="com"># Compile for whatever hardware is available</span>
+<span class="com">// Compile for whatever hardware is available</span>
 <span class="kw">var</span> compiled = compile_for(model, target=Target.AUTO)
-<span class="com"># AUTO detects: GPU (CUDA/Metal/ROCm), CPU (AVX-512/NEON)</span>
-<span class="com"># Generates vendor-specific optimized code</span>
+<span class="com">// AUTO detects: GPU (CUDA/Metal/ROCm), CPU (AVX-512/NEON)</span>
+<span class="com">// Generates vendor-specific optimized code</span>
 
-<span class="com"># Or target multiple backends at once for deployment</span>
+<span class="com">// Or target multiple backends at once for deployment</span>
 <span class="kw">var</span> multi = compile_for(model, target=[
     Target.CUDA,
     Target.CPU_AVX512,
     Target.METAL
 ])
-<span class="com"># One source, three optimized binaries</span></code></pre>
+<span class="com">// One source, three optimized binaries</span></code></pre>
       </div>
     </div>
 
@@ -157,19 +157,19 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo2"><code><span class="com"># Compiler-generated autodiff -- no runtime graph overhead</span>
+        <pre class="code-block active" id="mojo2"><code><span class="com">// Compiler-generated autodiff -- no runtime graph overhead</span>
 <span class="kw">@autodiff</span>
 <span class="kw">def</span> <span class="fn">loss_fn</span>(params: Parameters, data: Batch) -&gt; Float32:
     <span class="kw">var</span> pred = model.forward(data.inputs, params)
     <span class="kw">return</span> mse_loss(pred, data.labels)
 
-<span class="com"># The compiler generates:</span>
-<span class="com"># - Forward pass: as written above</span>
-<span class="com"># - Backward pass: analytically differentiated, fused</span>
-<span class="com"># - No tape, no graph replay, no Python dispatch</span>
+<span class="com">// The compiler generates:</span>
+<span class="com">// - Forward pass: as written above</span>
+<span class="com">// - Backward pass: analytically differentiated, fused</span>
+<span class="com">// - No tape, no graph replay, no Python dispatch</span>
 
 <span class="kw">var</span> grad = autodiff(loss_fn)(params, batch)
-<span class="com"># Gradients computed at native speed</span></code></pre>
+<span class="com">// Gradients computed at native speed</span></code></pre>
       </div>
     </div>
   </section>
@@ -193,19 +193,19 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo3"><code><span class="com"># Write once, run on any hardware</span>
-<span class="kw">from</span> std.runtime <span class="kw">import</span> auto_device, Transfer
+        <pre class="code-block active" id="mojo3"><code><span class="com">// Write once, run on any hardware</span>
+<span class="kw">from</span> runtime <span class="kw">import</span> auto_device, Transfer
 
 <span class="kw">def</span> <span class="fn">hybrid_compute</span>(data: Tensor[Float32]) -&gt; Tensor[Float32]:
-    <span class="com"># CPU handles the control flow and data preprocessing</span>
+    <span class="com">// CPU handles the control flow and data preprocessing</span>
     <span class="kw">var</span> preprocessed = preprocess_on_cpu(data)
 
-    <span class="com"># GPU handles the heavy matrix math</span>
-    <span class="kw">var</span> device = auto_device(preprocessed)  <span class="com"># Picks best available</span>
+    <span class="com">// GPU handles the heavy matrix math</span>
+    <span class="kw">var</span> device = auto_device(preprocessed)  <span class="com">// Picks best available</span>
     <span class="kw">var</span> gpu_data = preprocessed.to(device)
     <span class="kw">var</span> result = model.forward(gpu_data)
 
-    <span class="com"># Back to CPU for post-processing</span>
+    <span class="com">// Back to CPU for post-processing</span>
     <span class="kw">return</span> result.to(Device.CPU)</code></pre>
       </div>
     </div>
@@ -268,14 +268,14 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo4">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python</div>
+        
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo4"><code><span class="com"># Contributing to the Mojo ecosystem is easy</span>
-<span class="com"># Write a package, publish it, others can use it</span>
+        <pre class="code-block active" id="mojo4"><code><span class="com">// Contributing to the Mojo ecosystem is easy</span>
+<span class="com">// Write a package, publish it, others can use it</span>
 
-<span class="com"># my_package/mojo.mod</span>
+<span class="com">// my_package/mojo.mod</span>
 <span class="kw">name</span> = <span class="str">"my_ml_utils"</span>
 <span class="kw">version</span> = <span class="str">"0.2.0"</span>
 <span class="kw">dependencies</span> = [
@@ -283,22 +283,17 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <span class="str">"mojo-nn"</span>,
 ]
 
-<span class="com"># Users can precompile and import it:</span>
-<span class="com"># mojo precompile my_ml_utils -o my_ml_utils.mojoc</span>
+<span class="com">// Users can precompile and import it:</span>
+<span class="com">// mojo precompile my_ml_utils -o my_ml_utils.mojoc</span>
 
-<span class="com"># Or import directly from GitHub:</span>
+<span class="com">// Or import directly from GitHub:</span>
 <span class="kw">from</span> my_ml_utils <span class="kw">import</span> CustomAttention</code></pre>
-        <pre class="code-block" id="python"><code><span class="com"># Python ecosystem (for comparison)</span>
-<span class="com"># pip install my_ml_utils</span>
-
-<span class="kw">from</span> my_ml_utils <span class="kw">import</span> CustomAttention
-
-<span class="com"># Python packages are still usable from Mojo</span>
-<span class="com"># via the built-in Python interop layer</span></code></pre>
+        
       </div>
     </div>
 
-    <div class="tip-box info-box">
+    <p>Python packages remain reachable from Mojo through the built-in interop layer, so an existing <code>my_ml_utils</code> written in Python can still be called from a Mojo program. The ecosystem you contribute to is Mojo's own.</p>
+<div class="tip-box info-box">
       <strong>Tip: Start Contributing</strong>
       <p>The best way to learn Mojo deeply is to contribute to open-source Mojo packages. Even simple contributions -- documentation fixes, bug reports, test cases -- help the ecosystem grow and give you hands-on experience with the language.</p>
     </div>

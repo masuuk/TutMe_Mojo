@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -122,12 +122,11 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo"><code><span class="kw">from</span> std.math <span class="kw">import</span> sqrt, exp, log, pi
-<span class="kw">from</span> std.random <span class="kw">import</span> random_float64
+        <pre class="code-block active" id="mojo"><code><span class="kw">from</span> math <span class="kw">import</span> sqrt, exp, log, pi
+<span class="kw">from</span> random <span class="kw">import</span> random_float64
 
 <span class="kw">struct</span> <span class="type">Normal</span>:
     <span class="kw">var</span> mean: Float64
@@ -142,7 +141,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
         <span class="kw">return</span> exp(-<span class="num">0.5</span> * z * z) / (<span class="kw">self</span>.std * sqrt(<span class="num">2.0</span> * pi))
 
     <span class="kw">def</span> <span class="fn">sample</span>(<span class="kw">self</span>) -&gt; Float64:
-        <span class="com"># Box-Muller transform</span>
+        <span class="com">// Box-Muller transform</span>
         <span class="kw">var</span> u1 = random_float64()
         <span class="kw">var</span> u2 = random_float64()
         <span class="kw">var</span> z = sqrt(-<span class="num">2.0</span> * log(u1)) * cos(<span class="num">2.0</span> * pi * u2)
@@ -153,18 +152,8 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
 
 
 <span class="kw">var</span> dist = Normal(mean=<span class="num">0.0</span>, std=<span class="num">1.0</span>)
-<span class="kw">print</span>(dist.pdf(<span class="num">1.0</span>))  <span class="com"># ~0.242</span>
-<span class="kw">print</span>(dist.sample())    <span class="com"># random value ~ N(0, 1)</span></code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">from</span> scipy <span class="kw">import</span> stats
-
-dist = stats.norm(loc=<span class="num">0.0</span>, scale=<span class="num">1.0</span>)
-
-<span class="kw">print</span>(dist.pdf(<span class="num">1.0</span>))   <span class="com"># ~0.242</span>
-<span class="kw">print</span>(dist.rvs())      <span class="com"># random value ~ N(0, 1)</span>
-
-<span class="com"># Log-likelihood</span>
-<span class="kw">print</span>(dist.logpdf(<span class="num">1.0</span>)) <span class="com"># ~-1.419</span></code></pre>
+<span class="kw">print</span>(dist.pdf(<span class="num">1.0</span>))  <span class="com">// ~0.242</span>
+<span class="kw">print</span>(dist.sample())    <span class="com">// random value ~ N(0, 1)</span></code></pre>
       </div>
     </div>
 
@@ -181,25 +170,24 @@ dist = stats.norm(loc=<span class="num">0.0</span>, scale=<span class="num">1.0<
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo2">Mojo 1.x</div>
-        <div class="tab" data-target="python2">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo2"><code><span class="kw">def</span> <span class="fn">mle_normal</span>(data: List[Float64]) -&gt; (Float64, Float64):
-    <span class="com"># MLE for normal distribution parameters</span>
+    <span class="com">// MLE for normal distribution parameters</span>
     <span class="kw">var</span> n = <span class="fn">len</span>(data)
     <span class="kw">var</span> mu_hat = sum(data) / <span class="fn">Float64</span>(n)
 
     <span class="kw">var</span> sigma_sq = <span class="num">0.0</span>
     <span class="kw">for</span> x <span class="kw">in</span> data:
         sigma_sq += (x - mu_hat) ** <span class="num">2.0</span>
-    sigma_sq /= <span class="fn">Float64</span>(n)  <span class="com"># MLE uses n, not n-1</span>
+    sigma_sq /= <span class="fn">Float64</span>(n)  <span class="com">// MLE uses n, not n-1</span>
 
     <span class="kw">return</span> (mu_hat, sqrt(sigma_sq))
 
 
 <span class="kw">def</span> <span class="fn">mle_exponential</span>(data: List[Float64]) -&gt; Float64:
-    <span class="com"># MLE for exponential rate parameter</span>
+    <span class="com">// MLE for exponential rate parameter</span>
     <span class="kw">var</span> n = <span class="fn">len</span>(data)
     <span class="kw">var</span> total = sum(data)
     <span class="kw">return</span> <span class="fn">Float64</span>(n) / total
@@ -207,26 +195,12 @@ dist = stats.norm(loc=<span class="num">0.0</span>, scale=<span class="num">1.0<
 
 <span class="kw">var</span> data = List[Float64]()
 
-<span class="com"># Generate sample data</span>
+<span class="com">// Generate sample data</span>
 <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10000</span>):
     data.append(Normal(<span class="num">5.0</span>, <span class="num">2.0</span>).sample())
 
 <span class="kw">var</span> (mu, sigma) = mle_normal(data)
 <span class="kw">print</span>(<span class="str">"μ̂ ="</span>, mu, <span class="str">"σ̂ ="</span>, sigma)</code></pre>
-        <pre class="code-block" id="python2"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">from</span> scipy <span class="kw">import</span> stats
-
-data = np.random.normal(<span class="num">5.0</span>, <span class="num">2.0</span>, size=<span class="num">10000</span>)
-
-<span class="com"># MLE for normal</span>
-mu_hat = np.mean(data)
-sigma_hat = np.std(data, ddof=<span class="num">0</span>)  <span class="com"># MLE uses ddof=0</span>
-<span class="kw">print</span>(<span class="str">f"μ̂ = </span>{mu_hat}<span class="str">, σ̂ = </span>{sigma_hat}<span class="str">"</span>)
-
-<span class="com"># MLE for exponential</span>
-exp_data = np.random.exponential(scale=<span class="num">3.0</span>, size=<span class="num">10000</span>)
-lambda_hat = <span class="num">1.0</span> / np.mean(exp_data)
-<span class="kw">print</span>(<span class="str">f"λ̂ = </span>{lambda_hat}<span class="str">"</span>)</code></pre>
       </div>
     </div>
   </section>
@@ -241,11 +215,10 @@ lambda_hat = <span class="num">1.0</span> / np.mean(exp_data)
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo3">Mojo 1.x</div>
-        <div class="tab" data-target="python3">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> std.math <span class="kw">import</span> sqrt, abs
+        <pre class="code-block active" id="mojo3"><code><span class="kw">from</span> math <span class="kw">import</span> sqrt, abs
 
 <span class="kw">struct</span> <span class="type">TTestResult</span>:
     <span class="kw">var</span> t_statistic: Float64
@@ -269,18 +242,18 @@ lambda_hat = <span class="num">1.0</span> / np.mean(exp_data)
 
     <span class="kw">var</span> t = (x_bar - mu0) / (s / sqrt(<span class="fn">Float64</span>(n)))
 
-    <span class="com"># Approximate p-value using t-distribution</span>
+    <span class="com">// Approximate p-value using t-distribution</span>
     <span class="kw">var</span> p = approximate_t_pvalue(abs(t), n - <span class="num">1</span>)
 
     <span class="kw">return</span> TTestResult(
         t_statistic=t,
-        p_value=p * <span class="num">2.0</span>,  <span class="com"># two-tailed</span>
+        p_value=p * <span class="num">2.0</span>,  <span class="com">// two-tailed</span>
         df=n - <span class="num">1</span>,
         significant=(p * <span class="num">2.0</span>) &lt; alpha
     )
 
 
-<span class="com"># Example: test if sample mean differs from 50</span>
+<span class="com">// Example: test if sample mean differs from 50</span>
 <span class="kw">var</span> data = List[Float64]()
 <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">100</span>):
     data.append(Normal(<span class="num">52.0</span>, <span class="num">10.0</span>).sample())
@@ -289,16 +262,6 @@ lambda_hat = <span class="num">1.0</span> / np.mean(exp_data)
 <span class="kw">print</span>(<span class="str">"t ="</span>, result.t_statistic)
 <span class="kw">print</span>(<span class="str">"p ="</span>, result.p_value)
 <span class="kw">print</span>(<span class="str">"significant:"</span>, result.significant)</code></pre>
-        <pre class="code-block" id="python3"><code><span class="kw">from</span> scipy <span class="kw">import</span> stats
-<span class="kw">import</span> numpy <span class="kw">as</span> np
-
-data = np.random.normal(<span class="num">52.0</span>, <span class="num">10.0</span>, size=<span class="num">100</span>)
-
-<span class="com"># One-sample t-test</span>
-result = stats.ttest_1samp(data, popmean=<span class="num">50.0</span>)
-<span class="kw">print</span>(<span class="str">f"t = </span>{result.statistic}<span class="str">"</span>)
-<span class="kw">print</span>(<span class="str">f"p = </span>{result.pvalue}<span class="str">"</span>)
-<span class="kw">print</span>(<span class="str">f"significant: </span>{result.pvalue &lt; <span class="num">0.05</span>}<span class="str">"</span>)</code></pre>
       </div>
     </div>
   </section>
@@ -319,7 +282,7 @@ result = stats.ttest_1samp(data, popmean=<span class="num">50.0</span>)
         <pre class="code-block active" id="mojo4"><code><span class="kw">struct</span> <span class="type">RunningStats</span>:
     <span class="kw">var</span> n: Int
     <span class="kw">var</span> mean: Float64
-    <span class="kw">var</span> m2: Float64  <span class="com"># sum of squared deviations</span>
+    <span class="kw">var</span> m2: Float64  <span class="com">// sum of squared deviations</span>
     <span class="kw">var</span> min_val: Float64
     <span class="kw">var</span> max_val: Float64
 

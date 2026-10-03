@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -134,7 +132,6 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="projtoml"><span class="sw"></span>mojoproject.toml</div>
-        <div class="tab" data-lang="python" data-group="projtoml"><span class="sw"></span>pyproject.toml (Python)</div>
       </div>
       <div class="panes" data-group="projtoml">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo project manifest</span>
@@ -154,21 +151,11 @@ avx512 = [<span class="tok-str">"max-engine/avx512"</span>]
 [bin]
 name = <span class="tok-str">"pipeline"</span>
 source = <span class="tok-str">"src/main.mojo"</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python equivalent (pyproject.toml)</span>
-[project]
-name = <span class="tok-str">"ml_pipeline"</span>
-version = <span class="tok-str">"0.3.1"</span>
-description = <span class="tok-str">"Production ML data pipeline"</span>
-requires-python = <span class="tok-str">"&gt;=3.11"</span>
-
-[project.dependencies]
-numpy = <span class="tok-str">"&gt;=1.26"</span>
-
-[project.scripts]
-pipeline = <span class="tok-str">"src.main:main"</span></pre></div>
       </div>
     </div>
     </section></div>
+
+    <p class="cap">The <code class="inline">pyproject.toml</code> equivalent is the same <code class="inline">[project]</code> table with three different keys: <code class="inline">requires-python = "&gt;=3.11"</code> instead of a MAX version, a <code class="inline">[project.dependencies]</code> table instead of <code class="inline">[dependencies]</code>, and a <code class="inline">[project.scripts]</code> entry pointing at <code class="inline">src.main:main</code> — so Python has to name both the module and the function to produce one runnable command.</p>
 
     <p>Unlike Python, where source files are scattered into packages with <code class="inline">__init__.py</code>, Mojo projects use a clean <code class="inline">src/</code> layout. The compiler resolves imports from the <code class="inline">src/</code> directory automatically, so you never need to manipulate <code class="inline">sys.path</code> or install your own package in editable mode.</p>
 
@@ -211,24 +198,19 @@ mojo run src/main.mojo</pre>
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="deps"><span class="sw"></span>importing packages.mojo</div>
-        <div class="tab" data-lang="python" data-group="deps"><span class="sw"></span>importing packages.py</div>
       </div>
       <div class="panes" data-group="deps">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> max.engine <span class="tok-kw">import</span> InferenceSession
-<span class="tok-kw">from</span> std.math import sqrt, sin, cos
+<span class="tok-kw">from</span> math import sqrt, sin, cos
+<span class="tok-kw">from</span> collections import Dict
 
 <span class="tok-kw">def</span> <span class="tok-fn">load_model</span>(path: String) -&gt; InferenceSession:
     <span class="tok-kw">var</span> session = InferenceSession(path)
     <span class="tok-kw">return</span> session</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-kw">from</span> max.engine <span class="tok-kw">import</span> InferenceSession
-<span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt, sin, cos
-<span class="tok-kw">from</span> collections <span class="tok-kw">import</span> defaultdict
-
-<span class="tok-kw">def</span> <span class="tok-fn">load_model</span>(path: str) -&gt; InferenceSession:
-    session = InferenceSession(path)
-    <span class="tok-kw">return</span> session</pre></div>
       </div>
     </div>
+
+    <p class="cap">The same three imports in Python read <code class="inline">from max.engine import InferenceSession</code>, <code class="inline">from math import sqrt, sin, cos</code>, and <code class="inline">from collections import defaultdict</code> — with <code class="inline">str</code> where this page says <code class="inline">String</code>, and <code class="inline">defaultdict</code> where this page says <code class="inline">Dict</code>. Same lookup, different vocabulary.</p>
   </section>
 
   <section id="testing">
@@ -238,10 +220,9 @@ mojo run src/main.mojo</pre>
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="test"><span class="sw"></span>test_data_loader.mojo</div>
-        <div class="tab" data-lang="python" data-group="test"><span class="sw"></span>test_data_loader.py</div>
       </div>
       <div class="panes" data-group="test">
-        <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> std.testing import test, assert_equal, assert_true
+        <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> testing import test, assert_equal, assert_true
 
 <span class="tok-com"># Simple assertion test</span>
 <span class="tok-kw">@test</span>
@@ -266,28 +247,10 @@ mojo run src/main.mojo</pre>
     <span class="tok-kw">var</span> cases = [(<span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>), (<span class="tok-num">5.0</span>, <span class="tok-num">1.0</span>), (<span class="tok-num">-3.0</span>, <span class="tok-num">0.0</span>)]
     <span class="tok-kw">for</span> input_val, expected <span class="tok-kw">in</span> cases:
         assert_equal(normalize(input_val), expected)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-kw">import</span> pytest
-
-<span class="tok-com"># Simple assertion test</span>
-<span class="tok-kw">def</span> <span class="tok-fn">test_csv_parsing</span>():
-    rows = parse_csv(<span class="tok-str">"name,age\nAlice,30\nBob,25"</span>)
-    <span class="tok-kw">assert</span> <span class="tok-fn">len</span>(rows) == <span class="tok-num">2</span>
-    <span class="tok-kw">assert</span> rows[<span class="tok-num">0</span>][<span class="tok-str">"name"</span>] == <span class="tok-str">"Alice"</span>
-    <span class="tok-kw">assert</span> rows[<span class="tok-num">0</span>][<span class="tok-str">"age"</span>] == <span class="tok-str">"30"</span>
-
-<span class="tok-com"># Test with exception expectation</span>
-<span class="tok-kw">def</span> <span class="tok-fn">test_empty_input_raises</span>():
-    <span class="tok-kw">with</span> pytest.raises(ValueError):
-        parse_csv(<span class="tok-str">""</span>)
-
-<span class="tok-com"># Parameterized test</span>
-<span class="tok-kw">@pytest.mark.parametrize</span>(<span class="tok-str">"input_val,expected"</span>, [
-    (<span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>), (<span class="tok-num">5.0</span>, <span class="tok-num">1.0</span>), (<span class="tok-num">-3.0</span>, <span class="tok-num">0.0</span>)
-])
-<span class="tok-kw">def</span> <span class="tok-fn">test_normalize_values</span>(input_val, expected):
-    <span class="tok-kw">assert</span> normalize(input_val) == expected</pre></div>
       </div>
     </div>
+
+    <p class="cap">The pytest spelling of those same three tests needs <code class="inline">import pytest</code>, wraps the raising case in <code class="inline">with pytest.raises(ValueError):</code>, and replaces the hand-written case list with <code class="inline">@pytest.mark.parametrize("input_val,expected", [...])</code> — a decorator that generates one test function per row, and that pytest has to reflect over at collection time.</p>
 
     <p>Running your tests is a single command:</p>
 
@@ -321,11 +284,10 @@ mojo test --filter csv</pre>
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="bench"><span class="sw"></span>bench_transform.mojo</div>
-        <div class="tab" data-lang="python" data-group="bench"><span class="sw"></span>bench_transform.py</div>
       </div>
       <div class="panes" data-group="bench">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> benchmark <span class="tok-kw">import</span> keep_running, benchmark_function
-<span class="tok-kw">from</span> std.random import randn
+<span class="tok-kw">from</span> random import randn
 
 <span class="tok-kw">def</span> <span class="tok-fn">standardize</span>(data: List[Float64]) -&gt; List[Float64]:
     <span class="tok-kw">var</span> n = len(data)
@@ -354,25 +316,10 @@ mojo test --filter csv</pre>
     print(<span class="tok-str">f"Median: {stats.median:.4f}s"</span>)
     print(<span class="tok-str">f"Mean:   {stats.mean:.4f}s"</span>)
     print(<span class="tok-str">f"Stddev: {stats.stddev:.4f}s"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-kw">import</span> timeit
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">standardize</span>(data):
-    mean = np.mean(data)
-    std = np.std(data)
-    <span class="tok-kw">return</span> (data - mean) / std
-
-data = np.random.randn(<span class="tok-num">1_000_000</span>)
-
-<span class="tok-com"># timeit — not statistically rigorous</span>
-time = timeit.timeit(
-    <span class="tok-kw">lambda</span>: standardize(data),
-    number=<span class="tok-num">50</span>
-)
-<span class="tok-fn">print</span>(<span class="tok-str">f"Total: {time:.4f}s for 50 runs"</span>)
-<span class="tok-fn">print</span>(<span class="tok-str">f"Avg:   {time/50:.4f}s per run"</span>)</pre></div>
       </div>
     </div>
+
+    <p class="cap">The <code class="inline">numpy</code> version of <code class="inline">standardize</code> is <code class="inline">np.mean</code> and <code class="inline">np.std</code> in three lines, timed with <code class="inline">timeit.timeit(lambda: standardize(data), number=50)</code> — one wall-clock number, carrying every failure mode the next paragraph names: no warmup, no distribution, and GC time counted as work.</p>
 
     <p>The Mojo benchmarking module is integrated with the compiler — it knows about SIMD width, cache line alignment, and allocation patterns. It can detect when your benchmark is measuring garbage collection instead of actual work, something Python's <code class="inline">timeit</code> cannot do automatically.</p>
   </section>
@@ -384,7 +331,6 @@ time = timeit.timeit(
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="cicd"><span class="sw"></span>.github/workflows/ci.yml</div>
-        <div class="tab" data-lang="python" data-group="cicd"><span class="sw"></span>Python CI (for comparison)</div>
       </div>
       <div class="panes" data-group="cicd">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo CI — builds a binary artifact</span>
@@ -416,33 +362,10 @@ jobs:
         with:
           name: pipeline-binary
           path: build/</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python CI — always needs a runtime</span>
-name: Python CI
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: <span class="tok-str">"3.12"</span>
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest
-
-      - name: Run tests
-        run: pytest tests/
-
-      - name: Build wheel
-        run: pip install build &amp;&amp; python -m build</pre></div>
       </div>
     </div>
+
+    <p class="cap">The Python workflow for the same repository needs an <code class="inline">actions/setup-python@v5</code> step, a <code class="inline">pip install -r requirements.txt</code> step, and a build step that produces a <i>wheel</i> rather than an executable — <code class="inline">python -m build</code> — so the <code class="inline">pipeline-binary</code> artifact above has no direct counterpart to upload.</p>
 
     <p>Deployment options for Mojo data pipelines:</p>
 

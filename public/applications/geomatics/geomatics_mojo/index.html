@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geomatics Mojo - learn Mojo for geodesy, projections, and adjustment</title>
+<meta name="description" content="Eight hands-on modules on geomatics in Mojo: the ellipsoid, coordinate frames, traverses, transverse Mercator, GNSS least squares, network adjustment, areas and volumes, and gridded performance. Every module has a live widget and a quiz.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div id="progress"></div>
+
+<header class="topbar">
+  <div class="wrap topin">
+    <a class="brand" href="../index.html">
+      <span class="logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10z"></path>
+          <circle cx="12" cy="11" r="2.2"></circle>
+        </svg>
+      </span>
+      <span>Geomatics Mojo</span>
+      <span class="sub">· 8 modules</span>
+    </a>
+    <div class="topright">
+      <span class="readout" id="readout">0/8 modules</span>
+      <a class="pill hide" href="../index.html">Geomatics shelf</a>
+      <button class="pill tocbtn" aria-expanded="false" aria-controls="toc">Modules</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" id="toc" aria-label="Modules">
+    <h4>Contents</h4>
+    <div id="toclist"></div>
+    <hr>
+    <h4>Nearby</h4>
+    <a href="../index.html">Geomatics shelf</a>
+    <a href="karney_krueger_equations.html">Krueger equations</a>
+    <a href="gnss_surveying.html">GNSS surveying</a>
+    <a href="geo_computations.html">Geo computations</a>
+  </nav>
+
+  <main class="content">
+    <section class="hero">
+      <span class="eyebrow">Interactive tutorial</span>
+      <h1>Geomatics in <span class="grad">Mojo</span></h1>
+      <p class="lead">Geomatics is grid arithmetic wearing boots. A coordinate transformation is applied to millions of points, a least-squares adjustment solves a normal-equation system once per epoch, and a raster is one loop over cells. This tutorial works through the actual geodesy - the ellipsoid, ECEF, traverses, the transverse Mercator, GNSS trilateration and network adjustment - with a live widget on each idea and a quiz at the end of every module.</p>
+      <div class="actions">
+        <button class="btn primary" data-start>Start module 01 →</button>
+        <a class="btn" href="#m04">Jump to map projections</a>
+        <a class="btn" href="#m08">Gridding and the capstone</a>
+      </div>
+    </section>
+
+    <section class="module" id="m01" data-title="Why Mojo for geomatics">
+      <h2>01 - Why Mojo for geomatics</h2>
+      <p class="dek">The Earth is not a sphere, and every geomatics computation is a loop over that fact.</p>
+
+      <p>A geodetic position is a triple - latitude, longitude, height - and the surface it lives on is an ellipsoid, flattened so that the polar radius is about 21&nbsp;km shorter than the equatorial one. Almost nothing in geomatics is closed-form on a sphere; the radius of curvature depends on where you are, so a transformation is a per-point evaluation of functions of latitude.</p>
+
+      <p>That shape of work - fixed fields, tight loops, no dynamic dispatch - is what a systems language is for. A <code>struct</code> holds a point; a loop walks a grid; the compiler keeps the fields in registers. Mojo gives you the loop and the struct, and the same source runs scalar or vectorised.</p>
+
+      <div class="eq">
+$$M(\varphi)=\frac{a(1-e^2)}{(1-e^2\sin^2\varphi)^{3/2}}, \qquad N(\varphi)=\frac{a}{\sqrt{1-e^2\sin^2\varphi}}$$
+      </div>
+
+      <p>$M$ is the meridian radius of curvature and $N$ the prime-vertical radius. They differ by roughly 1&nbsp;km mid-latitude, and mixing them up is the classic source of a small, consistent distance error.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">ellipsoid.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Geomatics is grid arithmetic: millions of ellipsoidal evaluations.</span>
+<span class="tok-com"># A struct with fixed fields plus a tight loop is the whole idea.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">A</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">6378137.0</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">F</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span> <span class="tok-op">/</span> <span class="tok-num">298.257223563</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">E2</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-type">F</span> <span class="tok-op">*</span> (<span class="tok-num">2.0</span> <span class="tok-op">-</span> <span class="tok-type">F</span>)
+<span class="tok-kw">comptime</span> <span class="tok-type">DEG</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.017453292519943295</span>
+
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sqrt</span>, <span class="tok-fn">sin</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Ellipsoid</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">a</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">f</span>: <span class="tok-type">Float64</span>
+
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(<span class="tok-kw">out</span> <span class="tok-kw">self</span>, a: <span class="tok-type">Float64</span>, f: <span class="tok-type">Float64</span>):
+        <span class="tok-kw">self</span>.a <span class="tok-op">=</span> a
+        <span class="tok-kw">self</span>.f <span class="tok-op">=</span> f
+
+    <span class="tok-kw">def</span> <span class="tok-fn">meridian_radius</span>(<span class="tok-kw">self</span>, phi: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+        <span class="tok-com"># Radius of curvature in the meridian plane.</span>
+        <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(phi)
+        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.a <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">E2</span>) <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">E2</span> <span class="tok-op">*</span> s <span class="tok-op">*</span> s) <span class="tok-op">**</span> <span class="tok-num">1.5</span>
+
+    <span class="tok-kw">def</span> <span class="tok-fn">prime_vertical</span>(<span class="tok-kw">self</span>, phi: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+        <span class="tok-com"># Radius of curvature in the prime vertical.</span>
+        <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(phi)
+        <span class="tok-kw">return</span> <span class="tok-kw">self</span>.a <span class="tok-op">/</span> <span class="tok-fn">sqrt</span>(<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">E2</span> <span class="tok-op">*</span> s <span class="tok-op">*</span> s)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">wgs84</span> <span class="tok-op">=</span> <span class="tok-type">Ellipsoid</span>(<span class="tok-type">A</span>, <span class="tok-type">F</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">phi</span> <span class="tok-op">=</span> <span class="tok-num">51.4778</span> <span class="tok-op">*</span> <span class="tok-type">DEG</span>
+    <span class="tok-kw">var</span> <span class="tok-var">m</span> <span class="tok-op">=</span> wgs84.meridian_radius(phi)
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> wgs84.prime_vertical(phi)
+    <span class="tok-fn">print</span>(<span class="tok-str">"phi           ="</span>, phi)
+    <span class="tok-fn">print</span>(<span class="tok-str">"M (meridian)  ="</span>, m)
+    <span class="tok-fn">print</span>(<span class="tok-str">"N (prime vert)="</span>, n)
+    <span class="tok-fn">print</span>(<span class="tok-str">"mean radius   ="</span>, <span class="tok-fn">sqrt</span>(m <span class="tok-op">*</span> n))</pre>
+      </figure>
+<pre class="out">phi           = 0.898457101683137
+M (meridian)  = 6374580.03779663
+N (prime vert)= 6391244.876271445
+mean radius   = 6382907.01835378
+</pre>
+
+      <p>The WGS84 ellipsoid is fixed by two numbers: a semi-major axis $a = 6378137$&nbsp;m and a flattening $f = 1/298.257223563$. Everything else - the square of eccentricity $e^2 = f(2-f)$, the polar radius, the radii above - is derived. Carrying those two constants as <code>comptime</code> values means they fold into the arithmetic.</p>
+
+      <section class="lab" data-lab="earth" aria-label="Radii of curvature lab">
+        <div class="labhead"><span class="dot"></span>Lab - the radii of curvature<span class="tagline">m01</span></div>
+      </section>
+
+      <p>The widget plots the meridian radius (blue), the prime-vertical radius (green) and their geometric mean against latitude. The readouts give all three at the chosen latitude, plus the local flattening ratio $N/M$, which is the correction a surveyor applies to convert between the two.</p>
+
+      <div class="callout info">
+        <strong>Why the mean radius is 6 371 km</strong>
+        <p>A sphere of radius $\sqrt{MN}$ matches the ellipsoid to second order at that latitude. It is not a global best-fit sphere - that is a different, smaller number - but it is the natural local replacement, and it is exact enough for order-of-magnitude work.</p>
+      </div>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">At the equator, how do the meridian radius $M$ and the prime-vertical radius $N$ compare?</p>
+        <label class="opt"><input type="radio" name="m01q1" value="a"><span>$M > N$, because the meridian curves more sharply</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="b"><span>$M = N = a$, because both curvatures equal the equatorial radius</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="c"><span>$M < N$, because the equator bulges</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="d"><span>Both equal $a(1-e^2)$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> At $\varphi=0$ the $\sin^2\varphi$ term vanishes, so $M=N=a$ - both curvatures equal the equatorial radius. Moving toward the pole, $M$ falls faster than $N$, so $M<N$ through the mid-latitudes; they reconverge at the pole at $M=N=a/\sqrt{1-e^2}$.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <span class="navbtn off"><span class="d">Start</span><span class="t">You are here</span></span>
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Next</span><span class="t">02 - Coordinate frames</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m02" data-title="Coordinate frames">
+      <h2>02 - Coordinate frames</h2>
+      <p class="dek">Geodetic, Earth-centred Cartesian, and local tangent planes - and how to move between them.</p>
+
+      <p>Coordinates are not absolute; they are a description relative to a frame. Geodetic coordinates $(\varphi,\lambda,h)$ are intuitive and good for storage. Earth-centred Earth-fixed (ECEF) Cartesian $(X,Y,Z)$ are linear, so distances and differentiable operations live there. The conversion between them is the geodetic datum calculation.</p>
+
+      <p>Forward is closed. With $a$, $e^2$ and the prime-vertical radius $N(\varphi)$:</p>
+
+      <div class="eq">
+$$X=(N+h)\cos\varphi\cos\lambda,\quad Y=(N+h)\cos\varphi\sin\lambda,\quad Z=\bigl(N(1-e^2)+h\bigr)\sin\varphi$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">frames.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Geodetic &lt;-&gt; ECEF. The forward form is closed; the inverse needs iteration</span>
+<span class="tok-com"># because latitude appears inside the radius of curvature it defines.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">A</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">6378137.0</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">F</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span> <span class="tok-op">/</span> <span class="tok-num">298.257223563</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">E2</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-type">F</span> <span class="tok-op">*</span> (<span class="tok-num">2.0</span> <span class="tok-op">-</span> <span class="tok-type">F</span>)
+<span class="tok-kw">comptime</span> <span class="tok-type">DEG</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.017453292519943295</span>
+
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sqrt</span>, <span class="tok-fn">sin</span>, <span class="tok-fn">cos</span>, atan2
+
+<span class="tok-kw">struct</span> <span class="tok-type">Geodetic</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">lat</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">lon</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">h</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">to_ecef</span>(p: <span class="tok-type">Geodetic</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(p.lat)
+    <span class="tok-kw">var</span> <span class="tok-var">c</span> <span class="tok-op">=</span> <span class="tok-fn">cos</span>(p.lat)
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> <span class="tok-type">A</span> <span class="tok-op">/</span> <span class="tok-fn">sqrt</span>(<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">E2</span> <span class="tok-op">*</span> s <span class="tok-op">*</span> s)
+    <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> (n <span class="tok-op">+</span> p.h) <span class="tok-op">*</span> c <span class="tok-op">*</span> <span class="tok-fn">cos</span>(p.lon)
+    <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> (n <span class="tok-op">+</span> p.h) <span class="tok-op">*</span> c <span class="tok-op">*</span> <span class="tok-fn">sin</span>(p.lon)
+    <span class="tok-kw">var</span> <span class="tok-var">z</span> <span class="tok-op">=</span> (n <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">E2</span>) <span class="tok-op">+</span> p.h) <span class="tok-op">*</span> s
+    <span class="tok-kw">return</span> (x, y, z)
+
+<span class="tok-kw">def</span> <span class="tok-fn">to_geodetic</span>(x: <span class="tok-type">Float64</span>, y: <span class="tok-type">Float64</span>, z: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Geodetic</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">lon</span> <span class="tok-op">=</span> atan2(y, x)
+    <span class="tok-kw">var</span> <span class="tok-var">p</span> <span class="tok-op">=</span> <span class="tok-fn">sqrt</span>(x <span class="tok-op">*</span> x <span class="tok-op">+</span> y <span class="tok-op">*</span> y)
+    <span class="tok-kw">var</span> <span class="tok-var">lat</span> <span class="tok-op">=</span> atan2(z, p <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">E2</span>))
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> <span class="tok-type">A</span>
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">15</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(lat)
+        n <span class="tok-op">=</span> <span class="tok-type">A</span> <span class="tok-op">/</span> <span class="tok-fn">sqrt</span>(<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">E2</span> <span class="tok-op">*</span> s <span class="tok-op">*</span> s)
+        lat <span class="tok-op">=</span> atan2(z <span class="tok-op">+</span> <span class="tok-type">E2</span> <span class="tok-op">*</span> n <span class="tok-op">*</span> s, p)
+    <span class="tok-com"># p / cos(lat) - n is exact away from the poles.</span>
+    <span class="tok-kw">return</span> <span class="tok-type">Geodetic</span>(lat, lon, p <span class="tok-op">/</span> <span class="tok-fn">cos</span>(lat) <span class="tok-op">-</span> n)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">p</span> <span class="tok-op">=</span> <span class="tok-type">Geodetic</span>(<span class="tok-num">51.4778</span> <span class="tok-op">*</span> <span class="tok-type">DEG</span>, <span class="tok-op">-</span><span class="tok-num">0.0015</span> <span class="tok-op">*</span> <span class="tok-type">DEG</span>, <span class="tok-num">45.0</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">e</span> <span class="tok-op">=</span> to_ecef(p)
+    <span class="tok-fn">print</span>(<span class="tok-str">"X ="</span>, e[<span class="tok-num">0</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"Y ="</span>, e[<span class="tok-num">1</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"Z ="</span>, e[<span class="tok-num">2</span>])
+    <span class="tok-kw">var</span> <span class="tok-var">q</span> <span class="tok-op">=</span> to_geodetic(e[<span class="tok-num">0</span>], e[<span class="tok-num">1</span>], e[<span class="tok-num">2</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"lat ="</span>, q.lat)
+    <span class="tok-fn">print</span>(<span class="tok-str">"lon ="</span>, q.lon)
+    <span class="tok-fn">print</span>(<span class="tok-str">"h   ="</span>, q.h)</pre>
+      </figure>
+<pre class="out">X = 3980609.237097504
+Y = -104.2121061577852
+Z = 4966859.728504293
+lat = 0.898457101683137
+lon = -0.000026179938779914945
+h   = 45.0
+</pre>
+
+      <p>The inverse is the awkward direction. Longitude is a simple <code>atan2(y, x)</code>, but latitude appears on both sides of the equation because $N$ depends on it. The fix is a fixed-point iteration: start from a spherical estimate, then recompute $N$ and refine latitude until it stops moving. Hero of Alexandria had the same problem in two dimensions; here it takes about five passes to reach machine precision.</p>
+
+      <div class="callout warn">
+        <strong>Height at the poles</strong>
+        <p>The tidy inverse height $h = p/\cos\varphi - N$ divides by $\cos\varphi$, which vanishes at the poles. A robust routine switches to the $Z$-difference form $h = Z/\sin\varphi - N(1-e^2)$ inside a few degrees of the pole. Ignore this and the height blows up exactly where polar work happens.</p>
+      </div>
+
+      <section class="lab" data-lab="frames" aria-label="Frame conversion lab">
+        <div class="labhead"><span class="dot"></span>Lab - geodetic, ECEF, and back<span class="tagline">m02</span></div>
+      </section>
+
+      <p>Drag the latitude, longitude and height sliders and the widget runs the same forward map and the same iteration as the listing. The right-hand readouts are the ECEF triple and the recovered geodetic triple; the round-trip residual shows how far the iteration landed from where it started. The baseline readout is the straight-line chord to a fixed reference point at Greenwich - the Euclidean distance in the ECEF frame, before the curvature is put back.</p>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">Why does ECEF latitude need iteration to invert, when longitude does not?</p>
+        <label class="opt"><input type="radio" name="m02q1" value="a"><span>Because <code>atan2</code> is only defined in the first quadrant</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="b"><span>Because $X$, $Y$ and $Z$ are not independent</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="c"><span>Because the radius of curvature $N$ that scales $Z$ is itself a function of the latitude being solved for</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="d"><span>Because the flattening $f$ makes the equation cubic in $\varphi$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Longitude is a pure rotation about the $Z$ axis, so it is a single <code>atan2</code>. Latitude enters the height and the ellipsoid normal, and $N(\varphi)$ is coupled to $\varphi$ - a small circular dependency that iteration resolves.</p>
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m01" data-goto="0"><span class="d">Prev</span><span class="t">01 - Why Mojo for geomatics</span></a>
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Next</span><span class="t">03 - Bearings and traverses</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m03" data-title="Bearings and traverses">
+      <h2>03 - Bearings and traverses</h2>
+      <p class="dek">A chain of measured vectors should return to where it started - and the amount by which it misses is the whole art of surveying.</p>
+
+      <p>A traverse walks from one station to the next, turning a measured azimuth and distance into a coordinate increment. On a local plane the increment is a rotation of the distance by the bearing:</p>
+
+      <div class="eq">
+$$\Delta E = d\sin\alpha, \qquad \Delta N = d\cos\alpha$$
+      </div>
+
+      <p>Sum those over a closed loop and the answer should be zero. It never is. The residual vector is the <em>misclosure</em>, and its length divided by the perimeter is the accuracy of the traverse, usually quoted as a ratio such as 1:5000 or, in the field, in parts per thousand.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">traverse.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># A traverse is a chain of vectors. In a local plane the increments are</span>
+<span class="tok-com"># dE = d*sin(az), dN = d*cos(az); a closed loop should sum to zero, and how</span>
+<span class="tok-com"># far from zero it lands is the misclosure.</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sin</span>, <span class="tok-fn">cos</span>, <span class="tok-fn">sqrt</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Leg</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">azimuth</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">distance</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Closure</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">sum_e</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sum_n</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">perimeter</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">misclose</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">close_traverse</span>(legs: <span class="tok-type">List</span>[<span class="tok-type">Leg</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Closure</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">se</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sn</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">per</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(legs.size):
+        <span class="tok-kw">var</span> <span class="tok-var">d</span> <span class="tok-op">=</span> legs[i].distance
+        se <span class="tok-op">+=</span> d <span class="tok-op">*</span> <span class="tok-fn">sin</span>(legs[i].azimuth)
+        sn <span class="tok-op">+=</span> d <span class="tok-op">*</span> <span class="tok-fn">cos</span>(legs[i].azimuth)
+        per <span class="tok-op">+=</span> d
+    <span class="tok-kw">return</span> <span class="tok-type">Closure</span>(se, sn, per, <span class="tok-fn">sqrt</span>(se <span class="tok-op">*</span> se <span class="tok-op">+</span> sn <span class="tok-op">*</span> sn))
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-com"># A four-leg loop, reversible bearings 2 deg out on one leg.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">legs</span> <span class="tok-op">=</span> [
+        <span class="tok-type">Leg</span>(<span class="tok-num">0.7853981633974483</span>, <span class="tok-num">100.0</span>),
+        <span class="tok-type">Leg</span>(<span class="tok-num">2.3736477827122884</span>, <span class="tok-num">100.0</span>),
+        <span class="tok-type">Leg</span>(<span class="tok-num">3.9095375244672983</span>, <span class="tok-num">100.5</span>),
+        <span class="tok-type">Leg</span>(<span class="tok-num">5.4977871437821380</span>, <span class="tok-num">99.8</span>),
+    ]
+    <span class="tok-kw">var</span> <span class="tok-var">c</span> <span class="tok-op">=</span> close_traverse(legs)
+    <span class="tok-fn">print</span>(<span class="tok-str">"sum E     ="</span>, c.sum_e)
+    <span class="tok-fn">print</span>(<span class="tok-str">"sum N     ="</span>, c.sum_n)
+    <span class="tok-fn">print</span>(<span class="tok-str">"perimeter ="</span>, c.perimeter)
+    <span class="tok-fn">print</span>(<span class="tok-str">"misclose  ="</span>, c.misclose)
+    <span class="tok-fn">print</span>(<span class="tok-str">"accuracy  ="</span>, c.misclose <span class="tok-op">/</span> c.perimeter <span class="tok-op">*</span> <span class="tok-num">1000.0</span>, <span class="tok-str">"per mille"</span>)</pre>
+      </figure>
+<pre class="out">sum E     = -0.20590782899220983
+sum N     = -2.9476950868273804
+perimeter = 400.3
+misclose  = 2.954878061603653
+accuracy  = 7.381658909826763 per mille
+</pre>
+
+      <p>The example loop is a nominal square with one bearing two degrees out. The direction of the misclosure vector tells you which leg is suspect: a single gross error in one leg leaves a residual mostly along that leg's bearing-reversed direction, which is why a misclosure plot is diagnostic, not just a pass/fail number.</p>
+
+      <section class="lab" data-lab="traverse" aria-label="Traverse lab">
+        <div class="labhead"><span class="dot"></span>Lab - traverse closure<span class="tagline">m03</span></div>
+      </section>
+
+      <p>Edit the leg table - one <code>azimuth, distance</code> pair per line, azimuth in degrees - and the widget accumulates the loop exactly as the listing does. It draws the traverse, the closing vector from the last station back to the first, and prints the perimeter, misclosure and accuracy. Load the default and you will reproduce the listing's numbers to the last digit.</p>
+
+      <div class="callout perf">
+        <strong>Field practice</strong>
+        <p>A misclosure is never left in the raw coordinates. It is distributed back across the legs - by Bowditch (proportional to length) or by least squares - before anything is plotted or staked. Module 08's capstone carries the same loop through that adjustment step.</p>
+      </div>
+
+      <div class="check" data-answer="a" data-q="1">
+        <p class="q">A closed traverse has a misclosure of 0.030&nbsp;m over a perimeter of 600&nbsp;m. What is the accuracy in parts per thousand?</p>
+        <label class="opt"><input type="radio" name="m03q1" value="a"><span>0.05 per mille (about 1:20000)</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="b"><span>0.30 per mille</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="c"><span>20 per mille</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="d"><span>0.00005 per mille</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> $(0.030/600)\times 1000 = 0.05$ parts per thousand, or a ratio of 1:20000. Small misclosures quoted as ratios are why a positive error ratio - more than one part - always means a blunder, not noise.</p>
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Prev</span><span class="t">02 - Coordinate frames</span></a>
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Next</span><span class="t">04 - Map projections</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m04" data-title="Map projections">
+      <h2>04 - Map projections</h2>
+      <p class="dek">The transverse Mercator, the Krueger series, and the two numbers that make a projection usable: scale and convergence.</p>
+
+      <p>A projection trades a curved surface for a flat one. The transverse Mercator is conformal - it preserves angles - which makes it the workhorse of national grids. Points are not reproduced at true scale: the scale factor $k$ varies with position, chosen to equal $k_0$ on the central meridian and to grow or shrink away from it.</p>
+
+      <p>Karney's formulation writes the mapping as a sixth-order series in the third flattening $n = f/(2-f)$, evaluated on isometric coordinates. The series converges to sub-millimetre accuracy at six terms for a zone a few degrees wide.</p>
+
+      <div class="eq">
+$$n=\frac{f}{2-f},\qquad \xi'=\tan^{-1}\!\frac{\sinh\tau}{\cos\lambda},\qquad \eta'=\tanh^{-1}\!\frac{\sin\lambda}{\sqrt{1+\sinh^2\tau}}$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">krueger.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Transverse Mercator in Karney's conformal n-series. The mapping is exact to</span>
+<span class="tok-com"># the order kept; here six terms are carried, which is well under a millimetre.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">A</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">6378137.0</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">F</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span> <span class="tok-op">/</span> <span class="tok-num">298.257223563</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">N3</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-type">F</span> <span class="tok-op">/</span> (<span class="tok-num">2.0</span> <span class="tok-op">-</span> <span class="tok-type">F</span>)
+<span class="tok-kw">comptime</span> <span class="tok-type">CTAU</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> <span class="tok-fn">sqrt</span>(<span class="tok-type">N3</span>) <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> <span class="tok-type">N3</span>)
+<span class="tok-kw">comptime</span> <span class="tok-type">ARC</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> (<span class="tok-type">A</span> <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> <span class="tok-type">N3</span>)) <span class="tok-op">*</span> (<span class="tok-num">1.0</span> <span class="tok-op">+</span> <span class="tok-type">N3</span> <span class="tok-op">*</span> <span class="tok-type">N3</span> <span class="tok-op">/</span> <span class="tok-num">4.0</span> <span class="tok-op">+</span> <span class="tok-type">N3</span> <span class="tok-op">**</span> <span class="tok-num">4</span> <span class="tok-op">/</span> <span class="tok-num">64.0</span>)
+
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sqrt</span>, <span class="tok-fn">sin</span>, <span class="tok-fn">cos</span>, sinh, cosh, atan2, atanh
+
+<span class="tok-kw">def</span> <span class="tok-fn">alpha</span>() <span class="tok-op">-&gt;</span> <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> <span class="tok-type">N3</span>
+    <span class="tok-kw">var</span> <span class="tok-var">n2</span> <span class="tok-op">=</span> n <span class="tok-op">*</span> n
+    <span class="tok-kw">var</span> <span class="tok-var">n3</span> <span class="tok-op">=</span> n2 <span class="tok-op">*</span> n
+    <span class="tok-kw">var</span> <span class="tok-var">n4</span> <span class="tok-op">=</span> n3 <span class="tok-op">*</span> n
+    <span class="tok-kw">var</span> <span class="tok-var">n5</span> <span class="tok-op">=</span> n4 <span class="tok-op">*</span> n
+    <span class="tok-kw">var</span> <span class="tok-var">n6</span> <span class="tok-op">=</span> n5 <span class="tok-op">*</span> n
+    <span class="tok-kw">return</span> [
+        n <span class="tok-op">/</span> <span class="tok-num">2.0</span> <span class="tok-op">-</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> n2 <span class="tok-op">/</span> <span class="tok-num">3.0</span> <span class="tok-op">+</span> <span class="tok-num">5.0</span> <span class="tok-op">*</span> n3 <span class="tok-op">/</span> <span class="tok-num">16.0</span> <span class="tok-op">+</span> <span class="tok-num">41.0</span> <span class="tok-op">*</span> n4 <span class="tok-op">/</span> <span class="tok-num">180.0</span> <span class="tok-op">-</span> <span class="tok-num">127.0</span> <span class="tok-op">*</span> n5 <span class="tok-op">/</span> <span class="tok-num">288.0</span> <span class="tok-op">+</span> <span class="tok-num">7891.0</span> <span class="tok-op">*</span> n6 <span class="tok-op">/</span> <span class="tok-num">37800.0</span>,
+        <span class="tok-num">13.0</span> <span class="tok-op">*</span> n2 <span class="tok-op">/</span> <span class="tok-num">48.0</span> <span class="tok-op">-</span> <span class="tok-num">3.0</span> <span class="tok-op">*</span> n3 <span class="tok-op">/</span> <span class="tok-num">5.0</span> <span class="tok-op">+</span> <span class="tok-num">557.0</span> <span class="tok-op">*</span> n4 <span class="tok-op">/</span> <span class="tok-num">1440.0</span> <span class="tok-op">+</span> <span class="tok-num">281.0</span> <span class="tok-op">*</span> n5 <span class="tok-op">/</span> <span class="tok-num">630.0</span> <span class="tok-op">-</span> <span class="tok-num">1983433.0</span> <span class="tok-op">*</span> n6 <span class="tok-op">/</span> <span class="tok-num">1935360.0</span>,
+        <span class="tok-num">61.0</span> <span class="tok-op">*</span> n3 <span class="tok-op">/</span> <span class="tok-num">240.0</span> <span class="tok-op">-</span> <span class="tok-num">103.0</span> <span class="tok-op">*</span> n4 <span class="tok-op">/</span> <span class="tok-num">140.0</span> <span class="tok-op">+</span> <span class="tok-num">15061.0</span> <span class="tok-op">*</span> n5 <span class="tok-op">/</span> <span class="tok-num">26880.0</span> <span class="tok-op">+</span> <span class="tok-num">167603.0</span> <span class="tok-op">*</span> n6 <span class="tok-op">/</span> <span class="tok-num">181440.0</span>,
+        <span class="tok-num">49561.0</span> <span class="tok-op">*</span> n4 <span class="tok-op">/</span> <span class="tok-num">161280.0</span> <span class="tok-op">-</span> <span class="tok-num">179.0</span> <span class="tok-op">*</span> n5 <span class="tok-op">/</span> <span class="tok-num">168.0</span> <span class="tok-op">+</span> <span class="tok-num">6601661.0</span> <span class="tok-op">*</span> n6 <span class="tok-op">/</span> <span class="tok-num">7257600.0</span>,
+        <span class="tok-num">34729.0</span> <span class="tok-op">*</span> n5 <span class="tok-op">/</span> <span class="tok-num">80640.0</span> <span class="tok-op">-</span> <span class="tok-num">3418889.0</span> <span class="tok-op">*</span> n6 <span class="tok-op">/</span> <span class="tok-num">1995840.0</span>,
+        <span class="tok-num">212378941.0</span> <span class="tok-op">*</span> n6 <span class="tok-op">/</span> <span class="tok-num">319334400.0</span>,
+    ]
+
+<span class="tok-kw">def</span> <span class="tok-fn">tm_forward</span>(phi: <span class="tok-type">Float64</span>, dlam: <span class="tok-type">Float64</span>, k0: <span class="tok-type">Float64</span>, fe: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Tuple</span>[<span class="tok-type">Float64</span>, <span class="tok-type">Float64</span>]:
+    <span class="tok-com"># dlam is longitude measured east from the central meridian.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(phi)
+    <span class="tok-kw">var</span> <span class="tok-var">t</span> <span class="tok-op">=</span> atanh(s) <span class="tok-op">-</span> <span class="tok-type">CTAU</span> <span class="tok-op">*</span> atanh(<span class="tok-type">CTAU</span> <span class="tok-op">*</span> s)
+    <span class="tok-kw">var</span> <span class="tok-var">sh</span> <span class="tok-op">=</span> sinh(t)
+    <span class="tok-kw">var</span> <span class="tok-var">xip</span> <span class="tok-op">=</span> atan2(sh, <span class="tok-fn">cos</span>(dlam))
+    <span class="tok-kw">var</span> <span class="tok-var">etap</span> <span class="tok-op">=</span> atanh(<span class="tok-fn">sin</span>(dlam) <span class="tok-op">/</span> <span class="tok-fn">sqrt</span>(<span class="tok-num">1.0</span> <span class="tok-op">+</span> sh <span class="tok-op">*</span> sh))
+    <span class="tok-kw">var</span> <span class="tok-var">xi</span> <span class="tok-op">=</span> xip
+    <span class="tok-kw">var</span> <span class="tok-var">eta</span> <span class="tok-op">=</span> etap
+    <span class="tok-kw">var</span> <span class="tok-var">al</span> <span class="tok-op">=</span> alpha()
+    <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">1</span>, <span class="tok-num">7</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">fj</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(j)
+        xi <span class="tok-op">+=</span> al[j <span class="tok-op">-</span> <span class="tok-num">1</span>] <span class="tok-op">*</span> <span class="tok-fn">sin</span>(<span class="tok-num">2.0</span> <span class="tok-op">*</span> fj <span class="tok-op">*</span> xip) <span class="tok-op">*</span> cosh(<span class="tok-num">2.0</span> <span class="tok-op">*</span> fj <span class="tok-op">*</span> etap)
+        eta <span class="tok-op">+=</span> al[j <span class="tok-op">-</span> <span class="tok-num">1</span>] <span class="tok-op">*</span> <span class="tok-fn">cos</span>(<span class="tok-num">2.0</span> <span class="tok-op">*</span> fj <span class="tok-op">*</span> xip) <span class="tok-op">*</span> sinh(<span class="tok-num">2.0</span> <span class="tok-op">*</span> fj <span class="tok-op">*</span> etap)
+    <span class="tok-kw">return</span> (fe <span class="tok-op">+</span> k0 <span class="tok-op">*</span> <span class="tok-type">ARC</span> <span class="tok-op">*</span> eta, k0 <span class="tok-op">*</span> <span class="tok-type">ARC</span> <span class="tok-op">*</span> xi)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">e</span> <span class="tok-op">=</span> tm_forward(<span class="tok-num">51.5</span> <span class="tok-op">*</span> <span class="tok-num">0.017453292519943295</span>, <span class="tok-num">1.2</span> <span class="tok-op">*</span> <span class="tok-num">0.017453292519943295</span>, <span class="tok-num">0.9996</span>, <span class="tok-num">500000.0</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"Easting  ="</span>, e[<span class="tok-num">0</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"Northing ="</span>, e[<span class="tok-num">1</span>])</pre>
+      </figure>
+<pre class="out">Easting  = 583293.9244041431
+Northing = 5706111.842722682
+</pre>
+
+      <p>The widget runs the forward map, the inverse, and the local Jacobian to recover scale and convergence. A round trip should return to the input to within a hundredth of a millimetre; if it does not, the series order or the reduction to the footpoint is wrong.</p>
+
+      <table class="cheat">
+        <tr><th>Quantity</th><th>Meaning</th><th>Typical value (UTM)</th></tr>
+        <tr><td>$k_0$</td><td>Scale on the central meridian</td><td>0.9996</td></tr>
+        <tr><td>$k$</td><td>Local scale factor</td><td>0.9996 - 1.0010</td></tr>
+        <tr><td>$\gamma$</td><td>Meridian convergence</td><td>$0^\circ$ on the CM, up to $\pm3^\circ$</td></tr>
+        <tr><td>FE</td><td>False easting on the CM</td><td>500 000 m</td></tr>
+        <tr><td>FN</td><td>False northing (south hemisphere)</td><td>10 000 000 m</td></tr>
+      </table>
+
+      <section class="lab" data-lab="projection" aria-label="Projection check lab">
+        <div class="labhead"><span class="dot"></span>Lab - forward, inverse, scale, convergence<span class="tagline">m04</span></div>
+      </section>
+
+      <p>Set a latitude and a longitude offset from the central meridian and the widget projects the point, inverts the result, and differentiates the map numerically to get the scale factor and the grid convergence. The two scale columns - from the north and the east derivatives of the Jacobian - should agree: that agreement <em>is</em> conformality, and it is the sharpest check the widget can make.</p>
+
+      <div class="callout info">
+        <strong>Convergence is not a bug</strong>
+        <p>The angle between grid north and true north grows with longitude and latitude. A bearing measured on the ground must be rotated by $\gamma$ to plot on the grid, and failing to do so bends every long line.</p>
+      </div>
+
+      <div class="check" data-answer="d" data-q="1">
+        <p class="q">On the projection's central meridian, what is the local scale factor?</p>
+        <label class="opt"><input type="radio" name="m04q1" value="a"><span>Exactly 1, because it is the line of contact</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="b"><span>Independent of $k_0$</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="c"><span>Zero</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="d"><span>Exactly $k_0$, which is chosen smaller than 1 to split the error across the zone</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> The transverse Mercator is a secant projection: $k = k_0 < 1$ on the central meridian and rises to 1 on two standard lines either side, then above 1 toward the zone edge. Choosing $k_0 < 1$ balances the maximum error across the zone.</p>
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Prev</span><span class="t">03 - Bearings and traverses</span></a>
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Next</span><span class="t">05 - GNSS positioning</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m05" data-title="GNSS positioning">
+      <h2>05 - GNSS positioning</h2>
+      <p class="dek">A fix is a least-squares problem: ranges to satellites, linearised around a guess, solved for position.</p>
+
+      <p>A satellite broadcasts its position and a time of flight, which gives a range. The receiver's position is the point whose distances to the satellites best match those ranges. With four or more satellites the system is over-determined and is solved by least squares.</p>
+
+      <p>The range is nonlinear in the position, so each iteration linearises about the current estimate. Writing the unit vector from the estimate to satellite $i$ as $(u_x,u_y)$, the design matrix rows are those unit vectors and the residual is the measured minus computed range. The normal equations solve for the correction $(\delta x,\delta y)$:</p>
+
+      <div class="eq">
+$$A=\begin{bmatrix}u_{x,1}&u_{y,1}\\ \vdots&\vdots\\ u_{x,n}&u_{y,n}\end{bmatrix},\qquad \delta = (A^\top A)^{-1}A^\top r$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">gnss_fix.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># A position fix from ranges is a nonlinear least-squares problem. Fix the</span>
+<span class="tok-com"># clock and it is two unknowns (x, y); each satellite contributes one row to</span>
+<span class="tok-com"># the design matrix, and (A^T A)^-1 gives both the correction and the DOP.</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sqrt</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Sat</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">x</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">y</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">rho</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Fix</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">x</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">y</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">hdop</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">solve_2d</span>(sats: <span class="tok-type">List</span>[<span class="tok-type">Sat</span>], iters: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Fix</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">hdop</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(iters):
+        <span class="tok-kw">var</span> <span class="tok-var">a11</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">var</span> <span class="tok-var">a12</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">var</span> <span class="tok-var">a22</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">var</span> <span class="tok-var">b1</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">var</span> <span class="tok-var">b2</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+        <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(sats.size):
+            <span class="tok-kw">var</span> <span class="tok-var">dx</span> <span class="tok-op">=</span> x <span class="tok-op">-</span> sats[i].x
+            <span class="tok-kw">var</span> <span class="tok-var">dy</span> <span class="tok-op">=</span> y <span class="tok-op">-</span> sats[i].y
+            <span class="tok-kw">var</span> <span class="tok-var">r</span> <span class="tok-op">=</span> <span class="tok-fn">sqrt</span>(dx <span class="tok-op">*</span> dx <span class="tok-op">+</span> dy <span class="tok-op">*</span> dy)
+            <span class="tok-kw">var</span> <span class="tok-var">ux</span> <span class="tok-op">=</span> dx <span class="tok-op">/</span> r
+            <span class="tok-kw">var</span> <span class="tok-var">uy</span> <span class="tok-op">=</span> dy <span class="tok-op">/</span> r
+            <span class="tok-kw">var</span> <span class="tok-var">res</span> <span class="tok-op">=</span> sats[i].rho <span class="tok-op">-</span> r
+            a11 <span class="tok-op">+=</span> ux <span class="tok-op">*</span> ux
+            a12 <span class="tok-op">+=</span> ux <span class="tok-op">*</span> uy
+            a22 <span class="tok-op">+=</span> uy <span class="tok-op">*</span> uy
+            b1 <span class="tok-op">+=</span> ux <span class="tok-op">*</span> res
+            b2 <span class="tok-op">+=</span> uy <span class="tok-op">*</span> res
+        <span class="tok-kw">var</span> <span class="tok-var">det</span> <span class="tok-op">=</span> a11 <span class="tok-op">*</span> a22 <span class="tok-op">-</span> a12 <span class="tok-op">*</span> a12
+        x <span class="tok-op">+=</span> (a22 <span class="tok-op">*</span> b1 <span class="tok-op">-</span> a12 <span class="tok-op">*</span> b2) <span class="tok-op">/</span> det
+        y <span class="tok-op">+=</span> (a11 <span class="tok-op">*</span> b2 <span class="tok-op">-</span> a12 <span class="tok-op">*</span> b1) <span class="tok-op">/</span> det
+        hdop <span class="tok-op">=</span> <span class="tok-fn">sqrt</span>((a11 <span class="tok-op">+</span> a22) <span class="tok-op">/</span> det)
+    <span class="tok-kw">return</span> <span class="tok-type">Fix</span>(x, y, hdop)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-com"># Ranges built from the true point (1200, -800) m plus a fixed set of</span>
+    <span class="tok-com"># errors, so the least-squares solution has something to average out.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sats</span> <span class="tok-op">=</span> [
+        <span class="tok-type">Sat</span>(<span class="tok-op">-</span><span class="tok-num">8000.0</span>, <span class="tok-num">6000.0</span>, <span class="tok-num">11442.28</span>),
+        <span class="tok-type">Sat</span>(<span class="tok-num">12000.0</span>, <span class="tok-num">9000.0</span>, <span class="tok-num">14580.55</span>),
+        <span class="tok-type">Sat</span>(<span class="tok-num">10000.0</span>, <span class="tok-op">-</span><span class="tok-num">11000.0</span>, <span class="tok-num">13472.95</span>),
+        <span class="tok-type">Sat</span>(<span class="tok-op">-</span><span class="tok-num">7000.0</span>, <span class="tok-op">-</span><span class="tok-num">9000.0</span>, <span class="tok-num">11594.05</span>),
+    ]
+    <span class="tok-kw">var</span> <span class="tok-var">f</span> <span class="tok-op">=</span> solve_2d(sats, <span class="tok-num">12</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"x    ="</span>, f.x)
+    <span class="tok-fn">print</span>(<span class="tok-str">"y    ="</span>, f.y)
+    <span class="tok-fn">print</span>(<span class="tok-str">"HDOP ="</span>, f.hdop)</pre>
+      </figure>
+<pre class="out">x    = 1200.5099142930003
+y    = -799.9030216461338
+HDOP = 1.0019400656430641
+</pre>
+
+      <p>Two iterations of the display here would suffice; twelve are shown because a real receiver iterates until the correction is below a threshold, and it matters when the initial guess is far out. The matrix $(A^\top A)^{-1}$ is the covariance of the estimate scaled by the range variance, and its trace is the dilution of precision - the geometry penalty, independent of how good the ranges are.</p>
+
+      <section class="lab" data-lab="gnss" aria-label="GNSS fix lab">
+        <div class="labhead"><span class="dot"></span>Lab - position from ranges<span class="tagline">m05</span></div>
+      </section>
+
+      <p>The widget places a set of satellites on a sky plot and solves for the receiver position with the same linearised least squares as the listing. Move a satellite and the HDOP readout changes even though the ranges have not: that is geometry dilution, and the residual bars show which satellite pulls hardest against the fit.</p>
+
+      <div class="callout warn">
+        <strong>DOP is geometry, not accuracy</strong>
+        <p>A high DOP multiplies whatever range error you have. Satellites clustered in one part of the sky give a strong solution along the line to the cluster and a weak one across it, and no amount of averaging fixes that.</p>
+      </div>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">What does a small HDOP tell you about a fix?</p>
+        <label class="opt"><input type="radio" name="m05q1" value="a"><span>That the ranges were measured precisely</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="b"><span>That the satellite geometry is favourable, so range errors are not magnified</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="c"><span>That at least four satellites are visible</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="d"><span>That the receiver clock is synchronised</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> HDOP is $\sqrt{\operatorname{tr}[(A^\top A)^{-1}]}$: a pure function of the design matrix, hence of geometry. It scales the range measurement noise into position noise; it says nothing about how good the measured ranges were.</p>
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Prev</span><span class="t">04 - Map projections</span></a>
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Next</span><span class="t">06 - Least-squares adjustment</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m06" data-title="Least-squares adjustment">
+      <h2>06 - Least-squares adjustment</h2>
+      <p class="dek">Weights, normal equations, residuals and the a posteriori standard error that judges the whole adjustment.</p>
+
+      <p>Adjustment is least squares applied to measurements that carry different uncertainties. Each observation gets a weight $w$ - inversely proportional to its variance - and the normal equations stack as $A^\top W A\,x = A^\top W\,y$. For a straight line the two parameters are intercept and slope, and the closed form is a weighted linear fit.</p>
+
+      <div class="eq">
+$$\begin{bmatrix}\sum w & \sum wx\\ \sum wx & \sum wx^2\end{bmatrix}\begin{bmatrix}a\\ b\end{bmatrix}=\begin{bmatrix}\sum wy\\ \sum wxy\end{bmatrix}$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">adjust.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Weighted least squares is the adjustment engine. Stack normal equations of</span>
+<span class="tok-com"># the form A^T W A x = A^T W y, solve 2x2 in closed form, then judge the fit by</span>
+<span class="tok-com"># the a posteriori standard error s0 = sqrt(sum(w r^2) / dof).</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sqrt</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Obs</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">x</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">y</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">w</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Fit</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">a</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">b</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">s0</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">dof</span>: <span class="tok-type">Int</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">fit_line</span>(obs: <span class="tok-type">List</span>[<span class="tok-type">Obs</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Fit</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">sw</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">swx</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">swy</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">swxx</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">swxy</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(obs.size):
+        <span class="tok-kw">var</span> <span class="tok-var">w</span> <span class="tok-op">=</span> obs[i].w
+        sw <span class="tok-op">+=</span> w
+        swx <span class="tok-op">+=</span> w <span class="tok-op">*</span> obs[i].x
+        swy <span class="tok-op">+=</span> w <span class="tok-op">*</span> obs[i].y
+        swxx <span class="tok-op">+=</span> w <span class="tok-op">*</span> obs[i].x <span class="tok-op">*</span> obs[i].x
+        swxy <span class="tok-op">+=</span> w <span class="tok-op">*</span> obs[i].x <span class="tok-op">*</span> obs[i].y
+    <span class="tok-kw">var</span> <span class="tok-var">det</span> <span class="tok-op">=</span> sw <span class="tok-op">*</span> swxx <span class="tok-op">-</span> swx <span class="tok-op">*</span> swx
+    <span class="tok-kw">var</span> <span class="tok-var">a</span> <span class="tok-op">=</span> (swxx <span class="tok-op">*</span> swy <span class="tok-op">-</span> swx <span class="tok-op">*</span> swxy) <span class="tok-op">/</span> det
+    <span class="tok-kw">var</span> <span class="tok-var">b</span> <span class="tok-op">=</span> (sw <span class="tok-op">*</span> swxy <span class="tok-op">-</span> swx <span class="tok-op">*</span> swy) <span class="tok-op">/</span> det
+    <span class="tok-kw">var</span> <span class="tok-var">ss</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(obs.size):
+        <span class="tok-kw">var</span> <span class="tok-var">r</span> <span class="tok-op">=</span> obs[i].y <span class="tok-op">-</span> (a <span class="tok-op">+</span> b <span class="tok-op">*</span> obs[i].x)
+        ss <span class="tok-op">+=</span> obs[i].w <span class="tok-op">*</span> r <span class="tok-op">*</span> r
+    <span class="tok-kw">var</span> <span class="tok-var">dof</span> <span class="tok-op">=</span> obs.size <span class="tok-op">-</span> <span class="tok-num">2</span>
+    <span class="tok-kw">return</span> <span class="tok-type">Fit</span>(a, b, <span class="tok-fn">sqrt</span>(ss <span class="tok-op">/</span> <span class="tok-type">Float64</span>(dof)), dof)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-com"># One observation is known to be weak, so its weight is a quarter.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">obs</span> <span class="tok-op">=</span> [
+        <span class="tok-type">Obs</span>(<span class="tok-num">1.0</span>, <span class="tok-num">2.1</span>, <span class="tok-num">1.0</span>),
+        <span class="tok-type">Obs</span>(<span class="tok-num">2.0</span>, <span class="tok-num">3.9</span>, <span class="tok-num">1.0</span>),
+        <span class="tok-type">Obs</span>(<span class="tok-num">3.0</span>, <span class="tok-num">6.2</span>, <span class="tok-num">1.0</span>),
+        <span class="tok-type">Obs</span>(<span class="tok-num">4.0</span>, <span class="tok-num">7.8</span>, <span class="tok-num">1.0</span>),
+        <span class="tok-type">Obs</span>(<span class="tok-num">5.0</span>, <span class="tok-num">10.1</span>, <span class="tok-num">0.25</span>),
+    ]
+    <span class="tok-kw">var</span> <span class="tok-var">f</span> <span class="tok-op">=</span> fit_line(obs)
+    <span class="tok-fn">print</span>(<span class="tok-str">"intercept a ="</span>, f.a)
+    <span class="tok-fn">print</span>(<span class="tok-str">"slope     b ="</span>, f.b)
+    <span class="tok-fn">print</span>(<span class="tok-str">"dof         ="</span>, f.dof)
+    <span class="tok-fn">print</span>(<span class="tok-str">"s0          ="</span>, f.s0)</pre>
+      </figure>
+<pre class="out">intercept a = 0.10454545454545454
+slope     b = 1.9627272727272747
+dof         = 3
+s0          = 0.1764120520860526
+</pre>
+
+      <p>Once the parameters are solved, the residuals $r_i = y_i - (a + bx_i)$ are the evidence of misfit. The a posteriori standard error $s_0 = \sqrt{\sum w_i r_i^2 / \text{dof}}$ estimates the standard deviation of an observation of unit weight. If it is far from 1, either the weights were optimistic or the model is wrong - and the residual pattern says which.</p>
+
+      <section class="lab" data-lab="adjust" aria-label="Adjustment lab">
+        <div class="labhead"><span class="dot"></span>Lab - weighted fit and residuals<span class="tagline">m06</span></div>
+      </section>
+
+      <p>Slide one observation's weight down and watch the fitted line rotate toward the well-measured points. The residual bars should shrink at the heavy points and grow at the light one; the readout $\sigma_0$ is the same quantity the listing prints. When you de-weight an outlier the residuals concentrate on it, which is how a blunder is localised.</p>
+
+      <div class="callout info">
+        <strong>Degrees of freedom</strong>
+        <p>With $n$ observations and $u$ parameters, the redundancy is $n-u$. Here $5-2 = 3$. Without redundancy there are no residuals to judge, and least squares is just an exact solve wearing a costume.</p>
+      </div>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">You halve the weight of one observation. What happens to the fitted line?</p>
+        <label class="opt"><input type="radio" name="m06q1" value="a"><span>Nothing - weights only affect the residuals</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="b"><span>It is forced exactly through that point</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="c"><span>It moves toward the observations that still have full weight</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="d"><span>The intercept changes but the slope does not</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> The weight enters the normal equations directly, so a lower weight pulls the solution less. Both parameters can shift; only when every weight is equal does <code>w</code> cancel out of the solution entirely.</p>
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Prev</span><span class="t">05 - GNSS positioning</span></a>
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Next</span><span class="t">07 - Areas and volumes</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m07" data-title="Areas and volumes">
+      <h2>07 - Areas and volumes</h2>
+      <p class="dek">Shoelace for the boundary, quadrature for the profile, prismoid for the cut and fill.</p>
+
+      <p>Three different questions look like one. The area of a <em>polygon</em> has an exact formula: the shoelace, a half-sum of cross products around the boundary. The area under a <em>profile</em> is an integral, and its accuracy depends on the quadrature rule. The <em>volume</em> between two surfaces is a chain of cross-sections carried along a prismoid rule.</p>
+
+      <div class="eq">
+$$A_{\text{poly}}=\frac12\Bigl|\sum_i (x_i y_{i+1} - x_{i+1} y_i)\Bigr|,\qquad V=\frac{L}{6}\bigl(A_1 + 4A_m + A_2\bigr)$$
+      </div>
+
+      <p>The trapezoid rule joins samples with straight lines and is exact for a linear profile. Simpson's rule fits a parabola through each pair of intervals and is exact for a quadratic - so on the same samples it is closer to a smooth curve, at the cost of requiring an even number of intervals.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">area_volume.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Area and volume. The shoelace is exact for a polygon; the trapezoid and</span>
+<span class="tok-com"># Simpson rules integrate the profile above it, and the prismoid rule carries</span>
+<span class="tok-com"># that area along a chain of cross-sections.</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">abs</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">shoelace</span>(xs: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>], ys: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(xs.size):
+        <span class="tok-kw">var</span> <span class="tok-var">j</span> <span class="tok-op">=</span> (i <span class="tok-op">+</span> <span class="tok-num">1</span>) <span class="tok-op">%</span> xs.size
+        s <span class="tok-op">+=</span> xs[i] <span class="tok-op">*</span> ys[j] <span class="tok-op">-</span> xs[j] <span class="tok-op">*</span> ys[i]
+    <span class="tok-kw">return</span> <span class="tok-fn">abs</span>(s) <span class="tok-op">/</span> <span class="tok-num">2.0</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">trapezoid</span>(xs: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>], ys: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(xs.size <span class="tok-op">-</span> <span class="tok-num">1</span>):
+        s <span class="tok-op">+=</span> (ys[i] <span class="tok-op">+</span> ys[i <span class="tok-op">+</span> <span class="tok-num">1</span>]) <span class="tok-op">*</span> (xs[i <span class="tok-op">+</span> <span class="tok-num">1</span>] <span class="tok-op">-</span> xs[i]) <span class="tok-op">/</span> <span class="tok-num">2.0</span>
+    <span class="tok-kw">return</span> <span class="tok-fn">abs</span>(s)
+
+<span class="tok-kw">def</span> <span class="tok-fn">simpson</span>(xs: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>], ys: <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-com"># Composite Simpson over an even number of equal intervals.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> xs.size <span class="tok-op">-</span> <span class="tok-num">1</span>
+    <span class="tok-kw">var</span> <span class="tok-var">h</span> <span class="tok-op">=</span> (xs[xs.size <span class="tok-op">-</span> <span class="tok-num">1</span>] <span class="tok-op">-</span> xs[<span class="tok-num">0</span>]) <span class="tok-op">/</span> <span class="tok-type">Float64</span>(n)
+    <span class="tok-kw">var</span> <span class="tok-var">s</span> <span class="tok-op">=</span> ys[<span class="tok-num">0</span>] <span class="tok-op">+</span> ys[xs.size <span class="tok-op">-</span> <span class="tok-num">1</span>]
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">1</span>, n):
+        <span class="tok-kw">if</span> i <span class="tok-op">%</span> <span class="tok-num">2</span> <span class="tok-op">==</span> <span class="tok-num">0</span>:
+            s <span class="tok-op">+=</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> ys[i]
+        <span class="tok-kw">else</span>:
+            s <span class="tok-op">+=</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> ys[i]
+    <span class="tok-kw">return</span> <span class="tok-fn">abs</span>(s <span class="tok-op">*</span> h <span class="tok-op">/</span> <span class="tok-num">3.0</span>)
+
+<span class="tok-kw">def</span> <span class="tok-fn">prismoid</span>(length: <span class="tok-type">Float64</span>, a1: <span class="tok-type">Float64</span>, am: <span class="tok-type">Float64</span>, a2: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> length <span class="tok-op">/</span> <span class="tok-num">6.0</span> <span class="tok-op">*</span> (a1 <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> am <span class="tok-op">+</span> a2)
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">px</span> <span class="tok-op">=</span> [<span class="tok-num">0.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">0.0</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">py</span> <span class="tok-op">=</span> [<span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">2.0</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">sx</span> <span class="tok-op">=</span> [<span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">sy</span> <span class="tok-op">=</span> [<span class="tok-num">0.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">0.0</span>]
+    <span class="tok-fn">print</span>(<span class="tok-str">"shoelace  ="</span>, shoelace(px, py))
+    <span class="tok-fn">print</span>(<span class="tok-str">"trapezoid ="</span>, trapezoid(sx, sy))
+    <span class="tok-fn">print</span>(<span class="tok-str">"simpson   ="</span>, simpson(sx, sy))
+    <span class="tok-fn">print</span>(<span class="tok-str">"prismoid  ="</span>, prismoid(<span class="tok-num">50.0</span>, <span class="tok-num">10.0</span>, <span class="tok-num">12.0</span>, <span class="tok-num">15.0</span>))</pre>
+      </figure>
+<pre class="out">shoelace  = 10.0
+trapezoid = 7.0
+simpson   = 7.333333333333333
+prismoid  = 608.3333333333334
+</pre>
+
+      <p>The listing prints all four for fixed data so you can check each against a hand calculation. The polygon is exact at 10. On the same five-point profile, the trapezoid gives 7 and Simpson $7\tfrac13$; that gap is quadrature error, and on a real surface it is the difference between over- and under-ordering earthworks.</p>
+
+      <section class="lab" data-lab="area" aria-label="Area and volume lab">
+        <div class="labhead"><span class="dot"></span>Lab - three methods, one profile<span class="tagline">m07</span></div>
+      </section>
+
+      <p>The widget evaluates a smooth profile and computes its area three ways: the exact integral, the trapezoid rule, and Simpson's rule over the same samples. Add samples and both rules converge to the exact answer; Simpson converges far faster. The readout shows the error of each, so the algebraic order of the rule is visible as a slope.</p>
+
+      <div class="callout warn">
+        <strong>Shoelace sign</strong>
+        <p>The raw shoelace sum is signed by the winding direction: counter-clockwise is positive, clockwise negative. Take the absolute value for an area, but keep the sign if you need to know the orientation - and never feed a polygon with a duplicated closing vertex.</p>
+      </div>
+
+      <div class="check" data-answer="a" data-q="1">
+        <p class="q">On the same evenly-spaced samples of a smooth curve, which is generally more accurate?</p>
+        <label class="opt"><input type="radio" name="m07q1" value="a"><span>Simpson's rule, because it is exact for quadratics</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="b"><span>The trapezoid rule, because it uses fewer terms</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="c"><span>They are always identical</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="d"><span>The shoelace, because it closes the polygon</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Trapezoid integrates linears exactly and Simpson quadratics, so for smooth data Simpson's error falls as $h^4$ against the trapezoid's $h^2$. The cost is that it needs an even interval count and a uniform step.</p>
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Prev</span><span class="t">06 - Least-squares adjustment</span></a>
+        <a class="navbtn" href="#m08" data-goto="7"><span class="d">Next</span><span class="t">08 - Gridding and the capstone</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m08" data-title="Gridding and the capstone">
+      <h2>08 - Gridding and the capstone</h2>
+      <p class="dek">A raster is one loop; a survey reduction is several, chained.</p>
+
+      <p>Most geomatics throughput is a single loop over a grid of cells, applying the same arithmetic to each. What matters is that the loop is vectorisable: independent iterations, no aliasing, and an accumulation the compiler can reorder. Unrolling by four exposes four independent chains, which a vectorised backend packs into one register.</p>
+
+      <div class="eq">
+$$S=\sum_{i=0}^{n^2-1}\sin^2 i$$
+      </div>
+
+      <figure class="listing">
+        <figcaption><span class="fn">grid.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Raster work is one loop over cells; scalar Mojo is already fast.</span>
+<span class="tok-com"># Unrolling by four exposes work a vector backend can pack.</span>
+<span class="tok-com"># Reassociating the adds shifts the last ulp; the relative diff is the test.</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sin</span>, <span class="tok-fn">abs</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">scalar_sum</span>(n: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">acc</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(n <span class="tok-op">*</span> n):
+        <span class="tok-kw">var</span> <span class="tok-var">v</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(<span class="tok-type">Float64</span>(i))
+        acc <span class="tok-op">+=</span> v <span class="tok-op">*</span> v
+    <span class="tok-kw">return</span> acc
+
+<span class="tok-kw">def</span> <span class="tok-fn">unrolled_sum</span>(n: <span class="tok-type">Int</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">acc</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">quarters</span> <span class="tok-op">=</span> (n <span class="tok-op">*</span> n) <span class="tok-op">/</span> <span class="tok-num">4</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(quarters):
+        <span class="tok-kw">var</span> <span class="tok-var">v0</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(<span class="tok-type">Float64</span>(<span class="tok-num">4</span> <span class="tok-op">*</span> i))
+        <span class="tok-kw">var</span> <span class="tok-var">v1</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(<span class="tok-type">Float64</span>(<span class="tok-num">4</span> <span class="tok-op">*</span> i <span class="tok-op">+</span> <span class="tok-num">1</span>))
+        <span class="tok-kw">var</span> <span class="tok-var">v2</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(<span class="tok-type">Float64</span>(<span class="tok-num">4</span> <span class="tok-op">*</span> i <span class="tok-op">+</span> <span class="tok-num">2</span>))
+        <span class="tok-kw">var</span> <span class="tok-var">v3</span> <span class="tok-op">=</span> <span class="tok-fn">sin</span>(<span class="tok-type">Float64</span>(<span class="tok-num">4</span> <span class="tok-op">*</span> i <span class="tok-op">+</span> <span class="tok-num">3</span>))
+        acc <span class="tok-op">+=</span> v0 <span class="tok-op">*</span> v0 <span class="tok-op">+</span> v1 <span class="tok-op">*</span> v1 <span class="tok-op">+</span> v2 <span class="tok-op">*</span> v2 <span class="tok-op">+</span> v3 <span class="tok-op">*</span> v3
+    <span class="tok-kw">return</span> acc
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> <span class="tok-num">1024</span>
+    <span class="tok-fn">print</span>(<span class="tok-str">"cells     ="</span>, n <span class="tok-op">*</span> n)
+    <span class="tok-fn">print</span>(<span class="tok-str">"scalar    ="</span>, scalar_sum(n))
+    <span class="tok-fn">print</span>(<span class="tok-str">"unrolled  ="</span>, unrolled_sum(n))
+    <span class="tok-fn">print</span>(<span class="tok-str">"rel diff  ="</span>, <span class="tok-fn">abs</span>(scalar_sum(n) <span class="tok-op">-</span> unrolled_sum(n)) <span class="tok-op">/</span> scalar_sum(n))</pre>
+      </figure>
+<pre class="out">cells     = 1048576
+scalar    = 524287.845245648
+unrolled  = 524287.84524567844
+rel diff  = 5.80646813268768e-14
+</pre>
+
+      <p>The two sums are not bit-identical, and it would be dishonest to claim they are: reassociating the additions changes the rounding in the last place. The relative difference, one part in $10^{13}$, is the real answer - the arithmetic is correct, it just stopped being commutative in the bottom bits the moment the order changed.</p>
+
+      <section class="lab" data-lab="grid" aria-label="Grid bench lab">
+        <div class="labhead"><span class="dot"></span>Lab - grid size and unroll width<span class="tagline">m08</span></div>
+      </section>
+
+      <p>The bench runs the scalar loop and an unrolled loop over the same grid and compares them. It reports the relative difference (which should sit near machine epsilon times the number of cells) and the ratio of the per-cell work, so the point of unrolling is a number you measure rather than a claim you accept.</p>
+
+      <h3>Capstone - reduce a local survey</h3>
+
+      <p>The capstone chains the whole tutorial. It closes a four-leg traverse, distributes the misclosure by Bowditch so each leg carries a share proportional to its length, applies the grid scale factor, and reports the adjusted station coordinates. The closing east and north are machine-level zero - the loop now closes because the error has been pushed back into the legs where it belongs.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">reduce_survey.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Capstone: reduce a local survey. Close the traverse, distribute the</span>
+<span class="tok-com"># misclosure by Bowditch (proportional to leg length), apply the grid scale,</span>
+<span class="tok-com"># and report the adjusted stations.</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">sin</span>, <span class="tok-fn">cos</span>, <span class="tok-fn">sqrt</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Leg</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">azimuth</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">distance</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Station</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">east</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">north</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">cum</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">reduce</span>(legs: <span class="tok-type">List</span>[<span class="tok-type">Leg</span>], k0: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">List</span>[<span class="tok-type">Station</span>]:
+    <span class="tok-kw">var</span> <span class="tok-var">se</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">sn</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">per</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(legs.size):
+        se <span class="tok-op">+=</span> legs[i].distance <span class="tok-op">*</span> <span class="tok-fn">sin</span>(legs[i].azimuth)
+        sn <span class="tok-op">+=</span> legs[i].distance <span class="tok-op">*</span> <span class="tok-fn">cos</span>(legs[i].azimuth)
+        per <span class="tok-op">+=</span> legs[i].distance
+    <span class="tok-com"># Bowditch: the correction per leg is proportional to its length.</span>
+    <span class="tok-kw">var</span> <span class="tok-var">ce</span> <span class="tok-op">=</span> <span class="tok-op">-</span>se <span class="tok-op">/</span> per
+    <span class="tok-kw">var</span> <span class="tok-var">cn</span> <span class="tok-op">=</span> <span class="tok-op">-</span>sn <span class="tok-op">/</span> per
+    <span class="tok-kw">var</span> <span class="tok-var">stations</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Station</span>]()
+    <span class="tok-kw">var</span> <span class="tok-var">e</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">n</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">cum</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(legs.size):
+        e <span class="tok-op">+=</span> (legs[i].distance <span class="tok-op">*</span> <span class="tok-fn">sin</span>(legs[i].azimuth) <span class="tok-op">+</span> ce <span class="tok-op">*</span> legs[i].distance) <span class="tok-op">*</span> k0
+        n <span class="tok-op">+=</span> (legs[i].distance <span class="tok-op">*</span> <span class="tok-fn">cos</span>(legs[i].azimuth) <span class="tok-op">+</span> cn <span class="tok-op">*</span> legs[i].distance) <span class="tok-op">*</span> k0
+        cum <span class="tok-op">+=</span> legs[i].distance
+        stations.append(<span class="tok-type">Station</span>(e, n, cum))
+    <span class="tok-kw">return</span> stations
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">legs</span> <span class="tok-op">=</span> [
+        <span class="tok-type">Leg</span>(<span class="tok-num">0.7853981633974483</span>, <span class="tok-num">100.0</span>),
+        <span class="tok-type">Leg</span>(<span class="tok-num">2.3736477827122884</span>, <span class="tok-num">100.0</span>),
+        <span class="tok-type">Leg</span>(<span class="tok-num">3.9095375244672983</span>, <span class="tok-num">100.5</span>),
+        <span class="tok-type">Leg</span>(<span class="tok-num">5.4977871437821380</span>, <span class="tok-num">99.8</span>),
+    ]
+    <span class="tok-kw">var</span> <span class="tok-var">st</span> <span class="tok-op">=</span> reduce(legs, <span class="tok-num">1.0004</span>)
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(st.size):
+        <span class="tok-fn">print</span>(st[i].cum, st[i].east, st[i].north)
+    <span class="tok-fn">print</span>(<span class="tok-str">"closing east  ="</span>, st[st.size <span class="tok-op">-</span> <span class="tok-num">1</span>].east)
+    <span class="tok-fn">print</span>(<span class="tok-str">"closing north ="</span>, st[st.size <span class="tok-op">-</span> <span class="tok-num">1</span>].north)</pre>
+      </figure>
+<pre class="out">100.0 70.7904213437178 71.47562843158649
+200.0 140.33550367825146 0.24954084739208326
+300.5 70.54612842921445 -71.33267717472329
+400.3 -1.4210854715202004e-14 0.0
+closing east  = -1.4210854715202004e-14
+closing north = 0.0
+</pre>
+
+      <p>Each column is cumulative distance, adjusted easting and adjusted northing, in metres. The pipeline is the same one every survey reduction software runs: measure, close, distribute, project, report. Change the Bowditch rule for a least-squares distribution and only the middle step changes - which is exactly why the modules are ordered the way they are.</p>
+
+      <div class="check" data-answer="d" data-q="1">
+        <p class="q">After a correct Bowditch adjustment of a closed traverse, what is the closing error?</p>
+        <label class="opt"><input type="radio" name="m08q1" value="a"><span>The same as before, only redistributed</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="b"><span>Equal to the sum of the leg lengths</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="c"><span>Increased, because the scale factor is applied</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="d"><span>Zero to within rounding, because the corrections sum to the negative of the misclosure</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Bowditch distributes exactly the observed misclosure across the legs, proportional to length. The sum of the corrections equals the negative of the misclosure, so the adjusted loop closes by construction - leaving only floating-point residue, as the readout shows.</p>
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Prev</span><span class="t">07 - Areas and volumes</span></a>
+        <span class="navbtn off"><span class="d">End</span><span class="t">You have finished</span></span>
+      </nav>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footgrid">
+      <div>
+        <h4>This app</h4>
+        <a href="#m01">01 - Why Mojo</a>
+        <a href="#m04">04 - Map projections</a>
+        <a href="#m08">08 - Gridding and capstone</a>
+      </div>
+      <div>
+        <h4>Reference pages</h4>
+        <a href="karney_krueger_equations.html">Karney Krueger equations</a>
+        <a href="gnss_surveying.html">GNSS surveying</a>
+        <a href="geo_computations.html">Geo computations</a>
+      </div>
+      <div>
+        <h4>Geomatics shelf</h4>
+        <a href="../index.html">All geomatics material</a>
+      </div>
+    </div>
+    <p class="small">Listings target Mojo 1.x. Outputs are labelled expected, as the listings are not compile-checked in this build. KaTeX is vendored locally - the app works offline.</p>
+    <p class="small">Geomatics Mojo · <a class="resetlink" href="#" id="reset">reset progress</a></p>
+  </div>
+</footer>
+
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

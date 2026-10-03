@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Jupyter notebooks · Mojo v1 The Language Manual</title>
+<meta name="description" content="Writing, running, and publishing .ipynb Mojo notebooks.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part VI · Projects &amp; Tooling</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part VI</span><span class="sep">/</span><span>Projects &amp; Tooling</span><span class="sep">/</span><span class="num">36</span></nav><h1>Jupyter notebooks</h1>
+<p class="dek">Writing, running, and publishing .ipynb Mojo notebooks.</p><p class="byline">Chapter 36 · 1,269 words · 17 code blocks · <a class="ext" href="https://mojolang.org/docs/tools/notebooks/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p><a class="ext" data-external="" href="https://jupyter.org/" rel="noopener noreferrer">Jupyter notebooks</a> provide a web-based environment for
+creating and sharing Mojo computational documents. They combine code, results,
+and explanation so readers explore what you built, how you built it, and why it
+matters.</p>
+<p>You can run Mojo language notebooks locally or in GPU-backed Google Colab
+environments to accelerate workloads. For teaching, learning, and exploration,
+notebooks provide a hands-on, iterative workflow.</p>
+<p>This page assumes you'll work with Mojo notebooks in one of two ways:</p>
+<ul>
+<li class=""><strong>Google Colab</strong> <br/>
+Fast setup, optional GPU acceleration, ideal for quick experiments and for
+learning GPU programming when you don't have a compatible GPU-enabled
+computer on-hand.</li>
+<li class=""><strong>Local JupyterLab</strong> <br/>
+Private environment with full control of code, data, and dependencies.</li>
+</ul>
+<p>Both options use the same notebook model and the same Mojo cell magic.</p>
+<h2 class="h h--2" data-level="2" id="using-mojo-on-google-colab">Using Mojo on Google Colab<a aria-label="Link to Using Mojo on Google Colab" class="h__link" href="#using-mojo-on-google-colab"></a></h2>
+<ol>
+<li class="">
+<p>Create a Notebook:</p>
+<p>Visit <a class="ext" data-external="" href="https://colab.google/" rel="noopener noreferrer">Google Colab</a> and create a new notebook.</p>
+</li>
+<li class="">
+<p>Install Mojo:</p>
+<p>For most notebook work, the <code>mojo</code> package is all you need. This page
+installs <code>max</code> instead, because it includes the Mojo compiler—so <code>%%mojo</code>
+cells behave exactly the same—and it adds the MAX accelerator library that
+the <a href="../pages/36_jupyter-notebooks.html#using-mojo-with-gpu-support">GPU examples</a> later on this page import.</p>
+<p>For the nightly release:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">!pip install <span class="tk-operator">-</span><span class="tk-operator">-</span>pre <span class="tk-builtin">max</span> <span class="tk-operator">-</span><span class="tk-operator">-</span>extra<span class="tk-operator">-</span>index<span class="tk-operator">-</span>url https<span class="tk-punctuation">:</span><span class="tk-operator">//</span>whl<span class="tk-punctuation">.</span>modular<span class="tk-punctuation">.</span>com<span class="tk-operator">/</span>nightly<span class="tk-operator">/</span>simple<span class="tk-operator">/</span></span>
+</code></pre></figure>
+<p>For the stable release:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">!pip install <span class="tk-builtin">max</span></span>
+</code></pre></figure>
+<p>Wait for the "Successfully installed" message.</p>
+</li>
+<li class="">
+<p>Enable Mojo:</p>
+<p>In the first cell, run:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> mojo<span class="tk-punctuation">.</span>notebook</span>
+</code></pre></figure>
+<p>This adds the <code>%%mojo</code> cell magic, so you can compile and
+run Mojo code.</p>
+<p>Your Colab notebook is now ready to run Mojo programs.</p>
+</li>
+</ol>
+<h2 class="h h--2" data-level="2" id="using-mojo-in-local-jupyter-notebooks">Using Mojo in Local Jupyter Notebooks<a aria-label="Link to Using Mojo in Local Jupyter Notebooks" class="h__link" href="#using-mojo-in-local-jupyter-notebooks"></a></h2>
+<p>Local notebooks use <code>pixi</code> to manage an environment with
+Jupyter and Mojo.</p>
+<ol>
+<li class="">
+<p>Create a project:</p>
+<figure class="cb" data-lang="shell"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">pixi init notebooks <span class="tk-punctuation">\</span></span>
+<span class="cl" data-line="2">    -c https://conda.modular.com/max-nightly/ <span class="tk-punctuation">\</span></span>
+<span class="cl" data-line="3">    -c conda-forge</span>
+<span class="cl" data-line="4"><span class="tk-class-name">cd</span> notebooks</span>
+<span class="cl" data-line="5">pixi shell</span>
+</code></pre></figure>
+<p>This creates a project directory and enters the Pixi shell.</p>
+</li>
+<li class="">
+<p>Install required tools:</p>
+<figure class="cb" data-lang="shell"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">pixi <span class="tk-function">add</span> max jupyterlab ipykernel</span>
+</code></pre></figure>
+<p>This installs:</p>
+<ul>
+<li class="">Mojo, by way of <code>max</code> — see <a href="../pages/36_jupyter-notebooks.html#using-mojo-on-google-colab">the note above</a>
+on why this page installs <code>max</code> rather than <code>mojo</code></li>
+<li class="">JupyterLab</li>
+<li class="">The Python kernel required for notebook execution</li>
+</ul>
+</li>
+<li class="">
+<p>Start JupyterLab:</p>
+<figure class="cb" data-lang="shell"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">jupyter lab</span>
+</code></pre></figure>
+<p>JupyterLab opens in your browser.</p>
+</li>
+<li class="">
+<p>Create a Python-backed notebook:</p>
+<p>In your web browser:</p>
+<ul>
+<li class="">Select <em>File &gt; New &gt; Notebook</em>.</li>
+<li class="">Choose the <em>Python</em> kernel.</li>
+</ul>
+</li>
+<li class="">
+<p>Enable Mojo support:</p>
+<p>In the first cell, run:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> mojo<span class="tk-punctuation">.</span>notebook</span>
+</code></pre></figure>
+<p>This registers the <code>%%mojo</code> magic command.
+Your local environment is now ready for interactive Mojo development.</p>
+</li>
+</ol>
+<h2 class="h h--2" data-level="2" id="writing-and-running-mojo-code">Writing and running Mojo code<a aria-label="Link to Writing and running Mojo code" class="h__link" href="#writing-and-running-mojo-code"></a></h2>
+<p>Mojo code runs inside notebook cells marked with the <code>%%mojo</code> directive.
+Each Mojo cell must contain a complete program, including a <code>main()</code> function.</p>
+<h3 class="h h--3" data-level="3" id="example-hello-mojo">Example: Hello Mojo<a aria-label="Link to Example: Hello Mojo" class="h__link" href="#example-hello-mojo"></a></h3>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-operator">%</span><span class="tk-operator">%</span>mojo</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello Mojo"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Hello Mojo</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="example-parameterized-compilation">Example: Parameterized compilation<a aria-label="Link to Example: Parameterized compilation" class="h__link" href="#example-parameterized-compilation"></a></h3>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-operator">%</span><span class="tk-operator">%</span>mojo</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-comment"># Compiler-parameterized function</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> repeat<span class="tk-punctuation">[</span>count<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>msg<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>msg<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-comment"># Compiler-argumented function</span></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">threehello</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10">    repeat<span class="tk-punctuation">[</span><span class="tk-number">3</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello 🔥!"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-comment"># Run</span></span>
+<span class="cl" data-line="13"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14">    threehello<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Hello 🔥!</span>
+<span class="cl" data-line="2">Hello 🔥!</span>
+<span class="cl" data-line="3">Hello 🔥!</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="using-mojo-with-gpu-support">Using Mojo with GPU support<a aria-label="Link to Using Mojo with GPU support" class="h__link" href="#using-mojo-with-gpu-support"></a></h2>
+<p>Google Colab offers GPU-backed runtimes so you can run Mojo GPU
+examples even without local hardware. The specific accelerator
+available depends on your Colab tier; see
+<a class="ext" data-external="" href="https://mojolang.org/docs/requirements/#gpu-compatibility" rel="noopener noreferrer">GPU compatibility</a> for the list
+of accelerators supported by Mojo. Before running GPU code, select
+<em>Runtime &gt; Change runtime type &gt; [GPU]</em>.</p>
+<h3 class="h h--3" data-level="3" id="example-gpu-hello-world">Example: GPU Hello World<a aria-label="Link to Example: GPU Hello World" class="h__link" href="#example-gpu-hello-world"></a></h3>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-operator">%</span><span class="tk-operator">%</span>mojo</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> <span class="tk-builtin">max</span><span class="tk-punctuation">.</span>gpu<span class="tk-punctuation">.</span>host <span class="tk-keyword">import</span> DeviceContext</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">kernel</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello from the GPU"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># Launch GPU kernel</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">with</span> DeviceContext<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> ctx<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11">        ctx<span class="tk-punctuation">.</span>enqueue_function<span class="tk-punctuation">[</span>kernel<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>grid_dim<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> block_dim<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12">        ctx<span class="tk-punctuation">.</span>synchronize<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Hello from the GPU</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="example-hello-writing">Example: Hello writing<a aria-label="Link to Example: Hello writing" class="h__link" href="#example-hello-writing"></a></h3>
+<p>This example writes a value to device memory and reads it back on the host:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-operator">%</span><span class="tk-operator">%</span>mojo</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> Pointer</span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> <span class="tk-builtin">max</span><span class="tk-punctuation">.</span>gpu<span class="tk-punctuation">.</span>host <span class="tk-keyword">import</span> DeviceContext</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">comptime</span> `✅`<span class="tk-punctuation">:</span> Int32 <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">comptime</span> `❌`<span class="tk-punctuation">:</span> Int32 <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">def</span> <span class="tk-function">kernel</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Pointer<span class="tk-punctuation">[</span>Scalar<span class="tk-punctuation">[</span><span class="tk-punctuation">.</span>int32<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> MutAnyOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9">    value<span class="tk-punctuation">[</span>unsafe_offset<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> `✅`</span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">with</span> DeviceContext<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> ctx<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-comment"># Build it</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">var</span> <span class="tk-keyword">out</span> <span class="tk-operator">=</span> ctx<span class="tk-punctuation">.</span>enqueue_create_buffer<span class="tk-punctuation">[</span><span class="tk-punctuation">.</span>int32<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">out</span><span class="tk-punctuation">.</span>enqueue_fill<span class="tk-punctuation">(</span>`❌`<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17"> <span class="tk-comment"># Run it</span></span>
+<span class="cl" data-line="18">        ctx<span class="tk-punctuation">.</span>enqueue_function<span class="tk-punctuation">[</span>kernel<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span><span class="tk-punctuation">,</span> grid_dim<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> block_dim<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"></span>
+<span class="cl" data-line="20"> <span class="tk-comment"># Report the result</span></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">with</span> <span class="tk-keyword">out</span><span class="tk-punctuation">.</span>map_to_host<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> out_host<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"GPU responded:"</span><span class="tk-punctuation">,</span> \</span>
+<span class="cl" data-line="23"> <span class="tk-string">"👋, 🔥"</span> <span class="tk-keyword">if</span> out_host<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">==</span> `✅` <span class="tk-keyword">else</span> <span class="tk-string">"😢"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">GPU responded: 👋, 🔥</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="example-gpu-vector-addition">Example: GPU vector addition<a aria-label="Link to Example: GPU vector addition" class="h__link" href="#example-gpu-vector-addition"></a></h3>
+<p>This example runs elementwise vector addition on the GPU.
+Each GPU thread updates one element.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-operator">%</span><span class="tk-operator">%</span>mojo</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">from</span> <span class="tk-builtin">max</span><span class="tk-punctuation">.</span>gpu <span class="tk-keyword">import</span> thread_idx</span>
+<span class="cl" data-line="4"><span class="tk-keyword">from</span> <span class="tk-builtin">max</span><span class="tk-punctuation">.</span>gpu<span class="tk-punctuation">.</span>host <span class="tk-keyword">import</span> DeviceContext</span>
+<span class="cl" data-line="5"><span class="tk-keyword">from</span> layout <span class="tk-keyword">import</span> TileTensor<span class="tk-punctuation">,</span> row_major</span>
+<span class="cl" data-line="6"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>sys <span class="tk-keyword">import</span> has_accelerator</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">comptime</span> VECTOR_WIDTH <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="9"><span class="tk-keyword">comptime</span> layout <span class="tk-operator">=</span> row_major<span class="tk-punctuation">[</span>VECTOR_WIDTH<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">comptime</span> active_dtype <span class="tk-operator">=</span> DType<span class="tk-punctuation">.</span>uint8</span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"><span class="tk-comment"># Elementwise vector addition on GPU threads</span></span>
+<span class="cl" data-line="14"><span class="tk-keyword">def</span> <span class="tk-function">vector_addition</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="15">    left<span class="tk-punctuation">:</span> TileTensor<span class="tk-punctuation">[</span>active_dtype<span class="tk-punctuation">,</span> type_of<span class="tk-punctuation">(</span>layout<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> MutAnyOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="16">    right<span class="tk-punctuation">:</span> TileTensor<span class="tk-punctuation">[</span>active_dtype<span class="tk-punctuation">,</span> type_of<span class="tk-punctuation">(</span>layout<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> MutAnyOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="17">    output<span class="tk-punctuation">:</span> TileTensor<span class="tk-punctuation">[</span>active_dtype<span class="tk-punctuation">,</span> type_of<span class="tk-punctuation">(</span>layout<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> MutAnyOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="18"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">var</span> idx <span class="tk-operator">=</span> thread_idx<span class="tk-punctuation">.</span>x</span>
+<span class="cl" data-line="20">    output<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> left<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span> <span class="tk-operator">+</span> right<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="21"></span>
+<span class="cl" data-line="22"></span>
+<span class="cl" data-line="23"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24"> <span class="tk-comment"># Ensure a supported GPU (NVIDIA or AMD) is available</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">assert</span> has_accelerator<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-string">"This example requires a supported GPU"</span></span>
+<span class="cl" data-line="26"></span>
+<span class="cl" data-line="27"> <span class="tk-comment"># Create GPU device context</span></span>
+<span class="cl" data-line="28"> <span class="tk-keyword">var</span> ctx <span class="tk-operator">=</span> DeviceContext<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="29"></span>
+<span class="cl" data-line="30"> <span class="tk-comment"># Allocate buffers and tensors for left and right operands, and output</span></span>
+<span class="cl" data-line="31"> <span class="tk-keyword">var</span> left_buffer <span class="tk-operator">=</span> ctx<span class="tk-punctuation">.</span>enqueue_create_buffer<span class="tk-punctuation">[</span>active_dtype<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>VECTOR_WIDTH<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="32"> <span class="tk-keyword">var</span> left_tensor <span class="tk-operator">=</span> TileTensor<span class="tk-punctuation">(</span>left_buffer<span class="tk-punctuation">,</span> layout<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="33"></span>
+<span class="cl" data-line="34"> <span class="tk-keyword">var</span> right_buffer <span class="tk-operator">=</span> ctx<span class="tk-punctuation">.</span>enqueue_create_buffer<span class="tk-punctuation">[</span>active_dtype<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>VECTOR_WIDTH<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="35"> <span class="tk-keyword">var</span> right_tensor <span class="tk-operator">=</span> TileTensor<span class="tk-punctuation">(</span>right_buffer<span class="tk-punctuation">,</span> layout<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="36"></span>
+<span class="cl" data-line="37"> <span class="tk-keyword">var</span> output_buffer <span class="tk-operator">=</span> ctx<span class="tk-punctuation">.</span>enqueue_create_buffer<span class="tk-punctuation">[</span>active_dtype<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>VECTOR_WIDTH<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="38"> <span class="tk-keyword">var</span> output_tensor <span class="tk-operator">=</span> TileTensor<span class="tk-punctuation">(</span>output_buffer<span class="tk-punctuation">,</span> layout<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="39"></span>
+<span class="cl" data-line="40"> <span class="tk-comment"># Initialize input buffers with sample data</span></span>
+<span class="cl" data-line="41"> <span class="tk-keyword">var</span> message_bytes<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>UInt8<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="42"> <span class="tk-number">71</span><span class="tk-punctuation">,</span> <span class="tk-number">100</span><span class="tk-punctuation">,</span> <span class="tk-number">107</span><span class="tk-punctuation">,</span> <span class="tk-number">107</span><span class="tk-punctuation">,</span> <span class="tk-number">110</span><span class="tk-punctuation">,</span> <span class="tk-number">31</span><span class="tk-punctuation">,</span> <span class="tk-number">76</span><span class="tk-punctuation">,</span> <span class="tk-number">110</span><span class="tk-punctuation">,</span> <span class="tk-number">105</span><span class="tk-punctuation">,</span> <span class="tk-number">110</span></span>
+<span class="cl" data-line="43"> <span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="44"> <span class="tk-keyword">with</span> left_buffer<span class="tk-punctuation">.</span>map_to_host<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> mapped_buffer<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="45"> <span class="tk-keyword">var</span> mapped_tensor <span class="tk-operator">=</span> TileTensor<span class="tk-punctuation">(</span>mapped_buffer<span class="tk-punctuation">,</span> layout<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="46"> <span class="tk-keyword">for</span> idx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>VECTOR_WIDTH<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="47">            mapped_tensor<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> message_bytes<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="48">    _ <span class="tk-operator">=</span> right_buffer<span class="tk-punctuation">.</span>enqueue_fill<span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="49"></span>
+<span class="cl" data-line="50"> <span class="tk-comment"># Launch GPU kernel</span></span>
+<span class="cl" data-line="51">    ctx<span class="tk-punctuation">.</span>enqueue_function<span class="tk-punctuation">[</span>vector_addition<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="52">        left_tensor<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="53">        right_tensor<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="54">        output_tensor<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="55">        grid_dim<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="56">        block_dim<span class="tk-operator">=</span>VECTOR_WIDTH<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="57"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="58">    ctx<span class="tk-punctuation">.</span>synchronize<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="59"></span>
+<span class="cl" data-line="60"> <span class="tk-comment"># Read results back and print as ASCII</span></span>
+<span class="cl" data-line="61"> <span class="tk-keyword">with</span> output_buffer<span class="tk-punctuation">.</span>map_to_host<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> mapped_buffer<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="62"> <span class="tk-keyword">var</span> mapped_tensor <span class="tk-operator">=</span> TileTensor<span class="tk-punctuation">(</span>mapped_buffer<span class="tk-punctuation">,</span> layout<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="63"> <span class="tk-keyword">for</span> idx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>VECTOR_WIDTH<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="64"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">chr</span><span class="tk-punctuation">(</span>Int<span class="tk-punctuation">(</span>mapped_tensor<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="65"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Hello Mojo</span>
+</code></pre></figure>
+<aside class="callout callout--tip"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">✦</span>Tip</p><div class="callout__body"><p>Learn Mojo GPU programming through the interactive
+<a class="ext" data-external="" href="https://puzzles.modular.com/introduction.html" rel="noopener noreferrer">Mojo GPU Puzzles</a>.</p></div></aside>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/tools/notebooks/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/tools/notebooks/</a>, saved Thu, 01 Oct 2026 15:46:50 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/35_packaging.html"><span class="pager__dir">← Previous</span><span class="pager__title">Packaging</span></a><a class="pager__link pager__link--next" href="../pages/37_mojo-ai-skills.html"><span class="pager__dir">Next →</span><span class="pager__title">Mojo AI skills</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#using-mojo-on-google-colab">Using Mojo on Google Colab</a></li><li class="rail__depth-2"><a href="#using-mojo-in-local-jupyter-notebooks">Using Mojo in Local Jupyter Notebooks</a></li><li class="rail__depth-2"><a href="#writing-and-running-mojo-code">Writing and running Mojo code</a></li><li class="rail__depth-2"><a href="#using-mojo-with-gpu-support">Using Mojo with GPU support</a></li><li class="rail__depth-3"><a href="#example-hello-mojo">Example: Hello Mojo</a></li><li class="rail__depth-3"><a href="#example-parameterized-compilation">Example: Parameterized compilation</a></li><li class="rail__depth-3"><a href="#example-gpu-hello-world">Example: GPU Hello World</a></li><li class="rail__depth-3"><a href="#example-hello-writing">Example: Hello writing</a></li><li class="rail__depth-3"><a href="#example-gpu-vector-addition">Example: GPU vector addition</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#using-mojo-on-google-colab">Using Mojo on Google Colab</a></li><li class="rail__depth-2"><a href="#using-mojo-in-local-jupyter-notebooks">Using Mojo in Local Jupyter Notebooks</a></li><li class="rail__depth-2"><a href="#writing-and-running-mojo-code">Writing and running Mojo code</a></li><li class="rail__depth-2"><a href="#using-mojo-with-gpu-support">Using Mojo with GPU support</a></li><li class="rail__depth-3"><a href="#example-hello-mojo">Example: Hello Mojo</a></li><li class="rail__depth-3"><a href="#example-parameterized-compilation">Example: Parameterized compilation</a></li><li class="rail__depth-3"><a href="#example-gpu-hello-world">Example: GPU Hello World</a></li><li class="rail__depth-3"><a href="#example-hello-writing">Example: Hello writing</a></li><li class="rail__depth-3"><a href="#example-gpu-vector-addition">Example: GPU vector addition</a></li></ol>
+<p class="rail__meta">Chapter 36 of 38 · Part VI, Projects &amp; Tooling.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

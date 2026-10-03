@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Ownership · Mojo v1 The Language Manual</title>
+<meta name="description" content="Affine types, single ownership, and the borrow checker.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part III · Abstraction &amp; Values</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part III</span><span class="sep">/</span><span>Abstraction &amp; Values</span><span class="sep">/</span><span class="num">20</span></nav><h1>Ownership</h1>
+<p class="dek">Affine types, single ownership, and the borrow checker.</p><p class="byline">Chapter 20 · 2,584 words · 18 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/values/ownership/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>A challenge you might face when using some programming languages is that you
+must manually allocate and deallocate memory. When multiple parts of the
+program need access to the same memory, it becomes difficult to keep track of
+who "owns" a value and determine when is the right time to deallocate it. If
+you make a mistake, it may result in a "use-after-free" error, a "double free"
+error, or a "leaked memory" error, any one of which can be catastrophic.</p>
+<p>Mojo helps avoid these errors by ensuring there is only one variable that owns
+each value at a time, while still allowing you to share references with other
+functions. When the life span of the owner ends, Mojo
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/death/" rel="noopener noreferrer">destroys the value</a>. Programmers are still
+responsible for making sure any type that allocates resources (including memory)
+also deallocates those resources in its deinitializer. Mojo's ownership system
+ensures that deinitializers are called promptly.</p>
+<p>On this page, we'll explain the rules that govern this ownership model, and how
+to specify different argument conventions that define how values are passed into
+functions.</p>
+<h2 class="h h--2" data-level="2" id="ownership-summary">Ownership summary<a aria-label="Link to Ownership summary" class="h__link" href="#ownership-summary"></a></h2>
+<p>The fundamental rules that make Mojo's ownership model work are the following:</p>
+<ul>
+<li class="">Every value has only one owner at a time.</li>
+<li class="">When the lifetime of the owner ends, Mojo destroys the value.</li>
+<li class="">If there are existing references to a value, Mojo extends the lifetime of
+the owner.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="variables-and-references">Variables and references<a aria-label="Link to Variables and references" class="h__link" href="#variables-and-references"></a></h3>
+<p>A variable <em>owns</em> its value. A struct owns its fields.</p>
+<p>A <em>reference</em> allows you to access a value owned by another variable. A
+reference has either mutable access or immutable access to that value.</p>
+<p>Mojo references are created when you call a function: function arguments are
+passed as mutable or immutable references. A function can return a
+reference instead of returning a value. To capture a returned reference, you
+can use a reference binding:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">ref</span> value_ref <span class="tk-operator">=</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="argument-conventions">Argument conventions<a aria-label="Link to Argument conventions" class="h__link" href="#argument-conventions"></a></h2>
+<p>In all programming languages, code quality and performance is heavily dependent
+upon how functions treat argument values. That is, whether a value received by
+a function is a unique value or a reference, and whether it's mutable or
+immutable, has a series of consequences that define the readability,
+performance, and safety of the language.</p>
+<p>In Mojo, we want to provide full <a href="../pages/18_value-semantics.html">value
+semantics</a> by default, which provides
+consistent and predictable behavior. But as a systems programming language, we
+also need to offer full control over memory optimizations, which generally
+requires reference semantics. The trick is to introduce reference semantics in
+a way that ensures all code is memory safe by tracking the lifetime of every
+value and destroying each one at the right time (and only once). All of this is
+made possible in Mojo through the use of argument conventions that ensure every
+value has only one owner at a time.</p>
+<p>An argument convention specifies whether an argument is mutable or immutable,
+and whether the function owns the value. Each convention is defined by a
+keyword at the beginning of an argument declaration:</p>
+<ul>
+<li class="">
+<p>default: The function receives an <strong>immutable reference</strong>. This means the
+function can read the original value (it's <em>not</em> a copy), but it can't
+mutate (modify) it.</p>
+</li>
+<li class="">
+<p><code>mut</code>: The function receives a <strong>mutable reference</strong>. This means the
+function can read and mutate the original value (it's <em>not</em> a copy).</p>
+</li>
+<li class="">
+<p><code>var</code>: The function takes <strong>ownership</strong> of a value. This means the function
+has exclusive ownership of the argument. The caller might choose to transfer
+ownership of an existing value to this function, but that's not always what
+happens. The callee might receive a newly-created value, or a copy of an
+existing value.</p>
+</li>
+<li class="">
+<p><code>ref</code>: The function gets a reference with a parametric mutability: that is,
+it follows the mutability of the referenced value.
+<code>ref</code> arguments are an advanced topic, and they're described in more detail in
+<a href="../pages/21_lifetimes-origins-and-references.html">Lifetimes, origins, and references</a>.</p>
+</li>
+<li class="">
+<p><code>out</code>: A special convention used for the <code>self</code> argument in
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#constructor" rel="noopener noreferrer">initializers</a> and for
+<a href="../pages/08_functions.html#named-results">named results</a>. An <code>out</code>
+argument is uninitialized at the beginning of the function, and must be
+initialized before the function returns. Although <code>out</code> arguments show up in
+the argument list, they're never passed in by the caller.</p>
+</li>
+<li class="">
+<p><code>deinit</code>: A special convention used in the deinitializer and consuming-move
+lifecycle methods. A <code>deinit</code> argument is initialized at the beginning of the
+function, and uninitialized when the function returns.</p>
+</li>
+</ul>
+<p>For example, this function has one argument that's a mutable
+reference and one that's immutable:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">add</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    x <span class="tk-operator">+=</span> y</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> b <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="7">    add<span class="tk-punctuation">(</span>a<span class="tk-punctuation">,</span> b<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">)</span> <span class="tk-comment"># 3</span></span>
+</code></pre></figure>
+<p>You've probably already seen some function arguments that don't declare a
+convention. By default, all arguments use the default convention of an
+immutable read-only reference. In the following sections, we'll explain
+each of these conventions in more detail.</p>
+<h3 class="h h--3" data-level="3" id="deinitializing-arguments-deinit">Deinitializing arguments (<code>deinit</code>)<a aria-label="Link to Deinitializing arguments ( deinit )" class="h__link" href="#deinitializing-arguments-deinit"></a></h3>
+<p>The <code>deinit</code> convention isn't limited to <code>self</code>. You can write methods
+and functions that destruct other instances:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Pair</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">destroy_other</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">deinit</span> other<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># Can take from fields of `other` here</span></span>
+</code></pre></figure>
+<p>Like <code>deinit self</code>, the <code>deinit</code> convention in this example tells the
+compiler that <code>other</code> is tagged for destruction.</p>
+<p>Using <code>deinit</code> means <code>other</code> is logically deinitialized at the end of the
+method. Because of this, it's safe to move values out of <code>other</code>, since
+the instance's lifetime is guaranteed to complete.</p>
+<h2 class="h h--2" data-level="2" id="immutable-arguments-default">Immutable arguments (default)<a aria-label="Link to Immutable arguments (default)" class="h__link" href="#immutable-arguments-default"></a></h2>
+<p>The default convention is an immutable read-only reference. The callee
+receives an immutable reference to the argument value.</p>
+<p>For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print_list</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">.</span>__str__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6">    print_list<span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">[1, 2, 3, 4]</span>
+</code></pre></figure>
+<p>Here the <code>print_list()</code> function can read from the <code>list</code> argument, but not
+mutate it. <code>list</code> is a reference to <code>values</code> in the <code>main()</code> function, not a
+copy.</p>
+<p>In general, passing an immutable reference is much more efficient
+when handling large or expensive-to-copy values, because the copy initializer
+and deinitializer aren't invoked for a default (immutable reference) argument.</p>
+<h3 class="h h--3" data-level="3" id="compared-to-c-and-rust">Compared to C++ and Rust<a aria-label="Link to Compared to C++ and Rust" class="h__link" href="#compared-to-c-and-rust"></a></h3>
+<p>Mojo's default argument convention is similar in some ways to passing an
+argument by <code>const&amp;</code> in C++, which also avoids a copy of the value and disables
+mutability in the callee. However, the default convention differs from
+<code>const&amp;</code> in C++ in two important ways:</p>
+<ul>
+<li class="">
+<p>The Mojo compiler implements a lifetime checker that ensures that values are
+not destroyed when there are outstanding references to those values.</p>
+</li>
+<li class="">
+<p>Small values like <code>Int</code>, <code>Float</code>, and <code>SIMD</code> are always passed in
+machine registers. This provides a significant performance enhancement
+compared to languages like C++ and Rust.</p>
+</li>
+</ul>
+<p>The major difference between Rust and Mojo is that Mojo doesn't require a
+sigil on the caller side to pass by immutable reference. Also, Mojo is more
+efficient when passing small values, and Rust defaults to moving values
+instead of passing them around as a read-only reference. These policy and
+syntax decisions allow Mojo to provide an easier-to-use programming model.</p>
+<h2 class="h h--2" data-level="2" id="mutable-arguments-mut">Mutable arguments (<code>mut</code>)<a aria-label="Link to Mutable arguments ( mut )" class="h__link" href="#mutable-arguments-mut"></a></h2>
+<p>If you'd like your function to receive a <strong>mutable reference</strong>, add the <code>mut</code>
+keyword in front of the argument name. You can think of <code>mut</code> like this: it
+means any changes to the value <em>in</em>side the function are visible <em>out</em>side the
+function.</p>
+<p>For example, this <code>mutate()</code> function updates the original <code>list</code> value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print_list</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">.</span>__str__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">mutate</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> l<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    l<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10">    mutate<span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11">    print_list<span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">[1, 2, 3, 4, 5]</span>
+</code></pre></figure>
+<p>That behaves like an optimized replacement for this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print_list</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">.</span>__str__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">mutate_copy</span><span class="tk-punctuation">(</span>l<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># def creates an implicit copy of the list because it's mutated</span></span>
+<span class="cl" data-line="6">    l<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> l</span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12">    values <span class="tk-operator">=</span> mutate_copy<span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13">    print_list<span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">[1, 2, 3, 4, 5]</span>
+</code></pre></figure>
+<p>Although the code using <code>mut</code> isn't that much shorter, it's more memory
+efficient because it doesn't make a copy of the value.</p>
+<p>However, remember that the values passed as <code>mut</code> must already be mutable.
+For example, if you try to take an immutable reference and pass it to another
+function as <code>mut</code>, you'll get a compiler error because Mojo can't form a
+mutable reference from an immutable reference.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>You can't define <a href="../pages/08_functions.html#optional-arguments">default
+values</a> for <code>mut</code>
+arguments.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="argument-exclusivity">Argument exclusivity<a aria-label="Link to Argument exclusivity" class="h__link" href="#argument-exclusivity"></a></h3>
+<p>Mojo enforces <em>argument exclusivity</em> for mutable references. This means that if
+a function receives a mutable reference to a value (such as an <code>mut</code> argument),
+it can't receive any other references to the same value—mutable or immutable.
+That is, a mutable reference can't have any other references that <em>alias</em> it.</p>
+<p>For example, consider the following code example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">append_twice</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> s<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> other<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Mojo knows 's' and 'other' can't be the same string.</span></span>
+<span class="cl" data-line="3">   s <span class="tk-operator">+=</span> other</span>
+<span class="cl" data-line="4">   s <span class="tk-operator">+=</span> other</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">invalid_access</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> my_string <span class="tk-operator">=</span> <span class="tk-string">"o"</span> <span class="tk-comment"># Create a run-time String value</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># error: passing `my_string` mut is invalid since it's also passed</span></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># as an immutable reference</span></span>
+<span class="cl" data-line="11">  append_twice<span class="tk-punctuation">(</span>my_string<span class="tk-punctuation">,</span> my_string<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>my_string<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>This code is confusing because the user might expect the output to be <code>ooo</code>,
+but since the first addition mutates both <code>s</code> and <code>other</code>, the actual output
+would be <code>oooo</code>. Enforcing exclusivity of mutable references not only prevents
+coding errors, it also allows the Mojo compiler to optimize code in some cases.</p>
+<p>One way to avoid this issue when you do need both a mutable and an immutable
+reference (or need to pass the same value to two arguments) is to make a copy:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">valid_access</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> my_string <span class="tk-operator">=</span> <span class="tk-string">"o"</span> <span class="tk-comment"># Create a run-time String value</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> other_string <span class="tk-operator">=</span> my_string  <span class="tk-comment"># Create a copy of the String value</span></span>
+<span class="cl" data-line="4">  append_twice<span class="tk-punctuation">(</span>my_string<span class="tk-punctuation">,</span> other_string<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>my_string<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Note that argument exclusivity isn't enforced for register-passable trivial
+types (like <code>Int</code> and <code>Bool</code>) as they're always passed by copy. When
+passing the same value into two <code>Int</code> arguments, the callee receives two
+copies of the value.</p>
+<h2 class="h h--2" data-level="2" id="transfer-arguments-var-and-">Transfer arguments (<code>var</code> and <code>^</code>)<a aria-label="Link to Transfer arguments ( var and ^ )" class="h__link" href="#transfer-arguments-var-and-"></a></h2>
+<p>If you want your function to take <em>ownership</em> of a value, add the <code>var</code>
+keyword before the argument name.</p>
+<p>This convention is often combined with using the postfix <code>^</code> transfer sigil
+on an argument at the call site.</p>
+<p>When using a variable, transferring a value leaves the original variable
+uninitialized. You can't use the variable after the transfer until you
+assign it a new value of the original type.</p>
+<h3 class="h h--3" data-level="3" id="transferring-with-var">Transferring with <code>var</code><a aria-label="Link to Transferring with var" class="h__link" href="#transferring-with-var"></a></h3>
+<p><code>var</code> behaves differently depending on whether the caller uses the <code>^</code>
+transfer sigil and whether the value conforms to <code>Copyable</code>.</p>
+<p>The <code>var</code> keyword doesn't guarantee that the function receives <em>the original
+value</em>. It guarantees only that the function receives <em>ownership of a
+value</em>. That happens in one of three ways:</p>
+<ul>
+<li class="">
+<p><strong>Value transfer</strong>: The caller uses the <code>^</code> transfer sigil. This
+transfers the value, leaving the original variable uninitialized. The function
+argument receives ownership.</p>
+</li>
+<li class="">
+<p><strong>Copying</strong>: Without the transfer sigil, Mojo copies the value. If the
+type isn't <code>Copyable</code>, this produces a compile-time error.</p>
+</li>
+<li class="">
+<p><strong>Newly created value</strong>: The caller passes a newly created value,
+such as the result of a function call. In this case, no variable owns the
+value, so ownership transfers directly to the callee. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">take</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> s<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">pass</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    take<span class="tk-punctuation">(</span><span class="tk-string">"A brand-new String!"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+</li>
+</ul>
+<p>The following code works by making a copy of the string, because <code>take_text()</code>
+uses the <code>var</code> convention, and the caller doesn't include the transfer sigil:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">take_text</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> text<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    text <span class="tk-operator">+=</span> <span class="tk-string">"!"</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>text<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> message <span class="tk-operator">=</span> <span class="tk-string">"Hello"</span> <span class="tk-comment"># Create a run-time String value</span></span>
+<span class="cl" data-line="7">    take_text<span class="tk-punctuation">(</span>message<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>message<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Hello!</span>
+<span class="cl" data-line="2">Hello</span>
+</code></pre></figure>
+<p>However, if you add the <code>^</code> transfer sigil when calling <code>take_text()</code>, the
+compiler complains about <code>print(message)</code>, because at that point, the <code>message</code>
+variable is no longer initialized. That is, this version doesn't compile:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> message <span class="tk-operator">=</span> <span class="tk-string">"Hello"</span> <span class="tk-comment"># Create a run-time String value</span></span>
+<span class="cl" data-line="3">    take_text<span class="tk-punctuation">(</span>message<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>message<span class="tk-punctuation">)</span> <span class="tk-comment"># error: use of uninitialized value 'message'</span></span>
+</code></pre></figure>
+<p>This is a critical feature of Mojo's lifetime checker, because it ensures that
+no two variables have ownership of the same value. To fix the error, you must
+not use the <code>message</code> variable after you end its lifetime with the <code>^</code> transfer
+sigil. So here is the corrected code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">take_text</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> text<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    text <span class="tk-operator">+=</span> <span class="tk-string">"!"</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>text<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> message <span class="tk-operator">=</span> <span class="tk-string">"Hello"</span> <span class="tk-comment"># Create a run-time String value</span></span>
+<span class="cl" data-line="7">    take_text<span class="tk-punctuation">(</span>message<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Hello!</span>
+</code></pre></figure>
+<p>Regardless of how it receives the value, when the function declares an argument
+as <code>var</code>, it's certain that it has unique mutable access to that value.
+Because the value is owned, the value is destroyed when the function
+exits—unless the function transfers the value elsewhere.</p>
+<p>For example, in the following example, <code>add_to_list()</code> takes a string and
+appends it to the list. Ownership of the string is transferred to the list, so
+it's not destroyed when the function exits. On the other hand,
+<code>consume_string()</code> doesn't transfer its <code>var</code> value out, so the value is
+destroyed at the end of the function.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">add_to_list</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-builtin">list</span><span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>name<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># name is uninitialized, nothing to destroy</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">consume_string</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> s<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># s is destroyed here</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="transfer-implementation-details">Transfer implementation details<a aria-label="Link to Transfer implementation details" class="h__link" href="#transfer-implementation-details"></a></h3>
+<p>In Mojo, you shouldn't conflate "ownership transfer" with a "move
+operation"—these aren't strictly the same thing.</p>
+<p>There are multiple ways that Mojo transfers ownership of a value:</p>
+<ul>
+<li class="">
+<p>If a type implements the <a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#move-constructor" rel="noopener noreferrer">move
+initializer</a>,
+<code>__init__(take=)</code>, Mojo may invoke this method <em>if</em> a value of that type is
+transferred into a function as a <code>var</code> argument, <em>and</em> the original
+variable's lifetime ends at the same point (with or without use of the <code>^</code>
+transfer sigil).</p>
+</li>
+<li class="">
+<p>In some cases, Mojo optimizes away the move operation entirely, leaving the
+value in the same memory location but updating its ownership. In these cases,
+a value transfers without invoking either the copy or move
+initializers.</p>
+</li>
+</ul>
+<p>In order for the <code>var</code> convention to work <em>without</em> the transfer sigil, the
+value type must be copyable (via <code>__init__(out self, *, copy: Self)</code>).</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/values/ownership/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/values/ownership/</a>, saved Thu, 01 Oct 2026 15:37:34 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/19_intro-to-value-ownership.html"><span class="pager__dir">← Previous</span><span class="pager__title">Intro to value ownership</span></a><a class="pager__link pager__link--next" href="../pages/21_lifetimes-origins-and-references.html"><span class="pager__dir">Next →</span><span class="pager__title">Lifetimes, origins, and references</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#ownership-summary">Ownership summary</a></li><li class="rail__depth-2"><a href="#argument-conventions">Argument conventions</a></li><li class="rail__depth-2"><a href="#immutable-arguments-default">Immutable arguments (default)</a></li><li class="rail__depth-2"><a href="#mutable-arguments-mut">Mutable arguments ( mut )</a></li><li class="rail__depth-2"><a href="#transfer-arguments-var-and-">Transfer arguments ( var and ^ )</a></li><li class="rail__depth-3"><a href="#variables-and-references">Variables and references</a></li><li class="rail__depth-3"><a href="#deinitializing-arguments-deinit">Deinitializing arguments ( deinit )</a></li><li class="rail__depth-3"><a href="#compared-to-c-and-rust">Compared to C++ and Rust</a></li><li class="rail__depth-3"><a href="#argument-exclusivity">Argument exclusivity</a></li><li class="rail__depth-3"><a href="#transferring-with-var">Transferring with var</a></li><li class="rail__depth-3"><a href="#transfer-implementation-details">Transfer implementation details</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#ownership-summary">Ownership summary</a></li><li class="rail__depth-2"><a href="#argument-conventions">Argument conventions</a></li><li class="rail__depth-2"><a href="#immutable-arguments-default">Immutable arguments (default)</a></li><li class="rail__depth-2"><a href="#mutable-arguments-mut">Mutable arguments ( mut )</a></li><li class="rail__depth-2"><a href="#transfer-arguments-var-and-">Transfer arguments ( var and ^ )</a></li><li class="rail__depth-3"><a href="#variables-and-references">Variables and references</a></li><li class="rail__depth-3"><a href="#deinitializing-arguments-deinit">Deinitializing arguments ( deinit )</a></li><li class="rail__depth-3"><a href="#compared-to-c-and-rust">Compared to C++ and Rust</a></li><li class="rail__depth-3"><a href="#argument-exclusivity">Argument exclusivity</a></li><li class="rail__depth-3"><a href="#transferring-with-var">Transferring with var</a></li><li class="rail__depth-3"><a href="#transfer-implementation-details">Transfer implementation details</a></li></ol>
+<p class="rail__meta">Chapter 20 of 38 · Part III, Abstraction &amp; Values.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

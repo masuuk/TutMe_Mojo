@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Using Mojo's C FFI to call C libraries · Mojo v1 The Language Manual</title>
+<meta name="description" content="Declaring externs, linking, and calling C.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part IV · Memory &amp; Interop</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part IV</span><span class="sep">/</span><span>Memory &amp; Interop</span><span class="sep">/</span><span class="num">28</span></nav><h1>Using Mojo's C FFI to call C libraries</h1>
+<p class="dek">Declaring externs, linking, and calling C.</p><p class="byline">Chapter 28 · 4,873 words · 22 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/c-ffi/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>When you need functionality that's already available in a C library, you
+can call it directly from your Mojo code. Many libraries for graphics,
+databases, hardware control, signal processing, and scientific computing
+expose C APIs.</p>
+<p>Mojo emits a direct native call, with no translation layer or extra runtime
+overhead. A C call from Mojo runs as fast as handwritten C.</p>
+<h2 class="h h--2" data-level="2" id="c-number-types">C number types<a aria-label="Link to C number types" class="h__link" href="#c-number-types"></a></h2>
+<p>C integer types don't have fixed sizes. Their sizes depend on the target
+platform and its C <em>ABI</em>. For example, <code>int</code> is commonly 32 bits, while
+<code>long</code> is 64 bits on Linux and macOS but 32 bits on Windows.</p>
+<p>An ABI (application binary interface) defines how machine code passes
+arguments, returns values, and lays out data in memory.</p>
+<p>Use the <code>std.ffi</code> module's type aliases when working with C APIs. They
+match the target platform's C ABI, so you don't need to worry about
+platform-specific size differences.</p>
+<p>See the <a href="../pages/28_c-foreign-function-interface.html#c-type-reference">C type reference</a> at the end of this page for a
+list of <code>std.ffi</code> type aliases and their equivalent Mojo types.</p>
+<h2 class="h h--2" data-level="2" id="call-libc-functions">Call libc functions<a aria-label="Link to Call libc functions" class="h__link" href="#call-libc-functions"></a></h2>
+<p><code>libc</code> is the C standard library. It provides functions for memory
+allocation, string manipulation, file I/O, and other common tasks. Mojo
+calls libc functions with <code>external_call()</code>. Mojo resolves the symbol for
+you, so you don't need to add anything to your build.</p>
+<p>Import <code>external_call</code> from <code>std.ffi</code>. Parameterize it with the function
+name and return type. Then pass the function arguments in parentheses.
+Mojo infers the argument types from the values you pass, so there's nothing
+else to declare:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> external_call<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    callee<span class="tk-punctuation">:</span> StaticString<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3">    return_type<span class="tk-punctuation">:</span> RegisterPassable<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4"> <span class="tk-operator">*</span>types<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="5">    num_fixed_args<span class="tk-punctuation">:</span> OptionalReg<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-boolean">None</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>args<span class="tk-punctuation">:</span> <span class="tk-operator">*</span>types<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> return_type</span>
+</code></pre></figure>
+<p>The following example calls the C <code>abs()</code> function, which returns the
+absolute value of an integer:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_int</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># int abs(int n);</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> n <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span><span class="tk-string">"abs"</span><span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>c_int<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">42</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Absolute value is 42: {n == 42}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># True</span></span>
+</code></pre></figure>
+<p><code>c_int</code> is the <code>std.ffi</code> alias for C's <code>int</code>. It's 32 bits on every
+platform Mojo targets. Its Mojo counterpart is <code>Int32</code>.</p>
+<h3 class="h h--3" data-level="3" id="call-variadic-c-functions">Call variadic C functions<a aria-label="Link to Call variadic C functions" class="h__link" href="#call-variadic-c-functions"></a></h3>
+<p>A <em>variadic</em> C function takes a variable number of arguments, like
+<code>printf()</code> and <code>snprintf()</code>. Pass <code>num_fixed_args</code> with the number of
+arguments declared before the <code>...</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_char<span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">,</span> c_size_t</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># int snprintf(char *buf, size_t size, const char *fmt, ...);</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Three fixed arguments, so num_fixed_args=3.</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> buf <span class="tk-operator">=</span> Array<span class="tk-punctuation">[</span>c_char<span class="tk-punctuation">,</span> <span class="tk-number">64</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>uninitialized<span class="tk-operator">=</span><span class="tk-boolean">True</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> written <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span><span class="tk-string">"snprintf"</span><span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">,</span> num_fixed_args<span class="tk-operator">=</span><span class="tk-number">3</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="8">        buf<span class="tk-punctuation">.</span>unsafe_ptr<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="9">        c_size_t<span class="tk-punctuation">(</span><span class="tk-number">64</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="10"> <span class="tk-string">"score: %d/%d"</span><span class="tk-punctuation">.</span>as_c_string_span<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="11">        c_int<span class="tk-punctuation">(</span><span class="tk-number">7</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="12">        c_int<span class="tk-punctuation">(</span><span class="tk-number">10</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="13"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"wrote {written}: {String(unsafe_from_utf8_ptr=buf.unsafe_ptr())}"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Without <code>num_fixed_args</code>, Mojo treats every argument as fixed. Some ABIs
+pass variadic arguments differently from fixed ones, so the call can work
+on one target and break on another.</p>
+<h2 class="h h--2" data-level="2" id="use-shared-libraries">Use shared libraries<a aria-label="Link to Use shared libraries" class="h__link" href="#use-shared-libraries"></a></h2>
+<p>An <code>OwnedDLHandle</code> owns a handle to a dynamically linked library with RAII
+semantics. Use it to load shared libraries and retrieve functions as Mojo
+callables, so you can work with libraries such as SQLite, libcurl, camera
+SDKs, GPU vendor libraries, and other native libraries.</p>
+<p>Library names differ by platform, so use <code>platform_map()</code> to select the right
+one at compile time:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> OwnedDLHandle<span class="tk-punctuation">,</span> c_double</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>sys<span class="tk-punctuation">.</span>info <span class="tk-keyword">import</span> platform_map</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">comptime</span> LIBM <span class="tk-operator">=</span> platform_map<span class="tk-punctuation">[</span><span class="tk-string">"libm"</span><span class="tk-punctuation">,</span> linux<span class="tk-operator">=</span><span class="tk-string">"libm.so.6"</span><span class="tk-punctuation">,</span> macos<span class="tk-operator">=</span><span class="tk-string">"libm.dylib"</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> lib <span class="tk-operator">=</span> OwnedDLHandle<span class="tk-punctuation">(</span>LIBM<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> sqrt <span class="tk-operator">=</span> lib<span class="tk-punctuation">.</span>get_function<span class="tk-punctuation">[</span>c_double<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"sqrt"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>sqrt<span class="tk-punctuation">(</span>c_double<span class="tk-punctuation">(</span><span class="tk-number">4.0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Prints: 2.0</span></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># Library automatically closed when lib goes out of scope</span></span>
+</code></pre></figure>
+<p>If <code>platform_map()</code> has no value for the target, it raises a compilation
+error. It won't fall through to a library name for another platform.</p>
+<h3 class="h h--3" data-level="3" id="library-names">Library names<a aria-label="Link to Library names" class="h__link" href="#library-names"></a></h3>
+<p>Pass the library as any <code>os.PathLike</code>, such as a <code>String</code> or a <code>Path</code>. Mojo
+resolves the name at runtime. Use the bare name (<code>libm.dylib</code>) when the
+library is on the system search path, or a full path
+(<code>path/to/libm.dylib</code>) when it isn't.</p>
+<p>On Linux, use the ABI-versioned runtime name, such as <code>libm.so.6</code>, instead
+of the unversioned <code>libm.so</code>. An ABI version doesn't necessarily match the
+library's release version. For example, libcurl 8.21 still uses
+<code>libcurl.so.4</code>.</p>
+<p>The unversioned name belongs to the development package, where the static
+linker consumes it for options such as <code>-lm</code>. It's often a linker script
+rather than a library, so passing it to <code>dlopen</code> can fail with an
+<code>invalid ELF header</code> error. Find the shared libraries the dynamic linker
+knows about with:</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">ldconfig -p <span class="tk-operator">|</span> <span class="tk-function">grep</span> libcurl</span>
+</code></pre></figure>
+<p>macOS uses one name for both purposes. <code>libcurl.dylib</code> is both what you
+link against and what you load.</p>
+<p>If you omit the library name, <code>OwnedDLHandle()</code> opens the current process.
+This is another way to call libc functions and other symbols already linked
+into your program.</p>
+<h3 class="h h--3" data-level="3" id="availability-checks">Availability checks<a aria-label="Link to Availability checks" class="h__link" href="#availability-checks"></a></h3>
+<p><code>OwnedDLHandle</code> loads libraries at runtime, so the library must be available
+when your program runs. If it can't be found, loading fails:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> LIBCURL <span class="tk-operator">=</span> platform_map<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"libcurl"</span><span class="tk-punctuation">,</span> linux<span class="tk-operator">=</span><span class="tk-string">"libcurl.so.4"</span><span class="tk-punctuation">,</span> macos<span class="tk-operator">=</span><span class="tk-string">"libcurl.dylib"</span></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> lib <span class="tk-operator">=</span> OwnedDLHandle<span class="tk-punctuation">(</span>LIBCURL<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># use the optional feature</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">except</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># fall back</span></span>
+</code></pre></figure>
+<p>You can guard against missing functions with <code>check_symbol()</code>. Use it to
+test for optional, versioned, or platform-specific features. The check
+works for both functions and exported globals:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> LIBM <span class="tk-operator">=</span> platform_map<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"libm"</span><span class="tk-punctuation">,</span> linux<span class="tk-operator">=</span><span class="tk-string">"libm.so.6"</span><span class="tk-punctuation">,</span> macos<span class="tk-operator">=</span><span class="tk-string">"libm.dylib"</span></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> lib <span class="tk-operator">=</span> OwnedDLHandle<span class="tk-punctuation">(</span>LIBM<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">if</span> lib<span class="tk-punctuation">.</span>check_symbol<span class="tk-punctuation">(</span><span class="tk-string">"exp10"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> exp10 <span class="tk-operator">=</span> lib<span class="tk-punctuation">.</span>get_function<span class="tk-punctuation">[</span>c_double<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"exp10"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>exp10<span class="tk-punctuation">(</span>c_double<span class="tk-punctuation">(</span><span class="tk-number">2.0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 100.0</span></span>
+<span class="cl" data-line="9"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"exp10 not found in libm"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="retrieve-functions-by-name">Retrieve functions by name<a aria-label="Link to Retrieve functions by name" class="h__link" href="#retrieve-functions-by-name"></a></h3>
+<p><code>get_function()</code> looks up a library function by name and returns a callable.
+Parameterize it with the C function's return type. Here's a curses example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># WinPtr is a pointer to a curses window struct</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> wgetch <span class="tk-operator">=</span> lib<span class="tk-punctuation">.</span>get_function<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"wgetch"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-comment"># ... later</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6">_ <span class="tk-operator">=</span> wgetch<span class="tk-punctuation">(</span>win<span class="tk-punctuation">)</span> <span class="tk-comment"># blocks until a key is pressed.</span></span>
+</code></pre></figure>
+<p>You don't declare the argument types. Mojo infers them from the values you
+pass at each call, and forwards them using the C calling convention.</p>
+<p>Missing symbols raise errors.</p>
+<h2 class="h h--2" data-level="2" id="pointers">Passing pointers<a aria-label="Link to Passing pointers" class="h__link" href="#pointers"></a></h2>
+<p>Many C APIs work with pointers. Mojo represents raw pointers with
+<code>Pointer[T]</code>, where <code>T</code> is the pointed-to type. When a C API expects a
+<code>void*</code>, use <code>.unsafe_bitcast[NoneType]()</code> to produce an <code>OpaquePointer</code>.</p>
+<ul>
+<li class="">Use <code>Pointer(to=value)</code> to get a pointer to a Mojo value.</li>
+<li class="">Use <code>.unsafe_bitcast[U]()</code> to reinterpret a pointer as another
+pointer type.</li>
+</ul>
+<p>For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> c_int <span class="tk-operator">=</span> <span class="tk-number">42</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> p <span class="tk-operator">=</span> Pointer<span class="tk-punctuation">(</span>to<span class="tk-operator">=</span>value<span class="tk-punctuation">)</span> <span class="tk-comment"># Pointer to a C int</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> opaque<span class="tk-punctuation">:</span> OpaquePointer<span class="tk-punctuation">[</span>origin_of<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> p<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="typed-pointers">Typed pointers<a aria-label="Link to Typed pointers" class="h__link" href="#typed-pointers"></a></h3>
+<p>C functions often write results through a pointer you provide, rather than
+returning them. Pass <code>Pointer(to=value)</code> and C fills in the value. An <code>imm</code>
+function argument won't work, and, worse, it fails quietly, leaving the
+value unchanged. Use the <code>mut</code> convention or copy the value into a local
+<code>var</code> before your call.</p>
+<p>This example passes a Mojo floating-point number to C's <code>frexp</code>, which
+splits it into a mantissa and an exponent:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_double<span class="tk-punctuation">,</span> c_int</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># double frexp(double x, int *exp);</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Returns the mantissa and writes the exponent through the pointer.</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> exponent<span class="tk-punctuation">:</span> c_int <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> mantissa <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span><span class="tk-string">"frexp"</span><span class="tk-punctuation">,</span> c_double<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="8">        c_double<span class="tk-punctuation">(</span><span class="tk-number">12.0</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> Pointer<span class="tk-punctuation">(</span>to<span class="tk-operator">=</span>exponent<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"12.0 = {mantissa} * 2^{exponent}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 0.75 * 2^4</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="opaque-pointers">Opaque pointers<a aria-label="Link to Opaque pointers" class="h__link" href="#opaque-pointers"></a></h3>
+<p>The C standard library provides <code>qsort</code>, a general-purpose sorting
+function.</p>
+<p><code>qsort</code> sorts its array in place. You provide a pointer to that array, its
+number of elements, the element size, and a comparison function. Whenever
+<code>qsort</code> compares two elements, it calls your Mojo-native comparison
+function.</p>
+<p>The comparison function must be <em>thin</em>. That is, it can't capture any Mojo
+state as a closure. You must mark it with <code>abi("C")</code>, allowing <code>qsort</code> to
+call it across the FFI boundary.</p>
+<p>The following example sorts a list of C integers. The <code>compare()</code>
+function receives two <code>void*</code> pointers, casts them back to <code>c_int*</code>,
+and returns the comparison result:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">,</span> c_size_t</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>sys <span class="tk-keyword">import</span> size_of</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">compare</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="5">    a<span class="tk-punctuation">:</span> OpaquePointer<span class="tk-punctuation">[</span><span class="tk-keyword">mut</span><span class="tk-operator">=</span><span class="tk-boolean">False</span><span class="tk-punctuation">,</span> _<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6">    b<span class="tk-punctuation">:</span> OpaquePointer<span class="tk-punctuation">[</span><span class="tk-keyword">mut</span><span class="tk-operator">=</span><span class="tk-boolean">False</span><span class="tk-punctuation">,</span> _<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="7"><span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> c_int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> a_value <span class="tk-operator">=</span> a<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> b_value <span class="tk-operator">=</span> b<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># `qsort` only needs to know which value is larger. Compare the values</span></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># instead of subtracting them. Large differences can overflow, producing</span></span>
+<span class="cl" data-line="12"> <span class="tk-comment"># the wrong comparison result and sorting the values incorrectly.</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">if</span> a_value <span class="tk-operator">&lt;</span> b_value<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">return</span> c_int<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">return</span> c_int<span class="tk-punctuation">(</span>a_value <span class="tk-operator">&gt;</span> b_value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">var</span> numbers<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">9</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">6</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">var</span> count <span class="tk-operator">=</span> c_size_t<span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>numbers<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">var</span> size <span class="tk-operator">=</span> c_size_t<span class="tk-punctuation">(</span>size_of<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21">    external_call<span class="tk-punctuation">[</span><span class="tk-string">"qsort"</span><span class="tk-punctuation">,</span> NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="22">        numbers<span class="tk-punctuation">.</span>unsafe_ptr<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="23">        count<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="24">        size<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="25">        compare<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="26"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Sorted numbers:"</span><span class="tk-punctuation">,</span> numbers<span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 2, 5, 5, 6, 9]</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="passing-structs">Passing structs<a aria-label="Link to Passing structs" class="h__link" href="#passing-structs"></a></h2>
+<p>Struct pointers allow Mojo and C APIs to exchange structured data that goes
+beyond simple values. For example, <code>clock_gettime()</code> writes the system's
+monotonic time into a C <code>struct timespec</code>.</p>
+<p>To read that data from Mojo, define a struct with a C-compatible layout and
+pass a pointer to it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">,</span> c_long</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>sys<span class="tk-punctuation">.</span>info <span class="tk-keyword">import</span> platform_map</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">struct</span> <span class="tk-class-name">CTimeSpec</span><span class="tk-punctuation">(</span>RegisterPassable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-comment"># Matches C's struct timespec.</span></span>
+<span class="cl" data-line="6"> <span class="tk-comment"># CLOCK_MONOTONIC differs by platform</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> monotonic <span class="tk-operator">=</span> c_int<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="8">        platform_map<span class="tk-punctuation">[</span><span class="tk-string">"CLOCK_MONOTONIC"</span><span class="tk-punctuation">,</span> linux<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> macos<span class="tk-operator">=</span><span class="tk-number">6</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> tv_sec<span class="tk-punctuation">:</span> c_long</span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> tv_nsec<span class="tk-punctuation">:</span> c_long</span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">def</span> <span class="tk-function">monotonic_nanos</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> c_long<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> time_spec <span class="tk-operator">=</span> Self<span class="tk-punctuation">(</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="18">            external_call<span class="tk-punctuation">[</span><span class="tk-string">"clock_gettime"</span><span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="19">                Self<span class="tk-punctuation">.</span>monotonic<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="20">                Pointer<span class="tk-punctuation">(</span>to<span class="tk-operator">=</span>time_spec<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="21"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="22"> <span class="tk-operator">!=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="23"> <span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"clock_gettime failed"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">return</span> time_spec<span class="tk-punctuation">.</span>tv_sec <span class="tk-operator">*</span> <span class="tk-number">1_000_000_000</span> <span class="tk-operator">+</span> time_spec<span class="tk-punctuation">.</span>tv_nsec</span>
+<span class="cl" data-line="26"></span>
+<span class="cl" data-line="27"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="28"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Monotonic time: {CTimeSpec.monotonic_nanos()} ns"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="c-compatible-structs">C-compatible structs<a aria-label="Link to C-compatible structs" class="h__link" href="#c-compatible-structs"></a></h3>
+<p>C-compatible types are ordinary structs with two requirements:</p>
+<ul>
+<li class="">They conform to <code>RegisterPassable</code>.</li>
+<li class="">They contain only C-compatible fields.</li>
+</ul>
+<p>Field order matters. Declare your fields in the same order as the C struct
+you're mirroring. Mojo uses the corresponding C layout, including padding
+required for <a class="ext" data-external="" href="https://mojolang.org/docs/reference/decorators/align/" rel="noopener noreferrer">field alignment</a>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Mirrors C `div_t`: two ints, 8 bytes total.</span></span>
+<span class="cl" data-line="2"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">struct</span> <span class="tk-class-name">DivT</span><span class="tk-punctuation">(</span>RegisterPassable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> quot<span class="tk-punctuation">:</span> c_int</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> rem<span class="tk-punctuation">:</span> c_int</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> proc <span class="tk-operator">=</span> OwnedDLHandle<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># No path: opens the current process</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> div <span class="tk-operator">=</span> proc<span class="tk-punctuation">.</span>get_function<span class="tk-punctuation">[</span>DivT<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"div"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> d <span class="tk-operator">=</span> div<span class="tk-punctuation">(</span>c_int<span class="tk-punctuation">(</span><span class="tk-number">7</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">(</span><span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"div(7, 3): quot {d.quot} rem {d.rem}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 2 1</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="passing-lists-arrays-and-spans">Passing lists, arrays, and spans<a aria-label="Link to Passing lists, arrays, and spans" class="h__link" href="#passing-lists-arrays-and-spans"></a></h3>
+<p>A Mojo <code>List[T]</code> stores its elements contiguously in memory, just like C
+arrays. You pass a list to C as a pointer plus a length, as shown in the
+<a href="../pages/28_c-foreign-function-interface.html#opaque-pointers"><code>qsort</code> example</a>.</p>
+<p>Mojo list pointers are fragile. Operations that grow the list, such as
+<code>append()</code>, may move its storage and leave an earlier pointer stale. So get
+the pointer fresh, right before you use it, after any change to the list.</p>
+<p><code>Span[T]</code> is Mojo's built-in pointer-plus-length pair. It wraps a pointer
+to contiguous memory and stores a length. This gives you built-in bounds
+checking and safe iteration.</p>
+<p><code>Array[T, length]</code> is Mojo's fixed-size array. It owns its elements inline,
+so Mojo cleans it up and C can fill it through a pointer plus a length.</p>
+<p>Both <code>Span</code> and <code>Array</code> are safe to pass to and from C by pointer. Add a
+length to calls where C needs one.</p>
+<p>The following example allocates a 256-byte <code>Array</code>, passes it to
+C's <code>getcwd()</code>, wraps the filled bytes in a <code>Span</code>, and converts them
+to a Mojo <code>String</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_char<span class="tk-punctuation">,</span> c_size_t</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># char *getcwd(char *buf, size_t size); C fills a buffer that Mojo owns.</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> CAPACITY <span class="tk-operator">=</span> <span class="tk-number">256</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> buf <span class="tk-operator">=</span> Array<span class="tk-punctuation">[</span>c_char<span class="tk-punctuation">,</span> CAPACITY<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>uninitialized<span class="tk-operator">=</span><span class="tk-boolean">True</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> filled <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="9"> <span class="tk-string">"getcwd"</span><span class="tk-punctuation">,</span> Optional<span class="tk-punctuation">[</span>Pointer<span class="tk-punctuation">[</span>c_char<span class="tk-punctuation">,</span> origin_of<span class="tk-punctuation">(</span>buf<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="10"> <span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>buf<span class="tk-punctuation">.</span>unsafe_ptr<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> c_size_t<span class="tk-punctuation">(</span>CAPACITY<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> filled<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"getcwd failed"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># C reports no length, so ask for it, then wrap the bytes in a `Span`.</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">var</span> length <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span><span class="tk-string">"strlen"</span><span class="tk-punctuation">,</span> c_size_t<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>buf<span class="tk-punctuation">.</span>unsafe_ptr<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> span <span class="tk-operator">=</span> Span<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="17">        unsafe_ptr<span class="tk-operator">=</span>buf<span class="tk-punctuation">.</span>unsafe_ptr<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>Byte<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> length<span class="tk-operator">=</span>Int<span class="tk-punctuation">(</span>length<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"{len(span)} bytes: {String(from_utf8=span)}"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>Span</code>s work with both Mojo and C memory:</p>
+<ul>
+<li class="">If you wrap a Mojo-owned buffer, the <code>Span</code> keeps it alive.</li>
+<li class="">If you wrap a C-owned buffer, such as memory from <code>malloc()</code>, the <code>Span</code>
+doesn't free it. You must free C-owned memory with C.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="passing-strings">Passing strings<a aria-label="Link to Passing strings" class="h__link" href="#passing-strings"></a></h2>
+<p>C strings are null-terminated byte arrays (<code>char*</code>). Mojo strings are
+length-prefixed UTF-8.</p>
+<h3 class="h h--3" data-level="3" id="convert-a-mojo-string-to-a-c-string">Convert a Mojo string to a C string<a aria-label="Link to Convert a Mojo string to a C string" class="h__link" href="#convert-a-mojo-string-to-a-c-string"></a></h3>
+<p>Call <code>as_c_string_span()</code> on a <code>String</code> to ensure null termination, and get
+a type safe <code>CStringSpan</code> back.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">name<span class="tk-punctuation">.</span>as_c_string_span<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The source string must be mutable because <code>as_c_string_span()</code> may append
+a terminating zero byte. It may also move the string's buffer, so call it
+once and reuse the result.</p>
+<h3 class="h h--3" data-level="3" id="convert-a-c-string-to-a-mojo-string">Convert a C string to a Mojo string<a aria-label="Link to Convert a C string to a Mojo string" class="h__link" href="#convert-a-c-string-to-a-mojo-string"></a></h3>
+<p>Use <code>String(unsafe_from_utf8_ptr=...)</code> to copy a null-terminated C string
+into a Mojo string:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Copies the bytes; uses `strlen()`.</span></span>
+<span class="cl" data-line="2">String<span class="tk-punctuation">(</span>unsafe_from_utf8_ptr<span class="tk-operator">=</span>c_string_ptr<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>When you already know the length, you can wrap the C bytes in a
+non-copying, non-owning <code>Span[Byte]</code> and covert that to a Mojo <code>String</code>.</p>
+<p>For example, C's <code>strdup()</code> allocates and returns a copy of a string. You
+can wrap its result in a <code>Span</code>, convert the bytes to a Mojo string, then
+free the C-owned memory:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String <span class="tk-operator">=</span> <span class="tk-string">"Echo"</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> cptr <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="3"> <span class="tk-string">"strdup"</span><span class="tk-punctuation">,</span> Optional<span class="tk-punctuation">[</span>Pointer<span class="tk-punctuation">[</span>c_char<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">.</span>as_c_string_span<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">if</span> cptr<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> ptr <span class="tk-operator">=</span> cptr<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># Ask C for the length. A Mojo string's `byte_length()` measures the</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># Mojo side, which says nothing about the buffer C returned.</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> length <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span><span class="tk-string">"strlen"</span><span class="tk-punctuation">,</span> c_size_t<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>ptr<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> span <span class="tk-operator">=</span> Span<span class="tk-punctuation">(</span>unsafe_ptr<span class="tk-operator">=</span>ptr<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>Byte<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> length<span class="tk-operator">=</span>Int<span class="tk-punctuation">(</span>length<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>String<span class="tk-punctuation">(</span>from_utf8<span class="tk-operator">=</span>span<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># or from_utf8_lossy or unsafe_from_utf8</span></span>
+<span class="cl" data-line="12">    external_call<span class="tk-punctuation">[</span><span class="tk-string">"free"</span><span class="tk-punctuation">,</span> NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>ptr<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># free it</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="convert-mojo-string-literals-to-c-strings">Convert Mojo string literals to C strings<a aria-label="Link to Convert Mojo string literals to C strings" class="h__link" href="#convert-mojo-string-literals-to-c-strings"></a></h3>
+<p>String literals can be passed to C APIs that expect a null-terminated
+<code>char*</code>. Call <code>as_c_string_span()</code> to access the C string:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-string">"libm.so.6"</span><span class="tk-punctuation">.</span>as_c_string_span<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Mojo performs the conversion at compile time and embeds the null-terminated
+string in the compiled program.</p>
+<h2 class="h h--2" data-level="2" id="memory-management">Memory management<a aria-label="Link to Memory management" class="h__link" href="#memory-management"></a></h2>
+<p>Mojo tracks the lifetime of its own memory. C memory has no Mojo value
+behind it, so there's nothing for Mojo to track. Every allocation that
+crosses the boundary still belongs to one side, and that side remains
+responsible for freeing it:</p>
+<ul>
+<li class="">Free C memory with C's <code>free()</code>.</li>
+<li class="">Let Mojo handle its own memory, except for unsafe allocations.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="allocate-c-memory">Allocate C memory<a aria-label="Link to Allocate C memory" class="h__link" href="#allocate-c-memory"></a></h3>
+<p>C allocators such as <code>malloc</code> return C-owned memory. <code>malloc</code> returns
+null when the allocation fails. Wrap the return type in <code>Optional</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_size_t</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">create_buffer</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="4">    n<span class="tk-punctuation">:</span> c_size_t<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Optional<span class="tk-punctuation">[</span>Pointer<span class="tk-punctuation">[</span>UInt8<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> external_call<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="7"> <span class="tk-string">"malloc"</span><span class="tk-punctuation">,</span> Optional<span class="tk-punctuation">[</span>Pointer<span class="tk-punctuation">[</span>UInt8<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="8"> <span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> buf <span class="tk-operator">=</span> create_buffer<span class="tk-punctuation">(</span>c_size_t<span class="tk-punctuation">(</span><span class="tk-number">16</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> buf<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"malloc failed"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">var</span> ptr <span class="tk-operator">=</span> buf<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15">    ptr<span class="tk-punctuation">[</span>unsafe_offset<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">42</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>ptr<span class="tk-punctuation">[</span>unsafe_offset<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 42</span></span>
+<span class="cl" data-line="17">    external_call<span class="tk-punctuation">[</span><span class="tk-string">"free"</span><span class="tk-punctuation">,</span> NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>ptr<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>MutUntrackedOrigin</code> tells Mojo not to reason about this pointer's lifetime.
+It's the opposite of every other origin on this page. Instead of tying the
+pointer to an owner, it says that no Mojo value owns <em>this</em> memory. You're
+responsible for keeping it valid and freeing it. You must free it with C's
+memory management functions, such as <code>free</code>.</p>
+<h3 class="h h--3" data-level="3" id="free-c-memory-automatically">Free C memory automatically<a aria-label="Link to Free C memory automatically" class="h__link" href="#free-c-memory-automatically"></a></h3>
+<p>Pairing every <code>malloc()</code> with a matching <code>free()</code> by hand is easy to get
+wrong. A context manager can manage the allocation and release it for you.
+When the following block exits, <code>__exit__()</code> calls <code>free()</code>, even after a
+raised error:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_size_t</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">struct</span> <span class="tk-class-name">CBuffer</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> ptr<span class="tk-punctuation">:</span> Pointer<span class="tk-punctuation">[</span>UInt8<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> size<span class="tk-punctuation">:</span> c_size_t</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> n<span class="tk-punctuation">:</span> c_size_t<span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>size <span class="tk-operator">=</span> n</span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> allocated <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="10"> <span class="tk-string">"malloc"</span><span class="tk-punctuation">,</span> Optional<span class="tk-punctuation">[</span>Pointer<span class="tk-punctuation">[</span>UInt8<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="11"> <span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> allocated<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"malloc failed"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>ptr <span class="tk-operator">=</span> allocated<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">def</span> <span class="tk-function">__enter__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Pointer<span class="tk-punctuation">[</span>UInt8<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>ptr</span>
+<span class="cl" data-line="18"></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">def</span> <span class="tk-function">__exit__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="20">        external_call<span class="tk-punctuation">[</span><span class="tk-string">"free"</span><span class="tk-punctuation">,</span> NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>ptr<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21"></span>
+<span class="cl" data-line="22"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">with</span> CBuffer<span class="tk-punctuation">(</span>c_size_t<span class="tk-punctuation">(</span><span class="tk-number">1024</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> buf<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24">        buf<span class="tk-punctuation">[</span>unsafe_offset<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">42</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>buf<span class="tk-punctuation">[</span>unsafe_offset<span class="tk-operator">=</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 42</span></span>
+<span class="cl" data-line="26"> <span class="tk-comment"># The buffer is freed here.</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="null-returns">Null returns<a aria-label="Link to Null returns" class="h__link" href="#null-returns"></a></h3>
+<p>C uses null pointers to mean "nothing" or "failed." A Mojo <code>Pointer</code> can't
+be null, so wrap any "maybe null" return in <code>Optional</code>. The <code>malloc</code>
+examples you just saw showed this pattern.</p>
+<p><code>Optional</code>'s empty case adds nothing to the call and costs nothing to pass:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_char</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String <span class="tk-operator">=</span> <span class="tk-string">"PATH"</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> found <span class="tk-operator">=</span> external_call<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="6"> <span class="tk-string">"getenv"</span><span class="tk-punctuation">,</span> Optional<span class="tk-punctuation">[</span>Pointer<span class="tk-punctuation">[</span>c_char<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">.</span>as_c_string_span<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">if</span> found<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>String<span class="tk-punctuation">(</span>unsafe_from_utf8_ptr<span class="tk-operator">=</span>found<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"{name} is not set"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Declaring an unwrapped, non-optional <code>Pointer</code> would compile. It would also
+treat C's null as a valid pointer. Dereferencing results in undefined
+behavior and will typically crash your program.</p>
+<h3 class="h h--3" data-level="3" id="keeping-mojo-values-alive">Keeping Mojo values alive<a aria-label="Link to Keeping Mojo values alive" class="h__link" href="#keeping-mojo-values-alive"></a></h3>
+<p>Pointers into Mojo memory carry an origin that tracks the value's lifetime.
+When you derive a pointer from a variable, Mojo keeps the variable alive
+while the pointer is live. It rejects code that would let the variable die
+first:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> OwnedDLHandle<span class="tk-punctuation">,</span> c_size_t</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> proc <span class="tk-operator">=</span> OwnedDLHandle<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># No path: opens the current process.</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> c_strlen <span class="tk-operator">=</span> proc<span class="tk-punctuation">.</span>get_function<span class="tk-punctuation">[</span>c_size_t<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"strlen"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># The pointer carries `line`'s origin, so `line` outlives the call.</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> line <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> n <span class="tk-operator">=</span> c_strlen<span class="tk-punctuation">(</span>line<span class="tk-punctuation">.</span>as_c_string_span<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"length of '{line}': {n}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 5</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"> <span class="tk-comment"># Refill the same variable and call again. The origin still holds.</span></span>
+<span class="cl" data-line="13">    line <span class="tk-operator">=</span> <span class="tk-string">"Hello, Mojo!"</span></span>
+<span class="cl" data-line="14">    n <span class="tk-operator">=</span> c_strlen<span class="tk-punctuation">(</span>line<span class="tk-punctuation">.</span>as_c_string_span<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"length of '{line}': {n}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 12</span></span>
+</code></pre></figure>
+<p>The pointer's origin ties its lifetime to <code>line</code>. Mojo keeps <code>line</code> alive
+while C uses the pointer. As a result, you don't need workarounds to extend
+its lifetime.</p>
+<h2 class="h h--2" data-level="2" id="safety">Safety<a aria-label="Link to Safety" class="h__link" href="#safety"></a></h2>
+<p>Inside Mojo, the compiler checks types, tracks lifetimes through origins,
+and refuses code that would use a value after it dies. None of that reaches
+across the C boundary. C has no origins, no ownership, and no type
+information Mojo can read, so the compiler emits exactly the call you
+described and trusts you to have described it correctly.</p>
+<p>That makes you the type checker. The C header is the contract, and matching
+it is your job:</p>
+<ul>
+<li class=""><strong>Declare what C declares.</strong> Use the <code>std.ffi</code> aliases so your types track
+the target's C ABI. A mismatch isn't a compile error, it's a wrong answer.</li>
+<li class=""><strong>Free memory on the side that allocated it.</strong> C memory needs C's
+<code>free()</code>. Mojo memory has to outlive every C use, including uses that
+continue after the call returns.</li>
+<li class=""><strong>Assume undefined behavior, not exceptions.</strong> A mismatched declaration
+usually produces a plausible result rather than a crash, so a passing test
+is weak evidence that a declaration is right.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="unsafe-operations">Unsafe operations<a aria-label="Link to Unsafe operations" class="h__link" href="#unsafe-operations"></a></h2>
+<p>Mojo marks operations it can't check for you with an <code>unsafe_</code> prefix, the
+same convention used throughout the standard library. This page uses four:
+<code>unsafe_ptr()</code> to hand C a raw pointer, <code>unsafe_bitcast()</code> to reinterpret
+one, <code>unsafe_offset=</code> to index past the first element, and
+<code>String(unsafe_from_utf8_ptr=)</code> to trust bytes C gave you.</p>
+<p>Each <code>unsafe_</code> operation marks a guarantee and responsibility you've taken
+over from the compiler.</p>
+<p>Origins still help wherever a pointer stays inside Mojo's view. Deriving a
+pointer from a variable, as in <code>line.as_c_string_span()</code>,
+keeps that variable alive for as long as the pointer lives. That protection
+ends when C stores the pointer somewhere Mojo can't see.</p>
+<p><code>external_call()</code> and <code>OwnedDLHandle</code> are intentionally low level. Neither
+validates C signatures or protects you from ABI mismatches. Small
+declaration mistakes can produce plausible but incorrect results, while
+others fail only at build time or when you move to a different platform.</p>
+<p>Each entry names the API it applies to.</p>
+<h3 class="h h--3" data-level="3" id="silently-wrong-at-runtime">Silently wrong at runtime<a aria-label="Link to Silently wrong at runtime" class="h__link" href="#silently-wrong-at-runtime"></a></h3>
+<ul>
+<li class=""><strong>Type matching</strong> (both): Nothing validates your arguments or return type
+against the C declaration of the function you're calling.</li>
+<li class=""><strong>Return type width</strong> (both): Declaring a narrower return than C returns
+keeps only the low bits. Declare <code>strchr</code>'s <code>char*</code> return as <code>c_int</code> and a
+pointer whose real value is 6199428535 comes back as 1904461239. That's
+truncation rather than noise, so a wrong value can still look plausible.
+Subtract two truncated pointers and the error cancels, giving you the
+right offset for the wrong reason.</li>
+<li class=""><strong>Argument type width and signedness</strong> (both): Whatever you write becomes
+the declaration verbatim. Passing a <code>c_char</code> where C declares <code>int</code> has the
+callee reading a register the caller never fully set.</li>
+<li class=""><strong>Undeclared argument types</strong> (<code>OwnedDLHandle</code>): <code>get_function()</code> takes the
+return type only, so nothing connects the arguments to the C function's
+real signature. Calling <code>get_function[c_double]("sqrt")</code> with a <code>c_int</code>
+returns <code>0.0</code> instead of failing.</li>
+<li class=""><strong>Raw <code>String</code> arguments</strong> (<code>OwnedDLHandle</code>): <code>external_call()</code> rejects a
+<code>String</code> at compile time, but a callable from <code>get_function()</code> accepts one
+and reads whatever the struct's bytes happen to be. Passing a 53-byte
+<code>String</code> to <code>strlen</code> returns 5. Always pass
+<code>as_c_string_span()</code>.</li>
+<li class=""><strong>Pointers returned into a library</strong> (<code>OwnedDLHandle</code>): When a C function
+returns a pointer into its own library, the return type must borrow from
+the handle, as in <code>Pointer[c_char, lib_origin]</code> where
+<code>comptime lib_origin = ImmOrigin(origin_of(lib))</code>. Declaring
+<code>ImmStaticOrigin</code> compiles, then reads freed memory once the handle closes
+the library.</li>
+<li class=""><strong>Variadic callees without <code>num_fixed_args</code></strong> (<code>external_call()</code>): Pass
+<code>num_fixed_args</code> for every C variadic function. Without it, each argument
+defaults to a fixed argument of a non-variadic callee, which gets the ABI
+wrong for <code>open()</code> or <code>snprintf()</code>. AAPCS on ARM64 macOS passes variadic
+arguments differently from fixed ones, so the mistake can work on x86-64
+Linux and break on Apple silicon.</li>
+<li class=""><strong>Platform-varying C types</strong> (both): <code>c_long</code> and <code>c_ulong</code> resolve per
+target rather than to one fixed width. Every platform Mojo supports today
+is LP64, so writing <code>Int64</code> for a C <code>long</code> happens to work. The alias says
+what you mean and keeps saying it if the supported targets change.</li>
+<li class=""><strong>Pointers C keeps after the call</strong> (both): An origin protects a pointer
+for as long as Mojo can see it. Mojo can't see C storing your pointer for
+later, so a call returning doesn't mean C is finished with what you passed.
+Check the C documentation for whether a function retains the pointer.</li>
+<li class=""><strong>Non-nul-terminated buffers</strong> (both): A bare <code>Pointer[c_char]</code> into a
+buffer with no terminator sends a C string function reading off the end.
+<code>CStringSpan</code> is the guardrail for this, ensuring a null terminator is
+present.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="caught-at-build-time">Caught at build time<a aria-label="Link to Caught at build time" class="h__link" href="#caught-at-build-time"></a></h3>
+<p>These fail the build, but not always where you'd expect.</p>
+<ul>
+<li class=""><strong>Two signatures for one symbol in a module</strong> (<code>external_call()</code>):
+Declaring <code>strchr</code> twice with different argument types in the same file
+fails to build. The diagnostic points into <code>std.ffi</code> rather than at either
+of your call sites. This is easy to hit when a wrapper and an inline call
+disagree. <code>get_function()</code> casts a runtime pointer instead, so it has no
+module-level declaration to collide.</li>
+<li class=""><strong>String arguments</strong> (<code>external_call()</code>): Passing a <code>String</code> is rejected at
+compile time, and the error names <code>as_c_string_span()</code> as the fix. This is
+the one signature mistake the API catches for you. Take care because the
+checking is narrow, and <code>OwnedDLHandle</code> doesn't repeat it.</li>
+<li class=""><strong>Return types must be <code>RegisterPassable</code></strong> (both): <code>return_type</code> is bound
+to <code>RegisterPassable</code>, so the compiler rejects anything larger. A C
+function that returns a big struct by value isn't callable directly. C ABIs
+return those through a hidden pointer argument, so allocate the struct in
+Mojo, pass a pointer to it, and declare the return type as <code>NoneType</code>.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="limitations">Limitations<a aria-label="Link to Limitations" class="h__link" href="#limitations"></a></h3>
+<ul>
+<li class=""><strong><code>external_call()</code> can't load dynamic libraries</strong>: It calls C functions by
+name and leaves the name for Mojo to resolve. Use <code>OwnedDLHandle</code> to load a
+dynamic library at runtime and retrieve its functions.</li>
+<li class=""><strong>Function resolution is by C symbol name</strong> (both): C++ functions need
+<code>extern "C"</code> to be callable.</li>
+<li class=""><strong><code>OwnedDLHandle</code> resolves everything at runtime</strong>: A wrong library name or
+a missing symbol fails when the program runs, not when it builds, and the
+library has to be present on the machine that runs the program rather than
+the one that built it. <code>check_symbol()</code> tests whether a symbol exists and
+validates nothing about its signature.</li>
+<li class=""><strong><code>mojo run</code> and <code>mojo build</code> resolve symbols differently</strong>
+(<code>external_call()</code>): <code>mojo run</code> finds the symbol in the already loaded
+process image. <code>mojo build</code> links through a C compiler driver instead. libc
+arrives either way, so a running call is not proof that the same call will
+link. A symbol from another system library can resolve under <code>mojo run</code> and
+then fail under <code>mojo build</code> with <code>DSO missing from command line</code>. Name the
+library in <code>MODULAR_MOJO_MAX_SYSTEM_LIBS</code> when that happens.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="what-the-apis-do-check">What the APIs do check<a aria-label="Link to What the APIs do check" class="h__link" href="#what-the-apis-do-check"></a></h3>
+<p>Two guarantees <code>OwnedDLHandle</code> provides that <code>external_call()</code> doesn't:</p>
+<ul>
+<li class="">A missing symbol raises an error rather than aborting the process, so you
+can probe for optional symbols.</li>
+<li class="">The callable from <code>get_function()</code> borrows the handle, so the library
+can't be closed between the lookup and the call.</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="c-type-reference">C type reference<a aria-label="Link to C type reference" class="h__link" href="#c-type-reference"></a></h2>
+<div class="table-wrap" id="table-1"><table><thead><tr><th>C type</th><th><code>std.ffi</code> alias</th><th>Equivalent Mojo type</th><th>Notes</th></tr></thead><tbody><tr><td><code>int</code></td><td><code>c_int</code></td><td><code>Int32</code></td><td>the most common type by far</td></tr><tr><td><code>short</code></td><td><code>c_short</code></td><td><code>Int16</code></td><td></td></tr><tr><td><code>long</code></td><td><code>c_long</code></td><td>depends on target</td><td>64-bit on Linux and macOS</td></tr><tr><td><code>long long</code></td><td><code>c_long_long</code></td><td><code>Int64</code></td><td>Always 64 bits.</td></tr><tr><td><code>unsigned char</code></td><td><code>c_uchar</code></td><td><code>UInt8</code></td><td></td></tr><tr><td><code>char</code></td><td><code>c_char</code></td><td><code>Int8</code></td><td>signed; you'll mostly see it as <code>char*</code></td></tr><tr><td><code>unsigned short</code></td><td><code>c_ushort</code></td><td><code>UInt16</code></td><td></td></tr><tr><td><code>unsigned int</code></td><td><code>c_uint</code></td><td><code>UInt32</code></td><td></td></tr><tr><td><code>unsigned long</code></td><td><code>c_ulong</code></td><td>depends on target</td><td>matches <code>c_long</code></td></tr><tr><td><code>float</code></td><td><code>c_float</code></td><td><code>Float32</code></td><td></td></tr><tr><td><code>double</code></td><td><code>c_double</code></td><td><code>Float64</code></td><td></td></tr><tr><td><code>size_t</code></td><td><code>c_size_t</code></td><td><code>UInt</code></td><td>for sizes and counts</td></tr><tr><td><code>ssize_t</code></td><td><code>c_ssize_t</code></td><td><code>Int</code></td><td>for sizes that can be negative</td></tr><tr><td><code>void*</code></td><td><code>OpaquePointer</code></td><td><code>Pointer[NoneType]</code></td><td>see the <a href="../pages/28_c-foreign-function-interface.html#pointers">pointers section</a>, uses origins</td></tr></tbody></table></div>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/c-ffi/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/c-ffi/</a>, saved Thu, 01 Oct 2026 15:45:45 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/27_calling-mojo-from-python.html"><span class="pager__dir">← Previous</span><span class="pager__title">Calling Mojo from Python</span></a><a class="pager__link pager__link--next" href="../pages/29_intro-to-metaprogramming.html"><span class="pager__dir">Next →</span><span class="pager__title">Intro to metaprogramming</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#c-number-types">C number types</a></li><li class="rail__depth-2"><a href="#call-libc-functions">Call libc functions</a></li><li class="rail__depth-2"><a href="#use-shared-libraries">Use shared libraries</a></li><li class="rail__depth-2"><a href="#pointers">Passing pointers</a></li><li class="rail__depth-2"><a href="#passing-structs">Passing structs</a></li><li class="rail__depth-2"><a href="#passing-strings">Passing strings</a></li><li class="rail__depth-2"><a href="#memory-management">Memory management</a></li><li class="rail__depth-2"><a href="#safety">Safety</a></li><li class="rail__depth-2"><a href="#unsafe-operations">Unsafe operations</a></li><li class="rail__depth-2"><a href="#c-type-reference">C type reference</a></li><li class="rail__depth-3"><a href="#call-variadic-c-functions">Call variadic C functions</a></li><li class="rail__depth-3"><a href="#library-names">Library names</a></li><li class="rail__depth-3"><a href="#availability-checks">Availability checks</a></li><li class="rail__depth-3"><a href="#retrieve-functions-by-name">Retrieve functions by name</a></li><li class="rail__depth-3"><a href="#typed-pointers">Typed pointers</a></li><li class="rail__depth-3"><a href="#opaque-pointers">Opaque pointers</a></li><li class="rail__depth-3"><a href="#c-compatible-structs">C-compatible structs</a></li><li class="rail__depth-3"><a href="#passing-lists-arrays-and-spans">Passing lists, arrays, and spans</a></li><li class="rail__depth-3"><a href="#convert-a-mojo-string-to-a-c-string">Convert a Mojo string to a C string</a></li><li class="rail__depth-3"><a href="#convert-a-c-string-to-a-mojo-string">Convert a C string to a Mojo string</a></li><li class="rail__depth-3"><a href="#convert-mojo-string-literals-to-c-strings">Convert Mojo string literals to C strings</a></li><li class="rail__depth-3"><a href="#allocate-c-memory">Allocate C memory</a></li><li class="rail__depth-3"><a href="#free-c-memory-automatically">Free C memory automatically</a></li><li class="rail__depth-3"><a href="#null-returns">Null returns</a></li><li class="rail__depth-3"><a href="#keeping-mojo-values-alive">Keeping Mojo values alive</a></li><li class="rail__depth-3"><a href="#silently-wrong-at-runtime">Silently wrong at runtime</a></li><li class="rail__depth-3"><a href="#caught-at-build-time">Caught at build time</a></li><li class="rail__depth-3"><a href="#limitations">Limitations</a></li><li class="rail__depth-3"><a href="#what-the-apis-do-check">What the APIs do check</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#c-number-types">C number types</a></li><li class="rail__depth-2"><a href="#call-libc-functions">Call libc functions</a></li><li class="rail__depth-2"><a href="#use-shared-libraries">Use shared libraries</a></li><li class="rail__depth-2"><a href="#pointers">Passing pointers</a></li><li class="rail__depth-2"><a href="#passing-structs">Passing structs</a></li><li class="rail__depth-2"><a href="#passing-strings">Passing strings</a></li><li class="rail__depth-2"><a href="#memory-management">Memory management</a></li><li class="rail__depth-2"><a href="#safety">Safety</a></li><li class="rail__depth-2"><a href="#unsafe-operations">Unsafe operations</a></li><li class="rail__depth-2"><a href="#c-type-reference">C type reference</a></li><li class="rail__depth-3"><a href="#call-variadic-c-functions">Call variadic C functions</a></li><li class="rail__depth-3"><a href="#library-names">Library names</a></li><li class="rail__depth-3"><a href="#availability-checks">Availability checks</a></li><li class="rail__depth-3"><a href="#retrieve-functions-by-name">Retrieve functions by name</a></li><li class="rail__depth-3"><a href="#typed-pointers">Typed pointers</a></li><li class="rail__depth-3"><a href="#opaque-pointers">Opaque pointers</a></li><li class="rail__depth-3"><a href="#c-compatible-structs">C-compatible structs</a></li><li class="rail__depth-3"><a href="#passing-lists-arrays-and-spans">Passing lists, arrays, and spans</a></li><li class="rail__depth-3"><a href="#convert-a-mojo-string-to-a-c-string">Convert a Mojo string to a C string</a></li><li class="rail__depth-3"><a href="#convert-a-c-string-to-a-mojo-string">Convert a C string to a Mojo string</a></li><li class="rail__depth-3"><a href="#convert-mojo-string-literals-to-c-strings">Convert Mojo string literals to C strings</a></li><li class="rail__depth-3"><a href="#allocate-c-memory">Allocate C memory</a></li><li class="rail__depth-3"><a href="#free-c-memory-automatically">Free C memory automatically</a></li><li class="rail__depth-3"><a href="#null-returns">Null returns</a></li><li class="rail__depth-3"><a href="#keeping-mojo-values-alive">Keeping Mojo values alive</a></li><li class="rail__depth-3"><a href="#silently-wrong-at-runtime">Silently wrong at runtime</a></li><li class="rail__depth-3"><a href="#caught-at-build-time">Caught at build time</a></li><li class="rail__depth-3"><a href="#limitations">Limitations</a></li><li class="rail__depth-3"><a href="#what-the-apis-do-check">What the APIs do check</a></li></ol>
+<p class="rail__meta">Chapter 28 of 38 · Part IV, Memory &amp; Interop.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -109,7 +109,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
 <div class="container">
   <span class="kicker">Part II: Interoperability</span>
   <h1>🤝 Interoperability <span class="hl">&amp; FFI</span></h1>
-  <p class="dek">Calling Python from Mojo, calling Mojo from Python, C-ABI interop with native libraries, and MLIR integration.</p>
+  <p class="dek">Calling Python from Mojo with advanced patterns, C-ABI interop for calling native libraries, and MLIR integration. For the other direction — exposing Mojo functions back to Python — see Chapter 11.</p>
 
   <section id="python-interop">
     <h2>Mojo ↔ Python: Seamless Interop</h2>
@@ -118,45 +118,38 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-py">Mojo</div>
-        <div class="tab" data-target="python-py">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo-py"><code><span class="com"># Import Python modules directly</span>
-<span class="kw">from</span> python <span class="kw">import</span> Python
+        <pre class="code-block active" id="mojo-py">// Import Python modules directly
+from std.python import Python
 
-<span class="kw">def</span> <span class="fn">main</span>() raises:
-    <span class="com"># Use numpy from within Mojo</span>
-    <span class="kw">var</span> np = Python.import_module(<span class="str">"numpy"</span>)
-    <span class="kw">var</span> arr = np.array([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>])
-    <span class="kw">var</span> mean_val = np.mean(arr)
-    <span class="kw">print</span>(<span class="str">"NumPy mean:"</span>, mean_val)
+def main() raises:
+    // Use numpy from within Mojo
+    var np = Python.import_module("numpy")
 
-    <span class="com"># Use matplotlib</span>
-    <span class="kw">var</span> plt = Python.import_module(<span class="str">"matplotlib.pyplot"</span>)
+    // Build a Python list, then hand it across the boundary
+    var values = Python.list()
+    for i in range(5):
+        values.append(i + 1)
+    var arr = np.array(values)
+    print("NumPy mean:", np.mean(arr))
+
+    // Use matplotlib
+    var plt = Python.import_module("matplotlib.pyplot")
     plt.plot(arr)
-    plt.savefig(<span class="str">"plot.png"</span>)
+    plt.savefig("plot.png")
     plt.show()
 
-    <span class="com"># Use pandas</span>
-    <span class="kw">var</span> pd = Python.import_module(<span class="str">"pandas"</span>)
-    <span class="kw">var</span> df = pd.DataFrame({<span class="str">"a"</span>: [<span class="num">1</span>,<span class="num">2</span>], <span class="str">"b"</span>: [<span class="num">3</span>,<span class="num">4</span>]})
-    <span class="kw">print</span>(df.describe())</code></pre>
-        <pre class="code-block" id="python-py"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
-<span class="kw">import</span> pandas <span class="kw">as</span> pd
-
-arr = np.array([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>])
-mean_val = np.mean(arr)
-<span class="kw">print</span>(<span class="str">"NumPy mean:"</span>, mean_val)
-
-plt.plot(arr)
-plt.savefig(<span class="str">"plot.png"</span>)
-plt.show()
-
-df = pd.DataFrame({<span class="str">"a"</span>: [<span class="num">1</span>,<span class="num">2</span>], <span class="str">"b"</span>: [<span class="num">3</span>,<span class="num">4</span>]})
-<span class="kw">print</span>(df.describe())</code></pre>
+    // Use pandas
+    var pd = Python.import_module("pandas")
+    print(pd.Series(values).describe())</pre>
       </div>
+    </div>
+
+    <div class="tip-box info-box">
+      <strong>🔄 One library, two front ends</strong>
+      <p>Every call above — <code>np.mean</code>, <code>plt.plot</code>, <code>pd.Series</code> — is ordinary Python running inside the embedded CPython runtime. Written as a Python script this snippet would open with <code>import numpy as np</code> and then make the same calls directly; from Mojo each one is reached through a <code>PythonObject</code>, which is why the data has to be built as a Python list first. That boundary crossing is the only real cost of the interop.</p>
     </div>
 
     <div class="tip-box info-box">
@@ -175,34 +168,46 @@ df = pd.DataFrame({<span class="str">"a"</span>: [<span class="num">1</span>,<sp
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo-callpy"><code><span class="kw">from</span> python <span class="kw">import</span> Python, PythonObject
+        <pre class="code-block active" id="mojo-callpy"><code><span class="kw">from</span> std.python <span class="kw">import</span> Python, PythonObject
 
 <span class="kw">def</span> <span class="fn">train_sklearn_model</span>() raises:
     <span class="com"># scikit-learn inside Mojo</span>
     <span class="kw">var</span> sklearn = Python.import_module(<span class="str">"sklearn.linear_model"</span>)
     <span class="kw">var</span> np = Python.import_module(<span class="str">"numpy"</span>)
 
-    <span class="com"># Prepare data</span>
-    <span class="kw">var</span> X = np.array([[<span class="num">1</span>],[<span class="num">2</span>],[<span class="num">3</span>],[<span class="num">4</span>]])
-    <span class="kw">var</span> y = np.array([<span class="num">2</span>, <span class="num">4</span>, <span class="num">6</span>, <span class="num">8</span>])
+    <span class="com"># Prepare data — a Python list, not a Mojo List</span>
+    <span class="kw">var</span> X = Python.list()
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+        <span class="kw">var</span> row = Python.list()
+        row.<span class="fn">append</span>(<span class="num">1</span>)
+        row.<span class="fn">append</span>(i + <span class="num">1</span>)
+        X.<span class="fn">append</span>(row)
+    <span class="kw">var</span> y = Python.list()
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):
+        y.<span class="fn">append</span>(<span class="num">2</span> * (i + <span class="num">1</span>))
+    y = np.<span class="fn">array</span>(y)
 
     <span class="com"># Train model</span>
-    <span class="kw">var</span> model = sklearn.LinearRegression()
-    model.fit(X, y)
+    <span class="kw">var</span> model = sklearn.<span class="fn">LinearRegression</span>()
+    model.<span class="fn">fit</span>(X, y)
 
     <span class="com"># Predict from Mojo</span>
-    <span class="kw">var</span> pred = model.predict(np.array([[<span class="num">5</span>]]))
+    <span class="kw">var</span> probe = Python.list()
+    <span class="kw">var</span> probe_row = Python.list()
+    probe_row.<span class="fn">append</span>(<span class="num">5</span>)
+    probe.<span class="fn">append</span>(probe_row)
+    <span class="kw">var</span> pred = model.<span class="fn">predict</span>(np.<span class="fn">array</span>(probe))
     <span class="kw">print</span>(<span class="str">"Prediction for 5:"</span>, pred)
 
-<span class="com"># Pass Mojo data to Python via buffer protocol</span>
+<span class="com"># Pass Mojo data to Python via the buffer protocol</span>
 <span class="kw">def</span> <span class="fn">mojo_to_numpy</span>():
     <span class="kw">var</span> np = Python.import_module(<span class="str">"numpy"</span>)
-    <span class="kw">var</span> data = List[Float64]()
+    <span class="kw">var</span> py_values = Python.list()
     <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">100</span>):
-        data.append(<span class="fn">Float64</span>(i) * <span class="num">0.1</span>)
+        py_values.<span class="fn">append</span>(<span class="fn">Float64</span>(i) * <span class="num">0.1</span>)
 
-    <span class="com"># Convert List to numpy array via Python</span>
-    <span class="kw">var</span> arr = np.array(data)
+    <span class="com"># Hand the Python list to numpy and read the shape back</span>
+    <span class="kw">var</span> arr = np.<span class="fn">array</span>(py_values)
     <span class="kw">print</span>(arr.shape)</code></pre>
       </div>
     </div>
@@ -219,8 +224,7 @@ df = pd.DataFrame({<span class="str">"a"</span>: [<span class="num">1</span>,<sp
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
-        <pre class="code-block active" id="mojo-c"><code><span class="kw">from</span> std.memory <span class="kw">import</span> Layout, dealloc
-<span class="com"># Declare the external C functions</span>
+        <pre class="code-block active" id="mojo-c"><code><span class="com"># Declare the external C functions</span>
 <span class="kw">def</span> <span class="fn">c_add</span>(a: Int32, b: Int32) -&gt; Int32
     <span class="str">"libc_math"</span>.<span class="fn">add</span>
 
@@ -233,12 +237,11 @@ df = pd.DataFrame({<span class="str">"a"</span>: [<span class="num">1</span>,<sp
     <span class="kw">print</span>(<span class="str">"C says:"</span>, result)  <span class="com"># 42</span>
 
     <span class="com"># Pass Mojo pointers to native code</span>
-    <span class="kw">var</span> allocation = alloc(Layout[Int32](count=<span class="num">5</span>))
-    <span class="kw">var</span> buf = allocation.unsafe_ptr()
+    <span class="kw">var</span> buf = Pointer[Int32].alloc(<span class="num">5</span>)
     buf[<span class="num">0</span>] = <span class="num">5</span>; buf[<span class="num">1</span>] = <span class="num">3</span>; buf[<span class="num">2</span>] = <span class="num">1</span>; buf[<span class="num">3</span>] = <span class="num">4</span>; buf[<span class="num">4</span>] = <span class="num">2</span>
     <span class="fn">c_sort</span>(buf, <span class="num">5</span>)
     <span class="kw">print</span>(buf[<span class="num">0</span>], buf[<span class="num">1</span>], buf[<span class="num">2</span>], buf[<span class="num">3</span>], buf[<span class="num">4</span>])  <span class="com"># 1 2 3 4 5</span>
-    dealloc(allocation^)</code></pre>
+    buf.free()</code></pre>
         <pre class="code-block" id="c-native"><code><span class="com">// C side: libc_math.c</span>
 <span class="kw">int</span> <span class="fn">add</span>(int a, int b) {
     return a + b;
@@ -308,7 +311,7 @@ df = pd.DataFrame({<span class="str">"a"</span>: [<span class="num">1</span>,<sp
       <div class="qtext">How do you import a Python module in Mojo?</div>
       <div class="opts" id="quiz1">
         <button class="opt" data-correct="false"><code>import numpy as np</code></button>
-        <button class="opt" data-correct="true"><code>from python import Python</code>, then <code>Python.import_module("numpy")</code></button>
+        <button class="opt" data-correct="true"><code>from std.python import Python</code>, then <code>Python.import_module("numpy")</code></button>
         <button class="opt" data-correct="false">You can't — Mojo has no Python support</button>
         <button class="opt" data-correct="false"><code>use numpy</code></button>
       </div>
@@ -403,4 +406,141 @@ wireQuiz('quiz2','feedback2');
 wireQuiz('quiz3','feedback3');
 </script>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body></html>

@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
 
 <style>
-:root{--bg:#0c0906;--bg-1:#120c08;--bg-2:#191009;--paper:#fdf8ea;--paper-dim:#e8dcc0;--paper-faint:#c9b898;--ember-1:#ff7a1a;--ember-2:#ffb238;--ember-3:#c2360c;--py-blue:#4b8bbe;--py-yellow:#ffd43b;--line:rgba(244,234,215,0.24);--line-strong:rgba(244,234,215,0.48);--good:#9fe6a8;--bad:#e88b8b}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--paper);font-family:'Newsreader',serif;font-size:19px;line-height:1.7}::selection{background:var(--ember-1);color:#1a0d04}.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--ember-1),var(--ember-2));z-index:100;width:0%;transition:width .1s}nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:16px 5vw;background:rgba(12,9,6,0.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.brand{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;color:var(--paper-dim);text-decoration:none;display:flex;align-items:center;gap:8px}.brand:hover{color:var(--paper)}.chnum{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--ember-2);letter-spacing:0.06em}.wrap{max-width:760px;margin:0 auto;padding:5rem 6vw 8rem}.kicker{font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05;margin:0 0 1.4rem}.dek{font-style:italic;color:var(--paper-dim);font-size:1.2rem;max-width:52ch;margin-bottom:3rem}h2{font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;margin:3.2rem 0 1rem;padding-top:0.4rem;border-top:1px solid var(--line)}h2:first-of-type{border-top:none}h3{font-family:'Fraunces',serif;font-weight:600;font-size:1.25rem;margin:2rem 0 0.8rem;color:var(--paper)}p{color:var(--paper-dim);margin:0 0 1.1rem}p b,li b{color:var(--paper)}a.inline{color:var(--ember-2);text-decoration-color:rgba(255,178,56,0.4)}ul,ol{color:var(--paper-dim);padding-left:1.3rem}li{margin-bottom:0.5rem}code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:rgba(244,234,215,0.06);padding:0.1em 0.4em;border-radius:4px;color:var(--paper);border:1px solid var(--line)}.callout{border-left:3px solid var(--ember-2);background:rgba(255,122,26,0.06);padding:1rem 1.3rem;border-radius:0 6px 6px 0;margin:1.6rem 0}.callout .lbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ember-2);margin-bottom:0.4rem;display:block}.callout p{margin:0;color:var(--paper-dim);font-size:0.98rem}.callout.beta{border-left-color:var(--paper-faint);background:rgba(244,234,215,0.03)}.callout.beta .lbl{color:var(--paper-faint)}.demo{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.6rem 0 2rem;box-shadow:0 20px 60px rgba(0,0,0,0.35)}.tabbar{display:flex;border-bottom:1px solid var(--line);background:var(--bg-2);overflow-x:auto}.tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s}.tab .sw{width:7px;height:7px;border-radius:50%;flex:none}.tab[data-lang="mojo"] .sw{background:var(--ember-2)}.tab[data-lang="python"] .sw{background:var(--py-blue)}.tab.active{color:var(--paper);background:var(--bg)}.tab:hover{color:var(--paper)}.pane{display:none;padding:1.3rem 1.5rem}.pane.active{display:block}pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:0.82rem;line-height:1.6;color:var(--paper-dim);overflow-x:auto}.tok-kw{color:var(--ember-2)}.tok-str{color:#9fd9a0}.tok-com{color:var(--paper-faint);font-style:italic}.tok-fn{color:#7fc8e8}.tok-num{color:#e8b774}.tok-ty{color:#d3a4e8}.cap{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--paper-faint);margin-top:-1rem;margin-bottom:2rem}.code-block{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.4rem 0 1.8rem}.code-block .head{display:flex;align-items:center;gap:8px;padding:0.7rem 1.1rem;background:var(--bg-2);border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--paper-faint)}.code-block pre{padding:1.2rem 1.4rem}table{width:100%;border-collapse:collapse;margin:1.6rem 0 2rem;font-size:0.94rem}th,td{text-align:left;padding:0.65rem 0.9rem;border-bottom:1px solid var(--line);color:var(--paper-dim)}th{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--paper-faint);font-weight:500}td:first-child,th:first-child{color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:0.85rem}.quiz{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);padding:1.8rem;margin:2.4rem 0}.quiz .qlbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}.qtext{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--paper);margin-bottom:1.2rem}.opts{display:flex;flex-direction:column;gap:0.6rem}.opt{text-align:left;border:1px solid var(--line-strong);background:transparent;color:var(--paper-dim);font-family:'Newsreader',serif;font-size:1rem;padding:0.75rem 1rem;border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}.opt:hover{border-color:var(--ember-2);color:var(--paper)}.opt.correct{border-color:var(--good);background:rgba(159,230,168,0.08);color:var(--good)}.opt.wrong{border-color:var(--bad);background:rgba(232,139,139,0.08);color:var(--bad)}.feedback{margin-top:1rem;font-size:0.92rem;color:var(--paper-dim);display:none;font-family:'JetBrains Mono',monospace}.feedback.show{display:block}.mini-toc{position:fixed;right:2.4vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:30}.mini-toc a{width:8px;height:8px;border-radius:50%;background:var(--line-strong);display:block;transition:background .2s,transform .2s}.mini-toc a.active{background:var(--ember-2);transform:scale(1.3)}@media(max-width:900px){.mini-toc{display:none}}.chapnav{display:flex;justify-content:space-between;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--line);gap:1rem;flex-wrap:wrap}.navbtn{font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--paper-dim);text-decoration:none;border:1px solid var(--line-strong);padding:0.8rem 1.3rem;border-radius:6px;transition:border-color .15s,color .15s}.navbtn:hover{border-color:var(--ember-2);color:var(--paper)}.navbtn.disabled{opacity:0.4;pointer-events:none}.exercises{border:1px solid var(--line);border-radius:8px;padding:1.6rem 1.8rem;background:var(--bg-1);margin:2rem 0}.exercises ol{margin:0}
+:root{--bg:#0c0906;--bg-1:#120c08;--bg-2:#191009;--paper:#fdf8ea;--paper-dim:#e8dcc0;--paper-faint:#c9b898;--ember-1:#ff7a1a;--ember-2:#ffb238;--ember-3:#c2360c;--line:rgba(244,234,215,0.24);--line-strong:rgba(244,234,215,0.48);--good:#9fe6a8;--bad:#e88b8b}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--paper);font-family:'Newsreader',serif;font-size:19px;line-height:1.7}::selection{background:var(--ember-1);color:#1a0d04}.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--ember-1),var(--ember-2));z-index:100;width:0%;transition:width .1s}nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:16px 5vw;background:rgba(12,9,6,0.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.brand{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;color:var(--paper-dim);text-decoration:none;display:flex;align-items:center;gap:8px}.brand:hover{color:var(--paper)}.chnum{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--ember-2);letter-spacing:0.06em}.wrap{max-width:760px;margin:0 auto;padding:5rem 6vw 8rem}.kicker{font-family:'JetBrains Mono',monospace;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(2rem,5vw,3.2rem);line-height:1.05;margin:0 0 1.4rem}.dek{font-style:italic;color:var(--paper-dim);font-size:1.2rem;max-width:52ch;margin-bottom:3rem}h2{font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;margin:3.2rem 0 1rem;padding-top:0.4rem;border-top:1px solid var(--line)}h2:first-of-type{border-top:none}h3{font-family:'Fraunces',serif;font-weight:600;font-size:1.25rem;margin:2rem 0 0.8rem;color:var(--paper)}p{color:var(--paper-dim);margin:0 0 1.1rem}p b,li b{color:var(--paper)}a.inline{color:var(--ember-2);text-decoration-color:rgba(255,178,56,0.4)}ul,ol{color:var(--paper-dim);padding-left:1.3rem}li{margin-bottom:0.5rem}code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:rgba(244,234,215,0.06);padding:0.1em 0.4em;border-radius:4px;color:var(--paper);border:1px solid var(--line)}.callout{border-left:3px solid var(--ember-2);background:rgba(255,122,26,0.06);padding:1rem 1.3rem;border-radius:0 6px 6px 0;margin:1.6rem 0}.callout .lbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ember-2);margin-bottom:0.4rem;display:block}.callout p{margin:0;color:var(--paper-dim);font-size:0.98rem}.callout.beta{border-left-color:var(--paper-faint);background:rgba(244,234,215,0.03)}.callout.beta .lbl{color:var(--paper-faint)}.demo{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.6rem 0 2rem;box-shadow:0 20px 60px rgba(0,0,0,0.35)}.tabbar{display:flex;border-bottom:1px solid var(--line);background:var(--bg-2);overflow-x:auto}.tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s}.tab .sw{width:7px;height:7px;border-radius:50%;flex:none}.tab[data-lang="mojo"] .sw{background:var(--ember-2)}.tab.active{color:var(--paper);background:var(--bg)}.tab:hover{color:var(--paper)}.pane{display:none;padding:1.3rem 1.5rem}.pane.active{display:block}pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:0.82rem;line-height:1.6;color:var(--paper-dim);overflow-x:auto}.tok-kw{color:var(--ember-2)}.tok-str{color:#9fd9a0}.tok-com{color:var(--paper-faint);font-style:italic}.tok-fn{color:#7fc8e8}.tok-num{color:#e8b774}.tok-ty{color:#d3a4e8}.cap{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--paper-faint);margin-top:-1rem;margin-bottom:2rem}.code-block{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);overflow:hidden;margin:1.4rem 0 1.8rem}.code-block .head{display:flex;align-items:center;gap:8px;padding:0.7rem 1.1rem;background:var(--bg-2);border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:var(--paper-faint)}.code-block pre{padding:1.2rem 1.4rem}table{width:100%;border-collapse:collapse;margin:1.6rem 0 2rem;font-size:0.94rem}th,td{text-align:left;padding:0.65rem 0.9rem;border-bottom:1px solid var(--line);color:var(--paper-dim)}th{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--paper-faint);font-weight:500}td:first-child,th:first-child{color:var(--paper);font-family:'JetBrains Mono',monospace;font-size:0.85rem}.quiz{border:1px solid var(--line);border-radius:8px;background:var(--bg-1);padding:1.8rem;margin:2.4rem 0}.quiz .qlbl{font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ember-2);margin-bottom:1rem}.qtext{font-family:'Fraunces',serif;font-size:1.15rem;color:var(--paper);margin-bottom:1.2rem}.opts{display:flex;flex-direction:column;gap:0.6rem}.opt{text-align:left;border:1px solid var(--line-strong);background:transparent;color:var(--paper-dim);font-family:'Newsreader',serif;font-size:1rem;padding:0.75rem 1rem;border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}.opt:hover{border-color:var(--ember-2);color:var(--paper)}.opt.correct{border-color:var(--good);background:rgba(159,230,168,0.08);color:var(--good)}.opt.wrong{border-color:var(--bad);background:rgba(232,139,139,0.08);color:var(--bad)}.feedback{margin-top:1rem;font-size:0.92rem;color:var(--paper-dim);display:none;font-family:'JetBrains Mono',monospace}.feedback.show{display:block}.mini-toc{position:fixed;right:2.4vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:30}.mini-toc a{width:8px;height:8px;border-radius:50%;background:var(--line-strong);display:block;transition:background .2s,transform .2s}.mini-toc a.active{background:var(--ember-2);transform:scale(1.3)}@media(max-width:900px){.mini-toc{display:none}}.chapnav{display:flex;justify-content:space-between;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--line);gap:1rem;flex-wrap:wrap}.navbtn{font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--paper-dim);text-decoration:none;border:1px solid var(--line-strong);padding:0.8rem 1.3rem;border-radius:6px;transition:border-color .15s,color .15s}.navbtn:hover{border-color:var(--ember-2);color:var(--paper)}.navbtn.disabled{opacity:0.4;pointer-events:none}.exercises{border:1px solid var(--line);border-radius:8px;padding:1.6rem 1.8rem;background:var(--bg-1);margin:2rem 0}.exercises ol{margin:0}
 </style>
 </head>
 <body>
@@ -27,7 +27,6 @@
 <div class="demo">
 <div class="tabbar">
 <div class="tab active" data-lang="mojo" data-group="create"><span class="sw"></span>tensor_create.mojo</div>
-<div class="tab" data-lang="python" data-group="create"><span class="sw"></span>ndarray_create.py</div>
 </div>
 <div class="panes" data-group="create">
 <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — Tensor is parameterized by dtype</span>
@@ -64,27 +63,9 @@ data = data.reshape(<span class="tok-num">2</span>, <span class="tok-num">4</spa
 <span class="tok-com"># Inspect shape</span>
 print(data.shape)          <span class="tok-com"># (2, 4)</span>
 print(data.num_elements()) <span class="tok-com"># 8</span></pre></div>
-<div class="pane" data-lang="python"><pre><span class="tok-com"># Python — NumPy ndarray</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-t1 = np.zeros(<span class="tok-num">5</span>, dtype=np.float32)
-t2 = np.zeros((<span class="tok-num">3</span>, <span class="tok-num">4</span>), dtype=np.float32)
-t3 = np.zeros((<span class="tok-num">32</span>, <span class="tok-num">224</span>, <span class="tok-num">224</span>), dtype=np.float32)
-ones = np.ones((<span class="tok-num">4</span>, <span class="tok-num">4</span>), dtype=np.float32)
-
-data = np.array([<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>, <span class="tok-num">6</span>, <span class="tok-num">7</span>, <span class="tok-num">8</span>],
-                dtype=np.float32)
-data = data.reshape(<span class="tok-num">2</span>, <span class="tok-num">4</span>)
-
-eye = np.eye(<span class="tok-num">4</span>, dtype=np.float32)
-rng = np.random.rand(<span class="tok-num">3</span>, <span class="tok-num">3</span>).astype(np.float32)
-weights = np.zeros((<span class="tok-num">512</span>, <span class="tok-num">256</span>), dtype=np.bfloat16)
-
-<span class="tok-fn">print</span>(data.shape)     <span class="tok-com"># (2, 4)</span>
-<span class="tok-fn">print</span>(data.size)      <span class="tok-com"># 8</span></pre></div>
 </div>
 </div>
-<p class="cap">Mojo Tensor is similar to NumPy's ndarray API but with compile-time type safety and no Python overhead.</p>
+<p class="cap">Mojo Tensor is similar to NumPy's ndarray API but with compile-time type safety and no Python overhead. Two of the NumPy call shapes disappear: there is no <code class="inline">dtype=</code> argument to thread through every constructor, because the dtype is already part of the type, and <code class="inline">np.random.rand(3, 3).astype(np.float32)</code> collapses into <code class="inline">Tensor[DType.float32](random=True, 3, 3)</code>. Likewise <code class="inline">np.bfloat16</code> is a built-in type rather than something you import, and <code class="inline">data.size</code> is spelled <code class="inline">data.num_elements()</code>.</p>
 <div class="callout"><span class="lbl">✂️ Zero-copy slicing</span><p>Mojo Tensor slices return <b>views</b> into the original data, not copies — just like NumPy. But because Mojo knows the slice dimensions at compile time (when possible), it can eliminate bounds checking and generate tighter loops.</p></div>
 </section>
 
@@ -94,7 +75,6 @@ weights = np.zeros((<span class="tok-num">512</span>, <span class="tok-num">256<
 <div class="demo">
 <div class="tabbar">
 <div class="tab active" data-lang="mojo" data-group="ops"><span class="sw"></span>tensor_ops.mojo</div>
-<div class="tab" data-lang="python" data-group="ops"><span class="sw"></span>ndarray_ops.py</div>
 </div>
 <div class="panes" data-group="ops">
 <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — element-wise tensor operations</span>
@@ -124,33 +104,9 @@ weights = np.zeros((<span class="tok-num">512</span>, <span class="tok-num">256<
 <span class="tok-com"># In-place operations</span>
 a += b
 a *= <span class="tok-num">2</span></pre></div>
-<div class="pane" data-lang="python"><pre><span class="tok-com"># Python — NumPy element-wise operations</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-a = np.array([<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>])
-b = np.array([<span class="tok-num">10.0</span>, <span class="tok-num">20.0</span>, <span class="tok-num">30.0</span>, <span class="tok-num">40.0</span>])
-
-c = a + b       <span class="tok-com"># [11, 22, 33, 44]</span>
-d = b - a
-e = a * b
-f = b / a
-
-g = a + <span class="tok-num">100</span>
-h = a * <span class="tok-num">0.5</span>
-
-j = np.sqrt(a)
-k = np.exp(a)
-l = np.log(b)
-m = np.tanh(a)
-
-total = np.sum(a)
-maximum = np.max(a)
-
-a += b
-a *= <span class="tok-num">2</span></pre></div>
 </div>
 </div>
-<p class="cap">The API is nearly identical to NumPy — the mental model transfers directly. The difference is all under the hood: Mojo compiles these to SIMD kernels.</p>
+<p class="cap">The API is nearly identical to NumPy — the mental model transfers directly. The difference is all under the hood: Mojo compiles these to SIMD kernels. It shows in the names too: <code class="inline">np.sqrt(a)</code>, <code class="inline">np.exp(a)</code> and <code class="inline">np.sum(a)</code> become the bare <code class="inline">sqrt(a)</code>, <code class="inline">exp(a)</code> and <code class="inline">a.reduce_add()</code>, because the dtype already selects the overload and a reduction is a method on the tensor rather than a free function you have to import.</p>
 </section>
 
 <section id="broadcasting">
@@ -187,7 +143,6 @@ a *= <span class="tok-num">2</span></pre></div>
 <div class="demo">
 <div class="tabbar">
 <div class="tab active" data-lang="mojo" data-group="matmul"><span class="sw"></span>matmul.mojo</div>
-<div class="tab" data-lang="python" data-group="matmul"><span class="sw"></span>matmul_numpy.py</div>
 </div>
 <div class="panes" data-group="matmul">
 <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — matrix multiplication</span>
@@ -213,25 +168,9 @@ a *= <span class="tok-num">2</span></pre></div>
     <span class="tok-kw">for</span> i <span class="tok-kw">in</span> range(<span class="tok-num">0</span>, len(a), width):
         accum += a.simd_load[width](i) * b.simd_load[width](i)
     <span class="tok-kw">return</span> accum.reduce_add()</pre></div>
-<div class="pane" data-lang="python"><pre><span class="tok-com"># Python — NumPy matrix multiplication</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-A = np.array([[<span class="tok-num">1</span>, <span class="tok-num">2</span>], [<span class="tok-num">3</span>, <span class="tok-num">4</span>]], dtype=np.float32)
-B = np.array([[<span class="tok-num">5</span>, <span class="tok-num">6</span>], [<span class="tok-num">7</span>, <span class="tok-num">8</span>]], dtype=np.float32)
-
-<span class="tok-com"># Option 1: @ operator</span>
-C = A @ B
-
-<span class="tok-com"># Option 2: np.matmul</span>
-C = np.matmul(A, B)
-
-<span class="tok-com"># Option 3: einsum for complex patterns</span>
-C = np.einsum(<span class="tok-str">'ij,jk-&gt;ik'</span>, A, B)
-
-<span class="tok-com"># NumPy delegates to BLAS (OpenBLAS, MKL, etc.)</span></pre></div>
 </div>
 </div>
-<p class="cap">Mojo gives you three levels of control: high-level matmul, manual tiling for cache efficiency, and raw SIMD for maximum performance.</p>
+<p class="cap">Mojo gives you three levels of control: high-level matmul, manual tiling for cache efficiency, and raw SIMD for maximum performance. In NumPy the same product is <code class="inline">A @ B</code>, <code class="inline">np.matmul(A, B)</code> or — for the awkward shapes — <code class="inline">np.einsum('ij,jk-&gt;ik', A, B)</code>, and all three delegate to BLAS (OpenBLAS, MKL). <code class="inline">matmul(A, B)</code> is the same call in Mojo, except it is one you can drop down into, which is what <code class="inline">simd_dot</code> above starts doing.</p>
 <div class="callout"><span class="lbl">💡 Why this matters for ML</span><p>In a transformer, the attention mechanism computes <code class="inline">Q @ K^T / sqrt(d_k)</code> — a massive matrix multiply. In Python, this is a single <code class="inline">np.matmul</code> call to BLAS. In Mojo, you can use the same call <b>or</b> write a custom fused kernel that combines the matmul with softmax in a single pass, avoiding the memory traffic of writing intermediate results.</p></div>
 </section>
 

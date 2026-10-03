@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -121,11 +119,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="auto"><span class="sw"></span>autodiff.mojo</div>
-        <div class="tab" data-lang="python" data-group="auto"><span class="sw"></span>autodiff.py</div>
       </div>
       <div class="panes" data-group="auto">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — built-in autodiff</span>
-<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> exp, log
+<span class="tok-kw">from</span> math <span class="tok-kw">import</span> exp, log
 
 <span class="tok-kw">@differentiable</span>
 <span class="tok-kw">def</span> <span class="tok-fn">quadratic</span>(x: Float64) -&gt; Float64:
@@ -159,27 +156,10 @@ print(<span class="tok-str">f"dW = {dw}, db = {db}"</span>)
 
 <span class="tok-kw">var</span> grad_bce = grad(bce)
 <span class="tok-kw">var</span> gradient = grad_bce(<span class="tok-num">0.5</span>, <span class="tok-num">1.0</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — JAX autodiff</span>
-<span class="tok-kw">import</span> jax
-<span class="tok-kw">import</span> jax.numpy <span class="tok-kw">as</span> jnp
-
-<span class="tok-kw">def</span> <span class="tok-fn">quadratic</span>(x):
-    <span class="tok-kw">return</span> x**<span class="tok-num">2</span> + <span class="tok-num">2</span>*x + <span class="tok-num">1</span>
-
-<span class="tok-cast">df</span> = jax.grad(quadratic)
-slope = <span class="tok-cast">df</span>(<span class="tok-num">3.0</span>)   <span class="tok-com"># 8.0</span>
-
-<span class="tok-cast">def</span> <span class="tok-fn">loss_fn</span>(w, b):
-    pred = w * <span class="tok-num">3.0</span> + b
-    <span class="tok-kw">return</span> (pred - <span class="tok-num">5.0</span>)**<span class="tok-num">2</span>
-
-grad_fn = jax.grad(loss_fn, argnums=(<span class="tok-num">0</span>, <span class="tok-num">1</span>))
-dw, db = grad_fn(<span class="tok-num">1.0</span>, <span class="tok-num">0.0</span>)
-
-<span class="tok-com"># JAX traces the computation into a graph (jaxpr)</span>
-<span class="tok-com"># then compiles it — Mojo does this at compile time</span></pre></div>
       </div>
     </div>
+
+    <p class="cap">JAX spells the same two functions <code class="inline">jax.grad(quadratic)</code> and <code class="inline">jax.grad(loss_fn, argnums=(0, 1))</code> — the delta is not the API, it is <i>when</i> the derivative is worked out.</p>
 
     <h3>How Mojo's autodiff works</h3>
     <p>When you write <code class="inline">@differentiable</code>, Mojo's compiler does two things:</p>
@@ -199,7 +179,7 @@ dw, db = grad_fn(<span class="tok-num">1.0</span>, <span class="tok-num">0.0</sp
 
     <div class="code-block">
       <div class="head">vectorized autodiff</div>
-      <pre><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> exp
+      <pre><span class="tok-kw">from</span> math <span class="tok-kw">import</span> exp
 
 <span class="tok-kw">@differentiable</span>
 <span class="tok-kw">def</span> <span class="tok-fn">vector_relu</span>[N: Int](x: <span class="tok-ty">SIMD</span>[float32, N]) -&gt; <span class="tok-ty">SIMD</span>[float32, N]:
@@ -226,7 +206,6 @@ dw, db = grad_fn(<span class="tok-num">1.0</span>, <span class="tok-num">0.0</sp
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="cptime"><span class="sw"></span>comptime.mojo</div>
-        <div class="tab" data-lang="python" data-group="cptime"><span class="sw"></span>comptime.py</div>
       </div>
       <div class="panes" data-group="cptime">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — comptime generates specialized code</span>
@@ -265,22 +244,10 @@ dw, db = grad_fn(<span class="tok-num">1.0</span>, <span class="tok-num">0.0</sp
 <span class="tok-kw">var</span> lut16 = <span class="tok-ty">LookupTable</span>[<span class="tok-num">16</span>]()
 <span class="tok-com"># lut4.values is literally [0.0, 0.1, 0.2, 0.3]</span>
 <span class="tok-com"># lut16 is [0.0, 0.1, ..., 1.5] computed at compile time</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — no comptime equivalent</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-cast">def</span> <span class="tok-fn">dot_product</span>(a, b):
-    <span class="tok-kw">return</span> np.dot(a, b)
-
-<span class="tok-cast">def</span> <span class="tok-fn">to_string</span>(val, dtype):
-    <span class="tok-kw">if</span> dtype == <span class="tok-str">"float32"</span>:
-        <span class="tok-kw">return</span> <span class="tok-fn">f</span><span class="tok-str">"Float32({val})"</span>
-    <span class="tok-kw">elif</span> dtype == <span class="tok-str">"int32"</span>:
-        <span class="tok-kw">return</span> <span class="tok-fn">f</span><span class="tok-str">"Int32({val})"</span>
-
-<span class="tok-com"># All Python code runs at runtime — no compile-time</span>
-<span class="tok-com"># execution, no specialization, no loop unrolling</span></pre></div>
       </div>
     </div>
+
+    <p class="cap">Python's nearest neighbours are <code class="inline">np.dot(a, b)</code> and a runtime <code class="inline">if dtype == "float32"</code> chain that compares dtype <i>strings</i>. Both re-run on every call, and neither unrolls a loop or emits a specialised version of anything.</p>
 
     <h3>Parameterized types and compile-time loops</h3>
     <p>The <code class="inline">[N: Int]</code> syntax defines a <b>parameter</b> — a value that's fixed at compile time. When you call <code class="inline">dot_product[4](a, b)</code>, the compiler generates a version with the loop fully unrolled for exactly 4 iterations. Call it with <code class="inline">[16]</code> and you get a different, specialized version.</p>
@@ -294,11 +261,11 @@ dw, db = grad_fn(<span class="tok-num">1.0</span>, <span class="tok-num">0.0</sp
 
   <section id="materialize">
     <h2>Materialization: compile-time type transformations</h2>
-    <p>Materialization in Mojo refers to the process where the compiler converts abstract type information into concrete machine code. When you write a parameterized function, the compiler generates different code for each combination of type parameters — this is called <b>monomorphization</b>. Mojo takes this further with <code class="inline">comptime</code> and <code class="inline">type</code> declarations that are resolved at compile time.</p>
+    <p>Materialization in Mojo refers to the process where the compiler converts abstract type information into concrete machine code. When you write a parameterized function, the compiler generates different code for each combination of type parameters — this is called <b>monomorphization</b>. Mojo takes this further with <code class="inline">alias</code> and <code class="inline">type</code> declarations that are resolved at compile time.</p>
 
     <div class="code-block">
       <div class="head">materialization patterns</div>
-      <pre><span class="tok-com"># comptime creates compile-time constants</span>
+      <pre><span class="tok-com"># alias creates compile-time constants</span>
 <span class="tok-kw">comptime</span> BATCH_SIZE = <span class="tok-num">64</span>
 <span class="tok-kw">comptime</span> N_FEATURES = <span class="tok-num">784</span>
 <span class="tok-kw">comptime</span> DTYPE = DType.float32

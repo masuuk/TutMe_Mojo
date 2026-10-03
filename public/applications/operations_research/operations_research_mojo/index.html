@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operations Research Mojo - learn Mojo for LP, simplex, networks, and queues</title>
+<meta name="description" content="Nine hands-on modules on operations research in Mojo: linear programming geometry, the simplex method, duality and sensitivity, integer programming, networks, queues, nonlinear descent, and parallelism. Every module has a live widget and a quiz.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div id="progress"></div>
+
+<header class="topbar">
+  <div class="wrap topin">
+    <a class="brand" href="../index.html">
+      <span class="logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 20h18"></path>
+          <path d="M5 20V6l5 4 5-8 4 5"></path>
+        </svg>
+      </span>
+      <span>Operations Research Mojo</span>
+      <span class="sub">· 9 modules</span>
+    </a>
+    <div class="topright">
+      <span class="readout" id="readout">0/9 modules</span>
+      <a class="pill hide" href="../index.html">OR shelf</a>
+      <button class="pill tocbtn" aria-expanded="false" aria-controls="toc">Modules</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" id="toc" aria-label="Modules">
+    <h4>Contents</h4>
+    <div id="toclist"></div>
+    <hr>
+    <h4>Nearby</h4>
+    <a href="../index.html">OR shelf</a>
+    <a href="operations_research.html">Operations research</a>
+    <a href="simplex_algorithm.html">Simplex algorithm</a>
+  </nav>
+
+  <main class="content">
+    <section class="hero">
+      <span class="eyebrow">Interactive tutorial</span>
+      <h1>Operations Research in <span class="grad">Mojo</span></h1>
+      <p class="lead">Operations research turns a decision into a model: variables, an objective, and constraints. Solving it is arithmetic over that model - evaluate the objective, test feasibility, sweep the neighbours of a simplex, relax an integer, settle a network. This tutorial works through the real methods - LP geometry, the simplex method, duality, branch-and-bound thinking, Dijkstra, M/M/c queues, gradient descent and Amdahl's law - with a live widget on each idea and a quiz at the end of every module.</p>
+      <div class="actions">
+        <button class="btn primary" data-start>Start module 01 →</button>
+        <a class="btn" href="#m03">Jump to the simplex method</a>
+        <a class="btn" href="#m09">Networks and queues</a>
+      </div>
+    </section>
+
+    <section class="module" id="m01" data-title="Why Mojo for optimisers">
+      <h2>01 - Why Mojo for optimisers</h2>
+      <p class="dek">A model is a struct; solving it is a loop over that struct, millions of times.</p>
+
+      <p>An optimisation model has three parts: decision variables, an objective to maximise or minimise, and constraints the variables must respect. Once the model is fixed, the work is arithmetic - multiply a coefficient by a variable, add, compare against a bound. That shape - fixed fields, tight loops, no dynamic dispatch - is exactly what a systems language is built for.</p>
+
+      <p>Mojo gives you a <code>struct</code> to hold the plan and the coefficients, a loop to evaluate it, and the option to run the same source scalar or vectorised. The first listing evaluates a two-product plan: its profit and the four resources it consumes.</p>
+
+      <div class="eq">
+        $$\max\; z=\mathbf{c}^{\top}\mathbf{x}\quad\text{s.t.}\quad A\mathbf{x}\le\mathbf{b},\;\mathbf{x}\ge 0$$
+      </div>
+
+      <p>The objective is a dot product; each constraint row is another. Everything later in this tutorial - pivots, duals, relaxations - is bookkeeping on top of that dot product, and it stays cheap because the data lives in contiguous fields.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">objective.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Optimisation is loop arithmetic: evaluate an objective and the resource</span>
+<span class="tok-com"># usage of a plan. Fixed fields and a tight loop are the whole idea.</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Plan</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">x</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">y</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">objective</span>(p: <span class="tok-type">Plan</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">return</span> <span class="tok-num">5.0</span> <span class="tok-op">*</span> p.x <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> p.y
+
+<span class="tok-kw">def</span> <span class="tok-fn">usage</span>(index: <span class="tok-type">Int</span>, p: <span class="tok-type">Plan</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Float64</span>:
+    <span class="tok-kw">if</span> index <span class="tok-op">==</span> <span class="tok-num">0</span>:
+        <span class="tok-kw">return</span> <span class="tok-num">6.0</span> <span class="tok-op">*</span> p.x <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> p.y
+    <span class="tok-kw">if</span> index <span class="tok-op">==</span> <span class="tok-num">1</span>:
+        <span class="tok-kw">return</span> p.x <span class="tok-op">+</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> p.y
+    <span class="tok-kw">if</span> index <span class="tok-op">==</span> <span class="tok-num">2</span>:
+        <span class="tok-kw">return</span> p.x
+    <span class="tok-kw">return</span> p.y
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">p</span> <span class="tok-op">=</span> <span class="tok-type">Plan</span>(<span class="tok-num">3.0</span>, <span class="tok-num">1.0</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"z     ="</span>, objective(p))
+    <span class="tok-fn">print</span>(<span class="tok-str">"labor ="</span>, usage(<span class="tok-num">0</span>, p))
+    <span class="tok-fn">print</span>(<span class="tok-str">"steel ="</span>, usage(<span class="tok-num">1</span>, p))
+    <span class="tok-fn">print</span>(<span class="tok-str">"wood  ="</span>, usage(<span class="tok-num">2</span>, p))
+    <span class="tok-fn">print</span>(<span class="tok-str">"paint ="</span>, usage(<span class="tok-num">3</span>, p))</pre>
+      </figure>
+<pre class="out">z     = 19.0
+labor = 22.0
+steel = 5.0
+wood  = 3.0
+paint = 1.0
+</pre>
+
+      <p>The plan makes $3$ of the first product and $1$ of the second. Profit is $5\cdot3+4\cdot1=19$, and the labor row costs $6\cdot3+4\cdot1=22$ of its available $24$. Nothing here needed a solver - but every solver is this loop wrapped in a search.</p>
+
+      <section class="lab" data-lab="objective" aria-label="Objective and resource usage lab">
+        <div class="labhead"><span class="dot"></span>Lab - profit and resource usage<span class="tagline">m01</span></div>
+      </section>
+
+      <p>The widget evaluates a plan $(x,y)$ and plots each resource against its capacity. Push a variable until a bar fills and that resource binds; the binding rows are the constraints that shape the optimum you will meet in module 02.</p>
+
+      <div class="callout info">
+        <strong>Why a struct, not separate arrays</strong>
+        <p>A <code>Plan</code> keeps its fields adjacent, so the objective and the usage loop read the same two numbers repeatedly. When the model is a few hundred variables, that locality is the difference between fitting in cache and not.</p>
+      </div>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">A constraint is called <em>binding</em> at a point when</p>
+        <label class="opt"><input type="radio" name="m01q1" value="a"><span>Its left-hand side is zero</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="b"><span>The objective is maximised there</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="c"><span>Its left-hand side equals its right-hand side - all of the resource is used</span></label>
+        <label class="opt"><input type="radio" name="m01q1" value="d"><span>The variable is zero</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> A constraint binds when slack is zero, i.e. the resource is fully consumed. In the listing, the labor row reaches $22$ against a limit of $24$, so labor is not yet binding; increase $x$ and it will bind.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <span class="navbtn off"><span class="d">Start</span><span class="t">You are here</span></span>
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Next</span><span class="t">02 - LP geometry</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m02" data-title="Linear programming and its geometry">
+      <h2>02 - Linear programming and its geometry</h2>
+      <p class="dek">The feasible set is a polygon, and the optimum is always at a corner.</p>
+
+      <p>A linear program with two variables can be drawn. Each constraint is a half-plane; their intersection is a convex polygon - the feasible set. Because both the objective and the constraints are linear, the objective's contours are parallel lines, and sliding such a line against a convex polygon last touches it at a vertex. So you never need to search the interior: check the corners.</p>
+
+      <div class="eq">
+        $$\max\; z=5x+4y\quad\text{s.t.}\quad 6x+4y\le 24,\;\; x+2y\le 6,\;\; x,y\ge 0$$
+      </div>
+
+      <p>The four vertices come from intersecting pairs of the four boundary lines (two constraints plus the two axes). The listing enumerates every intersection and keeps only the feasible ones.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">vertices.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># A two-variable LP is a convex polygon, and its optimum sits at a vertex.</span>
+<span class="tok-com"># Enumerate every intersection of constraint lines, keep the feasible ones,</span>
+<span class="tok-com"># and take the best objective.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">C1</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">5.0</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">C2</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">4.0</span>
+
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">abs</span>
+
+<span class="tok-kw">struct</span> <span class="tok-type">Line</span>:
+    <span class="tok-kw">var</span> <span class="tok-var">a</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">b</span>: <span class="tok-type">Float64</span>
+    <span class="tok-kw">var</span> <span class="tok-var">r</span>: <span class="tok-type">Float64</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">feasible</span>(x: <span class="tok-type">Float64</span>, y: <span class="tok-type">Float64</span>) <span class="tok-op">-&gt;</span> <span class="tok-type">Bool</span>:
+    <span class="tok-kw">if</span> x <span class="tok-op">&lt;</span> <span class="tok-op">-</span><span class="tok-num">1e-9</span> <span class="tok-kw">or</span> y <span class="tok-op">&lt;</span> <span class="tok-op">-</span><span class="tok-num">1e-9</span>:
+        <span class="tok-kw">return</span> <span class="tok-kw">False</span>
+    <span class="tok-kw">if</span> <span class="tok-num">6.0</span> <span class="tok-op">*</span> x <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> y <span class="tok-op">&gt;</span> <span class="tok-num">24.0</span> <span class="tok-op">+</span> <span class="tok-num">1e-9</span>:
+        <span class="tok-kw">return</span> <span class="tok-kw">False</span>
+    <span class="tok-kw">if</span> x <span class="tok-op">+</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> y <span class="tok-op">&gt;</span> <span class="tok-num">6.0</span> <span class="tok-op">+</span> <span class="tok-num">1e-9</span>:
+        <span class="tok-kw">return</span> <span class="tok-kw">False</span>
+    <span class="tok-kw">return</span> <span class="tok-kw">True</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">lines</span> <span class="tok-op">=</span> [
+        <span class="tok-type">Line</span>(<span class="tok-num">6.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">24.0</span>),
+        <span class="tok-type">Line</span>(<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">6.0</span>),
+        <span class="tok-type">Line</span>(<span class="tok-num">1.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>),
+        <span class="tok-type">Line</span>(<span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">0.0</span>),
+    ]
+    <span class="tok-kw">var</span> <span class="tok-var">bx</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">by</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">bz</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">1e300</span>
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">4</span>):
+        <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(i <span class="tok-op">+</span> <span class="tok-num">1</span>, <span class="tok-num">4</span>):
+            <span class="tok-kw">var</span> <span class="tok-var">det</span> <span class="tok-op">=</span> lines[i].a <span class="tok-op">*</span> lines[j].b <span class="tok-op">-</span> lines[j].a <span class="tok-op">*</span> lines[i].b
+            <span class="tok-kw">if</span> <span class="tok-fn">abs</span>(det) <span class="tok-op">&lt;</span> <span class="tok-num">1e-12</span>:
+                <span class="tok-kw">continue</span>
+            <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> (lines[i].r <span class="tok-op">*</span> lines[j].b <span class="tok-op">-</span> lines[j].r <span class="tok-op">*</span> lines[i].b) <span class="tok-op">/</span> det
+            <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> (lines[i].a <span class="tok-op">*</span> lines[j].r <span class="tok-op">-</span> lines[j].a <span class="tok-op">*</span> lines[i].r) <span class="tok-op">/</span> det
+            <span class="tok-kw">if</span> <span class="tok-kw">not</span> feasible(x, y):
+                <span class="tok-kw">continue</span>
+            <span class="tok-kw">var</span> <span class="tok-var">z</span> <span class="tok-op">=</span> <span class="tok-type">C1</span> <span class="tok-op">*</span> x <span class="tok-op">+</span> <span class="tok-type">C2</span> <span class="tok-op">*</span> y
+            <span class="tok-fn">print</span>(<span class="tok-str">"vertex"</span>, x, y, <span class="tok-str">"-&gt; z ="</span>, z)
+            <span class="tok-kw">if</span> z <span class="tok-op">&gt;</span> bz:
+                bz <span class="tok-op">=</span> z
+                bx <span class="tok-op">=</span> x
+                by <span class="tok-op">=</span> y
+    <span class="tok-fn">print</span>(<span class="tok-str">"best x ="</span>, bx)
+    <span class="tok-fn">print</span>(<span class="tok-str">"best y ="</span>, by)
+    <span class="tok-fn">print</span>(<span class="tok-str">"best z ="</span>, bz)</pre>
+      </figure>
+<pre class="out">vertex 3.0 1.5 -&gt; z = 21.0
+vertex 4.0 0.0 -&gt; z = 20.0
+vertex 0.0 3.0 -&gt; z = 12.0
+vertex 0.0 0.0 -&gt; z = 0.0
+best x = 3.0
+best y = 1.5
+best z = 21.0
+</pre>
+
+      <p>The optimum is $(3,1.5)$ with $z=21$: both resources fully used. The corner $(4,0)$ gives $20$ and is the runner-up - the fact that it is on the axis is a warning for module 05, where whole units are required.</p>
+
+      <section class="lab" data-lab="lp" aria-label="LP geometry lab">
+        <div class="labhead"><span class="dot"></span>Lab - the feasible polygon<span class="tagline">m02</span></div>
+      </section>
+
+      <p>The widget draws the feasible polygon (shaded), the objective direction, and the optimal vertex. Move the two coefficients or the right-hand sides and watch the optimum jump from one corner to another.</p>
+
+      <div class="callout info">
+        <strong>Why corners, not the whole polygon</strong>
+        <p>If a point is optimal, so is any point on the segment between optimal points - a consequence of linearity. That means at least one optimal point is a vertex, so a finite enumeration always finds an optimum. The simplex method is just a clever way to visit only a few vertices instead of all of them.</p>
+      </div>
+
+      <div class="check" data-answer="a" data-q="1">
+        <p class="q">For a bounded linear program, where does an optimal solution always lie?</p>
+        <label class="opt"><input type="radio" name="m02q1" value="a"><span>At a vertex of the feasible region (or along an edge/face of optimal vertices)</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="b"><span>At the centroid of the feasible region</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="c"><span>Anywhere the gradient is zero</span></label>
+        <label class="opt"><input type="radio" name="m02q1" value="d"><span>Only on an axis</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> A linear objective over a convex polytope attains its optimum on the boundary, and if an edge is optimal, both its endpoints (vertices) are too. So a vertex always suffices - the basis of the simplex method.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m01" data-goto="0"><span class="d">Prev</span><span class="t">01 - Why Mojo</span></a>
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Next</span><span class="t">03 - The simplex method</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m03" data-title="The simplex method">
+      <h2>03 - The simplex method</h2>
+      <p class="dek">Walk from vertex to vertex, improving the objective at every step.</p>
+
+      <p>Enumerating every vertex is exponential. The simplex method visits only the ones that improve the objective. It keeps the constraint system in a tableau and repeatedly picks the column with the most negative reduced cost - the direction that improves $z$ fastest - then pivots until no improving direction remains.</p>
+
+      <div class="eq">
+        $$\text{entering}: j=\arg\min_k \bar{c}_k,\qquad \text{leaving}: i=\arg\min_{a_{ik}>0}\frac{b_i}{a_{ik}}$$
+      </div>
+
+      <p>The ratio test picks the leaving row so the new basic solution stays feasible. The listing starts from the slack basis, performs the two pivots this LP needs, and reports the optimal basis.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">simplex.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># The simplex method walks the feasible polygon from vertex to vertex. Each</span>
+<span class="tok-com"># pivot swaps the column with the most negative reduced cost into the basis.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">M</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">2</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">N</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">2</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">W</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">5</span>
+
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">abs</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">t</span> <span class="tok-op">=</span> [
+        [<span class="tok-num">6.0</span>, <span class="tok-num">4.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">24.0</span>],
+        [<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">6.0</span>],
+        [<span class="tok-op">-</span><span class="tok-num">5.0</span>, <span class="tok-op">-</span><span class="tok-num">4.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">0.0</span>],
+    ]
+    <span class="tok-kw">var</span> <span class="tok-var">basis</span> <span class="tok-op">=</span> [<span class="tok-num">2</span>, <span class="tok-num">3</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">pivots</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">while</span> <span class="tok-kw">True</span>:
+        <span class="tok-kw">var</span> <span class="tok-var">e</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">1</span>
+        <span class="tok-kw">var</span> <span class="tok-var">most</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">1e-9</span>
+        <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">W</span> <span class="tok-op">-</span> <span class="tok-num">1</span>):
+            <span class="tok-kw">if</span> t[<span class="tok-type">M</span>][j] <span class="tok-op">&lt;</span> most:
+                most <span class="tok-op">=</span> t[<span class="tok-type">M</span>][j]
+                e <span class="tok-op">=</span> j
+        <span class="tok-kw">if</span> e <span class="tok-op">==</span> <span class="tok-op">-</span><span class="tok-num">1</span>:
+            <span class="tok-kw">break</span>
+        <span class="tok-kw">var</span> <span class="tok-var">l</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">1</span>
+        <span class="tok-kw">var</span> <span class="tok-var">best</span> <span class="tok-op">=</span> <span class="tok-num">1e300</span>
+        <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">M</span>):
+            <span class="tok-kw">if</span> t[i][e] <span class="tok-op">&gt;</span> <span class="tok-num">1e-9</span>:
+                <span class="tok-kw">var</span> <span class="tok-var">ratio</span> <span class="tok-op">=</span> t[i][<span class="tok-type">W</span> <span class="tok-op">-</span> <span class="tok-num">1</span>] <span class="tok-op">/</span> t[i][e]
+                <span class="tok-kw">if</span> ratio <span class="tok-op">&lt;</span> best:
+                    best <span class="tok-op">=</span> ratio
+                    l <span class="tok-op">=</span> i
+        <span class="tok-kw">if</span> l <span class="tok-op">==</span> <span class="tok-op">-</span><span class="tok-num">1</span>:
+            <span class="tok-kw">break</span>
+        <span class="tok-kw">var</span> <span class="tok-var">p</span> <span class="tok-op">=</span> t[l][e]
+        <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">W</span>):
+            t[l][j] <span class="tok-op">=</span> t[l][j] <span class="tok-op">/</span> p
+        <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">M</span> <span class="tok-op">+</span> <span class="tok-num">1</span>):
+            <span class="tok-kw">if</span> i <span class="tok-op">==</span> l:
+                <span class="tok-kw">continue</span>
+            <span class="tok-kw">var</span> <span class="tok-var">f</span> <span class="tok-op">=</span> t[i][e]
+            <span class="tok-kw">if</span> <span class="tok-fn">abs</span>(f) <span class="tok-op">&gt;</span> <span class="tok-num">1e-12</span>:
+                <span class="tok-kw">for</span> j <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">W</span>):
+                    t[i][j] <span class="tok-op">=</span> t[i][j] <span class="tok-op">-</span> f <span class="tok-op">*</span> t[l][j]
+        basis[l] <span class="tok-op">=</span> e
+        pivots <span class="tok-op">+=</span> <span class="tok-num">1</span>
+    <span class="tok-fn">print</span>(<span class="tok-str">"pivots ="</span>, pivots)
+    <span class="tok-fn">print</span>(<span class="tok-str">"x ="</span>, t[<span class="tok-num">0</span>][<span class="tok-type">W</span> <span class="tok-op">-</span> <span class="tok-num">1</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"y ="</span>, t[<span class="tok-num">1</span>][<span class="tok-type">W</span> <span class="tok-op">-</span> <span class="tok-num">1</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"z ="</span>, t[<span class="tok-type">M</span>][<span class="tok-type">W</span> <span class="tok-op">-</span> <span class="tok-num">1</span>])</pre>
+      </figure>
+<pre class="out">pivots = 2
+x = 3.0
+y = 1.5
+z = 21.0
+</pre>
+
+      <p>Two pivots take the slack solution $(0,0)$ to the optimum $(3,1.5)$: first $x$ enters and slack $s_1$ leaves, then $y$ enters and $s_2$ leaves. Each pivot is a Gauss-Jordan elimination on one column.</p>
+
+      <section class="lab" data-lab="simplex" aria-label="Simplex stepper lab">
+        <div class="labhead"><span class="dot"></span>Lab - step through the pivots<span class="tagline">m03</span></div>
+      </section>
+
+      <p>The widget shows the tableau at each iteration. Step forward to watch a pivot normalise its row and eliminate the entering column from the rest, and watch the current objective rise monotonically.</p>
+
+      <div class="callout warn">
+        <strong>Degeneracy and cycling</strong>
+        <p>If the ratio test ties, a pivot can leave a basic variable at zero - a degenerate step with no improvement. Bland's rule (choose the smallest index among tied candidates) guarantees the method terminates, at the cost of more pivots.</p>
+      </div>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">Which row leaves the basis in a simplex pivot?</p>
+        <label class="opt"><input type="radio" name="m03q1" value="a"><span>The row with the largest right-hand side</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="b"><span>The row that keeps the solution feasible - the smallest positive ratio $b_i/a_{ik}$</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="c"><span>The first row, always</span></label>
+        <label class="opt"><input type="radio" name="m03q1" value="d"><span>The row with the most negative reduced cost</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Growing the entering variable moves along an edge; the first constraint that blocks it (smallest $b_i/a_{ik}$ with $a_{ik}>0$) sets the largest feasible step. That row becomes nonbasic. If no ratio is positive, the problem is unbounded.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m02" data-goto="1"><span class="d">Prev</span><span class="t">02 - LP geometry</span></a>
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Next</span><span class="t">04 - Duality and sensitivity</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m04" data-title="Duality and sensitivity">
+      <h2>04 - Duality and sensitivity</h2>
+      <p class="dek">Every LP has a shadow problem whose variables are the prices of the constraints.</p>
+
+      <p>The dual of a maximisation is a minimisation over the constraint prices. Each primal constraint becomes a dual variable - its <em>shadow price</em>: the rate the objective would rise if that resource limit increased by one unit. At the optimum the primal and dual objectives are equal (strong duality), so the dual certifies the primal's value.</p>
+
+      <div class="eq">
+        $$\min\; 24y_1+6y_2\quad\text{s.t.}\quad 6y_1+y_2\ge 5,\;\; 4y_1+2y_2\ge 4,\;\; y_1,y_2\ge 0$$
+      </div>
+
+      <p>Both primal constraints bind at the optimum, so both dual constraints hold with equality. That gives a $2\times2$ system, solved in the listing.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">dual.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Duality reads the same optimum from the other side. The dual variables are</span>
+<span class="tok-com"># shadow prices: the rate the objective rises per unit of each resource. Both</span>
+<span class="tok-com"># resources bind, so the prices solve a 2x2 system.</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-com"># 6 y1 + 1 y2 = 5 and 4 y1 + 2 y2 = 4</span>
+    <span class="tok-kw">var</span> <span class="tok-var">a</span> <span class="tok-op">=</span> <span class="tok-num">6.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">b</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">c</span> <span class="tok-op">=</span> <span class="tok-num">4.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">d</span> <span class="tok-op">=</span> <span class="tok-num">2.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">r1</span> <span class="tok-op">=</span> <span class="tok-num">5.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">r2</span> <span class="tok-op">=</span> <span class="tok-num">4.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">det</span> <span class="tok-op">=</span> a <span class="tok-op">*</span> d <span class="tok-op">-</span> c <span class="tok-op">*</span> b
+    <span class="tok-kw">var</span> <span class="tok-var">y1</span> <span class="tok-op">=</span> (r1 <span class="tok-op">*</span> d <span class="tok-op">-</span> r2 <span class="tok-op">*</span> b) <span class="tok-op">/</span> det
+    <span class="tok-kw">var</span> <span class="tok-var">y2</span> <span class="tok-op">=</span> (a <span class="tok-op">*</span> r2 <span class="tok-op">-</span> c <span class="tok-op">*</span> r1) <span class="tok-op">/</span> det
+    <span class="tok-fn">print</span>(<span class="tok-str">"shadow price y1 ="</span>, y1)
+    <span class="tok-fn">print</span>(<span class="tok-str">"shadow price y2 ="</span>, y2)
+    <span class="tok-fn">print</span>(<span class="tok-str">"dual objective  ="</span>, <span class="tok-num">24.0</span> <span class="tok-op">*</span> y1 <span class="tok-op">+</span> <span class="tok-num">6.0</span> <span class="tok-op">*</span> y2)
+    <span class="tok-fn">print</span>(<span class="tok-str">"allowable b1 min ="</span>, <span class="tok-num">2.0</span> <span class="tok-op">*</span> <span class="tok-num">6.0</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"allowable b1 max ="</span>, <span class="tok-num">6.0</span> <span class="tok-op">*</span> <span class="tok-num">6.0</span>)</pre>
+      </figure>
+<pre class="out">shadow price y1 = 0.75
+shadow price y2 = 0.5
+dual objective  = 21.0
+allowable b1 min = 12.0
+allowable b1 max = 36.0
+</pre>
+
+      <p>The shadow prices are $0.75$ and $0.5$, and the dual objective matches the primal $z=21$. The last two lines are the <em>allowable range</em> on $b_1$: between $12$ and $36$ the same basis stays optimal, so raising the limit by one unit buys exactly $0.75$ of profit throughout that range.</p>
+
+      <section class="lab" data-lab="dual" aria-label="Duality and sensitivity lab">
+        <div class="labhead"><span class="dot"></span>Lab - shadow prices and ranges<span class="tagline">m04</span></div>
+      </section>
+
+      <p>The widget lets you perturb the first resource limit and recomputes the optimum. Inside the allowable range the profit moves along a straight line of slope $y_1$; outside it, the basis changes and the slope does too.</p>
+
+      <div class="callout info">
+        <strong>Complementary slackness</strong>
+        <p>A constraint with slack has shadow price zero. In the listing, raising the limit on a non-binding resource changes nothing - there was spare capacity anyway. Prices live only on the binding rows.</p>
+      </div>
+
+      <div class="check" data-answer="d" data-q="1">
+        <p class="q">A shadow price of $0.75$ on a resource limit means</p>
+        <label class="opt"><input type="radio" name="m04q1" value="a"><span>The resource is unused</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="b"><span>The optimal $x$ is $0.75$</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="c"><span>The objective decreases by $0.75$ per unit added</span></label>
+        <label class="opt"><input type="radio" name="m04q1" value="d"><span>The objective increases by $0.75$ per unit of extra capacity, within the allowable range</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> The shadow price is the derivative of the optimal objective with respect to that right-hand side. One more unit of a binding resource raises profit by $0.75$ - until the basis changes at the edge of the allowable range.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m03" data-goto="2"><span class="d">Prev</span><span class="t">03 - The simplex method</span></a>
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Next</span><span class="t">05 - Integer programming</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m05" data-title="Integer programming">
+      <h2>05 - Integer programming</h2>
+      <p class="dek">When variables must be whole, the fractional optimum may be out of reach.</p>
+
+      <p>Real plans come in whole units. Requiring integer variables makes the problem harder: the LP optimum can be fractional, and simply rounding it can be infeasible or suboptimal - as the capstone will show. The smallest integer problem is the $0/1$ knapsack, where each item is either taken or not.</p>
+
+      <div class="eq">
+        $$\max\sum_i v_i x_i\quad\text{s.t.}\quad\sum_i w_i x_i\le C,\;\; x_i\in\{0,1\}$$
+      </div>
+
+      <p>A dynamic program over capacity gives the exact integer optimum: <code>dp[c]</code> is the best value achievable with capacity $c$. The fractional relaxation - filling the highest value-per-weight items first, splitting the last - bounds it from above.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">knapsack.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Integer programming is where the fractional vertices stop being allowed.</span>
+<span class="tok-com"># The 0/1 knapsack is the smallest case: a DP over capacity yields the exact</span>
+<span class="tok-com"># integer optimum, and the fractional relaxation bounds it from above.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">N</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">4</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">CAP</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">6</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">w</span> <span class="tok-op">=</span> [<span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">v</span> <span class="tok-op">=</span> [<span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>, <span class="tok-num">6</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">dp</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Int</span>]()
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">CAP</span> <span class="tok-op">+</span> <span class="tok-num">1</span>):
+        dp.append(<span class="tok-num">0</span>)
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">N</span>):
+        <span class="tok-kw">for</span> k <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">CAP</span> <span class="tok-op">-</span> w[i] <span class="tok-op">+</span> <span class="tok-num">1</span>):
+            <span class="tok-kw">var</span> <span class="tok-var">cap</span> <span class="tok-op">=</span> <span class="tok-type">CAP</span> <span class="tok-op">-</span> k
+            <span class="tok-kw">var</span> <span class="tok-var">cand</span> <span class="tok-op">=</span> dp[cap <span class="tok-op">-</span> w[i]] <span class="tok-op">+</span> v[i]
+            <span class="tok-kw">if</span> cand <span class="tok-op">&gt;</span> dp[cap]:
+                dp[cap] <span class="tok-op">=</span> cand
+    <span class="tok-fn">print</span>(<span class="tok-str">"best value       ="</span>, dp[<span class="tok-type">CAP</span>])
+    <span class="tok-fn">print</span>(<span class="tok-str">"fractional bound = 8.25"</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"gap              ="</span>, <span class="tok-num">8.25</span> <span class="tok-op">-</span> <span class="tok-type">Float64</span>(dp[<span class="tok-type">CAP</span>]))</pre>
+      </figure>
+<pre class="out">best value       = 8
+fractional bound = 8.25
+gap              = 0.25
+</pre>
+
+      <p>With weights $\{2,3,4,5\}$, values $\{3,4,5,6\}$ and capacity $6$, the best whole plan takes items $1$ and $3$ for value $8$. The fractional relaxation allots one quarter of item $3$ and reaches $8.25$, so the integrality gap here is only $0.25$.</p>
+
+      <section class="lab" data-lab="knapsack" aria-label="Knapsack lab">
+        <div class="labhead"><span class="dot"></span>Lab - integer versus fractional<span class="tagline">m05</span></div>
+      </section>
+
+      <p>The widget sweeps the capacity and plots the integer DP value against the fractional bound. Where the two curves separate, the gap is the price of integrality; where they touch, rounding is free.</p>
+
+      <div class="callout warn">
+        <strong>Greedy is not always optimal</strong>
+        <p>Taking items by value-per-weight is optimal for the <em>fractional</em> knapsack but can fail for the integer one: a high-ratio small item can block a slightly lower-ratio pair that weighs in better. The DP does not make that mistake.</p>
+      </div>
+
+      <div class="check" data-answer="b" data-q="1">
+        <p class="q">Why can rounding an LP optimum fail for an integer program?</p>
+        <label class="opt"><input type="radio" name="m05q1" value="a"><span>Rounding always gives the integer optimum</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="b"><span>The rounded point can be infeasible, and even when feasible it may not be the best integer point</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="c"><span>Floating point cannot represent integers</span></label>
+        <label class="opt"><input type="radio" name="m05q1" value="d"><span>The objective becomes nonlinear</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Constraints can be tight at the fractional optimum, so rounding up violates them and rounding down loses value. The true integer optimum may sit at a different corner entirely - which is why branch and bound, not rounding, is the general tool.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m04" data-goto="3"><span class="d">Prev</span><span class="t">04 - Duality and sensitivity</span></a>
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Next</span><span class="t">06 - Networks</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m06" data-title="Networks">
+      <h2>06 - Networks</h2>
+      <p class="dek">Routing, shortest paths, and flows are optimisation on a graph.</p>
+
+      <p>Many operational problems are defined on a network: a road map, a supply chain, a communication mesh. The shortest-path problem asks for the cheapest route from a source to every node. Dijkstra's algorithm settles nodes in order of distance: repeatedly take the nearest unsettled node, then relax the edges leaving it.</p>
+
+      <div class="eq">
+        $$d(v)=\min_{u\to v}\bigl(d(u)+w(u,v)\bigr)$$
+      </div>
+
+      <p>The listing runs Dijkstra on a six-node undirected graph from node $0$, using an $O(n^2)$ scan for the nearest unsettled node - the right choice when the graph is dense and edges are stored compactly.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">shortest_path.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># A network problem is a shortest-path problem with weights. Dijkstra settles</span>
+<span class="tok-com"># the nearest unsettled node, relaxes its edges, and repeats; the settled</span>
+<span class="tok-com"># distances are the optimal costs from the source.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">N</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">6</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">INF</span> <span class="tok-op">=</span> <span class="tok-num">1.0e18</span>
+    <span class="tok-kw">var</span> <span class="tok-var">dist</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Float64</span>]()
+    <span class="tok-kw">var</span> <span class="tok-var">done</span> <span class="tok-op">=</span> <span class="tok-type">List</span>[<span class="tok-type">Bool</span>]()
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">N</span>):
+        dist.append(<span class="tok-type">INF</span>)
+        done.append(<span class="tok-kw">False</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">eu</span> <span class="tok-op">=</span> [<span class="tok-num">0</span>, <span class="tok-num">0</span>, <span class="tok-num">0</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">ev</span> <span class="tok-op">=</span> [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">5</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">3</span>, <span class="tok-num">5</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>]
+    <span class="tok-kw">var</span> <span class="tok-var">ew</span> <span class="tok-op">=</span> [<span class="tok-num">7.0</span>, <span class="tok-num">9.0</span>, <span class="tok-num">14.0</span>, <span class="tok-num">10.0</span>, <span class="tok-num">15.0</span>, <span class="tok-num">11.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">6.0</span>, <span class="tok-num">9.0</span>]
+    dist[<span class="tok-num">0</span>] <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">N</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">u</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">1</span>
+        <span class="tok-kw">var</span> <span class="tok-var">best</span> <span class="tok-op">=</span> <span class="tok-type">INF</span>
+        <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">N</span>):
+            <span class="tok-kw">if</span> <span class="tok-kw">not</span> done[i] <span class="tok-kw">and</span> dist[i] <span class="tok-op">&lt;</span> best:
+                best <span class="tok-op">=</span> dist[i]
+                u <span class="tok-op">=</span> i
+        <span class="tok-kw">if</span> u <span class="tok-op">==</span> <span class="tok-op">-</span><span class="tok-num">1</span>:
+            <span class="tok-kw">break</span>
+        done[u] <span class="tok-op">=</span> <span class="tok-kw">True</span>
+        <span class="tok-kw">for</span> e <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">9</span>):
+            <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">1</span>
+            <span class="tok-kw">if</span> eu[e] <span class="tok-op">==</span> u:
+                x <span class="tok-op">=</span> ev[e]
+            <span class="tok-kw">elif</span> ev[e] <span class="tok-op">==</span> u:
+                x <span class="tok-op">=</span> eu[e]
+            <span class="tok-kw">if</span> x <span class="tok-op">!=</span> <span class="tok-op">-</span><span class="tok-num">1</span>:
+                <span class="tok-kw">var</span> <span class="tok-var">nd</span> <span class="tok-op">=</span> dist[u] <span class="tok-op">+</span> ew[e]
+                <span class="tok-kw">if</span> nd <span class="tok-op">&lt;</span> dist[x]:
+                    dist[x] <span class="tok-op">=</span> nd
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">N</span>):
+        <span class="tok-fn">print</span>(<span class="tok-str">"dist to node"</span>, i, <span class="tok-str">"="</span>, dist[i])</pre>
+      </figure>
+<pre class="out">dist to node 0 = 0.0
+dist to node 1 = 7.0
+dist to node 2 = 9.0
+dist to node 3 = 20.0
+dist to node 4 = 20.0
+dist to node 5 = 11.0
+</pre>
+
+      <p>The nearest node after the source is node $1$ at $7$, then node $2$ at $9$; node $5$ is reached cheaply via node $2$ ($9+2=11$), and nodes $3$ and $4$ both settle at $20$. Notice node $4$ is reached through node $5$, not the direct-looking route through node $3$ - order of settlement matters.</p>
+
+      <section class="lab" data-lab="graph" aria-label="Shortest path lab">
+        <div class="labhead"><span class="dot"></span>Lab - settle the network<span class="tagline">m06</span></div>
+      </section>
+
+      <p>The widget draws the graph and lets you move the source. Settled nodes and the shortest-path tree update live, with each node labelled by its distance.</p>
+
+      <div class="callout info">
+        <strong>Negative weights break Dijkstra</strong>
+        <p>Dijkstra assumes distances never decrease as you settle, so a negative edge can invalidate an already-settled node. For negative edges you need Bellman-Ford; for all-pairs you need Floyd-Warshall. Both are still just loops over the same adjacency data.</p>
+      </div>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">Dijkstra's algorithm settles the nearest unsettled node because</p>
+        <label class="opt"><input type="radio" name="m06q1" value="a"><span>It has the most edges</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="b"><span>It has the smallest index</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="c"><span>All edge weights are non-negative, so no later path can improve its distance</span></label>
+        <label class="opt"><input type="radio" name="m06q1" value="d"><span>The graph has no cycles</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> With non-negative weights, any route to the nearest unsettled node goes through another unsettled node and is therefore at least as long. Its tentative distance is final, so it can be settled and never revisited - giving $O(n^2)$ (or $O(m\log n)$ with a heap).
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m05" data-goto="4"><span class="d">Prev</span><span class="t">05 - Integer programming</span></a>
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Next</span><span class="t">07 - Queues</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m07" data-title="Queues">
+      <h2>07 - Queues</h2>
+      <p class="dek">Capacity planning is queueing theory: how long, how many, how often full.</p>
+
+      <p>A service with random arrivals and random service times is a queue. The M/M/c model - Poisson arrivals, exponential service, $c$ servers - has closed-form steady-state results. Erlang-C gives the probability an arrival has to wait; the average queue length and wait follow from it.</p>
+
+      <div class="eq">
+        $$L_q=\frac{P_0\,a^c\,\rho}{c!\,(1-\rho)^2},\qquad W_q=\frac{L_q}{\lambda},\qquad W=W_q+\frac{1}{\mu},\qquad L=\lambda W$$
+      </div>
+
+      <p>Here $a=\lambda/\mu$ is the offered load and $\rho=a/c$ the utilisation; the system is stable only when $\rho<1$. The listing computes the full set for $\lambda=6$, $\mu=4$, $c=2$.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">queue.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># A queue is a stochastic process, but its steady-state formulas are ordinary</span>
+<span class="tok-com"># arithmetic. Erlang-C gives the chance an arrival has to wait, and from it</span>
+<span class="tok-com"># the queue length, wait, and utilisation all follow.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">LAM</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">6.0</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">MU</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">4.0</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">C</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">2</span>
+
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> <span class="tok-fn">pow</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">a</span> <span class="tok-op">=</span> <span class="tok-type">LAM</span> <span class="tok-op">/</span> <span class="tok-type">MU</span>
+    <span class="tok-kw">var</span> <span class="tok-var">rho</span> <span class="tok-op">=</span> a <span class="tok-op">/</span> <span class="tok-type">Float64</span>(<span class="tok-type">C</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">sum</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">term</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span>
+    <span class="tok-kw">for</span> k <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">C</span>):
+        <span class="tok-kw">if</span> k <span class="tok-op">&gt;</span> <span class="tok-num">0</span>:
+            term <span class="tok-op">=</span> term <span class="tok-op">*</span> a <span class="tok-op">/</span> <span class="tok-type">Float64</span>(k)
+        <span class="tok-fn">sum</span> <span class="tok-op">+=</span> term
+    <span class="tok-kw">var</span> <span class="tok-var">pc</span> <span class="tok-op">=</span> term <span class="tok-op">*</span> a <span class="tok-op">/</span> <span class="tok-type">Float64</span>(<span class="tok-type">C</span>) <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> rho)
+    <span class="tok-kw">var</span> <span class="tok-var">p0</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span> <span class="tok-op">/</span> (<span class="tok-fn">sum</span> <span class="tok-op">+</span> pc)
+    <span class="tok-kw">var</span> <span class="tok-var">cfact</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span>
+    <span class="tok-kw">for</span> k <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">1</span>, <span class="tok-type">C</span> <span class="tok-op">+</span> <span class="tok-num">1</span>):
+        cfact <span class="tok-op">*=</span> <span class="tok-type">Float64</span>(k)
+    <span class="tok-kw">var</span> <span class="tok-var">Lq</span> <span class="tok-op">=</span> p0 <span class="tok-op">*</span> <span class="tok-fn">pow</span>(a, <span class="tok-type">Float64</span>(<span class="tok-type">C</span>)) <span class="tok-op">/</span> (cfact <span class="tok-op">*</span> <span class="tok-fn">pow</span>(<span class="tok-num">1.0</span> <span class="tok-op">-</span> rho, <span class="tok-num">2.0</span>)) <span class="tok-op">*</span> rho
+    <span class="tok-kw">var</span> <span class="tok-var">Wq</span> <span class="tok-op">=</span> <span class="tok-type">Lq</span> <span class="tok-op">/</span> <span class="tok-type">LAM</span>
+    <span class="tok-kw">var</span> <span class="tok-var">W</span> <span class="tok-op">=</span> <span class="tok-type">Wq</span> <span class="tok-op">+</span> <span class="tok-num">1.0</span> <span class="tok-op">/</span> <span class="tok-type">MU</span>
+    <span class="tok-kw">var</span> <span class="tok-var">L</span> <span class="tok-op">=</span> <span class="tok-type">LAM</span> <span class="tok-op">*</span> <span class="tok-type">W</span>
+    <span class="tok-fn">print</span>(<span class="tok-str">"rho  ="</span>, rho)
+    <span class="tok-fn">print</span>(<span class="tok-str">"P0   ="</span>, p0)
+    <span class="tok-fn">print</span>(<span class="tok-str">"Lq   ="</span>, <span class="tok-type">Lq</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"Wq   ="</span>, <span class="tok-type">Wq</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"W    ="</span>, <span class="tok-type">W</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"L    ="</span>, <span class="tok-type">L</span>)</pre>
+      </figure>
+<pre class="out">rho  = 0.75
+P0   = 0.14285714285714285
+Lq   = 1.9285714285714284
+Wq   = 0.3214285714285714
+W    = 0.5714285714285714
+L    = 3.4285714285714284
+</pre>
+
+      <p>At $75\%$ utilisation the average queue is about $1.93$ customers and a customer waits about $0.32$ time units before service. Queueing is nonlinear in $\rho$: push utilisation toward $1$ and $L_q$ blows up, which is why systems are provisioned to stay well below full.</p>
+
+      <section class="lab" data-lab="queue" aria-label="Queueing lab">
+        <div class="labhead"><span class="dot"></span>Lab - M/M/c metrics<span class="tagline">m07</span></div>
+      </section>
+
+      <p>The widget plots the average queue length against the arrival rate for the chosen number of servers, and reports $P_0$, $L_q$, $W_q$, $W$ and $L$. Watch the curve steepen as $\rho$ approaches one.</p>
+
+      <div class="callout perf">
+        <strong>Little's law ties it together</strong>
+        <p>$L=\lambda W$ holds for any stable queue, not just M/M/c: the average number in the system equals the arrival rate times the average time in the system. It is a conservation identity, and a fast sanity check on any simulator.</p>
+      </div>
+
+      <div class="check" data-answer="a" data-q="1">
+        <p class="q">What condition must hold for an M/M/c queue to be stable?</p>
+        <label class="opt"><input type="radio" name="m07q1" value="a"><span>The utilisation $\rho=\lambda/(c\mu)$ is less than $1$</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="b"><span>The arrival rate exceeds the service rate</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="c"><span>$c=1$</span></label>
+        <label class="opt"><input type="radio" name="m07q1" value="d"><span>The queue is always empty</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> If arrivals outrun the combined service capacity $c\mu$, the queue grows without bound and no steady state exists. Stability requires $\lambda<c\mu$, i.e. $\rho<1$.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m06" data-goto="5"><span class="d">Prev</span><span class="t">06 - Networks</span></a>
+        <a class="navbtn" href="#m08" data-goto="7"><span class="d">Next</span><span class="t">08 - Nonlinear descent</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m08" data-title="Nonlinear descent">
+      <h2>08 - Nonlinear and multi-objective optimisation</h2>
+      <p class="dek">When the objective curves, the optimum has no corner to sit on.</p>
+
+      <p>Real objectives are not always linear - cost curves bend, risk and return trade off. A smooth nonlinear objective has no vertices, so the geometric shortcut is gone. The workhorse is <em>gradient descent</em>: step in the direction of steepest decrease, $x\leftarrow x-\alpha\nabla f$.</p>
+
+      <div class="eq">
+        $$f(x,y)=x^2+y^2+xy-6x-6y,\qquad \nabla f=(2x+y-6,\;x+2y-6)$$
+      </div>
+
+      <p>This coupled quadratic is minimised at $(2,2)$, where the gradient vanishes. The listing runs $40$ fixed steps of size $\alpha=0.1$ from the origin.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">descent.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Nonlinear objectives have no vertices to test. Gradient descent slides</span>
+<span class="tok-com"># downhill along the negative gradient; the step size decides whether it</span>
+<span class="tok-com"># settles, oscillates, or diverges.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">LR</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.1</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">ITERS</span>: <span class="tok-type">Int</span> <span class="tok-op">=</span> <span class="tok-num">40</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> <span class="tok-num">0.0</span>
+    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-type">ITERS</span>):
+        <span class="tok-kw">var</span> <span class="tok-var">gx</span> <span class="tok-op">=</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> x <span class="tok-op">+</span> y <span class="tok-op">-</span> <span class="tok-num">6.0</span>
+        <span class="tok-kw">var</span> <span class="tok-var">gy</span> <span class="tok-op">=</span> x <span class="tok-op">+</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> y <span class="tok-op">-</span> <span class="tok-num">6.0</span>
+        x <span class="tok-op">=</span> x <span class="tok-op">-</span> <span class="tok-type">LR</span> <span class="tok-op">*</span> gx
+        y <span class="tok-op">=</span> y <span class="tok-op">-</span> <span class="tok-type">LR</span> <span class="tok-op">*</span> gy
+    <span class="tok-fn">print</span>(<span class="tok-str">"x ="</span>, x)
+    <span class="tok-fn">print</span>(<span class="tok-str">"y ="</span>, y)
+    <span class="tok-fn">print</span>(<span class="tok-str">"f ="</span>, x <span class="tok-op">*</span> x <span class="tok-op">+</span> y <span class="tok-op">*</span> y <span class="tok-op">+</span> x <span class="tok-op">*</span> y <span class="tok-op">-</span> <span class="tok-num">6.0</span> <span class="tok-op">*</span> x <span class="tok-op">-</span> <span class="tok-num">6.0</span> <span class="tok-op">*</span> y)</pre>
+      </figure>
+<pre class="out">x = 1.9999987266388477
+y = 1.9999987266388477
+f = -11.999999999995136
+</pre>
+
+      <p>After $40$ steps the iterate is at $(1.9999987,1.9999987)$, essentially the minimum, with $f\approx-12$. The step size matters: too small and convergence crawls, too large and the iterates overshoot and diverge. For a quadratic, stability needs $\alpha<2/\lambda_{\max}$.</p>
+
+      <section class="lab" data-lab="descent" aria-label="Gradient descent lab">
+        <div class="labhead"><span class="dot"></span>Lab - the descent path<span class="tagline">m08</span></div>
+      </section>
+
+      <p>The widget draws the iterates on the objective's contours. Shrink or grow the step and watch the path either settle smoothly, zig-zag, or spiral out.</p>
+
+      <div class="callout warn">
+        <strong>Local, not global</strong>
+        <p>Gradient descent finds a stationary point, which for a non-convex objective may be a local minimum or a saddle. Multi-objective problems make it worse: there is no single optimum, only a Pareto front of non-dominated trade-offs, and the method must be told how to trade them off.</p>
+      </div>
+
+      <div class="check" data-answer="c" data-q="1">
+        <p class="q">Choosing too large a step size in gradient descent typically causes</p>
+        <label class="opt"><input type="radio" name="m08q1" value="a"><span>Faster guaranteed convergence</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="b"><span>No change at all</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="c"><span>Overshooting and possibly divergence</span></label>
+        <label class="opt"><input type="radio" name="m08q1" value="d"><span>The gradient becomes linear</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> A step larger than about $2/\lambda_{\max}$ (for a quadratic) makes the error grow each iteration instead of shrinking, so the iterates diverge. Step-size selection - line search, momentum, or adaptive rules - is central in practice.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m07" data-goto="6"><span class="d">Prev</span><span class="t">07 - Queues</span></a>
+        <a class="navbtn" href="#m09" data-goto="8"><span class="d">Next</span><span class="t">09 - Parallelism and capstone</span></a>
+      </nav>
+    </section>
+
+    <section class="module" id="m09" data-title="Parallelism and the capstone">
+      <h2>09 - Complexity, parallelism, and the capstone</h2>
+      <p class="dek">How far does the work parallelise, and what does the whole pipeline produce?</p>
+
+      <p>Optimisation is often compute-bound - large LPs, Monte-Carlo simulation, dense linear algebra. Amdahl's law bounds the payoff from parallelism: if a fraction $p$ of the work parallelises perfectly across $n$ workers, the speedup is capped by the serial part no matter how many workers you add.</p>
+
+      <div class="eq">
+        $$S(n)=\frac{1}{(1-p)+\dfrac{p}{n}}\;\xrightarrow[n\to\infty]{}\;\frac{1}{1-p}$$
+      </div>
+
+      <p>With $p=0.95$ and $8$ cores the speedup is about $5.93$; the ceiling is $20$, reached only with infinitely many cores.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">amdahl.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Some optimisation work parallelises and some does not. Amdahl's law bounds</span>
+<span class="tok-com"># the speedup: the serial fraction caps it no matter how many workers you add.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">P_PAR</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">0.95</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-kw">var</span> <span class="tok-var">cores</span> <span class="tok-op">=</span> <span class="tok-num">8.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">speedup</span> <span class="tok-op">=</span> <span class="tok-num">1.0</span> <span class="tok-op">/</span> ((<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">P_PAR</span>) <span class="tok-op">+</span> <span class="tok-type">P_PAR</span> <span class="tok-op">/</span> cores)
+    <span class="tok-fn">print</span>(<span class="tok-str">"parallel fraction ="</span>, <span class="tok-type">P_PAR</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"cores             ="</span>, cores)
+    <span class="tok-fn">print</span>(<span class="tok-str">"speedup           ="</span>, speedup)
+    <span class="tok-fn">print</span>(<span class="tok-str">"ceiling           ="</span>, <span class="tok-num">1.0</span> <span class="tok-op">/</span> (<span class="tok-num">1.0</span> <span class="tok-op">-</span> <span class="tok-type">P_PAR</span>))</pre>
+      </figure>
+<pre class="out">parallel fraction = 0.95
+cores             = 8.0
+speedup           = 5.925925925925925
+ceiling           = 20.0
+</pre>
+
+      <section class="lab" data-lab="amdahl" aria-label="Amdahl's law lab">
+        <div class="labhead"><span class="dot"></span>Lab - bounds on speedup<span class="tagline">m09</span></div>
+      </section>
+
+      <p>The widget plots speedup against core count for the chosen parallel fraction. Drag $p$ down and watch the curve flatten early - the serial fraction is the real limit.</p>
+
+      <div class="callout perf">
+        <strong>Where the parallelism is</strong>
+        <p>The loops in this tutorial are the parallel part: evaluating objectives, sweeping vertices, relaxing edges, simulating queues. Mojo's <code>parallelize</code> and vectorised kernels expose that work to the hardware; the serial bookkeeping (pivots, priority scans) is what Amdahl warns you about.</p>
+      </div>
+
+      <p>The capstone puts the pieces in order. Take the same production LP, solve it continuously, then decide what a factory can actually schedule. Naive rounding of the LP optimum is not the integer optimum - so enumerate the integer plans.</p>
+
+      <figure class="listing">
+        <figcaption><span class="fn">production.mojo</span><button class="copy" type="button">copy</button></figcaption>
+<pre class="code"><span class="tok-com"># Capstone: a production plan. Solve the LP, then face the fact that products</span>
+<span class="tok-com"># come in whole units. Naive rounding can miss the true integer optimum, so</span>
+<span class="tok-com"># enumerate the integer plans and compare.</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">CAP1</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">24.0</span>
+<span class="tok-kw">comptime</span> <span class="tok-type">CAP2</span>: <span class="tok-type">Float64</span> <span class="tok-op">=</span> <span class="tok-num">6.0</span>
+
+<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
+    <span class="tok-fn">print</span>(<span class="tok-str">"LP profit      ="</span>, <span class="tok-num">5.0</span> <span class="tok-op">*</span> <span class="tok-num">3.0</span> <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> <span class="tok-num">1.5</span>)
+    <span class="tok-fn">print</span>(<span class="tok-str">"rounded plan   ="</span>, <span class="tok-num">5.0</span> <span class="tok-op">*</span> <span class="tok-num">3.0</span> <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> <span class="tok-num">1.0</span>)
+    <span class="tok-kw">var</span> <span class="tok-var">best</span> <span class="tok-op">=</span> <span class="tok-op">-</span><span class="tok-num">1.0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">bx</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">var</span> <span class="tok-var">by</span> <span class="tok-op">=</span> <span class="tok-num">0</span>
+    <span class="tok-kw">for</span> xi <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">5</span>):
+        <span class="tok-kw">for</span> yi <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">4</span>):
+            <span class="tok-kw">var</span> <span class="tok-var">x</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(xi)
+            <span class="tok-kw">var</span> <span class="tok-var">y</span> <span class="tok-op">=</span> <span class="tok-type">Float64</span>(yi)
+            <span class="tok-kw">if</span> <span class="tok-num">6.0</span> <span class="tok-op">*</span> x <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> y <span class="tok-op">&lt;=</span> <span class="tok-type">CAP1</span> <span class="tok-kw">and</span> x <span class="tok-op">+</span> <span class="tok-num">2.0</span> <span class="tok-op">*</span> y <span class="tok-op">&lt;=</span> <span class="tok-type">CAP2</span>:
+                <span class="tok-kw">var</span> <span class="tok-var">z</span> <span class="tok-op">=</span> <span class="tok-num">5.0</span> <span class="tok-op">*</span> x <span class="tok-op">+</span> <span class="tok-num">4.0</span> <span class="tok-op">*</span> y
+                <span class="tok-kw">if</span> z <span class="tok-op">&gt;</span> best:
+                    best <span class="tok-op">=</span> z
+                    bx <span class="tok-op">=</span> xi
+                    by <span class="tok-op">=</span> yi
+    <span class="tok-fn">print</span>(<span class="tok-str">"integer plan   ="</span>, bx, by)
+    <span class="tok-fn">print</span>(<span class="tok-str">"integer profit ="</span>, best)
+    <span class="tok-fn">print</span>(<span class="tok-str">"gap            ="</span>, <span class="tok-num">21.0</span> <span class="tok-op">-</span> best)</pre>
+      </figure>
+<pre class="out">LP profit      = 21.0
+rounded plan   = 19.0
+integer plan   = 4 0
+integer profit = 20.0
+gap            = 1.0
+</pre>
+
+      <p>The continuous optimum earns $21$, but it wants $1.5$ of the second product. Rounding to $(3,1)$ drops profit to $19$; the true best integer plan is $(4,0)$ at $20$. The integrality gap is $1$ - small here, but the lesson generalises: model, relax, then account for the units your operation actually ships in.</p>
+
+      <section class="lab" data-lab="capstone" aria-label="Production planning lab">
+        <div class="labhead"><span class="dot"></span>Lab - continuous versus integer plans<span class="tagline">m09</span></div>
+      </section>
+
+      <p>The widget plots the integer grid against the feasible polygon, marks the LP vertex and the best integer point, and reports the gap. It is the whole tutorial in one picture: geometry, optimum, integrality.</p>
+
+      <div class="check" data-answer="d" data-q="1">
+        <p class="q">In the capstone, why is the best integer plan $(4,0)$ rather than the rounded $(3,1)$?</p>
+        <label class="opt"><input type="radio" name="m09q1" value="a"><span>Because rounding is forbidden</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="b"><span>Because $(3,1)$ is infeasible</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="c"><span>Because $(4,0)$ has a larger shadow price</span></label>
+        <label class="opt"><input type="radio" name="m09q1" value="d"><span>Because $(4,0)$ satisfies both constraints and earns $20$, more than $(3,1)$'s $19$</span></label>
+        <p class="feedback"></p>
+        <div class="explain" hidden>
+          <strong>Why:</strong> Rounding the fractional coordinate down is only a heuristic. $(4,0)$ uses all of the first resource ($24$) and stays within the second ($4\le6$), for profit $5\cdot4=20$, which beats the rounded $19$. Enumerating - or branching - finds it; guessing does not.
+        </div>
+      </div>
+
+      <nav class="pager">
+        <a class="navbtn" href="#m08" data-goto="7"><span class="d">Prev</span><span class="t">08 - Nonlinear descent</span></a>
+        <span class="navbtn off"><span class="d">End</span><span class="t">You have finished</span></span>
+      </nav>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footgrid">
+      <div>
+        <h4>This app</h4>
+        <a href="#m01">01 - Why Mojo</a>
+        <a href="#m03">03 - Simplex</a>
+        <a href="#m09">09 - Parallelism and capstone</a>
+      </div>
+      <div>
+        <h4>Reference pages</h4>
+        <a href="operations_research.html">Operations research</a>
+        <a href="simplex_algorithm.html">Simplex algorithm</a>
+      </div>
+      <div>
+        <h4>OR shelf</h4>
+        <a href="../index.html">All operations research material</a>
+      </div>
+    </div>
+    <p class="small">Listings target Mojo 1.x. Outputs are labelled expected, as the listings are not compile-checked in this build. KaTeX is vendored locally - the app works offline.</p>
+    <p class="small">Operations Research Mojo · <a class="resetlink" href="#" id="reset">reset progress</a></p>
+  </div>
+</footer>
+
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/katex/auto-render.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

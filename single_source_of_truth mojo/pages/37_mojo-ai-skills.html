@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Mojo AI skills · Mojo v1 The Language Manual</title>
+<meta name="description" content="Teaching an agent the Mojo toolchain.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part VI · Projects &amp; Tooling</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part VI</span><span class="sep">/</span><span>Projects &amp; Tooling</span><span class="sep">/</span><span class="num">37</span></nav><h1>Mojo AI skills</h1>
+<p class="dek">Teaching an agent the Mojo toolchain.</p><p class="byline">Chapter 37 · 630 words · 9 code blocks · <a class="ext" href="https://mojolang.org/docs/tools/skills/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Mojo is ideal for agentic programming because it has a concise language
+syntax and your agent will catch most of the coding errors at compile time.
+To make your token usage even more efficient, our Mojo skills ensure
+that you generate up-to-date and idiomatic Mojo code from the start.</p>
+<p>Many AI models are trained on older versions of Mojo and MAX.
+They aren't updated as quickly as the language evolves, so they
+often generate code that doesn't compile or reflects outdated
+usage.</p>
+<p>For best results, agents need accurate, up-to-date context.
+Mojo agent skills are designed to be compact and focused,
+providing only the most important guidance needed to avoid
+common code generation issues. This keeps token usage low and
+leaves more room for relevant context.</p>
+<p><a class="ext" data-external="" href="https://github.com/modular/skills/tree/main" rel="noopener noreferrer">Modular skills</a>
+provide current guidance on Mojo syntax, development patterns,
+and workflows so AI coding agents generate modern, working
+code that aligns with the language today.</p>
+<h2 class="h h--2" data-level="2" id="what-you-can-do-with-this">What you can do with this<a aria-label="Link to What you can do with this" class="h__link" href="#what-you-can-do-with-this"></a></h2>
+<ul>
+<li class="">Start new Mojo or MAX projects without manual setup
+("I want to start a new Mojo project for image enhancement")</li>
+<li class="">Generate modern Mojo syntax
+("Write a function that applies a transformation around the center")</li>
+<li class="">Write GPU code using valid patterns
+("Convert this CPU function to run on GPU")</li>
+<li class="">Use Python interoperability correctly
+("Update this Mojo code to use NumPy")</li>
+<li class="">Port code from CUDA, Python, or C++
+("Convert this CUDA function to Mojo")</li>
+</ul>
+<p>You describe the goal. Your system handles the language.</p>
+<h2 class="h h--2" data-level="2" id="installation">Installation<a aria-label="Link to Installation" class="h__link" href="#installation"></a></h2>
+<p><strong>Install all skills</strong>:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">npx skills add modular/skills</span>
+</code></pre></figure>
+<p><strong>Install a specific skill</strong>:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">npx skills add modular/skills --skill mojo-syntax</span>
+</code></pre></figure>
+<p><strong>Update skills</strong>:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">npx skills update</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="manual-installation">Manual installation<a aria-label="Link to Manual installation" class="h__link" href="#manual-installation"></a></h3>
+<p><strong>HTTPS:</strong></p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">git clone https://github.com/modular/skills.git</span>
+</code></pre></figure>
+<p><strong>SSH:</strong></p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">git clone git@github.com:modular/skills.git</span>
+</code></pre></figure>
+<p><strong>CLI:</strong></p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">gh repo clone modular/skills</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="configuration">Configuration<a aria-label="Link to Configuration" class="h__link" href="#configuration"></a></h3>
+<p>Copy or symlink individual skill files into your agent's configuration
+directory.</p>
+<h2 class="h h--2" data-level="2" id="how-it-works">How it works<a aria-label="Link to How it works" class="h__link" href="#how-it-works"></a></h2>
+<p>Skills follow the
+<a class="ext" data-external="" href="https://agentskills.io/specification" rel="noopener noreferrer">Agent Skills Standard</a>.
+Each skill is self-contained, triggered by intent, and
+structured for reliable use by AI agents.</p>
+<p>At runtime:</p>
+<ol>
+<li class="">The agent interprets your request.</li>
+<li class="">It selects the right skill (for example, <code>mojo-syntax</code>
+or <code>mojo-gpu-fundamentals</code>).</li>
+<li class="">The skill guides generation toward current Mojo and
+MAX patterns.</li>
+</ol>
+<p>This isn't prompting. It's controlled code generation.</p>
+<h2 class="h h--2" data-level="2" id="connect-to-the-docs-mcp-server">Connect to the docs MCP server<a aria-label="Link to Connect to the docs MCP server" class="h__link" href="#connect-to-the-docs-mcp-server"></a></h2>
+<p>Connect the docs
+<a class="ext" data-external="" href="https://modelcontextprotocol.io/" rel="noopener noreferrer">Model Context Protocol</a> (MCP) server to give
+your AI assistant live access to Mojo's documentation. Your assistant can
+search Mojo's manual, API references, and code examples while it plans, writes,
+and debugs your code, so its answers stay grounded in the current
+documentation instead of its training data.</p>
+<p>Your assistant can usually set up the MCP server itself with a prompt like
+this:</p>
+<figure class="cb cb--transcript" data-lang="text"><figcaption class="cb__bar"><span class="cb__lang">Text</span><span class="cb__spacer"></span><button aria-label="Copy Text code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Add the Mojo docs MCP server at https://mojo-mcp.modular.com/mcp/ and verify it</span>
+<span class="cl" data-line="2">by searching the docs.</span>
+</code></pre></figure>
+<p>Or configure it manually in your tool's settings.</p>
+<p>With Claude Code, add the server from the command line:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">claude mcp <span class="tk-function">add</span> --transport http mojo-docs https://mojo-mcp.modular.com/mcp/</span>
+</code></pre></figure>
+<p>With Cursor, add the server to <code>~/.cursor/mcp.json</code>:</p>
+<figure class="cb" data-lang="json"><figcaption class="cb__bar"><span class="cb__lang">JSON</span><span class="cb__spacer"></span><button aria-label="Copy JSON code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">{</span></span>
+<span class="cl" data-line="2"> <span class="tk-property">"mcpServers"</span><span class="tk-operator">:</span> <span class="tk-punctuation">{</span></span>
+<span class="cl" data-line="3"> <span class="tk-property">"mojo-docs"</span><span class="tk-operator">:</span> <span class="tk-punctuation">{</span></span>
+<span class="cl" data-line="4"> <span class="tk-property">"url"</span><span class="tk-operator">:</span> <span class="tk-string">"https://mojo-mcp.modular.com/mcp/"</span></span>
+<span class="cl" data-line="5"> <span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="6"> <span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="7"><span class="tk-punctuation">}</span></span>
+</code></pre></figure>
+<p>Any other client that supports MCP's streamable HTTP transport connects with
+the same URL. The server indexes both the stable and nightly documentation.</p>
+<h2 class="h h--2" data-level="2" id="faq">FAQ<a aria-label="Link to FAQ" class="h__link" href="#faq"></a></h2>
+<p><strong>Are the skills always up to date with the latest Mojo?</strong></p>
+<p>Skills are updated regularly to track changes in Mojo and MAX, but
+there will be lag between language changes and skill updates.</p>
+<p><strong>Can I select a skill version that matches my installed Mojo version?</strong></p>
+<p>Not currently. Skills aren't versioned by Mojo release, so there may be
+mismatches between the skill's guidance and your installed version.
+We recommend installing the latest version of Mojo to minimize this risk.</p>
+<p><strong>Do I have to install all the skills?</strong></p>
+<p>No. Install only what you need.</p>
+<p><strong>Are the skills licensed?</strong></p>
+<p>Yes. They're available under the Apache 2.0 license.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/tools/skills/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/tools/skills/</a>, saved Thu, 01 Oct 2026 15:47:11 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/36_jupyter-notebooks.html"><span class="pager__dir">← Previous</span><span class="pager__title">Jupyter notebooks</span></a><a class="pager__link pager__link--next" href="../pages/38_types-and-literals-cheat-sheet.html"><span class="pager__dir">Next →</span><span class="pager__title">Mojo types &amp; literals cheat sheet</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#what-you-can-do-with-this">What you can do with this</a></li><li class="rail__depth-2"><a href="#installation">Installation</a></li><li class="rail__depth-2"><a href="#how-it-works">How it works</a></li><li class="rail__depth-2"><a href="#connect-to-the-docs-mcp-server">Connect to the docs MCP server</a></li><li class="rail__depth-2"><a href="#faq">FAQ</a></li><li class="rail__depth-3"><a href="#manual-installation">Manual installation</a></li><li class="rail__depth-3"><a href="#configuration">Configuration</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#what-you-can-do-with-this">What you can do with this</a></li><li class="rail__depth-2"><a href="#installation">Installation</a></li><li class="rail__depth-2"><a href="#how-it-works">How it works</a></li><li class="rail__depth-2"><a href="#connect-to-the-docs-mcp-server">Connect to the docs MCP server</a></li><li class="rail__depth-2"><a href="#faq">FAQ</a></li><li class="rail__depth-3"><a href="#manual-installation">Manual installation</a></li><li class="rail__depth-3"><a href="#configuration">Configuration</a></li></ol>
+<p class="rail__meta">Chapter 37 of 38 · Part VI, Projects &amp; Tooling.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

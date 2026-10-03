@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Mojo language basics · Mojo v1 The Language Manual</title>
+<meta name="description" content="The small set of ideas the rest of the manual depends on.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part I · Orientation</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part I</span><span class="sep">/</span><span>Orientation</span><span class="sep">/</span><span class="num">03</span></nav><h1>Mojo language basics</h1>
+<p class="dek">The small set of ideas the rest of the manual depends on.</p><p class="byline">Chapter 03 · 2,004 words · 22 code blocks · <a class="ext" href="https://mojolang.org/nightly/docs/manual/basics/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>This page provides an overview of the Mojo language.</p>
+<p>If you know Python, then a lot of Mojo code looks familiar. However, Mojo
+incorporates features like static type checking, memory safety, next-generation
+compiler technologies, and more. As such, Mojo also has a lot in common with
+languages like C++ and Rust.</p>
+<p>If you prefer to learn by doing, follow the <a href="../pages/02_get-started-with-mojo.html">Get started with
+Mojo</a> tutorial.</p>
+<p>On this page, we'll introduce the essential Mojo syntax, so you can start
+coding quickly and understand other Mojo code you encounter. Subsequent
+sections in the Mojo Manual dive deeper into these topics, and this page links
+to them as appropriate.</p>
+<p>Let's get started! 🔥</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Mojo is a young language that's still <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/roadmap/" rel="noopener noreferrer">evolving</a>. As such, Mojo
+is currently <strong>not</strong> meant for beginners. Even this basics section assumes some
+programming experience. However, throughout the Mojo Manual, we try not to
+assume experience with any particular language.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="hello-world">Hello world<a aria-label="Link to Hello world" class="h__link" href="#hello-world"></a></h2>
+<p>Here's the traditional "Hello world" program in Mojo:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello, world!"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Every Mojo program must include a function named <code>main()</code> as the entry point.
+We'll talk more about functions soon, but for now it's enough to know that
+you can write <code>def main():</code> followed by an indented function body.</p>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/io/io/print/" rel="noopener noreferrer"><code>print()</code></a> function does what you'd expect,
+printing its arguments to the standard output.</p>
+<p>This page omits <code>def main():</code> for many brief examples.
+To test these, add them to a <code>main()</code> function.</p>
+<h2 class="h h--2" data-level="2" id="variables">Variables<a aria-label="Link to Variables" class="h__link" href="#variables"></a></h2>
+<p>In Mojo, you can declare a variable using the <code>var</code> keyword:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> y <span class="tk-operator">=</span> x <span class="tk-operator">*</span> x</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>y<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You can also explicitly declare the variable type, with or without an
+assignment:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> <span class="tk-builtin">sum</span><span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"> <span class="tk-builtin">sum</span> <span class="tk-operator">=</span> x <span class="tk-operator">+</span> x</span>
+</code></pre></figure>
+<p>Mojo variables are statically typed:
+that is, Mojo sets a variable's type at compile time, and the type doesn't
+change at runtime.
+If you don't specify a type, Mojo uses the type of the first value assigned to
+the variable.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="2">x <span class="tk-operator">=</span> <span class="tk-string">"Foo"</span> <span class="tk-comment"># Error: cannot implicitly convert 'StringLiteral["Foo"]' value to 'Int'</span></span>
+</code></pre></figure>
+<p>For more details, see the page about
+<a href="../pages/05_variables.html">variables</a>.</p>
+<h2 class="h h--2" data-level="2" id="blocks-and-statements">Blocks and statements<a aria-label="Link to Blocks and statements" class="h__link" href="#blocks-and-statements"></a></h2>
+<p>Define code blocks such as functions, conditions, and loops
+with a colon followed by indented lines. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">loop</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> x <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">if</span> x <span class="tk-operator">%</span> <span class="tk-number">2</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You can use any number of spaces or tabs for your indentation (we prefer 4
+spaces).</p>
+<p>All code statements in Mojo end with a newline. The Mojo compiler is fairly
+lenient in allowing extra line breaks. As a rule of thumb, you can always break
+statements between a pair of parentheses (<code>()</code>), square brackets (<code>[]</code>), or
+curly braces (<code>{}</code>):</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">matrix_multiply<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2">    matrix_a<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3">    matrix_b<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4">    result_matrix</span>
+<span class="cl" data-line="5"><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You can add parentheses to continue a statement across lines:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> long_text <span class="tk-operator">=</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"This is a long line of text that is a lot easier to read if"</span></span>
+<span class="cl" data-line="3"> <span class="tk-string">" it is broken up across two lines instead of one long line."</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Mojo combines adjacent string literals, so <code>long_text</code> ends up with
+a single, combined string.</p>
+<p>For more information on loops and conditional statements, see
+<a href="../pages/11_control-flow.html">Control flow</a>.</p>
+<h2 class="h h--2" data-level="2" id="functions">Functions<a aria-label="Link to Functions" class="h__link" href="#functions"></a></h2>
+<p>Define Mojo functions with the <code>def</code> keyword. For example, the
+following uses the <code>def</code> keyword to define a function named <code>greet()</code>
+that requires a single <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/collections/string/string/String/" rel="noopener noreferrer"><code>String</code></a>
+argument and returns a <code>String</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">greet</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> <span class="tk-string">"Hello, "</span> <span class="tk-operator">+</span> name <span class="tk-operator">+</span> <span class="tk-string">"!"</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="code-comments">Code comments<a aria-label="Link to Code comments" class="h__link" href="#code-comments"></a></h2>
+<p>You can create a one-line comment using the hash <code>#</code> symbol:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># This is a comment. The Mojo compiler ignores this line.</span></span>
+</code></pre></figure>
+<p>Comments may also follow some code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> message <span class="tk-operator">=</span> <span class="tk-string">"Hello, World!"</span> <span class="tk-comment"># This is also a valid comment</span></span>
+</code></pre></figure>
+<p>Enclose API documentation comments in triple quotes. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"""Prints a string.</span></span>
+<span class="cl" data-line="3"><span class="tk-string"></span></span>
+<span class="cl" data-line="4"><span class="tk-string">    Args:</span></span>
+<span class="cl" data-line="5"><span class="tk-string">        x: The string to print.</span></span>
+<span class="cl" data-line="6"><span class="tk-string">    """</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>Documenting your code with these kinds of comments (known as "docstrings")
+is a topic we've yet to fully specify, but you can generate an API reference
+from docstrings using the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/cli/doc/" rel="noopener noreferrer"><code>mojo doc</code> command</a>.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Technically, docstrings aren't <em>comments</em>, they're a special use of Mojo's
+syntax for multi-line string literals. For details, see
+<a href="../pages/06_types.html#string-literals">String literals</a> in the page on
+<a href="../pages/06_types.html">Types</a>.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="structs">Structs<a aria-label="Link to Structs" class="h__link" href="#structs"></a></h2>
+<p>You can build high-level abstractions for types (or "objects") as a <code>struct</code>.</p>
+<p>A <code>struct</code> in Mojo is similar to a <code>class</code> in Python: they both support
+methods, fields, operator overloading, decorators for metaprogramming, and so
+on. However, Mojo structs are completely static—the compiler binds them at
+compile time, so they don't allow dynamic dispatch or any runtime changes to
+the structure.
+(Mojo will also support Python-style classes in the future.)</p>
+<p>For example, here's a basic struct:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> second<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> first<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> second<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first <span class="tk-operator">=</span> first</span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second <span class="tk-operator">=</span> second</span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-operator">*</span><span class="tk-punctuation">,</span> copy<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first <span class="tk-operator">=</span> copy<span class="tk-punctuation">.</span>first</span>
+<span class="cl" data-line="11"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second <span class="tk-operator">=</span> copy<span class="tk-punctuation">.</span>second</span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">def</span> <span class="tk-function">dump</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>And here's how you can use it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">use_mypair</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> mine <span class="tk-operator">=</span> MyPair<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3">    mine<span class="tk-punctuation">.</span>dump<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The <code>MyPair</code> struct contains two special methods, <code>__init__()</code>, the initializer,
+and <code>__init__(out self, *, copy: Self)</code>, the copy initializer.
+<em>Lifecycle methods</em> like this control how Mojo creates, copies, moves, and
+destroys a struct.</p>
+<p>For most simple types, you don't need to write the lifecycle methods. You can
+use the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/reference/decorators/fieldwise-init/" rel="noopener noreferrer"><code>@fieldwise_init</code></a>
+decorator to generate the boilerplate field-wise initializer for you, and Mojo
+synthesizes copy and move initializers if you ask for them with trait
+conformance. So you can simplify the <code>MyPair</code> struct to this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> second<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">dump</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>For more details, see the page about
+<a href="../pages/13_mojo-structs.html">structs</a>.</p>
+<h3 class="h h--3" data-level="3" id="traits">Traits<a aria-label="Link to Traits" class="h__link" href="#traits"></a></h3>
+<p>A trait is like a template of characteristics for a struct. If you want to
+create a struct with the characteristics defined in a trait, you must implement
+each characteristic (such as each method). Each characteristic in a trait is a
+"requirement" for the struct, and when your struct implements all of the
+requirements, it "conforms" to the trait.</p>
+<p>Using traits allows you to write parameterized functions that can accept any
+type that conforms to a trait, rather than accepting only specific types.</p>
+<p>For example, here's how you can create a trait:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> SomeTrait<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">required_method</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>The three dots following the method signature are Mojo syntax indicating that
+the method has no implementation.</p>
+<p>Here's a struct that conforms to <code>SomeTrait</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">SomeStruct</span><span class="tk-punctuation">(</span>SomeTrait<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">def</span> <span class="tk-function">required_method</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"hello traits"</span><span class="tk-punctuation">,</span> x<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Then, here's a function that uses the trait as an argument type (instead of the
+struct type):</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> fun_with_traits<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> SomeTrait<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    x<span class="tk-punctuation">.</span>required_method<span class="tk-punctuation">(</span><span class="tk-number">42</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">use_trait_function</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> thing <span class="tk-operator">=</span> SomeStruct<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6">    fun_with_traits<span class="tk-punctuation">(</span>thing<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You'll see traits used in a lot of APIs provided by Mojo's standard library. For
+example, Mojo's collection types like <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/collections/list/List/" rel="noopener noreferrer"><code>List</code></a>
+and <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/collections/dict/Dict/" rel="noopener noreferrer"><code>Dict</code></a> can store any type that conforms
+to the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/traits/movable/Movable/" rel="noopener noreferrer"><code>Movable</code></a> trait (<code>Dict</code> keys must
+also conform to <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/collections/dict/#keyelement" rel="noopener noreferrer"><code>KeyElement</code></a>).
+You can specify the type when you create a collection:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> my_list <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>Float64<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>You're probably wondering about the square brackets on <code>fun_with_traits()</code>.
+These aren't function <em>arguments</em> (which go in parentheses); these are
+compile-time <em>parameters</em>, which we'll explain in the next section.</p></div></aside>
+<p>Without traits, the <code>x</code> argument in <code>fun_with_traits()</code> would have to declare a
+specific type that implements <code>required_method()</code>, such as <code>SomeStruct</code> (but
+then the function would accept only that type). With traits, the function can
+accept any type for <code>x</code> as long as it conforms to (it "implements") <code>SomeTrait</code>.
+Thus, <code>fun_with_traits()</code> is a "parameterized function" because it accepts a
+<em>generalized</em> type instead of a specific type.</p>
+<p>For more details, see the page about <a href="../pages/16_traits.html">traits</a>.</p>
+<h2 class="h h--2" data-level="2" id="parameterization">Parameterization<a aria-label="Link to Parameterization" class="h__link" href="#parameterization"></a></h2>
+<p>In Mojo, a parameter is a compile-time variable that becomes a runtime
+constant, and you declare it in square brackets on a function or struct.
+Parameters allow for compile-time metaprogramming, which means you can generate
+or modify code at compile time.</p>
+<p>Many other languages use "parameter" and "argument" interchangeably, so be aware
+that when we say things like "parameter" and "parameterized function," we're
+talking about these compile-time parameters. In contrast, a function "argument"
+is a runtime value that you declare in parentheses.</p>
+<p>Parameterization is a complex topic that the
+<a href="../pages/29_intro-to-metaprogramming.html">Metaprogramming</a> section covers in much more
+detail, but we want to break the ice just a little bit here. To get you started,
+let's look at a parameterized function:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> repeat<span class="tk-punctuation">[</span>count<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>msg<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># evaluate the following for loop at compile time</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>msg<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>This function has one parameter of type <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/simd/#int" rel="noopener noreferrer"><code>Int</code></a> and
+one argument of type <code>String</code>. To call the function, you need to specify both
+the parameter and the argument:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">call_repeat</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    repeat<span class="tk-punctuation">[</span><span class="tk-number">3</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># Prints "Hello" 3 times</span></span>
+</code></pre></figure>
+<p>By specifying <code>count</code> as a parameter, the Mojo compiler can optimize the
+function because this value can't change at runtime. And the <code>comptime</code> keyword
+in the code tells the compiler to evaluate the <code>for</code> loop at compile time, not
+runtime.</p>
+<p>The compiler effectively generates a unique version of the <code>repeat()</code> function
+that repeats the message only 3 times. This makes the code more performant
+because there's less to compute at runtime.</p>
+<p>Similarly, you can define a struct with parameters, which effectively allows
+you to define variants of that type at compile time, depending on the parameter
+values.</p>
+<p>For more detail on parameters, see the section on
+<a href="../pages/29_intro-to-metaprogramming.html">Metaprogramming</a>.</p>
+<h2 class="h h--2" data-level="2" id="python-integration">Python integration<a aria-label="Link to Python integration" class="h__link" href="#python-integration"></a></h2>
+<p>Mojo supports the ability to import Python modules as-is, so you can leverage
+existing Python code right away.</p>
+<p>For example, here's how you can import and use NumPy:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> np <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>import_module<span class="tk-punctuation">(</span><span class="tk-string">"numpy"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> ar <span class="tk-operator">=</span> np<span class="tk-punctuation">.</span>arange<span class="tk-punctuation">(</span><span class="tk-number">15</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>reshape<span class="tk-punctuation">(</span><span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>ar<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>ar<span class="tk-punctuation">.</span>shape<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You must have the Python module (such as <code>numpy</code>) installed in the environment
+where you're using Mojo.</p>
+<p>For more details, see the page on
+<a href="../pages/24_python-interoperability.html">Python integration</a>.</p>
+<h2 class="h h--2" data-level="2" id="next-steps">Next steps<a aria-label="Link to Next steps" class="h__link" href="#next-steps"></a></h2>
+<p>Hopefully this page has given you enough information to start experimenting with
+Mojo, but this is only touching the surface of what's available in Mojo.</p>
+<p>If you're in the mood to read more, continue through each page of this
+Mojo Manual—the next page from here is <a href="../pages/08_functions.html">Functions</a>.</p>
+<p>Otherwise, here are some other resources to check out:</p>
+<ul>
+<li class="">
+<p>See <a href="../pages/02_get-started-with-mojo.html">Get started with Mojo</a> for a hands-on
+tutorial that gets you up and running with Mojo.</p>
+</li>
+<li class="">
+<p>If you want to experiment with some code, clone <a class="ext" data-external="" href="https://github.com/modular/modular/" rel="noopener noreferrer">our GitHub
+repo</a> to try our code examples:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-function">git</span> clone https://github.com/modular/modular.git</span>
+<span class="cl" data-line="2"><span class="tk-class-name">cd</span> modular/Mojo/examples</span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>To see all the available Mojo APIs, check out the <a class="ext" data-external="" href="https://mojolang.org/nightly/docs/std/" rel="noopener noreferrer">Mojo standard library
+reference</a>.</p>
+</li>
+</ul>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/nightly/docs/manual/basics/" rel="noopener noreferrer" data-external>https://mojolang.org/nightly/docs/manual/basics/</a>, saved Thu, 01 Oct 2026 15:31:44 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/02_get-started-with-mojo.html"><span class="pager__dir">← Previous</span><span class="pager__title">Get started with Mojo</span></a><a class="pager__link pager__link--next" href="../pages/04_mojo-tips-for-python-devs.html"><span class="pager__dir">Next →</span><span class="pager__title">Mojo tips for Python devs</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#hello-world">Hello world</a></li><li class="rail__depth-2"><a href="#variables">Variables</a></li><li class="rail__depth-2"><a href="#blocks-and-statements">Blocks and statements</a></li><li class="rail__depth-2"><a href="#functions">Functions</a></li><li class="rail__depth-2"><a href="#code-comments">Code comments</a></li><li class="rail__depth-2"><a href="#structs">Structs</a></li><li class="rail__depth-2"><a href="#parameterization">Parameterization</a></li><li class="rail__depth-2"><a href="#python-integration">Python integration</a></li><li class="rail__depth-2"><a href="#next-steps">Next steps</a></li><li class="rail__depth-3"><a href="#traits">Traits</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#hello-world">Hello world</a></li><li class="rail__depth-2"><a href="#variables">Variables</a></li><li class="rail__depth-2"><a href="#blocks-and-statements">Blocks and statements</a></li><li class="rail__depth-2"><a href="#functions">Functions</a></li><li class="rail__depth-2"><a href="#code-comments">Code comments</a></li><li class="rail__depth-2"><a href="#structs">Structs</a></li><li class="rail__depth-2"><a href="#parameterization">Parameterization</a></li><li class="rail__depth-2"><a href="#python-integration">Python integration</a></li><li class="rail__depth-2"><a href="#next-steps">Next steps</a></li><li class="rail__depth-3"><a href="#traits">Traits</a></li></ol>
+<p class="rail__meta">Chapter 03 of 38 · Part I, Orientation.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

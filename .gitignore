@@ -1,11 +1,4 @@
-# Windows system files
 desktop.ini
-Thumbs.db
-ehthumbs.db
-*Zone.Identifier
 
-# Node
-node_modules/
-
-# Logs
-*.log
+# compiler-migration safety nets (not source)
+*.bak

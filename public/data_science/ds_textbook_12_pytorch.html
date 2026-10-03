@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -115,7 +113,6 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="pytorch"><span class="sw"></span>pytorch_inference.mojo</div>
-        <div class="tab" data-lang="python" data-group="pytorch"><span class="sw"></span>pytorch_inference.py</div>
       </div>
       <div class="panes" data-group="pytorch">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> python import Python
@@ -143,29 +140,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <span class="tok-kw">var</span> scores = output.detach().numpy()
     <span class="tok-kw">for</span> i <span class="tok-kw">in</span> range(<span class="tok-num">10</span>):
         print(<span class="tok-str">f"  Class {i}: {scores[0][i]:.4f}"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-kw">import</span> torch
-<span class="tok-kw">import</span> torch.nn <span class="tok-kw">as</span> nn
-
-<span class="tok-com"># Define a simple model</span>
-model = nn.Linear(<span class="tok-num">128</span>, <span class="tok-num">10</span>)
-model.eval()
-
-<span class="tok-com"># Create input tensor</span>
-input_tensor = torch.randn(<span class="tok-num">1</span>, <span class="tok-num">128</span>)
-
-<span class="tok-com"># Run inference</span>
-<span class="tok-kw">with</span> torch.no_grad():
-    output = model(input_tensor)
-    prediction = torch.argmax(output, dim=<span class="tok-num">1</span>)
-
-<span class="tok-fn">print</span>(<span class="tok-str">f"Prediction class: {prediction}"</span>)
-
-<span class="tok-com"># Convert to numpy</span>
-scores = output.detach().numpy()
-<span class="tok-kw">for</span> i <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">10</span>):
-    <span class="tok-fn">print</span>(<span class="tok-str">f"  Class {i}: {scores[0][i]:.4f}"</span>)</pre></div>
       </div>
     </div>
+
+    <p class="cap">The pure-Python spelling of that same block is <code class="inline">import torch</code> / <code class="inline">import torch.nn as nn</code> at module scope, with <code class="inline">with torch.no_grad():</code> wrapping the forward pass. The Mojo pane reaches the identical module through <code class="inline">Python.import_module("torch")</code> and gets gradient suppression from a bare <code class="inline">torch.no_grad()</code> call rather than a context manager.</p>
 
     <p>The Python interop layer is not a toy — it's a fully functional FFI bridge. You can:</p>
 
@@ -188,45 +166,12 @@ scores = output.detach().numpy()
 
     <div class="demo">
       <div class="tabbar">
-        <div class="tab active" data-lang="python" data-group="onnx"><span class="sw"></span>export_onnx.py</div>
-        <div class="tab" data-lang="mojo" data-group="onnx"><span class="sw"></span>inference_onnx.mojo</div>
+        <div class="tab active" data-lang="mojo" data-group="onnx"><span class="sw"></span>inference_onnx.mojo</div>
       </div>
       <div class="panes" data-group="onnx">
-        <div class="pane active" data-lang="python"><pre><span class="tok-com"># Step 1: Train and export to ONNX (Python/PyTorch)</span>
-<span class="tok-kw">import</span> torch
-<span class="tok-kw">import</span> torch.nn <span class="tok-kw">as</span> nn
-
-<span class="tok-kw">class</span> <span class="tok-ty">Classifier</span>(nn.Module):
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(self):
-        <span class="tok-fn">super</span>().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(<span class="tok-num">784</span>, <span class="tok-num">256</span>),
-            nn.ReLU(),
-            nn.Dropout(<span class="tok-num">0.2</span>),
-            nn.Linear(<span class="tok-num">256</span>, <span class="tok-num">128</span>),
-            nn.ReLU(),
-            nn.Linear(<span class="tok-num">128</span>, <span class="tok-num">10</span>),
-        )
-
-    <span class="tok-kw">def</span> <span class="tok-fn">forward</span>(self, x):
-        <span class="tok-kw">return</span> self.net(x)
-
-model = Classifier()
-model.eval()
-
-<span class="tok-com"># Export with dynamic batch dimension</span>
-dummy = torch.randn(<span class="tok-num">1</span>, <span class="tok-num">784</span>)
-torch.onnx.export(
-    model, dummy, <span class="tok-str">"classifier.onnx"</span>,
-    input_names=[<span class="tok-str">"input"</span>],
-    output_names=[<span class="tok-str">"output"</span>],
-    dynamic_axes={<span class="tok-str">"input"</span>: {<span class="tok-num">0</span>: <span class="tok-str">"batch"</span>}},
-    opset_version=<span class="tok-num">17</span>,
-)
-<span class="tok-fn">print</span>(<span class="tok-str">"Exported to classifier.onnx"</span>)</pre></div>
-        <div class="pane" data-lang="mojo"><pre><span class="tok-com"># Step 2: Run inference in Mojo via MAX Engine</span>
+        <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Run inference in Mojo via MAX Engine</span>
 <span class="tok-kw">from</span> max.engine <span class="tok-kw">import</span> InferenceSession
-<span class="tok-kw">from</span> std.math import exp
+<span class="tok-kw">from</span> math import exp
 
 <span class="tok-kw">def</span> <span class="tok-fn">softmax</span>(logits: List[Float64]) -&gt; List[Float64]:
     <span class="tok-kw">var</span> max_val = logits[<span class="tok-num">0</span>]
@@ -266,6 +211,8 @@ torch.onnx.export(
       </div>
     </div>
 
+    <p class="cap">The export half of that workflow still happens in Python: a <code class="inline">nn.Module</code> subclass whose <code class="inline">forward</code> wraps an <code class="inline">nn.Sequential(Linear(784, 256), ReLU, Dropout(0.2), Linear(256, 128), ReLU, Linear(128, 10))</code>, then <code class="inline">torch.onnx.export(model, dummy, "classifier.onnx", dynamic_axes={"input": {0: "batch"}}, opset_version=17)</code>. The <code class="inline">dynamic_axes</code> entry is what lets the Mojo pane vary the batch dimension later, and <code class="inline">opset_version=17</code> is the contract the MAX Engine has to honour when it reads the file.</p>
+
     <p>The ONNX format captures not just the model weights but the entire computation graph — every matrix multiply, activation, and reshape operation is encoded in a versioned, cross-platform format. This means you can train on GPU in PyTorch and run inference on CPU, mobile, or edge devices without any code changes.</p>
 
     <table>
@@ -288,7 +235,6 @@ torch.onnx.export(
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="max"><span class="sw"></span>max_serving.mojo</div>
-        <div class="tab" data-lang="python" data-group="max"><span class="sw"></span>python_serving.py</div>
       </div>
       <div class="panes" data-group="max">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> max.engine <span class="tok-kw">import</span> InferenceSession, Model
@@ -324,32 +270,10 @@ torch.onnx.export(
 
     <span class="tok-kw">var</span> batch_output = session.execute_batch(batch)
     print(<span class="tok-str">f"Batch of {batch_size} completed"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python inference — simpler but slower</span>
-<span class="tok-kw">import</span> onnxruntime <span class="tok-kw">as</span> ort
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-<span class="tok-kw">import</span> time
-
-session = ort.InferenceSession(
-    <span class="tok-str">"classifier.onnx"</span>,
-    providers=[<span class="tok-str">"CPUExecutionProvider"</span>]
-)
-
-<span class="tok-com"># Warmup</span>
-input_data = np.random.randn(<span class="tok-num">1</span>, <span class="tok-num">784</span>).astype(np.float32)
-session.run(<span class="tok-kw">None</span>, {<span class="tok-str">"input"</span>: input_data})
-
-<span class="tok-com"># Benchmark</span>
-iterations = <span class="tok-num">1000</span>
-start = time.perf_counter()
-<span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(iterations):
-    session.run(<span class="tok-kw">None</span>, {<span class="tok-str">"input"</span>: input_data})
-elapsed = time.perf_counter() - start
-
-avg_ms = (elapsed / iterations) * <span class="tok-num">1000</span>
-<span class="tok-fn">print</span>(<span class="tok-str">f"Average latency: {avg_ms:.2f}ms"</span>)
-<span class="tok-fn">print</span>(<span class="tok-str">f"Throughput: {<span class="tok-num">1000</span>/avg_ms:.0f} inferences/sec"</span>)</pre></div>
       </div>
     </div>
+
+    <p class="cap">The same loop in Python runs through <code class="inline">onnxruntime</code>: <code class="inline">ort.InferenceSession("classifier.onnx", providers=["CPUExecutionProvider"])</code>, a warmup <code class="inline">session.run(None, {"input": input_data})</code>, and <code class="inline">time.perf_counter()</code> around the loop. Identical iteration count, identical <code class="inline">avg_ms</code> formula — and the number the 3-10x figure in the callout below is measured against.</p>
 
     <p>The MAX Engine automatically selects the best execution strategy for your hardware — AVX-512 on modern x86, NEON on ARM, and GPU acceleration when available. This happens at compile time, not at runtime, so there's no overhead from hardware detection.</p>
 
@@ -366,7 +290,6 @@ avg_ms = (elapsed / iterations) * <span class="tok-num">1000</span>
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="opt"><span class="sw"></span>optimize_model.mojo</div>
-        <div class="tab" data-lang="python" data-group="opt"><span class="sw"></span>optimize_model.py</div>
       </div>
       <div class="panes" data-group="opt">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-kw">from</span> max.engine <span class="tok-kw">import</span> InferenceSession
@@ -406,27 +329,10 @@ avg_ms = (elapsed / iterations) * <span class="tok-num">1000</span>
     <span class="tok-com"># INT4 for edge deployment (more aggressive)</span>
     <span class="tok-kw">var</span> edge_model = session.optimize([quantize_int4()])
     print(<span class="tok-str">f"INT4 size: {edge_model.model_size() / <span class="tok-num">1_000_000</span>:.1f} MB"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python quantization via onnxruntime</span>
-<span class="tok-kw">import</span> onnxruntime <span class="tok-kw">as</span> ort
-<span class="tok-kw">from</span> onnxruntime.quantization <span class="tok-kw">import</span> quantize_dynamic, QuantType
-
-<span class="tok-com"># Dynamic INT8 quantization</span>
-quantize_dynamic(
-    model_input=<span class="tok-str">"classifier.onnx"</span>,
-    model_output=<span class="tok-str">"classifier_int8.onnx"</span>,
-    weight_type=QuantType.QInt8,
-)
-
-<span class="tok-com"># Load and benchmark</span>
-session = ort.InferenceSession(<span class="tok-str">"classifier_int8.onnx"</span>)
-
-<span class="tok-kw">import</span> os
-original = os.path.getsize(<span class="tok-str">"classifier.onnx"</span>) / <span class="tok-num">1e6</span>
-quantized = os.path.getsize(<span class="tok-str">"classifier_int8.onnx"</span>) / <span class="tok-num">1e6</span>
-<span class="tok-fn">print</span>(<span class="tok-str">f"Original: {original:.1f} MB"</span>)
-<span class="tok-fn">print</span>(<span class="tok-str">f"Quantized: {quantized:.1f} MB"</span>)</pre></div>
       </div>
     </div>
+
+    <p class="cap">The Python equivalent is <code class="inline">onnxruntime.quantization.quantize_dynamic(model_input="classifier.onnx", model_output="classifier_int8.onnx", weight_type=QuantType.QInt8)</code>, which writes a second file and measures the win with <code class="inline">os.path.getsize(...)</code> on both paths — a post-hoc, file-level diff. The pipeline above fuses and re-plans in memory instead, so there is no second artifact to ship.</p>
 
     <h3>Optimization strategies by use case</h3>
     <table>

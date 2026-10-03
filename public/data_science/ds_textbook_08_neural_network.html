@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -136,11 +134,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="arch"><span class="sw"></span>network.mojo</div>
-        <div class="tab" data-lang="python" data-group="arch"><span class="sw"></span>network.py</div>
       </div>
       <div class="panes" data-group="arch">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — network struct with He initialization</span>
-<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt, sigmoid
+<span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt, sigmoid
 
 <span class="tok-kw">struct</span> <span class="tok-ty">NeuralNetwork</span>:
     <span class="tok-kw">var</span> W1: <span class="tok-ty">List</span>[Float64]
@@ -171,25 +168,9 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
         <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> range(n_hidden):
             self.W2.append(randn() * scale2)
         self.b2 = [<span class="tok-num">0.0</span>]</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — equivalent with numpy</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">class</span> <span class="tok-ty">NeuralNetwork</span>:
-    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(self, n_features, n_hidden, lr=<span class="tok-num">0.01</span>):
-        self.n_hidden = n_hidden
-        self.lr = lr
-
-        <span class="tok-com"># He initialization</span>
-        scale1 = np.sqrt(<span class="tok-num">2.0</span> / n_features)
-        self.W1 = np.random.randn(n_hidden, n_features) * scale1
-        self.b1 = np.zeros((n_hidden, <span class="tok-num">1</span>))
-
-        scale2 = np.sqrt(<span class="tok-num">2.0</span> / n_hidden)
-        self.W2 = np.random.randn(<span class="tok-num">1</span>, n_hidden) * scale2
-        self.b2 = np.zeros((<span class="tok-num">1</span>, <span class="tok-num">1</span>))</pre></div>
       </div>
     </div>
-    <p class="cap">He initialization scales weights by sqrt(2/n) so that the variance of activations stays constant across layers — critical for training deep networks.</p>
+    <p class="cap">He initialization scales weights by sqrt(2/n) so that the variance of activations stays constant across layers — critical for training deep networks. In <code class="inline">numpy</code> that constructor is one line, <code class="inline">self.W1 = np.random.randn(n_hidden, n_features) * scale1</code>, and the matrix keeps its own two dimensions. Here the same weights live in a flat <code class="inline">List</code>[Float64] with the shape carried in <code class="inline">n_features</code>, so every access from here on does its own index arithmetic.</p>
   </section>
 
   <section id="forward">
@@ -199,11 +180,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="fwd"><span class="sw"></span>forward.mojo</div>
-        <div class="tab" data-lang="python" data-group="fwd"><span class="sw"></span>forward.py</div>
       </div>
       <div class="panes" data-group="fwd">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — forward pass with ReLU and sigmoid</span>
-<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sigmoid
+<span class="tok-kw">from</span> math <span class="tok-kw">import</span> sigmoid
 
 <span class="tok-kw">def</span> <span class="tok-fn">matmul</span>(A: <span class="tok-ty">List</span>[Float64], B: <span class="tok-ty">List</span>[Float64],
            rows: Int, cols: Int, inner: Int) -&gt; <span class="tok-ty">List</span>[Float64]:
@@ -238,20 +218,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <span class="tok-kw">var</span> output = [sigmoid(z2[<span class="tok-num">0</span>])]
 
     <span class="tok-kw">return</span> (z1, a1, output)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — forward pass with numpy</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">forward</span>(self, x):
-    <span class="tok-cast">self</span>.z1 = self.W1 @ x + self.b1
-    <span class="tok-cast">self</span>.a1 = np.maximum(<span class="tok-num">0</span>, self.z1)  <span class="tok-com"># ReLU</span>
-    <span class="tok-cast">self</span>.z2 = self.W2 @ self.a1 + self.b2
-    output = <span class="tok-num">1</span> / (<span class="tok-num">1</span> + np.exp(-self.z2))  <span class="tok-com"># sigmoid</span>
-    <span class="tok-kw">return</span> output
-
-<span class="tok-com"># numpy's @ operator calls optimized BLAS routines</span>
-<span class="tok-com"># but each element is still a Python float object</span></pre></div>
       </div>
     </div>
+
+    <p class="cap">The <code class="inline">numpy</code> version of those three lines is <code class="inline">self.z1 = self.W1 @ x + self.b1</code>, <code class="inline">np.maximum(0, self.z1)</code> for the ReLU, and <code class="inline">1 / (1 + np.exp(-self.z2))</code> for the sigmoid — compact and correct, with every element still a Python float on the heap.</p>
 
     <p>The Mojo version stores matrices as flat lists and computes the dot product explicitly. While this is slower than calling BLAS (which we'd do in production), it makes every operation transparent. You can see exactly how the <code class="inline">n_hidden × n_features</code> multiplication unrolls into individual multiply-accumulate operations.</p>
   </section>
@@ -263,7 +233,6 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="bwd"><span class="sw"></span>backward.mojo</div>
-        <div class="tab" data-lang="python" data-group="bwd"><span class="sw"></span>backward.py</div>
       </div>
       <div class="panes" data-group="bwd">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — backward pass with manual gradient computation</span>
@@ -305,28 +274,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <span class="tok-kw">for</span> i <span class="tok-kw">in</span> range(self.n_hidden):
         self.W2[i] -= self.lr * dW2[i]
     self.b2[<span class="tok-num">0</span>] -= self.lr * db2[<span class="tok-num">0</span>]</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — backward pass</span>
-<span class="tok-kw">def</span> <span class="tok-fn">backward</span>(self, x, y, output):
-    m = x.shape[<span class="tok-num">1</span>]
-
-    <span class="tok-com"># Output layer</span>
-    dz2 = output - y
-    dW2 = (<span class="tok-num">1</span>/m) * dz2 @ self.a1.T
-    db2 = (<span class="tok-num">1</span>/m) * np.sum(dz2, axis=<span class="tok-num">1</span>, keepdims=<span class="tok-num">True</span>)
-
-    <span class="tok-com"># Hidden layer</span>
-    da1 = self.W2.T @ dz2
-    dz1 = da1 * (self.z1 &gt; <span class="tok-num">0</span>)  <span class="tok-com"># ReLU derivative</span>
-    dW1 = (<span class="tok-num">1</span>/m) * dz1 @ x.T
-    db1 = (<span class="tok-num">1</span>/m) * np.sum(dz1, axis=<span class="tok-num">1</span>, keepdims=<span class="tok-num">True</span>)
-
-    <span class="tok-com"># Update</span>
-    self.W1 -= self.lr * dW1
-    self.b1 -= self.lr * db1
-    self.W2 -= self.lr * dW2
-    self.b2 -= self.lr * db2</pre></div>
       </div>
     </div>
+
+    <p class="cap">The same backward pass in <code class="inline">numpy</code> is five lines of <code class="inline">@</code> and <code class="inline">.T</code>, with <code class="inline">np.sum(..., axis=1, keepdims=True)</code> reducing the bias gradients. The flat-list version is longer for exactly one reason: it has to name the index, which is what makes the <code class="inline">dW1</code> mistake in the callout below possible in the first place.</p>
 
     <div class="callout">
       <span class="lbl">🐛 Common bug</span>
@@ -451,6 +402,9 @@ net.train(X, y, epochs=<span class="tok-num">2000</span>)</pre>
   <div class="chapnav"> <a class="navbtn" href="../mojo_v1/mojo_book_1.html">📕 Mojo Textbook</a>
     <a class="navbtn" href="ds_textbook_07_pipelines.html">← Chapter 7: Fast Data Pipelines</a>
     <a class="navbtn" href="ds_textbook_09_autodiff.html">Chapter 9: Autodiff and Metaprogramming →</a>
+    <a class="navbtn" href="neural_network.html">🔬 NN from Scratch (hands-on)</a>
+    <a class="navbtn" href="mlp_xor.html">🤖 MLP XOR Lab</a>
+    <a class="navbtn" href="nn_mojo.html">🧮 3-4-1 NN in Mojo &amp; NumPy</a>
   </div>
 </div>
 

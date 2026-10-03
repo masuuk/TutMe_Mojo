@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Comptime constraints and assertions · Mojo v1 The Language Manual</title>
+<meta name="description" content="Rejecting types and values the compiler cannot accept.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part V · Compile-Time Programming</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part V</span><span class="sep">/</span><span>Compile-Time Programming</span><span class="sep">/</span><span class="num">31</span></nav><h1>Comptime constraints and assertions</h1>
+<p class="dek">Rejecting types and values the compiler cannot accept.</p><p class="byline">Chapter 31 · 3,209 words · 19 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/constraints/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Mojo's constraint system lets you express program guarantees that go beyond
+what the type system provides. This page explains how to use this system
+effectively.</p>
+<p>A constraint, defined with the <code>where</code> keyword, represents a precondition for
+calling a function or instantiating a struct:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> pow2<span class="tk-punctuation">[</span>n<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int where n <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>Here the <code>pow2()</code> function requires its <code>n</code> parameter to be greater than or
+equal to 0. The expression <code>n &gt;= 0</code> is called a <em>proposition</em>. With the
+exception of very simple expressions, Mojo doesn't evaluate these propositions
+literally. Instead, it analyzes them symbolically, tracking a list of
+propositions that are known to be true in the current scope. Understanding this
+system of symbolic propositions is key to using constraints effectively.</p>
+<p>Mojo also supports <em>compile-time assertions</em>, which test a proposition at
+compile time—if the assertion evaluates to false, compilation fails:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> <span class="tk-keyword">assert</span> x <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-string">"x must be greater than or equal to 0."</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="defining-constraints">Defining constraints<a aria-label="Link to Defining constraints" class="h__link" href="#defining-constraints"></a></h2>
+<p>You can use constraints in the following contexts:</p>
+<ul>
+<li class="">
+<p>At the end of a function, method, or in the parameters of struct
+declaration, to constrain the values that you can bind to one or more
+parameters.</p>
+<p><code>def pow2[n: Int]() -&gt; Int where n &gt;= 0:</code></p>
+<p>A single <code>where</code> clause can constrain multiple parameters:</p>
+<p><code>def subspan[start: Int, end: Int](self) -&gt; Self where end &gt; start:</code></p>
+<p>Methods can gate their availability on parameters of the parent struct:</p>
+<p><code>def sort() where conforms_to(Self.T, Comparable):</code></p>
+</li>
+<li class="">
+<p>In the trait conformance list for a struct, to declare that a struct conforms
+to a trait only when certain conditions are met.</p>
+<p><code>struct MyContainer[T: AnyType](Copyable where conforms_to(T, Copyable)):</code></p>
+<p>You'll use this form, called <em>conditional trait conformance</em>, when defining
+parameterized types. For details, see the section on
+<a href="../pages/17_parameterized-declarations.html#conditional-trait-conformance">conditional trait conformances</a>.</p>
+</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="symbolic-propositions">Symbolic propositions<a aria-label="Link to Symbolic propositions" class="h__link" href="#symbolic-propositions"></a></h2>
+<p>The constraint system works with <em>symbolic</em> propositions.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> first<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>array<span class="tk-punctuation">:</span> Array<span class="tk-punctuation">[</span>_<span class="tk-punctuation">,</span> size<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> array<span class="tk-punctuation">.</span>T where size <span class="tk-operator">&gt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>In this case, <code>size &gt; 0</code> is a proposition that the constraint system tracks.</p>
+<p>By analogy, when you annotate a type on an argument you ask the compiler to
+ensure callers only pass that type. When you annotate a constraint on a
+function, you ask the compiler to ensure that the proposition is true at the
+call site.</p>
+<p>But the compiler can't test every proposition at every call site without running
+or interpreting unbounded amounts of code, which would vastly expand compile
+times. Instead, callers need to explicitly introduce "knowledge" into the
+constraint system.</p>
+<h3 class="h h--3" data-level="3" id="introducing-knowledge">Introducing knowledge<a aria-label="Link to Introducing knowledge" class="h__link" href="#introducing-knowledge"></a></h3>
+<p>The compiler tracks knowledge by scopes: each scope contains a set of known
+true propositions, also known as "knowledge," and nested scopes accumulate
+knowledge from outer scopes.</p>
+<p>There are four ways to introduce knowledge to the system:</p>
+<ul>
+<li class="">
+<p>Inside a struct declaration, all constraints declared on the struct are
+known, because concrete instances of the struct type can only be
+created when the proposition is true:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">List</span><span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span> where size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Knowledge base:</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># - `size &gt;= 0`</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>Inside a function, all constraints declared on the function are known,
+because callers can only call the function if they guarantee the constraint
+holds:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> create_list<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span> where size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Knowledge base:</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># - `size &gt;= 0`</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>Inside a <code>comptime if</code>, the <code>if</code> condition is known, because the code within
+the body is only instantiated if the condition is true:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Knowledge base:</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># - `size &gt;= 0`</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> size<span class="tk-punctuation">.</span>is_even<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-comment"># Knowledge base:</span></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># - `size &gt;= 0`</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># - `size.is_even()`</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>After a <code>comptime assert</code>, the asserted condition is known, because the
+compiler won't instantiate a function if a <code>comptime assert</code> condition is
+false. So any code after it is only instantiated if the assertion didn't
+fire:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> <span class="tk-keyword">assert</span> size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># Knowledge base:</span></span>
+<span class="cl" data-line="3"><span class="tk-comment"># - `size &gt;= 0`</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">comptime</span> <span class="tk-keyword">assert</span> size<span class="tk-punctuation">.</span>is_even<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-comment"># Knowledge base:</span></span>
+<span class="cl" data-line="7"><span class="tk-comment"># - `size &gt;= 0`</span></span>
+<span class="cl" data-line="8"><span class="tk-comment"># - `size.is_even()`</span></span>
+</code></pre></figure>
+</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="satisfying-constraints-with-knowledge">Satisfying constraints with knowledge<a aria-label="Link to Satisfying constraints with knowledge" class="h__link" href="#satisfying-constraints-with-knowledge"></a></h3>
+<p>Any time you call a function that has constraints, the system inspects the set
+of known-true propositions at the call site and determines whether <em>the known
+set of propositions</em> is a superset of <em>the required set of propositions</em>
+declared on the callee.</p>
+<p>The constraint system treats all propositions symbolically: it doesn't know or
+care what the expression means and doesn't interpret the code. With a few very
+simple exceptions (discussed later), the system doesn't perform symbolic math on
+your behalf. Instead, it treats these propositions as opaque and only uses
+knowledge you've explicitly introduced in the calling scope.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># A function that wants a non-empty list.</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> print_first<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>l<span class="tk-punctuation">:</span> Array<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> size<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> where size <span class="tk-operator">&gt;=</span> <span class="tk-number">1</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-comment"># A wrapper that wants a size &gt;= 2 list.</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> print_first_two<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>l<span class="tk-punctuation">:</span> Array<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> size<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> where size <span class="tk-operator">&gt;=</span> <span class="tk-number">2</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># Error: invalid call to 'print_first': lacking evidence to prove</span></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># correctness</span></span>
+<span class="cl" data-line="10">    print_first<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>l<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># ...</span></span>
+</code></pre></figure>
+<p>Mojo checks constraints without knowing all the call sites, and these
+expressions can reference symbolic parameter values-for example <code>is_prime(x)</code>
+where <code>x</code> is unknown. Because of this, Mojo can't interpret <code>is_prime()</code> for all
+possible values of <code>x</code>, nor can it make logical deductions. For example if
+<code>is_prime(x)</code> and <code>x &gt; 2</code> are true, it can't deduce that <code>is_odd(x)</code> must also
+be true.</p>
+<h2 class="h h--2" data-level="2" id="compile-time-assertions">Compile-time assertions<a aria-label="Link to Compile-time assertions" class="h__link" href="#compile-time-assertions"></a></h2>
+<p>Use <code>comptime assert</code> to introduce a known-true proposition at a specific
+point in the code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> <span class="tk-keyword">assert</span> x <span class="tk-operator">&gt;</span> <span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-string">"x must be greater than 0."</span></span>
+</code></pre></figure>
+<p>The message is optional. If the condition evaluates to false at compile time,
+compilation fails and the compiler shows the message (or a default message if
+none is specified).</p>
+<p>Mojo adds the asserted condition to the list of "known true" propositions for
+any code following the assertion.</p>
+<p>Constraints and assertions serve complementary roles: a <code>where</code> clause exposes
+a <em>requirement</em> that callers must prove, and <code>comptime assert</code> is one way to
+satisfy that requirement.</p>
+<h2 class="h h--2" data-level="2" id="limited-evaluation-of-propositions">Limited evaluation of propositions<a aria-label="Link to Limited evaluation of propositions" class="h__link" href="#limited-evaluation-of-propositions"></a></h2>
+<p>In general, it's safe to assume that the constraint system doesn't evaluate
+propositions directly, and that all knowledge needs to be provided explicitly.
+However, the constraint system does apply a <em>very
+limited</em> amount of "smartness" for very common cases. These are provided as a
+convenience and should not be treated as the norm.</p>
+<p>The goal is to provide a consistent, predictable experience so users can
+recognize these patterns as they become more familiar with the system.</p>
+<h3 class="h h--3" data-level="3" id="simple-implication">Simple implication<a aria-label="Link to Simple implication" class="h__link" href="#simple-implication"></a></h3>
+<p>A known proposition of the form <code>A and B</code> can satisfy a requirement of <code>A</code> by
+itself (or <code>B</code> by itself), even though symbolically they aren't identical
+propositions.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> create_list<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">,</span> size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span> where size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>capacity <span class="tk-operator">=</span> size<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> create_even_list<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">,</span> size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span> where <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="5">    size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span> <span class="tk-keyword">and</span> <span class="tk-punctuation">(</span>size <span class="tk-operator">/</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-operator">*</span> <span class="tk-number">2</span> <span class="tk-operator">==</span> size</span>
+<span class="cl" data-line="6"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># No need to individually prove `size &gt;= 0` — it's part of the</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># `and` above, so the call to `create_list` type-checks.</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">return</span> create_list<span class="tk-punctuation">[</span>T<span class="tk-punctuation">,</span> size<span class="tk-operator">=</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> l1 <span class="tk-operator">=</span> create_even_list<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>l1<span class="tk-punctuation">)</span> <span class="tk-operator">%</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># Prints 0, since the list has an even number of elements.</span></span>
+<span class="cl" data-line="15"></span>
+<span class="cl" data-line="16"> <span class="tk-comment"># var l2 = create_even_list[Int, 5]()  # Won't compile: 5 isn't even.</span></span>
+</code></pre></figure>
+<p>Similarly, <code>A</code> implies <code>A or B</code> for any <code>B</code>.</p>
+<h3 class="h h--3" data-level="3" id="canonicalization">Canonicalization<a aria-label="Link to Canonicalization" class="h__link" href="#canonicalization"></a></h3>
+<p>Sometimes there is more than one way to write the same expression. The system
+always simplifies expressions into a normal form internally, so expressions
+that aren't identical on the surface may be seen as identical by the system.</p>
+<p>The following are self-explanatory (assume <code>x: Int</code>):</p>
+<ul>
+<li class=""><code>x &gt; 0</code> == <code>x &gt;= 1</code></li>
+<li class=""><code>x &gt;= 2</code> == <code>not (x &lt; 2)</code></li>
+<li class=""><code>x + x</code> == <code>2 * x</code></li>
+</ul>
+<p>There's a special case for function calls. When invoking functions as part of
+a proposition, the system treats the entire function call as opaque. Only two
+identical function calls are the same.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">is_even</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> x <span class="tk-operator">%</span> <span class="tk-number">2</span> <span class="tk-operator">==</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> needs_even<span class="tk-punctuation">[</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> where is_even<span class="tk-punctuation">(</span>x<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">pass</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> forward_even_bad<span class="tk-punctuation">[</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> where x <span class="tk-operator">%</span> <span class="tk-number">2</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># ERROR: Needs evidence for `is_even(x)`.</span></span>
+<span class="cl" data-line="9">  needs_even<span class="tk-punctuation">[</span>x<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-keyword">def</span> forward_even_good<span class="tk-punctuation">[</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> where is_even<span class="tk-punctuation">(</span>x<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-comment"># SUCCESS</span></span>
+<span class="cl" data-line="13">  needs_even<span class="tk-punctuation">[</span>x<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Builtin functions</p><div class="callout__body"><p>Some functions in the standard library can be evaluated in <code>where</code> clauses.
+These functions implement simple operations on core types (for example, <code>Int</code>
+numerics), which are known to the compiler. These functions and can be inlined
+into the calling expression when called in a parameter context.</p><p>However, there's no way to identify these builtin functions without looking at
+the source code, and whether a given function is builtin may change without
+notice.</p><p>If you need a predicate that works transparently rather than opaquely, consider
+implementing it as a parametric comptime value instead, which is always
+inlined.</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> is_even<span class="tk-punctuation">[</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span> Bool <span class="tk-operator">=</span> x <span class="tk-operator">%</span> <span class="tk-number">2</span> <span class="tk-operator">==</span> <span class="tk-number">0</span></span>
+</code></pre></figure></div></aside>
+<h3 class="h h--3" data-level="3" id="context-free-folding">Context-free folding<a aria-label="Link to Context-free folding" class="h__link" href="#context-free-folding"></a></h3>
+<p>This is more of an extreme case of canonicalization than a separate category,
+but may catch people by surprise.</p>
+<p>Certain primitive operations on constants can be canonicalized into a new
+constant. For example:</p>
+<ul>
+<li class=""><code>1 + 1</code> == <code>2</code></li>
+<li class=""><code>4 % 2</code> == <code>0</code></li>
+<li class=""><code>1 == 1</code> == <code>True</code></li>
+</ul>
+<p>This extends to expressions with a mix of constants and non-constants:</p>
+<ul>
+<li class=""><code>1 + x + 1</code> == <code>2 + x</code></li>
+</ul>
+<p>Concretely, this means you may omit explicitly providing knowledge for
+propositions that are simple operations on constants:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">create_my_list</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># No need to provide evidence for `2 &gt;= 0`.</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> create_list<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="best-practices">Best practices<a aria-label="Link to Best practices" class="h__link" href="#best-practices"></a></h2>
+<p>The examples here focus on functions (declaring constraints when writing
+functions and satisfying constraints when calling functions), but the tips
+generalize to other forms of constraints such as struct parameter constraints
+and conditional trait conformances.</p>
+<h3 class="h h--3" data-level="3" id="writing-functions">Writing functions<a aria-label="Link to Writing functions" class="h__link" href="#writing-functions"></a></h3>
+<p>When writing a function, how do you decide whether a <code>where</code> clause is right
+for you?</p>
+<figure class="fig"><div class="fig__frame"><div class="fig__media"><img alt="Deciding when to use constraints" class="fig__img fig__img--light" decoding="async" loading="lazy" src="../assets/images/constraint-decisions-57c787a306a9c01a2269a55d0b9e2384.png" width="700"/><img alt="" aria-hidden="true" class="fig__img fig__img--dark" decoding="async" loading="lazy" src="../assets/images/constraint-decisions-dark-c580de3c6be3d9a5e64b3608f856b809.png" width="700"/></div></div><figcaption class="fig__caption"><b>Figure 1.</b> Deciding when to use constraints</figcaption></figure>
+<h4 class="h h--4" data-level="4" id="q1-does-your-function-handle-the-entire-domain-of-its-input-types">Q1: Does your function handle the entire domain of its input types?<a aria-label="Link to Q1: Does your function handle the entire domain of its input types?" class="h__link" href="#q1-does-your-function-handle-the-entire-domain-of-its-input-types"></a></h4>
+<p>If you can write your function so that it returns a result or throws an error
+on all inputs, you don't need to care about constraints at all. Just write
+your function as usual.</p>
+<p>For example, the following functions do <em>not</em> need constraints since they're
+guaranteed to return or throw:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> create_list_opt<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Optional<span class="tk-punctuation">[</span>List<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> size <span class="tk-operator">&lt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> <span class="tk-boolean">None</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> create_list_raise<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> size <span class="tk-operator">&lt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"negative size!"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">return</span> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>Constraints are only for cases where you don't want to check for exceptional
+cases at execution time.</p>
+<ul>
+<li class="">Constraints ask the type checker to rule out exceptional cases so that a
+type-checked program guarantees you (as the function author) don't need to
+handle these cases in your function body using run-time resources.</li>
+<li class="">As always, enforcing static guarantees isn't free. You're trading off
+run-time error checking logic for compile-time proof writing. In the
+absence of hard limits that prevent you from error checking at run
+time, it comes down to your preference for user experience.</li>
+</ul>
+<h4 class="h h--4" data-level="4" id="q2-is-this-limitation-a-central-concept-of-your-code">Q2: Is this limitation a central concept of your code?<a aria-label="Link to Q2: Is this limitation a central concept of your code?" class="h__link" href="#q2-is-this-limitation-a-central-concept-of-your-code"></a></h4>
+<p>If the condition represents a concept that is central to your code, a
+dedicated type may be easier than sprinkling <code>where</code> everywhere.</p>
+<p>Examples:</p>
+<ul>
+<li class="">A SIMD library that needs to represent SIMD width values, which aren't
+arbitrary integers.</li>
+<li class="">A filesystem library that needs to represent paths that follow specific
+format rules.</li>
+<li class="">A network library that needs to represent port numbers, which must be in
+the valid range.</li>
+</ul>
+<p>This is a good approach because the constraint is proven once (at construction)
+and the refined value can be passed around unconstrained until it needs to be
+disassembled. Your APIs stay simpler: fewer <code>where</code> clauses, fewer repeated
+asserts.</p>
+<p>A new type doesn't come for free though, as it's no longer freely
+interoperable with the original type. Make sure that the semantics are distinct
+enough to warrant the extra code. For example, writing a new type usually means
+implementing dunder methods corresponding to common operators (addition,
+subtraction, equality, and so on), which preserve the semantics of the new
+type.</p>
+<h4 class="h h--4" data-level="4" id="q3-is-the-constraint-understandable-and-provable-by-the-caller">Q3: Is the constraint understandable and provable by the caller?<a aria-label="Link to Q3: Is the constraint understandable and provable by the caller?" class="h__link" href="#q3-is-the-constraint-understandable-and-provable-by-the-caller"></a></h4>
+<p>If yes, use constraints.</p>
+<p>Make the condition part of the function's contract so that callers must prove
+it.</p>
+<p>This tends to be the right choice when:</p>
+<ul>
+<li class="">The condition is a user-facing requirement that the user can understand.</li>
+<li class="">Callers typically already need to handle the "bad" case themselves (for
+example, they may already have a <code>comptime if</code> that branches on this
+condition).</li>
+</ul>
+<p>Example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> take_prefix<span class="tk-punctuation">[</span>n<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> <span class="tk-builtin">len</span><span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span> where <span class="tk-number">0</span> <span class="tk-operator">&lt;=</span> n <span class="tk-operator">&lt;=</span> <span class="tk-builtin">len</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>One practical heuristic: if a user can read the function signature and
+immediately understand <em>what they did wrong</em> when the constraint fails,
+<code>where</code> is likely the right tool.</p>
+<p>If the constraint is <em>not</em> understandable or <em>not</em> provable by the
+user, use <code>assert</code> or <code>abort</code>.</p>
+<p>If the "bad case" isn't something users would understand, adding a <code>where</code>
+constraint only causes more confusion, as users can't reasonably prove it
+themselves.</p>
+<ul>
+<li class="">This typically happens when your library returns a value that has some
+internal constraints on it and expects users to pass it back with those
+constraints. For example, a communication library passes a device handle to
+the user as an <code>Int</code>, which has properties that are only known internally (for
+example, non-negative, special bits). Library APIs accepting this handle can't
+expect the user to prove these.</li>
+<li class="">There are usually more type-safe ways to achieve the same thing, so only do
+this if you don't care about type safety. For example, a more type-safe
+approach is to introduce a new type for the device handle so users are less
+likely to accidentally pass another <code>Int</code> or modify the returned value
+unexpectedly.</li>
+</ul>
+<h4 class="h h--4" data-level="4" id="summary">Summary<a aria-label="Link to Summary" class="h__link" href="#summary"></a></h4>
+<ul>
+<li class="">Use a dedicated type when the condition is a common refinement that should
+be proven once and reused everywhere.</li>
+<li class="">Use <code>where</code> when the condition is a user-understandable precondition.</li>
+<li class="">Use <code>comptime assert</code> or <code>abort</code> for internal inconsistencies in your library
+where a user can't do anything with the failure.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="calling-functions">Calling functions<a aria-label="Link to Calling functions" class="h__link" href="#calling-functions"></a></h3>
+<p>When calling a function, how do you show proof that you've satisfied the
+constraint?</p>
+<p>This is where the constraint system actively guides you into handling
+exceptional cases.</p>
+<figure class="fig"><div class="fig__frame"><div class="fig__media"><img alt="Using constrained APIs" class="fig__img fig__img--light" decoding="async" loading="lazy" src="../assets/images/constraint-propagation-fb6998b69150f6fc9f74910da03eb15e.png" width="700"/><img alt="" aria-hidden="true" class="fig__img fig__img--dark" decoding="async" loading="lazy" src="../assets/images/constraint-propagation-dark-803b96ceaf51cef77d6a2dc6f785c7e3.png" width="700"/></div></div><figcaption class="fig__caption"><b>Figure 2.</b> Using constrained APIs</figcaption></figure>
+<h4 class="h h--4" data-level="4" id="q1-do-the-constrained-parameters-come-from-a-parent-parameter-list">Q1: Do the constrained parameters come from a parent parameter list?<a aria-label="Link to Q1: Do the constrained parameters come from a parent parameter list?" class="h__link" href="#q1-do-the-constrained-parameters-come-from-a-parent-parameter-list"></a></h4>
+<p>If the constrained parameter you're passing is from the function's parameter
+list, or is a parameter on the enclosing struct, you're basically "forwarding"
+a value from one parameter list to another. Go to Q2.</p>
+<p>If not, you computed the value inside the function body, and you're in
+"construction" territory. Go to Q3.</p>
+<h4 class="h h--4" data-level="4" id="q2-does-the-same-limitation-apply-to-your-function">Q2: Does the same limitation apply to your function?<a aria-label="Link to Q2: Does the same limitation apply to your function?" class="h__link" href="#q2-does-the-same-limitation-apply-to-your-function"></a></h4>
+<p>If you're forwarding a constrained parameter into another constrained API,
+it's usually a hint to <strong>propagate</strong> the same requirement onto your own
+function.</p>
+<p>For example, to propagate the constraint to your callers:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> create_list<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">,</span> size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span> where size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>capacity <span class="tk-operator">=</span> size<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-comment"># This function is also only meaningful when size &gt;= 0.</span></span>
+<span class="cl" data-line="5"><span class="tk-comment"># Make that part of the contract too.</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> create_list_and_process<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">,</span> size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span> where size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> xs <span class="tk-operator">=</span> create_list<span class="tk-punctuation">[</span>T<span class="tk-punctuation">,</span> size<span class="tk-operator">=</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>But if you want your function to accept a <em>wider</em> input domain, your job is
+to <strong>handle both cases</strong> explicitly using a <code>comptime if</code>.</p>
+<p>For example, narrow the domain by checking before the call:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> create_list_and_fill<span class="tk-punctuation">[</span>size<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Optional<span class="tk-punctuation">[</span>List<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> needs_nonneg<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> <span class="tk-boolean">None</span></span>
+</code></pre></figure>
+<h4 class="h h--4" data-level="4" id="q3-do-you-know-that-the-parameter-already-satisfies-this-condition">Q3: Do you know that the parameter already satisfies this condition?<a aria-label="Link to Q3: Do you know that the parameter already satisfies this condition?" class="h__link" href="#q3-do-you-know-that-the-parameter-already-satisfies-this-condition"></a></h4>
+<p>If the parameter didn't come from a parent parameter list, it must
+have been computed in the body.</p>
+<p>Decide whether the desired constraint <strong>holds by construction</strong>.</p>
+<p>If it does, indicate this to the constraint system via a <code>comptime assert</code>.
+Note that this is you explicitly taking over the burden of proof.</p>
+<p>Don't be afraid to write these asserts. The symbolic nature of the constraint
+system means that it is conservative—logical deductions that are obvious to
+you aren't always "obvious" to it. Adding <code>comptime assert</code> is not a
+code smell, but rather an inseparable part of working within the constraint
+system.</p>
+<p>For example, given a computed parameter that is always valid:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># The constraint on hi &amp; lo guarantees a valid size.</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># Introduce this piece of knowledge explicitly.</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> size <span class="tk-operator">=</span> hi <span class="tk-operator">-</span> lo</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">assert</span> size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-string">"span is guaranteed non-negative"</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> create_list<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>But if the constraint does <em>not</em> necessarily hold, insert a <code>comptime if</code> and
+handle both cases explicitly.</p>
+<p>For example, a computed parameter that may be invalid:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># This version does NOT have a constraint on its inputs.</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># Branch on the computation to handle both cases.</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> create_list_from_span<span class="tk-punctuation">[</span>lo<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> hi<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Optional<span class="tk-punctuation">[</span>List<span class="tk-punctuation">[</span>hi <span class="tk-operator">-</span> lo<span class="tk-punctuation">]</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> size <span class="tk-operator">=</span> hi <span class="tk-operator">-</span> lo</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> size <span class="tk-operator">&gt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> create_list<span class="tk-punctuation">[</span>size<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> <span class="tk-boolean">None</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="summary-1">Summary<a aria-label="Link to Summary" class="h__link" href="#summary-1"></a></h2>
+<ul>
+<li class="">Constraints are part of the API contract.
+<ul>
+<li class="">A <code>where</code> clause is a precondition that the <strong>API author</strong> requires the
+<strong>caller</strong> to prove.</li>
+</ul>
+</li>
+<li class="">The compiler doesn't automatically derive evidence for callers.
+<ul>
+<li class="">The caller must explicitly provide evidence that the precondition is always
+satisfied.</li>
+</ul>
+</li>
+<li class="">If a caller gets a "lacking evidence" error, they can:
+<ol>
+<li class="">Add a constraint to push the requirement onto their own callers.</li>
+<li class="">Branch on the condition (<code>comptime if</code>).</li>
+<li class="">Assert an invariant (<code>comptime assert</code>).</li>
+</ol>
+</li>
+</ul>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/constraints/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/metaprogramming/constraints/</a>, saved Thu, 01 Oct 2026 15:41:16 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/30_compile-time-evaluation.html"><span class="pager__dir">← Previous</span><span class="pager__title">Compile-time evaluation</span></a><a class="pager__link pager__link--next" href="../pages/32_materializing-comptime-values.html"><span class="pager__dir">Next →</span><span class="pager__title">Materializing compile-time values at run time</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#defining-constraints">Defining constraints</a></li><li class="rail__depth-2"><a href="#symbolic-propositions">Symbolic propositions</a></li><li class="rail__depth-2"><a href="#compile-time-assertions">Compile-time assertions</a></li><li class="rail__depth-2"><a href="#limited-evaluation-of-propositions">Limited evaluation of propositions</a></li><li class="rail__depth-2"><a href="#best-practices">Best practices</a></li><li class="rail__depth-2"><a href="#summary-1">Summary</a></li><li class="rail__depth-3"><a href="#introducing-knowledge">Introducing knowledge</a></li><li class="rail__depth-3"><a href="#satisfying-constraints-with-knowledge">Satisfying constraints with knowledge</a></li><li class="rail__depth-3"><a href="#simple-implication">Simple implication</a></li><li class="rail__depth-3"><a href="#canonicalization">Canonicalization</a></li><li class="rail__depth-3"><a href="#context-free-folding">Context-free folding</a></li><li class="rail__depth-3"><a href="#writing-functions">Writing functions</a></li><li class="rail__depth-3"><a href="#calling-functions">Calling functions</a></li><li class="rail__depth-4"><a href="#q1-does-your-function-handle-the-entire-domain-of-its-input-types">Q1: Does your function handle the entire domain of its input types?</a></li><li class="rail__depth-4"><a href="#q2-is-this-limitation-a-central-concept-of-your-code">Q2: Is this limitation a central concept of your code?</a></li><li class="rail__depth-4"><a href="#q3-is-the-constraint-understandable-and-provable-by-the-caller">Q3: Is the constraint understandable and provable by the caller?</a></li><li class="rail__depth-4"><a href="#summary">Summary</a></li><li class="rail__depth-4"><a href="#q1-do-the-constrained-parameters-come-from-a-parent-parameter-list">Q1: Do the constrained parameters come from a parent parameter list?</a></li><li class="rail__depth-4"><a href="#q2-does-the-same-limitation-apply-to-your-function">Q2: Does the same limitation apply to your function?</a></li><li class="rail__depth-4"><a href="#q3-do-you-know-that-the-parameter-already-satisfies-this-condition">Q3: Do you know that the parameter already satisfies this condition?</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#defining-constraints">Defining constraints</a></li><li class="rail__depth-2"><a href="#symbolic-propositions">Symbolic propositions</a></li><li class="rail__depth-2"><a href="#compile-time-assertions">Compile-time assertions</a></li><li class="rail__depth-2"><a href="#limited-evaluation-of-propositions">Limited evaluation of propositions</a></li><li class="rail__depth-2"><a href="#best-practices">Best practices</a></li><li class="rail__depth-2"><a href="#summary-1">Summary</a></li><li class="rail__depth-3"><a href="#introducing-knowledge">Introducing knowledge</a></li><li class="rail__depth-3"><a href="#satisfying-constraints-with-knowledge">Satisfying constraints with knowledge</a></li><li class="rail__depth-3"><a href="#simple-implication">Simple implication</a></li><li class="rail__depth-3"><a href="#canonicalization">Canonicalization</a></li><li class="rail__depth-3"><a href="#context-free-folding">Context-free folding</a></li><li class="rail__depth-3"><a href="#writing-functions">Writing functions</a></li><li class="rail__depth-3"><a href="#calling-functions">Calling functions</a></li><li class="rail__depth-4"><a href="#q1-does-your-function-handle-the-entire-domain-of-its-input-types">Q1: Does your function handle the entire domain of its input types?</a></li><li class="rail__depth-4"><a href="#q2-is-this-limitation-a-central-concept-of-your-code">Q2: Is this limitation a central concept of your code?</a></li><li class="rail__depth-4"><a href="#q3-is-the-constraint-understandable-and-provable-by-the-caller">Q3: Is the constraint understandable and provable by the caller?</a></li><li class="rail__depth-4"><a href="#summary">Summary</a></li><li class="rail__depth-4"><a href="#q1-do-the-constrained-parameters-come-from-a-parent-parameter-list">Q1: Do the constrained parameters come from a parent parameter list?</a></li><li class="rail__depth-4"><a href="#q2-does-the-same-limitation-apply-to-your-function">Q2: Does the same limitation apply to your function?</a></li><li class="rail__depth-4"><a href="#q3-do-you-know-that-the-parameter-already-satisfies-this-condition">Q3: Do you know that the parameter already satisfies this condition?</a></li></ol>
+<p class="rail__meta">Chapter 31 of 38 · Part V, Compile-Time Programming.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

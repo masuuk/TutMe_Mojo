@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#0e1117; --bg2:#161b22; --bg3:#1c2230; --panel:#0f1420;
-    --fg:#e6edf3; --mut:#9aa7b8; --acc:#58a6ff; --acc2:#79c0ff;
+    --fg:#e6edf3; --mut:#ffd98f; --acc:#58a6ff; --acc2:#79c0ff;
     --acc3:#d2a8ff; --grn:#3fb950; --ylw:#d29922; --red:#f85149;
     --line:#30363d; --code:#0d1117;
   }
@@ -81,15 +81,13 @@
   pre code{background:none; padding:0; color:#c9d1d9; font-size:.86rem; line-height:1.55; display:block;}
   .tok-k{color:#ff7b72;} .tok-s{color:#a5d6ff;} .tok-c{color:#8b949e; font-style:italic;}
   .tok-n{color:#79c0ff;} .tok-f{color:#d2a8ff;} .tok-num{color:#79c0ff;}
-  /* side-by-side language labels: Python reference vs Mojo 1.x port */
-  pre.py{border-left:3px solid #a5d6ff;}
+  /* language label above each code block */
   pre.mojo{border-left:3px solid #4fc1ff; background:rgba(79,193,255,.05);}
-  pre.py::before, pre.mojo::before{
+  pre.mojo::before{
     display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
     font-family:"Cascadia Code",Consolas,Menlo,monospace;margin-bottom:8px;color:var(--mut);
+    content:"mojo 1.x";color:#4fc1ff;
   }
-  pre.py::before{content:"python — reference";}
-  pre.mojo::before{content:"mojo 1.0 — native port";color:#4fc1ff;}
   .math{font-family:Georgia,serif; font-style:italic; font-size:1.02em; color:var(--acc3);}
   .eq{
     background:rgba(210,168,255,.06); border:1px dashed rgba(210,168,255,.35); border-radius:10px;
@@ -121,8 +119,11 @@
   <a href="../applications/index.html" style="color:#9fd3ff;text-decoration:none;">🧩 Applications lessons</a>
   <a href="data_science.html" style="color:#9fd3ff;text-decoration:none;">📖 Data Science Textbook</a>
   <a href="perceptrons_and_activation.html" style="color:#9fd3ff;text-decoration:none;">🧠 Perceptrons &amp; Activations</a>
+  <a href="neural_network.html" style="color:#9fd3ff;text-decoration:none;">🧮 NN from Scratch</a>
+  <a href="mlp_xor.html" style="color:#9fd3ff;text-decoration:none;">🧪 ML Lab · Neural Nets</a>
+  <a href="nn_mojo.html" style="color:#9fd3ff;text-decoration:none;">🧮 3-4-1 NN · Mojo &amp; NumPy</a>
   <a href="fine_tuning_llms.html" style="color:#9fd3ff;text-decoration:none;">🤖 Fine-Tuning LLMs</a>
-  <a href="ai_agents_python_vs_mojo.html" style="color:#9fd3ff;text-decoration:none;">🤝 AI Agents · Python vs Mojo</a>
+  <a href="ai_agents_python_vs_mojo.html" style="color:#9fd3ff;text-decoration:none;">💬 AI Agents · Python vs Mojo</a>
   <a href="../index.html" style="color:#9fd3ff;text-decoration:none;">🏠 Home</a>
 </nav>
 
@@ -132,7 +133,7 @@
       <span class="logo">📉</span>
       <h1>Decision-Aware Machine Learning</h1>
     </div>
-    <div class="kicker"><span>Equations &amp; Code</span><span>Predict-then-Optimize</span><span>SPO+</span><span>Newsvendor</span><span>Python · Mojo 1.x</span></div>
+    <div class="kicker"><span>Equations &amp; Code</span><span>Predict-then-Optimize</span><span>SPO+</span><span>Newsvendor</span><span>Mojo 1.x</span></div>
   </div>
 </header>
 
@@ -171,7 +172,6 @@
   <a href="#llms">9. Cost-Weighted LLM Fine-Tuning</a>
   <a href="#check">10. Self-Check</a>
   <a href="fine_tuning_llms.html" class="xlink">↪ Companion tutorial: Fine-Tuning LLMs with LoRA &amp; QLoRA</a>
-  <a href="ai_agents_python_vs_mojo.html" class="xlink">↪ Companion guide: Building AI Agents · Python vs Mojo</a>
 </nav>
 <span class="toc-resize" id="tocResize" title="Drag to resize · double-click to reset"></span>
 <button class="toc-open" id="tocOpen" type="button" title="Show sidebar">☰ Contents</button>
@@ -222,44 +222,39 @@
   <strong>which quantile of the forecast you act on</strong>. An MSE model predicts the mean and
   answers the wrong question whenever <span class="math">c<sub>u</sub> ≠ c<sub>o</sub></span>.</p>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
 
-c_u, c_o = <span class="tok-num">8.0</span>, <span class="tok-num">1.0</span>              <span class="tok-c"># stockout is 8x worse than overage</span>
-fractile = c_u / (c_u + c_o)          <span class="tok-c"># 0.888…</span>
+  <p>The empirical quantile is visibly what it is — <em>sort, index at the fractile</em> — and the
+  whole experiment (sample → quantile → evaluate on a million draws) compiles to one pass with no
+  interpreter in the loop. It runs the experiment twice, so the claim above is a measurement rather
+  than an assertion: <code>q_mse</code> is what an MSE forecast hands you, <code>q_da</code> is what
+  the fractile hands you, and the two expected costs are printed side by side.</p>
 
-hist = np.random.lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, size=<span class="tok-num">200</span>)
-q_mse = hist.mean()                   <span class="tok-c"># wrong target: the mean</span>
-q_da  = np.quantile(hist, fractile)   <span class="tok-c"># cost-aware target: the quantile</span>
-
-<span class="tok-k">def</span> <span class="tok-f">cost</span>(q, d):
-    <span class="tok-k">return</span> c_o*np.maximum(q-d, <span class="tok-num">0</span>) + c_u*np.maximum(d-q, <span class="tok-num">0</span>)
-
-test = np.random.lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, size=<span class="tok-num">10_000</span>)
-<span class="tok-k">print</span>(cost(q_mse, test).mean(), cost(q_da, test).mean())  <span class="tok-c"># quantile wins big</span></code></pre>
-
-  <p>In Mojo the empirical quantile is visibly what it is — <em>sort, index at the fractile</em> —
-  and the whole experiment (sample → quantile → evaluate on millions of draws) compiles to one
-  pass with no interpreter in the loop:</p>
-
-  <pre class="mojo"><span class="tok-k">from</span> std.random <span class="tok-k">import</span> random_float64, seed
-<span class="tok-k">from</span> std.math <span class="tok-k">import</span> sqrt, log, cos, exp, PI
+  <pre class="mojo"><code><span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
+<span class="tok-k">from</span> std.random <span class="tok-k">import</span> random_float64, seed
+<span class="tok-k">from</span> std.math <span class="tok-k">import</span> <span class="tok-f">sqrt</span>, <span class="tok-f">log</span>, <span class="tok-f">cos</span>, <span class="tok-f">exp</span>, PI
 
 <span class="tok-k">def</span> <span class="tok-f">lognormal</span>(mu: Float64, sigma: Float64, n: Int) -&gt; List[Float64]:
     <span class="tok-k">var</span> xs = List[Float64]()
-    <span class="tok-k">for</span> _ <span class="tok-k">in</span> range(n):                <span class="tok-c"># Box–Muller</span>
+    <span class="tok-k">for</span> _ <span class="tok-k">in</span> <span class="tok-f">range</span>(n):                <span class="tok-c"># Box–Muller</span>
         <span class="tok-k">var</span> u1 = random_float64(<span class="tok-num">1e-12</span>, <span class="tok-num">1.0</span>)
         <span class="tok-k">var</span> u2 = random_float64(<span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>)
-        <span class="tok-k">var</span> z = sqrt(-<span class="tok-num">2.0</span>*log(u1)) * cos(<span class="tok-num">2.0</span>*PI*u2)
-        xs.append(exp(mu + sigma*z))
+        <span class="tok-k">var</span> z = <span class="tok-f">sqrt</span>(-<span class="tok-num">2.0</span>*<span class="tok-f">log</span>(u1)) * <span class="tok-f">cos</span>(<span class="tok-num">2.0</span>*PI*u2)
+        xs.append(<span class="tok-f">exp</span>(mu + sigma*z))
     <span class="tok-k">return</span> xs
+
+<span class="tok-k">def</span> <span class="tok-f">mean_of</span>(xs: List[Float64]) -&gt; Float64:
+    <span class="tok-k">var</span> s: Float64 = <span class="tok-num">0.0</span>
+    <span class="tok-k">for</span> x <span class="tok-k">in</span> xs:
+        s += x
+    <span class="tok-k">return</span> s / Float64(<span class="tok-f">len</span>(xs))
 
 <span class="tok-k">def</span> <span class="tok-f">quantile</span>(xs: List[Float64], q: Float64) -&gt; Float64:
     xs.sort()                          <span class="tok-c"># empirical quantile = sorted index</span>
-    <span class="tok-k">return</span> xs[Int(q * Float64(len(xs)-<span class="tok-num">1</span>) + <span class="tok-num">0.5</span>)]
+    <span class="tok-k">return</span> xs[Int(q * Float64(<span class="tok-f">len</span>(xs)-<span class="tok-num">1</span>) + <span class="tok-num">0.5</span>)]
 
 <span class="tok-k">def</span> <span class="tok-f">cost</span>(q: Float64, d: Float64, c_u: Float64,
-             c_o: Float64) -&gt; Float64:
-    <span class="tok-k">return</span> c_o*max(q-d, <span class="tok-num">0.0</span>) + c_u*max(d-q, <span class="tok-num">0.0</span>)
+         c_o: Float64) -&gt; Float64:
+    <span class="tok-k">return</span> c_o*<span class="tok-f">max</span>(q-d, <span class="tok-num">0.0</span>) + c_u*<span class="tok-f">max</span>(d-q, <span class="tok-num">0.0</span>)
 
 <span class="tok-k">def</span> <span class="tok-f">main</span>():
     seed(<span class="tok-num">42</span>)
@@ -267,12 +262,16 @@ test = np.random.lognormal(<span class="tok-num">3.0</span>, <span class="tok-nu
     <span class="tok-k">var</span> c_o: Float64 = <span class="tok-num">1.0</span>
     <span class="tok-k">var</span> fr = c_u / (c_u + c_o)
     <span class="tok-k">var</span> hist = lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, <span class="tok-num">200</span>)
-    <span class="tok-k">var</span> q_da = quantile(hist, fr)         <span class="tok-c"># cost-aware order</span>
+    <span class="tok-k">var</span> q_da = quantile(hist, fr)      <span class="tok-c"># cost-aware order: the quantile</span>
+    <span class="tok-k">var</span> q_mse = mean_of(hist)          <span class="tok-c"># wrong target: the mean an MSE model gives</span>
     <span class="tok-k">var</span> test = lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, <span class="tok-num">1_000_000</span>)
-    <span class="tok-k">var</span> tot: Float64 = <span class="tok-num">0.0</span>
+    <span class="tok-k">var</span> tot_da: Float64 = <span class="tok-num">0.0</span>
+    <span class="tok-k">var</span> tot_mse: Float64 = <span class="tok-num">0.0</span>
     <span class="tok-k">for</span> d <span class="tok-k">in</span> test:
-        tot += cost(q_da, d, c_u, c_o)
-    <span class="tok-k">print</span>(<span class="tok-s">"expected cost:"</span>, tot / <span class="tok-num">1e6</span>)</code></pre>
+        tot_da  += cost(q_da,  d, c_u, c_o)
+        tot_mse += cost(q_mse, d, c_u, c_o)
+    <span class="tok-f">print</span>(<span class="tok-s">"mean order    :"</span>, tot_mse / <span class="tok-num">1e6</span>)   <span class="tok-c"># what an MSE forecast pays</span>
+    <span class="tok-f">print</span>(<span class="tok-s">"quantile order:"</span>, tot_da  / <span class="tok-num">1e6</span>)   <span class="tok-c"># quantile wins big</span></code></pre>
 </section>
 
 <!-- ===================== THRESHOLD ===================== -->
@@ -291,20 +290,9 @@ test = np.random.lognormal(<span class="tok-num">3.0</span>, <span class="tok-nu
   <p>Triage example: sending a severe patient home costs 8, escalating a mild one costs 1.5, so
   <span class="math">τ* = 1.5 / 9.5 ≈ 0.158</span> — escalate anyone with &gt;16% severe risk.</p>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
 
-C = np.array([[<span class="tok-num">0.0</span>, <span class="tok-num">8.0</span>],      <span class="tok-c"># C[true, pred]: [0,1] severe→home</span>
-              [<span class="tok-num">1.5</span>, <span class="tok-num">0.0</span>]])     <span class="tok-c">#               [1,0] mild→escalate</span>
+  <pre class="mojo"><code><span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
 
-c_fp, c_fn = C[<span class="tok-num">1</span>, <span class="tok-num">0</span>], C[<span class="tok-num">0</span>, <span class="tok-num">1</span>]
-tau = c_fp / (c_fp + c_fn)            <span class="tok-c"># 0.158 — not 0.5!</span>
-
-<span class="tok-k">def</span> <span class="tok-f">decide</span>(p):                 <span class="tok-c"># p = calibrated P(severe)</span>
-    <span class="tok-k">return</span> (p &gt; tau).astype(<span class="tok-k">int</span>)
-
-expected_cost = np.mean(C[y_true, decide(p_pred)])  <span class="tok-c"># the metric to report</span></code></pre>
-
-  <pre class="mojo">
 <span class="tok-k">def</span> <span class="tok-f">threshold</span>(c_fp: Float64, c_fn: Float64) -&gt; Float64:
     <span class="tok-k">return</span> c_fp / (c_fp + c_fn)
 
@@ -336,14 +324,6 @@ expected_cost = np.mean(C[y_true, decide(p_pred)])  <span class="tok-c"># the me
   <p>For stock allocation the impact weight is the unmet-demand exposure: facilities likely to run
   out of stock get up-weighted, exactly the Sierra Leone design.</p>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-
-<span class="tok-k">def</span> <span class="tok-f">decision_weights</span>(hist_demand, stock, c_u):
-    cover = np.clip(stock / (hist_demand + <span class="tok-num">1e-9</span>), <span class="tok-num">0</span>, <span class="tok-num">1</span>)
-    impact = c_u * (<span class="tok-num">1</span> - cover)         <span class="tok-c"># unmet-demand proxy</span>
-    <span class="tok-k">return</span> impact / impact.sum()      <span class="tok-c"># weights sum to 1</span>
-
-<span class="tok-c"># then: model.fit(x, y, sample_weight=w)   — any sklearn/GBM model</span></code></pre>
 
   <pre class="mojo"><code><span class="tok-k">from</span> tensor <span class="tok-k">import</span> Tensor
 
@@ -383,24 +363,6 @@ expected_cost = np.mean(C[y_true, decide(p_pred)])  <span class="tok-c"># the me
   oracle decision would have cost.</em> Convex in <span class="math">ŷ</span> — so it plugs into
   gradient training. Canonical example: shortest path with predicted edge costs.</p>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-<span class="tok-k">from</span> scipy.sparse.csgraph <span class="tok-k">import</span> shortest_path
-
-<span class="tok-c"># graph with TRUE edge costs y; model predicts y_hat</span>
-<span class="tok-k">def</span> <span class="tok-f">path_cost</span>(adj, y):
-    <span class="tok-c"># cost of the shortest path under y (decision = argmin path)</span>
-    _, pred = shortest_path(adj, directed=<span class="tok-k">True</span>,
-                            return_predecessors=<span class="tok-k">True</span>)
-    <span class="tok-k">return</span> pred  <span class="tok-c"># path structure — see note below</span>
-
-<span class="tok-k">def</span> <span class="tok-f">spo_plus</span>(y, y_hat, D):
-    <span class="tok-c"># D = callable: c -> decision d(c) minimizing c^T d</span>
-    c_hat  = y_hat @ D(y_hat)       <span class="tok-c"># cost of YOUR decision</span>
-    c_orac = y @ D(y)               <span class="tok-c"># cost of oracle decision</span>
-    c_worst = max(y @ d - <span class="tok-num">2</span>*(y_hat @ d) <span class="tok-k">for</span> d <span class="tok-k">in</span> D.extreme_points())
-    <span class="tok-k">return</span> c_worst - <span class="tok-num">2</span>*c_hat + c_orac
-
-<span class="tok-c"># training loop: theta -= lr * grad(spo_plus(f(x), y))</span></code></pre>
 
   <pre class="mojo"><code><span class="tok-c"># SPO+ for the 1-D allocation case: D = [0, q_max], c(d; y) = -y*d</span>
 <span class="tok-c"># (buy d units, earn y per unit). d(c) = q_max if c &gt; 0 else 0.</span>
@@ -439,23 +401,14 @@ expected_cost = np.mean(C[y_true, decide(p_pred)])  <span class="tok-c"># the me
   </div>
 
   <p>Cost <span class="math">k</span> optimizer solves per training step — a throughput problem,
-  i.e. exactly the workload where the Mojo version of the inner loop pays for itself.</p>
+  i.e. exactly the workload where the Mojo version of the inner loop pays for itself. The smoothed
+  decision <span class="math">d̃ = (1/k) Σ d<sub>j</sub></span> comes out of the very same loop: keep
+  a running sum alongside the gradient and it is the action you report, while the gradient is the
+  thing you train on.</p>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
 
-<span class="tok-k">def</span> <span class="tok-f">perturbed_decision_and_grad</span>(y_hat, solver, eps=<span class="tok-num">0.1</span>, k=<span class="tok-num">64</span>):
-    Z = np.random.normal(size=(k, len(y_hat)))
-    d_bar = np.zeros_like(y_hat)
-    grad  = np.zeros_like(y_hat)
-    <span class="tok-k">for</span> z <span class="tok-k">in</span> Z:
-        d_j = solver(y_hat + eps*z)      <span class="tok-c"># one optimizer solve</span>
-        d_bar += d_j
-        grad  += np.outer(d_j, z) / eps  <span class="tok-c"># accumulate grad estimate</span>
-    <span class="tok-k">return</span> d_bar / k, grad / k
-
-<span class="tok-c"># theta -= lr * (d-bar Jacobian) @ grad  — plug into autograd manually</span></code></pre>
-
-  <pre class="mojo"><span class="tok-k">from</span> std.random <span class="tok-k">import</span> normal_float64, seed
+  <pre class="mojo"><code><span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
+<span class="tok-k">from</span> std.random <span class="tok-k">import</span> normal_float64, seed
 <span class="tok-k">from</span> std.math <span class="tok-k">import</span> sqrt
 
 <span class="tok-k">def</span> <span class="tok-f">perturbed_grad</span>(y_hat: List[Float64],
@@ -494,32 +447,44 @@ expected_cost = np.mean(C[y_true, decide(p_pred)])  <span class="tok-c"># the me
     VGC debiasing:&nbsp; Ĉ<sub>out</sub> = Ĉ<sub>in</sub> + (∂ Ĉ<sub>in</sub> / ∂ Zᵢ)ᵀ Σ<sub>Z</sub> (∂ Ĉ<sub>in</sub> / ∂ Zᵢ) · (1/n) &nbsp;— smooth in policy parameters, usable for <em>selection</em>, not just evaluation
   </div>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
 
-<span class="tok-c"># 1) see the optimism yourself: SAA newsvendor on tiny samples</span>
-<span class="tok-k">def</span> <span class="tok-f">saa_order</span>(samples, c_u, c_o):
-    <span class="tok-k">return</span> np.quantile(samples, c_u/(c_u+c_o))
+  <pre class="mojo"><code><span class="tok-c"># 1) see the optimism yourself: SAA newsvendor on tiny samples.</span>
+<span class="tok-c">#    (reuses quantile(), cost() and lognormal() from Section 2)</span>
+<span class="tok-k">def</span> <span class="tok-f">main</span>():
+    seed(<span class="tok-num">0</span>)
+    <span class="tok-k">var</span> c_u: Float64 = <span class="tok-num">8.0</span>
+    <span class="tok-k">var</span> c_o: Float64 = <span class="tok-num">1.0</span>
+    <span class="tok-k">var</span> n = <span class="tok-num">30</span>                         <span class="tok-c"># n = 30 only</span>
+    <span class="tok-k">var</span> reps = <span class="tok-num">500</span>
+    <span class="tok-k">var</span> in_sample: Float64 = <span class="tok-num">0.0</span>
+    <span class="tok-k">var</span> out_sample: Float64 = <span class="tok-num">0.0</span>
+    <span class="tok-k">for</span> _ <span class="tok-k">in</span> <span class="tok-f">range</span>(reps):
+        <span class="tok-k">var</span> train = lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, n)
+        <span class="tok-k">var</span> q = quantile(train, c_u / (c_u + c_o))
+        <span class="tok-k">var</span> c_in: Float64 = <span class="tok-num">0.0</span>
+        <span class="tok-k">for</span> d <span class="tok-k">in</span> train:
+            c_in += cost(q, d, c_u, c_o)
+        in_sample += c_in / Float64(n)     <span class="tok-c"># looks great…</span>
+        <span class="tok-k">var</span> test = lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, <span class="tok-num">10_000</span>)
+        <span class="tok-k">var</span> c_out: Float64 = <span class="tok-num">0.0</span>
+        <span class="tok-k">for</span> d <span class="tok-k">in</span> test:
+            c_out += cost(q, d, c_u, c_o)
+        out_sample += c_out / <span class="tok-num">10_000.0</span>     <span class="tok-c"># …but this is the truth</span>
+    in_sample /= Float64(reps)
+    out_sample /= Float64(reps)
+    <span class="tok-f">print</span>(<span class="tok-s">"in-sample    :"</span>, in_sample)
+    <span class="tok-f">print</span>(<span class="tok-s">"out-of-sample:"</span>, out_sample)
+    <span class="tok-f">print</span>(<span class="tok-s">"gap (the bias):"</span>, out_sample - in_sample)
 
-rng = np.random.default_rng(<span class="tok-num">0</span>)
-true_opt = []
-in_sample = []
-<span class="tok-k">for</span> _ <span class="tok-k">in</span> range(<span class="tok-num">500</span>):
-    train = rng.lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, <span class="tok-num">30</span>)   <span class="tok-c"># n = 30 only</span>
-    q = saa_order(train, <span class="tok-num">8.0</span>, <span class="tok-num">1.0</span>)
-    in_sample.append(cost(q, train).mean())   <span class="tok-c"># looks great…</span>
-    test = rng.lognormal(<span class="tok-num">3.0</span>, <span class="tok-num">0.6</span>, <span class="tok-num">10_000</span>)
-    true_opt.append(cost(q, test).mean())     <span class="tok-c"># …but this is the truth</span>
-<span class="tok-k">print</span>(np.mean(in_sample), np.mean(true_opt))  <span class="tok-c"># gap = the bias</span></code></pre>
-
-  <pre class="mojo"><code><span class="tok-c"># 2) VGC-style bootstrap debias, 1-D newsvendor:</span>
+<span class="tok-c"># 2) VGC-style bootstrap debias, 1-D newsvendor:</span>
 <span class="tok-c">#    perturb the sample, re-solve, measure sensitivity.</span>
 <span class="tok-k">def</span> <span class="tok-f">vgc_debias</span>(samples: List[Float64],
-                   c_u: Float64, c_o: Float64,
-                   delta: Float64) -&gt; Float64:
+               c_u: Float64, c_o: Float64,
+               delta: Float64) -&gt; Float64:
     <span class="tok-k">var</span> q0 = quantile(samples, c_u/(c_u+c_o))
-    <span class="tok-k">var</span> n = len(samples)
+    <span class="tok-k">var</span> n = <span class="tok-f">len</span>(samples)
     <span class="tok-k">var</span> bias: Float64 = <span class="tok-num">0.0</span>
-    <span class="tok-k">for</span> i <span class="tok-k">in</span> range(n):
+    <span class="tok-k">for</span> i <span class="tok-k">in</span> <span class="tok-f">range</span>(n):
         samples[i] += delta              <span class="tok-c"># perturb one sample</span>
         <span class="tok-k">var</span> q1 = quantile(samples, c_u/(c_u+c_o))
         samples[i] -= delta              <span class="tok-c"># restore</span>
@@ -542,16 +507,6 @@ in_sample = []
   <p>One loop, three numbers — mean decision cost, per-component cost, and worst-group cost
   (equity). AUC never appears.</p>
 
-  <pre class="py"><code><span class="tok-k">def</span> <span class="tok-f">evaluate_decisions</span>(C, y_true, y_pred, groups):
-    cost = C[y_true, y_pred]
-    <span class="tok-k">print</span>(<span class="tok-s">"mean cost     :"</span>, cost.mean())
-    <span class="tok-k">for</span> g <span class="tok-k">in</span> np.unique(groups):
-        m = groups == g
-        <span class="tok-k">print</span>(<span class="tok-s">f"  group {g}: cost={cost[m].mean():.3f}"</span>)
-    <span class="tok-k">print</span>(<span class="tok-s">"worst group   :"</span>,
-          max(cost[groups==g].mean() <span class="tok-k">for</span> g <span class="tok-k">in</span> np.unique(groups)))
-<span class="tok-c"># deployed causal claims → randomized rollout + difference-in-differences,</span>
-<span class="tok-c"># as in the Sierra Leone evaluation (+19% consumption, p &lt; 0.01).</span></code></pre>
 
   <pre class="mojo"><code><span class="tok-k">def</span> <span class="tok-f">mean_decision_cost</span>(C: Tensor[DType.float64],
                           y: List[Int],
@@ -577,16 +532,6 @@ in_sample = []
     RLHF/DPO reward:&nbsp; r(output) = − E[ decision cost of the action parsed from output ]
   </div>
 
-  <pre class="py"><code><span class="tok-c"># triage assistant, QLoRA fine-tune with decision weights</span>
-c_fp, c_fn = <span class="tok-num">1.5</span>, <span class="tok-num">8.0</span>
-
-<span class="tok-k">def</span> <span class="tok-f">example_weight</span>(p_severe):
-    <span class="tok-c"># impact of an error on this example, from the cost matrix</span>
-    <span class="tok-k">return</span> p_severe*c_fn + (<span class="tok-num">1</span>-p_severe)*c_fp
-
-<span class="tok-c"># SFTTrainer(..., ) then:</span>
-<span class="tok-c"># trainer = WeightedSFTTrainer(weights=[example_weight(p) for p in probs])</span>
-<span class="tok-c"># evaluate: mean decision cost (Section 8), never accuracy alone</span></code></pre>
 
   <pre class="mojo"><code><span class="tok-k">def</span> <span class="tok-f">example_weight</span>(p_severe: Float64,
                      c_fp: Float64, c_fn: Float64) -&gt; Float64:
@@ -615,7 +560,7 @@ c_fp, c_fn = <span class="tok-num">1.5</span>, <span class="tok-num">8.0</span>
 </div>
 
 <footer>
-<p>Decision-Aware ML, code-first: newsvendor · thresholds · reweighting · SPO+ · perturbed optimizers · SAA/VGC — in Python and Mojo 1.x. Companions: <a href="fine_tuning_llms.html" style="color:var(--acc2);">Fine-Tuning LLMs</a> · <a href="ai_agents_python_vs_mojo.html" style="color:var(--acc2);">Building AI Agents</a>.</p>
+<p>Decision-Aware ML, code-first: newsvendor · thresholds · reweighting · SPO+ · perturbed optimizers · SAA/VGC — in Mojo 1.x. Companion: <a href="fine_tuning_llms.html" style="color:var(--acc2);">Fine-Tuning LLMs</a>.</p>
 </footer>
 
 <script>

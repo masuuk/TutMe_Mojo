@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NPV &amp; Amortisation — Time Value of Money in Python &amp; Mojo 1.x</title>
+<title>NPV &amp; Amortisation — Time Value of Money in Mojo 1.x</title>
 <style>
   :root{
     --bg:#0d1114; --bg2:#151b21; --bg3:#1b242b; --panel:#0e1418;
-    --fg:#e6edf3; --mut:#9aabb6; --acc:#3fb950; --acc2:#8be9a8;
+    --fg:#e6edf3; --mut:#ffd98f; --acc:#3fb950; --acc2:#8be9a8;
     --acc3:#ffd97d; --grn:#3fb950; --ylw:#d29922; --red:#f85149;
     --line:#30363d; --code:#0d1117;
   }
@@ -131,7 +131,7 @@
       <span class="logo">💰</span>
       <h1>NPV &amp; Amortisation</h1>
     </div>
-    <div class="kicker"><span>Time Value of Money</span><span>NPV &amp; IRR</span><span>Amortisation</span><span>Python · Mojo 1.x</span></div>
+    <div class="kicker"><span>Time Value of Money</span><span>NPV &amp; IRR</span><span>Amortisation</span><span>Mojo 1.x</span></div>
   </div>
 </header>
 
@@ -186,13 +186,13 @@
 <!-- ===================== INTRO ===================== -->
 <section id="intro">
   <h2>1. Orientation &amp; Learning Objectives</h2>
-  <p>Two ideas underpin almost every corporate-finance decision: <strong>net present value</strong> — whether a stream of future cash flows is worth more than it costs to obtain — and <strong>amortisation</strong> — how a fixed-payment loan is actually paid down, and what that ends up costing you. This book teaches both from first principles, with a running <em>Python &harr; Mojo 1.x</em> dialogue so you see the identical mathematics in each language.</p>
+  <p>Two ideas underpin almost every corporate-finance decision: <strong>net present value</strong> — whether a stream of future cash flows is worth more than it costs to obtain — and <strong>amortisation</strong> — how a fixed-payment loan is actually paid down, and what that ends up costing you. This book teaches both from first principles in Mojo 1.x, so every figure on the page is produced by compiled, typed code rather than by hand.</p>
 
   <div class="card">
     <h4>By the end of this book you will be able to:</h4>
     <ul>
       <li>Explain the <strong>time value of money</strong> and discount any future cash flow to its present value.</li>
-      <li>Compute the <strong>NPV</strong> of a cash-flow stream in Python and Mojo &mdash; and apply the decision rule (accept when <span class="math">NPV &gt; 0</span>).</li>
+      <li>Compute the <strong>NPV</strong> of a cash-flow stream in Mojo 1.x &mdash; and apply the decision rule (accept when <span class="math">NPV &gt; 0</span>).</li>
       <li>Sweep discount rates to build an <strong>NPV profile</strong> and read the <strong>internal rate of return</strong> where NPV crosses zero.</li>
       <li>Derive the <strong>level-payment formula</strong> for a loan and generate an amortisation schedule month by month.</li>
       <li>Quantify the interest a mortgage really costs, and model <strong>prepayment</strong> (extra principal) so you can judge how much it saves.</li>
@@ -209,7 +209,7 @@
   </div>
 
   <h3>Prerequisites &amp; Source Materials</h3>
-  <p>Comfort with Python basics (functions, loops, lists). No finance background is assumed: every formula is derived, not decreed. The Mojo side expects only that you have seen <code>def</code>, <code>var</code>, and <code>List</code> anywhere in the Applications or Mojo tracks.</p>
+  <p>Comfort with <code>def</code>, <code>var</code>, and <code>List</code> from the Applications or Mojo tracks &mdash; nothing more. No finance background is assumed: every formula is derived, not decreed.</p>
   <div class="card">
     <h4>This book consolidates and enhances these sources:</h4>
     <ul>
@@ -281,40 +281,35 @@
 
   <p>The €500 arriving in year 3 is worth only <span class="money">375.66</span> today; the ₹600 in year 4 just <span class="money">409.81</span>. Discounting prefers early money.</p>
 
-  <p><strong>Python</strong> &mdash; the sum is a one-liner; <code>enumerate</code> conveniently starts <code>t</code> at 0:</p>
-<pre><code><span class="tok-k">def</span> npv(rate, cash_flows):
-    <span class="tok-c">"""NPV of a cash-flow list: CF0 today, CF1 one period later, ..."""</span>
-    <span class="tok-k">return</span> <span class="tok-n">sum</span>(cf / (1 + rate) ** t <span class="tok-k">for</span> t, cf <span class="tok-k">in</span> enumerate(cash_flows))
-
-cf = [-1000.0, 300.0, 400.0, 500.0, 600.0]
-<span class="tok-n">print</span>(<span class="tok-s">f"NPV = {npv(0.10, cf):.2f}"</span>)   <span class="tok-c"># NPV = 388.77 → NPV &gt; 0 : invest</span></code></pre>
-
-  <p><strong>Mojo 1.x</strong> &mdash; the same loop, typed, compiled. Mojo&rsquo;s <code>**</code> powers take a <code>Float64</code> exponent, so cast <code>t</code> (an <code>Int</code>) before raising:</p>
-<pre><code><span class="tok-k">from</span> std.math <span class="tok-k">import</span> pow
+  <p><strong>Mojo 1.x</strong> &mdash; one typed, compiled loop over the flows. Mojo&rsquo;s <code>**</code> powers take a <code>Float64</code> exponent, so cast <code>t</code> (an <code>Int</code>) before raising:</p>
+<pre>from std.math import pow
 
 def npv(rate: Float64, cash_flows: List[Float64]) -&gt; Float64:
     var total: Float64 = 0.0
-    <span class="tok-k">for</span> t <span class="tok-k">in</span> range(len(cash_flows)):
-        total += cash_flows[t] / pow(1.0 + rate, Float64(t))   <span class="tok-c"># exponent must be a Float64</span>
-    <span class="tok-k">return</span> total
+    for t in range(len(cash_flows)):
+        total += cash_flows[t] / pow(1.0 + rate, Float64(t))   # exponent must be a Float64
+    return total
 
 def main():
-    <span class="tok-k">var</span> cf = List[Float64](-1000.0, 300.0, 400.0, 500.0, 600.0)
-    print(<span class="tok-s">"NPV = "</span>, npv(0.10, cf))     <span class="tok-c"># NPV = 388.77</span></code></pre>
+    var cf = List[Float64](-1000.0, 300.0, 400.0, 500.0, 600.0)
+    print("NPV = ", npv(0.10, cf))     # NPV = 388.77  -&gt; positive, so invest</pre>
 
   <h3 id="npv-reject">3.3 Worked example: a project that loses</h3>
   <p>The &ldquo;should you invest?&rdquo; case from the sources: <span class="money">$10,000</span> today for <span class="money">$3,000, $4,000, $5,000</span> over three years at the same 10%:</p>
 
-<pre><code><span class="tok-k">def</span> calculate_npv(rate, cashflows):
-    npv = 0.0
-    <span class="tok-k">for</span> t, cf <span class="tok-k">in</span> enumerate(cashflows):
-        npv += cf / (1 + rate) ** t
-    <span class="tok-k">return</span> npv
+<pre>from std.math import pow
 
-cf = [-10000.0, 3000.0, 4000.0, 5000.0]
-<span class="tok-n">print</span>(<span class="tok-s">f"Net Present Value: ${calculate_npv(0.10, cf):,.2f}"</span>)
-<span class="tok-c"># Net Present Value: $-210.37 → REJECT: your $10,000 grows to only</span>
-<span class="tok-c"># $9,789.63 of today's money (PV of the inflows) — you'd lose value.</span></code></pre>
+def calculate_npv(rate: Float64, cash_flows: List[Float64]) -&gt; Float64:
+    var npv: Float64 = 0.0
+    for t in range(len(cash_flows)):
+        npv += cash_flows[t] / pow(1.0 + rate, Float64(t))
+    return npv
+
+def main():
+    var cf = List[Float64](-10000.0, 3000.0, 4000.0, 5000.0)
+    print("Net Present Value: ", calculate_npv(0.10, cf))
+    # Net Present Value: -210.37  -&gt;  REJECT: your $10,000 grows to only
+    # $9,789.63 of today's money (PV of the inflows) - you'd lose value.</pre>
 
   <div class="warn"><strong>Note the arithmetic fact the sources got wrong.</strong> The sources printed <span class="money">−38.17</span>, but the correct value is <span class="money">−210.37</span> (3,000/1.10 + 4,000/1.21 + 5,000/1.331 = 9,789.63). The verdict is the same either way &mdash; reject &mdash; so always state the number you <em>computed</em>, and re-derive it by hand before publishing. It is a golden rule that a tutorial&rsquo;s printed output is the least trustworthy line in the file.</div>
 
@@ -326,31 +321,25 @@ cf = [-10000.0, 3000.0, 4000.0, 5000.0]
   <h2>4. The NPV Profile &amp; IRR</h2>
   <p>NPV bends with the discount rate: raise <span class="math">r</span> and future inflows shrink, so NPV falls. Plot NPV against <span class="math">r</span> and you get the project&rsquo;s <strong>NPV profile</strong>. The rate where the curve crosses zero is its <strong>internal rate of return (IRR)</strong> &mdash; the compound return the project actually earns on the money tied up.</p>
 
-  <p>A <code>numpy</code> one-liner vectorises the sum, handy for sweeping many candidate rates at once:</p>
-<pre><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-
-<span class="tok-k">def</span> npv_profile(cash_flows, rates):
-    t = np.arange(len(cash_flows))
-    cf = np.array(cash_flows)
-    <span class="tok-k">return</span> [<span class="tok-n">float</span>(cf @ (1 / (1 + r) ** t)) <span class="tok-k">for</span> r <span class="tok-k">in</span> rates]
-
-cf = [-1000.0, 300.0, 400.0, 500.0, 600.0]
-rates = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
-<span class="tok-k">for</span> r, v <span class="tok-k">in</span> <span class="tok-n">zip</span>(rates, npv_profile(cf, rates)):
-    <span class="tok-n">print</span>(<span class="tok-s">f"r={r:.2f}  NPV={v:9.2f}"</span>)
-<span class="tok-c"># r=0.05  NPV=   574.07</span>
-<span class="tok-c"># r=0.10  NPV=   388.77</span>
-<span class="tok-c"># r=0.15  NPV=   235.14</span>
-<span class="tok-c"># r=0.20  NPV=   106.48</span>
-<span class="tok-c"># r=0.25  NPV=    -2.24   ← NPV crosses zero just here: IRR ≈ 24.9%</span>
-<span class="tok-c"># r=0.30  NPV=   -94.88</span></code></pre>
+  <p>Sweeping many candidate rates is a plain loop &mdash; the same <code>npv</code> from &sect;3.2 evaluated at each rate, which is exactly the shape a compiled sweep wants:</p>
+<pre>def main():
+    var cf = List[Float64](-1000.0, 300.0, 400.0, 500.0, 600.0)
+    var rates = List[Float64](0.05, 0.10, 0.15, 0.20, 0.25, 0.30)
+    for i in range(len(rates)):
+        print("r=", rates[i], "  NPV=", npv(rates[i], cf))     # npv() from section 3.2
+    # r= 0.05   NPV=  574.07
+    # r= 0.1    NPV=  388.77
+    # r= 0.15   NPV=  235.14
+    # r= 0.2    NPV=  106.48
+    # r= 0.25   NPV=   -2.24    &lt;- NPV crosses zero just here: IRR ~ 24.9%
+    # r= 0.3    NPV=  -94.88</pre>
 
   <div class="card">
     <h4>Interpreting the profile</h4>
     <ul>
       <li><strong>IRR is a hurdle, not a guarantee.</strong> If your cost of capital is 10%, this project&rsquo;s 24.9% IRR beats it with room to spare &mdash; accept. <strong>If the cost of capital were 26%+, NPV would be negative &mdash; reject.</strong> IRR and the <span class="math">NPV&gt;0</span> rule agree at every point on the curve: they are the same decision drawn two ways.</li>
       <li><strong>Where they disagree.</strong> IRR can be misleading for non-conventional flows (a sign change mid-stream can give two IRRs; comparing two projects on IRR alone ignores scale and timing). <strong>When in doubt, decide on NPV</strong> &mdash; it is the defensible number.</li>
-      <li><strong>Mojo.</strong> The sweep is a plain loop over <code>pow(1.0 + r, Float64(t))</code> &mdash; identical shape to the NPV port above, compiled to native speed. For thousands of candidate projects (a real portfolio screen), that is where compiled code earns its keep.</li>
+      <li><strong>Mojo.</strong> The sweep is a plain loop over <code>pow(1.0 + r, Float64(t))</code> &mdash; identical shape to the NPV loop above, compiled to native speed. For thousands of candidate projects (a real portfolio screen), that is where compiled code earns its keep.</li>
     </ul>
   </div>
 </section>
@@ -370,32 +359,9 @@ rates = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
   <h3 id="amort-examples">5.2 Worked examples</h3>
 
   <p><strong>Example A &mdash; a $100,000 machine at 6% annual over 30 years</strong> (from the quick tutorial). First the payment, then a full month-by-month schedule:</p>
-<pre><code><span class="tok-k">def</span> amortization_schedule(principal, annual_rate, years):
-    r = annual_rate / 12
-    n = years * 12
-    payment = principal * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
-    balance, schedule = principal, []
-    <span class="tok-k">for</span> month <span class="tok-k">in</span> range(1, n + 1):
-        interest = balance * r          <span class="tok-c"># interest first…</span>
-        principal_paid = payment - interest
-        balance -= principal_paid       <span class="tok-c"># …remainder pays down principal</span>
-        schedule.append((month, payment, interest, principal_paid, balance))
-    <span class="tok-k">return</span> payment, schedule
-
-payment, schedule = amortization_schedule(100000, 0.06, 30)
-<span class="tok-n">print</span>(<span class="tok-s">f"Monthly payment = ${payment:.2f}"</span>)                 <span class="tok-c"># $599.55</span>
-<span class="tok-n">print</span>(<span class="tok-s">f"Total interest  = ${payment * 360 - 100000:,.2f}"</span>)  <span class="tok-c"># $115,838.19</span>
-<span class="tok-k">for</span> row <span class="tok-k">in</span> schedule[:3] + [schedule[-1]]:
-    <span class="tok-n">print</span>(<span class="tok-s">f"Month {row[0]:&gt;3}: Pay ${row[1]:7.2f}  Int ${row[2]:7.2f}  Prin ${row[3]:7.2f}  Bal ${row[4]:11.2f}"</span>)
-<span class="tok-c"># Month   1: Pay $599.55  Int $500.00  Prin  $99.55  Bal $99,900.45</span>
-<span class="tok-c"># Month   2: Pay $599.55  Int $499.50  Prin $100.05  Bal $99,800.40</span>
-<span class="tok-c"># Month   3: Pay $599.55  Int $499.00  Prin $100.55  Bal $99,699.85</span>
-<span class="tok-c"># Month 360: Pay $599.55  Int   $2.98  Prin $596.57  Bal      $0.00</span></code></pre>
-
-  <p>Month-1 interest is <span class="money">500.00</span> because the monthly rate on <span class="money">100,000</span> is exactly <span class="money">0.01</span> &mdash; the loan&rsquo;s single biggest interest bill. Only <span class="money">99.55</span> of the first payment touches the principal; on the final payment <span class="money">596.57</span> does. The loan&rsquo;s true cost: <strong>$115,838.19 in interest on $100,000 borrowed</strong> &mdash; more than the loan itself.</p>
 
   <p><strong>Mojo 1.x</strong> &mdash; carrying each row in a <code>struct</code> is exactly what a compiled scheduler would emit (the Applications-track lesson *Amortisation Schedules* does the same):</p>
-<pre><code><span class="tok-k">from</span> std.math <span class="tok-k">import</span> pow
+<pre>from std.math import pow
 
 struct AmortRow:
     var period: Int
@@ -405,32 +371,52 @@ struct AmortRow:
     var balance: Float64
 
 def amortization_schedule(principal: Float64, annual_rate: Float64, years: Int) -&gt; List[AmortRow]:
-    <span class="tok-k">var</span> r = annual_rate / 12.0
-    <span class="tok-k">var</span> n = years * 12
-    <span class="tok-k">var</span> payment = principal * (r * pow(1.0 + r, Float64(n))) / (pow(1.0 + r, Float64(n)) - 1.0)
+    var r = annual_rate / 12.0
+    var n = years * 12
+    var payment = principal * (r * pow(1.0 + r, Float64(n))) / (pow(1.0 + r, Float64(n)) - 1.0)
     var balance = principal
     var schedule = List[AmortRow]()
-    <span class="tok-k">for</span> month <span class="tok-k">in</span> range(1, n + 1):
-        <span class="tok-k">var</span> interest = balance * r
-        <span class="tok-k">var</span> principal_paid = payment - interest
-        balance -= principal_paid
+    for month in range(1, n + 1):
+        var interest = balance * r              # interest first...
+        var principal_paid = payment - interest
+        balance -= principal_paid               # ...remainder pays down principal
         schedule.push_back(AmortRow(month, payment, interest, principal_paid, balance))
-    <span class="tok-k">return</span> schedule</code></pre>
+    return schedule
 
-  <p><strong>Example B &mdash; a $250,000 mortgage at 4.5% over 30 years</strong> (from the financial-math tutorial): the payment and the total interest owed, in one short function:</p>
-<pre><code><span class="tok-k">def</span> calculate_amortisation(principal, annual_rate, years):
-    r = annual_rate / 12
-    n = years * 12
-    pmt = principal * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
-    total_interest = pmt * n - principal
-    <span class="tok-k">return</span> pmt, total_interest
+def main():
+    var schedule = amortization_schedule(100000.0, 0.06, 30)
+    var payment = schedule[0].payment
+    print("Monthly payment = ", payment)                      # 599.55
+    print("Total interest  = ", payment * 360.0 - 100000.0)   # 115838.19
+    var shown = List[Int](0, 1, 2, 359)      # first three months, then the last
+    for i in shown:
+        var row = schedule[i]
+        print("Month ", row.period, ": Pay ", row.payment, "  Int ", row.interest,
+              "  Prin ", row.principal, "  Bal ", row.balance)
+    # Month 1: Pay 599.55  Int 500.00  Prin 99.55   Bal 99900.45
+    # Month 2: Pay 599.55  Int 499.50  Prin 100.05  Bal 99800.40
+    # Month 3: Pay 599.55  Int 499.00  Prin 100.55  Bal 99699.85
+    # Month 360: Pay 599.55  Int 2.98  Prin 596.57  Bal 0.00</pre>
 
-pmt, interest = calculate_amortisation(250000, 0.045, 30)
-<span class="tok-n">print</span>(<span class="tok-s">f"Monthly Payment: ${pmt:,.2f}"</span>)            <span class="tok-c"># $1,266.71</span>
-<span class="tok-n">print</span>(<span class="tok-s">f"Total Interest:  ${interest:,.2f}"</span>)      <span class="tok-c"># $206,016.78</span></code></pre>
+  <p><strong>Example B &mdash; a $250,000 mortgage at 4.5% over 30 years</strong> (from the financial-math tutorial):</p>
+<pre>from std.math import pow
+
+def calculate_amortisation(principal: Float64, annual_rate: Float64, years: Int) -&gt; (Float64, Float64):
+    var r = annual_rate / 12.0
+    var n = Float64(years * 12)
+    var pmt = principal * (r * pow(1.0 + r, n)) / (pow(1.0 + r, n) - 1.0)
+    var total_interest = pmt * n - principal
+    return pmt, total_interest
+
+def main():
+    var pmt: Float64
+    var interest: Float64
+    pmt, interest = calculate_amortisation(250000.0, 0.045, 30)
+    print("Monthly Payment: ", pmt)          # 1266.71
+    print("Total Interest:  ", interest)      # 206016.78</pre>
 
   <div class="card">
-    <h4>Python vs Mojo 1.x &mdash; what changes, what doesn&rsquo;t</h4>
+    <h4>Mojo 1.x &mdash; what changes, and what doesn&rsquo;t</h4>
     <table>
       <tr><th>Feature</th><th>Python</th><th>Mojo 1.x</th></tr>
       <tr><td><strong>Functions</strong></td><td><code>def</code>, duck-typed</td><td><code>def</code> with <code>var</code> and explicit <code>Float64</code>/<code>Int</code> types</td></tr>
@@ -467,23 +453,28 @@ pmt, interest = calculate_amortisation(250000, 0.045, 30)
     <tr><td>Lump $10,000</td><td>$599.55, +$10,000 at month 60</td><td>~25 years (297 mo)</td><td>$87,788.40</td><td>$28,049.79</td></tr>
   </table>
 
-<pre><code><span class="tok-k">def</span> how_long(principal, annual_rate, years, extra, extra_at=None):
-    r = annual_rate / 12
-    n = years * 12
-    pmt = principal * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
-    balance, months, interest = principal, 0, 0.0
-    <span class="tok-k">while</span> balance &gt; 0 and months &lt; n * 2:
+<pre>def how_long(principal: Float64, annual_rate: Float64, years: Int, extra: Float64, extra_at: Int = -1):
+    var r = annual_rate / 12.0
+    var n = years * 12
+    var pmt_base = principal * (r * pow(1.0 + r, Float64(n))) / (pow(1.0 + r, Float64(n)) - 1.0)
+    var balance: Float64 = principal
+    var months: Int = 0
+    var interest_total: Float64 = 0.0
+    while balance &gt; 0 and months &lt; n * 2:
         months += 1
-        <span class="tok-k">if</span> extra_at and months == extra_at:
+        if extra_at &gt; 0 and months == extra_at:
             balance -= 10000.0
-        interest += balance * r
-        balance -= (pmt + extra) - balance * r
-        <span class="tok-k">if</span> balance &lt; 0: balance = 0
-    <span class="tok-k">return</span> months, interest
+        var cur_payment = pmt_base + extra
+        interest_total += balance * r
+        balance -= (cur_payment) - balance * r
+        if balance &lt; 0:
+            balance = 0
+    return months, interest_total
 
-<span class="tok-n">print</span>(how_long(100000, 0.06, 30, extra=0))        <span class="tok-c"># (360, 115838.19)</span>
-<span class="tok-n">print</span>(how_long(100000, 0.06, 30, extra=100))      <span class="tok-c"># (252,  75937.94)</span>
-<span class="tok-n">print</span>(how_long(100000, 0.06, 30, extra=0, extra_at=61))  <span class="tok-c"># (297, 87788.40)</span></code></pre>
+def main():
+    print(how_long(100000.0, 0.06, 30, extra=0.0))                # (360, 115838.19)
+    print(how_long(100000.0, 0.06, 30, extra=100.0))              # (252,  75937.94)
+    print(how_long(100000.0, 0.06, 30, extra=0.0, extra_at=61))   # (297, 87788.40)</pre>
 
   <div class="good"><strong>Rule of thumb.</strong> A small, constant extra payment is the single highest-return "investment" most borrowers own: every dollar of extra principal avoids ~2 dollars of interest at a 6% / 30-year rate &mdash; a guaranteed, tax-free return. The same loop in Mojo is trivial &mdash; pure <code>Float64</code> arithmetic, compiled &mdash; and scales to sweeping thousands of candidate plans.</div>
 </section>
@@ -495,47 +486,39 @@ pmt, interest = calculate_amortisation(250000, 0.045, 30)
 
   <p>Three moves: (1) the loan determines the monthly <em>debt service</em>; (2) netting it against the expected inflows gives the annual cash the project actually delivers; (3) discounting that net stream at the firm&rsquo;s cost of capital is the project&rsquo;s NPV. The loan itself is <em>funding</em>, not an outflow &mdash; the discount rate already prices the cost of the money.</p>
 
-<pre><code><span class="tok-k">def</span> monthly_payment(principal, annual_rate, years):
-    r = annual_rate / 12
-    n = years * 12
-    <span class="tok-k">return</span> principal * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
-
-<span class="tok-k">def</span> npv(cash_flows, rate):
-    <span class="tok-k">return</span> <span class="tok-n">sum</span>(cf / (1 + rate) ** t <span class="tok-k">for</span> t, cf <span class="tok-k">in</span> enumerate(cash_flows))
-
-LOAN, APY, YEARS = 50_000.0, 0.05, 5
-INFLOWS, DISCOUNT = 15_000.0, 0.10
-
-m = monthly_payment(LOAN, APY, YEARS)                  <span class="tok-c"># $943.56</span>
-annual_debt = 12 * m                                   <span class="tok-c"># $11,322.74</span>
-net_annual = INFLOWS - annual_debt                     <span class="tok-c"># $3,677.26</span>
-
-<span class="tok-n">print</span>(<span class="tok-s">f"Monthly loan payment = ${m:,.2f}"</span>)             <span class="tok-c"># $943.56</span>
-<span class="tok-n">print</span>(<span class="tok-s">f"Annual debt service  = ${annual_debt:,.2f}"</span>)  <span class="tok-c"># $11,322.74</span>
-<span class="tok-n">print</span>(<span class="tok-s">f"Net annual inflow    = ${net_annual:,.2f}"</span>)   <span class="tok-c"># $3,677.26</span>
-
-stream = [0.0] + [net_annual] * YEARS                  <span class="tok-c"># nothing today, then 5 years of net inflow</span>
-project_npv = npv(stream, DISCOUNT)
-<span class="tok-n">print</span>(<span class="tok-s">f"Project NPV @ {DISCOUNT:.0%} = ${project_npv:,.2f}"</span>)  <span class="tok-c"># +$13,939.71 → accept</span></code></pre>
-
-  <p>The same in Mojo &mdash; payment via <code>pow</code>, then the discounted loop you know from Section 3:</p>
-<pre><code>from std.math import pow
+<pre>from std.math import pow
 
 def monthly_payment(principal: Float64, annual_rate: Float64, years: Int) -&gt; Float64:
     var r = annual_rate / 12.0
     var n = Float64(years * 12)
     return principal * (r * pow(1.0 + r, n)) / (pow(1.0 + r, n) - 1.0)
 
-def combined_npv(loan: Float64, apy: Float64, years: Int, inflow: Float64, discount: Float64) -&gt; Float64:
-    var m = monthly_payment(loan, apy, years)
-    var net = inflow - 12.0 * m
-    var npv = 0.0
-    for t in range(1, years + 1):
-        npv += net / pow(1.0 + discount, Float64(t))          # skip t=0: nothing invested today
-    return npv
+def npv_discrete(cash_flows: List[Float64], rate: Float64) -&gt; Float64:
+    var total: Float64 = 0.0
+    for t in range(len(cash_flows)):
+        total += cash_flows[t] / pow(1.0 + rate, Float64(t))
+    return total
 
 def main():
-    print(&quot;Project NPV = &quot;, combined_npv(50000.0, 0.05, 5, 15000.0, 0.10))  # 13,939.71</code></pre>
+    var LOAN: Float64 = 50000.0
+    var APY: Float64 = 0.05
+    var YEARS: Int = 5
+    var INFLOWS: Float64 = 15000.0
+    var DISCOUNT: Float64 = 0.10
+
+    var m = monthly_payment(LOAN, APY, YEARS)        # 943.56
+    var annual_debt = 12.0 * m                       # 11322.74
+    var net_annual = INFLOWS - annual_debt           # 3677.26
+
+    print("Monthly loan payment = ", m)
+    print("Annual debt service  = ", annual_debt)
+    print("Net annual inflow    = ", net_annual)
+
+    var stream = List[Float64](0.0)
+    for t in range(YEARS):
+        stream.push_back(net_annual)                 # 5 years of net inflows
+    var project_npv = npv_discrete(stream, DISCOUNT)
+    print("Project NPV @ ", DISCOUNT * 100.0, "% = ", project_npv)  # +13939.71</pre>
 
   <div class="note"><strong>The qualification this model blurs.</strong> Real valuations would model the loan drawdown as a Year-0 inflow, separate equity from debt, and treat the 15,000 as the project&rsquo;s operating surplus rather than raw revenue. Here the pedagogy is the point: the <strong>payment</strong> from Section 5 and the <strong>discounting</strong> from Section 3 fit together &mdash; finance is one machinery, used twice.</div>
 </section>
@@ -559,7 +542,7 @@ def main():
     <li><strong>Sign convention:</strong> outflow negative, inflow positive; NPV sign matches the verdict.</li>
     <li><strong>Units:</strong> every rate, period, and flow share one time unit &mdash; check the monthly <span class="math">r<sub>m</sub></span> before trusting a payment.</li>
     <li><strong>Round-trip:</strong> re-derive one number in clear text, e.g. PV(CF₁) = CF₁/(1+r) &mdash; if the code disagrees, the code is wrong.</li>
-    <li><strong>Cross-check languages:</strong> run the same schedule in Python and Mojo; they must agree to cents (mind floating-point on the final row).</li>
+    <li><strong>Cross-check the arithmetic:</strong> reproduce the same schedule with a published loan calculator or a spreadsheet; the payment and total interest must agree to cents (mind floating-point on the final row).</li>
     <li><strong>State the decision:</strong> &ldquo;NPV = +388.77, so under the 10% cost of capital the project creates value&rdquo; &mdash; not just a formula dump.</li>
   </ul>
 </section>
@@ -571,7 +554,7 @@ def main():
     <li><strong>By hand.</strong> A project costs $2,000 today and returns $1,100 and $1,210 in years 1 and 2. Compute the NPV at 10% <em>exactly</em> (answers: 1,100/1.1 = 1,000 exactly; 1,210/1.21 = 1,000 exactly; NPV = 0). What decision does the rule give, and what does that NPV = 0 state about the project? (It just earns its 10% cost of capital &mdash; indifferent.)</li>
     <li><strong>Decision.</strong> Two candidates &mdash; A: &minus;1,000 then [300, 400, 500, 600] (Section 3.2); B: &minus;10,000 then [3,000, 4,000, 5,000] (Section 3.3). At a 10% cost of capital each is accept / reject &mdash; justify each with NPV, not gut feel.</li>
     <li><strong>Profile.</strong> For candidate A estimate the IRR from the Section 4 profile table. What happens to the decision if your cost of capital is 26%? (NPV turns negative &mdash; accept <em>only</em> when the hurdle is below the IRR.)</li>
-    <li><strong>Schedule.</strong> A $120,000 loan at 4.8% APR, 15 years. Write the Python from Section 5.2; report the payment, the total interest, and the Row-1 / Row-180 split. Now add $200/month &mdash; how many months does the loan take, and how much interest does it save? (The Section 6 machinery answers it.)</li>
+    <li><strong>Schedule.</strong> A $120,000 loan at 4.8% APR, 15 years. Write the Mojo from Section 5.2; report the payment, the total interest, and the Row-1 / Row-180 split. Now add $200/month &mdash; how many months does the loan take, and how much interest does it save? (The Section 6 machinery answers it.)</li>
     <li><strong>Mojo port.</strong> Port exercise 4&rsquo;s function to Mojo: a <code>struct AmortRow</code> scheduler plus a payment-only helper via <code>pow</code>. Confirm both languages agree to the cent (last-row floating-point fuzz aside).</li>
     <li><strong>Bridge to the sources.</strong> Reproduce the Section 7 loan-funded project in your own numbers: $80,000 borrowed at 4% for 10 years, $9,000 of annual inflows, 12% cost of capital. Is the NPV positive? What single variable turns it negative?</li>
   </ol>
@@ -640,5 +623,142 @@ def main():
   })();
 </script>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body>
 </html>

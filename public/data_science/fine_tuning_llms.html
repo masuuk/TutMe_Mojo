@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#0e1117; --bg2:#161b22; --bg3:#1c2230; --panel:#0f1420;
-    --fg:#e6edf3; --mut:#9aa7b8; --acc:#3fb950; --acc2:#7ee787;
+    --fg:#e6edf3; --mut:#ffd98f; --acc:#3fb950; --acc2:#7ee787;
     --acc3:#56d364; --grn:#3fb950; --ylw:#d29922; --red:#f85149;
     --line:#30363d; --code:#0d1117;
   }
@@ -81,21 +81,19 @@
   pre code{background:none; padding:0; color:#c9d1d9; font-size:.86rem; line-height:1.55; display:block;}
   .tok-k{color:#ff7b72;} .tok-s{color:#a5d6ff;} .tok-c{color:#8b949e; font-style:italic;}
   .tok-n{color:#56d364;} .tok-f{color:#7ee787;} .tok-num{color:#56d364;}
-  pre.py{border-left:3px solid #a5d6ff;}
   pre.mojo{border-left:3px solid #4fc1ff; background:rgba(79,193,255,.05);}
-  pre.py::before, pre.mojo::before{
+  pre.mojo::before{
     display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
     font-family:"Cascadia Code",Consolas,Menlo,monospace;margin-bottom:8px;color:var(--mut);
+    content:"mojo 1.x";color:#4fc1ff;
   }
-  pre.py::before{content:"python — reference";}
-  pre.mojo::before{content:"mojo 1.0 — native port";color:#4fc1ff;}
   .math{font-family:Georgia,serif; font-style:italic; font-size:1.02em; color:var(--acc3);}
   .eq{
     background:rgba(126,231,135,.06); border:1px dashed rgba(126,231,135,.35); border-radius:10px;
     padding:14px 20px; margin:14px 0; font-family:Georgia,serif; font-size:1.04rem; color:var(--fg);
     overflow-x:auto; line-height:1.9; font-style:italic;
   }
-  .diagram{background:var(--code); color:#c9d1d9; border:1px solid var(--line); border-radius:10px;
+  .diagram{background:var(--code); color:#fff4d6; border:1px solid var(--line); border-radius:10px;
     padding:16px 20px; overflow-x:auto; margin:14px 0; font-family:"Cascadia Code",Consolas,monospace; font-size:.86rem; line-height:1.6;}
   footer{border-top:1px solid var(--line); padding:28px 20px; text-align:center; color:var(--mut); font-size:.85rem; max-width:1180px; margin:0 auto;}
   .toc-mobile{display:none;}
@@ -119,10 +117,11 @@
   <a href="../mojo_v1/index.html" style="color:#9fd3ff;text-decoration:none;">📊 Data Science lessons</a>
   <a href="data_science.html" style="color:#9fd3ff;text-decoration:none;">📖 Data Science Textbook</a>
   <a href="perceptrons_and_activation.html" style="color:#9fd3ff;text-decoration:none;">🧠 Perceptrons &amp; Activations</a>
-  <a href="ai_agents_python_vs_mojo.html" style="color:#9fd3ff;text-decoration:none;">🤝 AI Agents · Python vs Mojo</a>
+  <a href="nn_mojo.html" style="color:#9fd3ff;text-decoration:none;">🧮 3-4-1 NN · Mojo &amp; NumPy</a>
   <a href="time_series_analytics.html" style="color:#9fd3ff;text-decoration:none;">📈 Time Series Analytics</a>
   <a href="linear_regression.html" style="color:#9fd3ff;text-decoration:none;">📉 Linear Regression</a>
   <a href="decision_aware_ml.html" style="color:#9fd3ff;text-decoration:none;">🧩 Decision-Aware ML</a>
+  <a href="ai_agents_python_vs_mojo.html" style="color:#9fd3ff;text-decoration:none;">💬 AI Agents · Python vs Mojo</a>
   <a href="../index.html" style="color:#9fd3ff;text-decoration:none;">🏠 Home</a>
 </nav>
 
@@ -132,7 +131,7 @@
       <span class="logo">🌱</span>
       <h1>Fine-Tuning LLMs — LoRA &amp; QLoRA, Equations &amp; Code</h1>
     </div>
-    <div class="kicker"><span>VRAM Math</span><span>LoRA</span><span>NF4</span><span>Merge &amp; Serve</span><span>Python · Mojo 1.x</span></div>
+    <div class="kicker"><span>VRAM Math</span><span>LoRA</span><span>NF4</span><span>Merge &amp; Serve</span><span>Mojo 1.x</span></div>
   </div>
 </header>
 
@@ -195,12 +194,6 @@
   <em>input gradients</em> were ~567 MB while LoRA <em>parameters</em> were ~26 MB — activations,
   not adapters, dominate.</p>
 
-  <pre class="py"><code><span class="tok-c"># verify the equation yourself for any model</span>
-P = <span class="tok-num">7e9</span>                       <span class="tok-c"># params</span>
-full = (<span class="tok-num">2</span> + <span class="tok-num">2</span> + <span class="tok-num">8</span>) * P         <span class="tok-c"># = 84 GB</span>
-lora = <span class="tok-num">2</span>*P + <span class="tok-num">12</span>*(<span class="tok-num">0.005</span>*P)    <span class="tok-c"># ≈ 14.4 GB + activations</span>
-qlora = <span class="tok-num">0.5</span>*P + <span class="tok-num">12</span>*(<span class="tok-num">0.005</span>*P)  <span class="tok-c"># ≈ 3.9 GB + activations</span>
-<span class="tok-k">print</span>(full/<span class="tok-num">1e9</span>, lora/<span class="tok-num">1e9</span>, qlora/<span class="tok-num">1e9</span>)</code></pre>
 
   <pre class="mojo"><code><span class="tok-k">def</span> <span class="tok-f">vram_budget</span>(params: Float64,
                     lora_frac: Float64,
@@ -231,21 +224,8 @@ qlora = <span class="tok-num">0.5</span>*P + <span class="tok-num">12</span>*(<s
 
   <p>Example: a 4096×4096 linear layer with r = 16 trains 131k parameters instead of 16.8M —
   0.8%. The adapter is a few MB, swappable per task, and merges away at deploy time (Section 4).
-  From scratch in NumPy, the whole mechanism is four lines:</p>
+  The whole mechanism as pure arithmetic:</p>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-
-<span class="tok-k">class</span> <span class="tok-f">LoRALinear</span>:
-    <span class="tok-k">def</span> <span class="tok-f">__init__</span>(self, W, r=<span class="tok-num">16</span>, alpha=<span class="tok-num">32.0</span>):
-        self.W = W                      <span class="tok-c"># frozen (h, o)</span>
-        self.A = np.random.randn(r, W.shape[<span class="tok-num">1</span>]) * <span class="tok-num">0.02</span>
-        self.B = np.zeros((W.shape[<span class="tok-num">0</span>], r))  <span class="tok-c"># ΔW = 0 at start</span>
-        self.s = alpha / r
-
-    <span class="tok-k">def</span> <span class="tok-f">forward</span>(self, X):                <span class="tok-c"># Y = XW + s·XBA</span>
-        <span class="tok-k">return</span> X @ self.W + self.s * (X @ self.B @ self.A)
-
-<span class="tok-c"># gradient flows ONLY through B and A; W is a constant.</span></code></pre>
 
   <pre class="mojo"><code><span class="tok-k">from</span> tensor <span class="tok-k">import</span> Tensor
 <span class="tok-k">from</span> std.random <span class="tok-k">import</span> normal_float64, seed
@@ -268,14 +248,17 @@ qlora = <span class="tok-num">0.5</span>*P + <span class="tok-num">12</span>*(<s
             Y[i, j] = base + s * delta
     <span class="tok-k">return</span> Y
 
-<span class="tok-c"># init rule, both languages: B = 0 exactly, A ~ N(0, 0.02²)</span>
+<span class="tok-c"># init rule: B = 0 exactly, A ~ N(0, 0.02²)</span>
 seed(<span class="tok-num">42</span>)
 <span class="tok-k">var</span> a0 = normal_float64(<span class="tok-num">0.0</span>, <span class="tok-num">0.02</span>)</code></pre>
 
   <p class="note"><strong>Two defaults that matter more than the rest:</strong> target
   <em>all</em> linear layers (attention + MLP — the difference between matching full fine-tuning
   and not), and use the shortest sensible sequence length — activations scale linearly in tokens
-  and are the biggest slice of memory.</p>
+  and are the biggest slice of memory. And note what is <em>not</em> trainable: the base
+  <code>W</code> is a constant, so the gradient flows only through <code>A</code> and
+  <code>B</code> — which is exactly why the init rule can afford <code>B = 0</code> without
+  stalling the first step.</p>
 </section>
 
 <!-- ===================== NF4 ===================== -->
@@ -298,36 +281,24 @@ seed(<span class="tok-num">42</span>)
   formed for the 16-bit adapters — never the 4-bit base. That is the entire reason the base can
   stay quantized during backprop.</p>
 
-  <pre class="py"><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-<span class="tok-k">from</span> scipy.stats <span class="tok-k">import</span> norm
+  <p>The codebook is the only thing separating NF4 from ordinary int4, and it is one line: the 16
+  codes are the equal-mass quantiles of <span class="math">N(0,1)</span> rescaled to
+  <span class="math">[−1, 1]</span>, so a nearest-code search against that table replaces the
+  uniform grid. The kernel below is the uniform-grid half — block-wise absmax down to 16 codes in
+  one compiled pass — and it is the half that has to be fast, because it runs over every weight at
+  load and again over every block whenever an adapter is swapped. Swapping the grid for the NF4
+  table and measuring the relative-error win is exercise 4.</p>
 
-<span class="tok-c"># NF4 breakpoints = 16 equal-mass quantiles of N(0,1), normalized to [-1,1]</span>
-NF4 = norm.ppf(np.linspace(<span class="tok-num">1</span>/<span class="tok-num">32</span>, <span class="tok-num">31</span>/<span class="tok-num">32</span>, <span class="tok-num">16</span>))
-NF4 = NF4 / np.max(np.abs(NF4))
 
-<span class="tok-k">def</span> <span class="tok-f">quantize_nf4</span>(w):                 <span class="tok-c"># w: one block of weights</span>
-    scale = np.max(np.abs(w))          <span class="tok-c"># absmax scheme</span>
-    wn = w / (scale + <span class="tok-num">1e-12</span>)            <span class="tok-c"># to [-1, 1]</span>
-    q = np.argmin(np.abs(wn[..., <span class="tok-k">None</span>] - NF4), axis=-<span class="tok-num">1</span>)  <span class="tok-c"># nearest code</span>
-    <span class="tok-k">return</span> q, scale                     <span class="tok-c"># 4 bits + fp32 scale</span>
-
-<span class="tok-k">def</span> <span class="tok-f">dequant_nf4</span>(q, scale):
-    <span class="tok-k">return</span> NF4[q] * scale
-
-<span class="tok-c"># error check: NF4 beats uniform int4 on Gaussian weights</span>
-w = np.random.randn(<span class="tok-num">100_000</span>) * <span class="tok-num">0.02</span>
-q, s = quantize_nf4(w)
-<span class="tok-k">print</span>(<span class="tok-s">"nf4 relative error:"</span>,
-      np.abs(dequant_nf4(q, s) - w).mean() / np.abs(w).mean())</code></pre>
-
-  <pre class="mojo"><span class="tok-k">from</span> std.math <span class="tok-k">import</span> abs, max
+  <pre class="mojo"><code><span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
+<span class="tok-k">from</span> std.math <span class="tok-k">import</span> abs, max
 
 <span class="tok-c"># block-wise absmax quantize to 4-bit codes — the kernel that</span>
 <span class="tok-c"># makes serving-side quantization a single compiled pass.</span>
 <span class="tok-k">def</span> <span class="tok-f">quantize_absmax</span>(w: List[Float64], b: Int,
                      out_q: List[Int], out_scale: List[Float64]):
     <span class="tok-k">var</span> n = len(w)
-    <span class="tok-k">var</span> n_blocks = n # b
+    <span class="tok-k">var</span> n_blocks = n // b
     <span class="tok-k">for</span> blk <span class="tok-k">in</span> range(n_blocks):
         <span class="tok-k">var</span> lo = blk * b
         <span class="tok-k">var</span> hi = lo + b
@@ -352,17 +323,14 @@ q, s = quantize_nf4(w)
 <section id="merge">
   <h2>4. Merging &amp; Serving</h2>
   <p>At deploy time the adapter folds into the base — one small matmul per layer, zero inference
-  overhead afterwards:</p>
+  overhead afterwards. From the Python side the whole fold is one call,
+  <code>model.merge_and_unload()</code>, followed by a <code>save_pretrained</code>; there is just no
+  reason to pay a process boundary to do arithmetic that is already this cheap:</p>
 
   <div class="eq">
     W′ = W + (α/r)·B·A &nbsp;&nbsp;— merge once, serve W′ with no adapter path in the graph
   </div>
 
-  <pre class="py"><code><span class="tok-c"># peft one-liner (folds every adapter):</span>
-merged = model.merge_and_unload()
-merged.save_pretrained(<span class="tok-s">"phi3-yoda-merged"</span>)
-<span class="tok-c"># optional: export GGUF for local inference</span>
-<span class="tok-c"># merged.save_pretrained_gguf("out", quantization="q4_k_m")</span></code></pre>
 
   <pre class="mojo"><code><span class="tok-k">from</span> tensor <span class="tok-k">import</span> Tensor
 
@@ -402,73 +370,66 @@ merged.save_pretrained(<span class="tok-s">"phi3-yoda-merged"</span>)
 <!-- ===================== PIPELINE ===================== -->
 <section id="pipeline">
   <h2>5. The Full Training Pipeline</h2>
-  <p>The end-to-end recipe with Hugging Face (Python trains — its CUDA stack is unmatched; Mojo
-  orchestrates and takes over at merge/serve time).</p>
+  <p>The end-to-end recipe, driven from Mojo. The Hugging Face stack still does the training — its
+  CUDA kernels are unmatched — but the orchestration, the load-time accounting and the handoff to the
+  native merge in Section 4 are all compiled.</p>
 
-  <pre class="py"><code><span class="tok-c"># deps: uv pip install transformers peft accelerate trl bitsandbytes datasets torch</span>
-<span class="tok-k">from</span> transformers <span class="tok-k">import</span> (AutoModelForCausalLM, AutoTokenizer,
-                           BitsAndBytesConfig)
-<span class="tok-k">from</span> peft <span class="tok-k">import</span> (LoraConfig, get_peft_model,
-                  prepare_model_for_kbit_training)
-<span class="tok-k">from</span> trl <span class="tok-k">import</span> SFTConfig, SFTTrainer
-<span class="tok-k">from</span> datasets <span class="tok-k">import</span> load_dataset
 
-<span class="tok-c"># 1) 4-bit base</span>
-bnb = BitsAndBytesConfig(load_in_4bit=<span class="tok-k">True</span>,
-                         bnb_4bit_quant_type=<span class="tok-s">"nf4"</span>,
-                         bnb_4bit_use_double_quant=<span class="tok-k">True</span>)
-repo = <span class="tok-s">"microsoft/Phi-3-mini-4k-instruct"</span>
-model = AutoModelForCausalLM.from_pretrained(
-    repo, device_map=<span class="tok-s">"auto"</span>, quantization_config=bnb)
+  <pre class="mojo"><code><span class="tok-k">from</span> std.python <span class="tok-k">import</span> Python
 
-<span class="tok-c"># 2) LoRA on ALL linear layers</span>
-model = prepare_model_for_kbit_training(model)
-model = get_peft_model(model, LoraConfig(
-    r=<span class="tok-num">8</span>, lora_alpha=<span class="tok-num">16</span>, lora_dropout=<span class="tok-num">0.05</span>,
-    task_type=<span class="tok-s">"CAUSAL_LM"</span>,
-    target_modules=[<span class="tok-s">"o_proj"</span>, <span class="tok-s">"qkv_proj"</span>,
-                    <span class="tok-s">"gate_up_proj"</span>, <span class="tok-s">"down_proj"</span>]))
+<span class="tok-c"># The same run driven from Mojo: the HF stack through the bridge, the</span>
+<span class="tok-c"># orchestration compiled, then the adapter merges natively (Section 4).</span>
+<span class="tok-k">var</span> tf   = Python.import_module(<span class="tok-s">"transformers"</span>)
+<span class="tok-k">var</span> peft = Python.import_module(<span class="tok-s">"peft"</span>)
+<span class="tok-k">var</span> trl  = Python.import_module(<span class="tok-s">"trl"</span>)
+<span class="tok-k">var</span> dsn  = Python.import_module(<span class="tok-s">"datasets"</span>)
 
-<span class="tok-c"># 3) data + tokenizer</span>
-ds = load_dataset(<span class="tok-s">"dvgodoy/yoda_sentences"</span>, split=<span class="tok-s">"train"</span>)
-tok = AutoTokenizer.from_pretrained(repo)
-tok.pad_token = tok.unk_token          <span class="tok-c"># keep EOS unmasked</span>
-
-<span class="tok-c"># 4) train — paged optimizer absorbs long-sequence spikes</span>
-trainer = SFTTrainer(model=model, processing_class=tok,
-    train_dataset=ds, args=SFTConfig(
-        output_dir=<span class="tok-s">"./phi3-yoda-adapter"</span>,
-        per_device_train_batch_size=<span class="tok-num">16</span>,
-        gradient_checkpointing=<span class="tok-k">True</span>,
-        max_length=<span class="tok-num">64</span>,           <span class="tok-c"># shortest sensible</span>
-        num_train_epochs=<span class="tok-num">10</span>, learning_rate=<span class="tok-num">3e-4</span>,
-        optim=<span class="tok-s">"paged_adamw_8bit"</span>,
-        logging_steps=<span class="tok-num">10</span>, report_to=<span class="tok-s">"none"</span>))
-trainer.train(); trainer.save_model()   <span class="tok-c"># saves only the adapter</span>
-
-tr, tot = model.get_nb_trainable_parameters()
-<span class="tok-k">print</span>(<span class="tok-s">f"trainable: {100*tr/tot:.2f}%"</span>)   <span class="tok-c"># ~0.3% — check it!</span></code></pre>
-
-  <pre class="mojo"><code><span class="tok-k">from</span> python <span class="tok-k">import</span> Python
-
-<span class="tok-c"># same run driven from Mojo: compiled orchestration, HF through the</span>
-<span class="tok-c"># bridge, then the adapter merges natively (Section 4's merge_lora).</span>
-<span class="tok-k">def</span> <span class="tok-f">main</span>() raises:
-    <span class="tok-k">var</span> tf  = Python.import_module(<span class="tok-s">"transformers"</span>)
+<span class="tok-k">def</span> <span class="tok-f">main</span>() <span class="tok-k">raises</span>:
+    <span class="tok-c"># 1) 4-bit base</span>
     <span class="tok-k">var</span> bnb = tf.BitsAndBytesConfig(
         load_in_4bit=<span class="tok-k">True</span>,
         bnb_4bit_quant_type=<span class="tok-s">"nf4"</span>,
         bnb_4bit_use_double_quant=<span class="tok-k">True</span>)
+    <span class="tok-k">var</span> repo = <span class="tok-s">"microsoft/Phi-3-mini-4k-instruct"</span>
     <span class="tok-k">var</span> model = tf.AutoModelForCausalLM.from_pretrained(
-        <span class="tok-s">"microsoft/Phi-3-mini-4k-instruct"</span>,
-        device_map=<span class="tok-s">"auto"</span>, quantization_config=bnb)
-    <span class="tok-k">print</span>(<span class="tok-s">"footprint GB:"</span>,
-          model.get_memory_footprint() / <span class="tok-num">1e9</span>)</code></pre>
+        repo, device_map=<span class="tok-s">"auto"</span>, quantization_config=bnb)
+
+    <span class="tok-c"># 2) LoRA on ALL linear layers</span>
+    model = peft.prepare_model_for_kbit_training(model)
+    model = peft.get_peft_model(model, peft.LoraConfig(
+        r=<span class="tok-num">8</span>, lora_alpha=<span class="tok-num">16</span>, lora_dropout=<span class="tok-num">0.05</span>,
+        task_type=<span class="tok-s">"CAUSAL_LM"</span>,
+        target_modules=[<span class="tok-s">"o_proj"</span>, <span class="tok-s">"qkv_proj"</span>,
+                        <span class="tok-s">"gate_up_proj"</span>, <span class="tok-s">"down_proj"</span>]))
+
+    <span class="tok-c"># 3) data + tokenizer</span>
+    <span class="tok-k">var</span> data = dsn.load_dataset(<span class="tok-s">"dvgodoy/yoda_sentences"</span>, split=<span class="tok-s">"train"</span>)
+    <span class="tok-k">var</span> tok = tf.AutoTokenizer.from_pretrained(repo)
+    tok.pad_token = tok.unk_token       <span class="tok-c"># keep EOS unmasked</span>
+
+    <span class="tok-c"># 4) train — paged optimizer absorbs long-sequence spikes</span>
+    <span class="tok-k">var</span> trainer = trl.SFTTrainer(
+        model=model, processing_class=tok, train_dataset=data,
+        args=trl.SFTConfig(
+            output_dir=<span class="tok-s">"./phi3-yoda-adapter"</span>,
+            per_device_train_batch_size=<span class="tok-num">16</span>,
+            gradient_checkpointing=<span class="tok-k">True</span>,
+            max_length=<span class="tok-num">64</span>,              <span class="tok-c"># shortest sensible</span>
+            num_train_epochs=<span class="tok-num">10</span>, learning_rate=<span class="tok-num">3e-4</span>,
+            optim=<span class="tok-s">"paged_adamw_8bit"</span>,
+            logging_steps=<span class="tok-num">10</span>, report_to=<span class="tok-s">"none"</span>))
+    trainer.train()
+    trainer.save_model()                <span class="tok-c"># saves only the adapter</span>
+
+    <span class="tok-c"># 5) the number that tells you it worked</span>
+    <span class="tok-k">var</span> counts = model.get_nb_trainable_parameters()   <span class="tok-c"># (trainable, total)</span>
+    <span class="tok-f">print</span>(<span class="tok-s">"trainable %:"</span>, <span class="tok-num">100.0</span> * counts[<span class="tok-num">0</span>] / counts[<span class="tok-num">1</span>])   <span class="tok-c"># ~0.3% — check it!</span>
+    <span class="tok-f">print</span>(<span class="tok-s">"footprint GB:"</span>, model.get_memory_footprint() / <span class="tok-num">1e9</span>)</code></pre>
 
   <p class="warn"><strong>Version gotchas (trl ≥ 0.20):</strong> <code>max_seq_length</code> was
   renamed to <code>max_length</code>; <code>bf16</code> defaults to True — guard with
   <code>torch.cuda.is_bf16_supported()</code> on older GPUs; in trl 0.21 prefer passing
-  <code>peft_config=</code> to SFTTrainer over pre-applying adapters.</p>
+  <code>peft_config=</code> to SFTTrainer over the pre-applied adapters this block uses.</p>
 </section>
 
 <!-- ===================== DECIDE ===================== -->
@@ -520,35 +481,46 @@ few-shot prompting (3–5 examples in context)
     Elo from pairwise LLM-judged wins:&nbsp; update R<sub>A</sub> ← R<sub>A</sub> + K(S<sub>A</sub> − E<sub>A</sub>),&nbsp; E<sub>A</sub> = 1/(1+10<sup>(R<sub>B</sub>−R<sub>A</sub>)/400</sup>)
   </div>
 
-  <pre class="py"><code><span class="tok-k">import</span> json
 
-<span class="tok-k">def</span> <span class="tok-f">evaluate</span>(outputs, targets, cost=<span class="tok-k">None</span>):
-    <span class="tok-k">def</span> <span class="tok-f">parses</span>(o):                 <span class="tok-c"># format validity</span>
-        <span class="tok-k">try</span>: json.loads(o); <span class="tok-k">return</span> <span class="tok-k">True</span>
-        <span class="tok-k">except</span> Exception: <span class="tok-k">return</span> <span class="tok-k">False</span>
-    <span class="tok-k">print</span>(<span class="tok-s">f"format validity = {sum(map(parses, outputs))/len(outputs):.3f}"</span>)
-    em = <span class="tok-k">sum</span>(a.strip() == b.strip()
-           <span class="tok-k">for</span> a, b <span class="tok-k">in</span> <span class="tok-k">zip</span>(outputs, targets)) / <span class="tok-k">len</span>(targets)
-    <span class="tok-k">print</span>(<span class="tok-s">f"exact match = {em:.3f}"</span>)
-    <span class="tok-k">if</span> cost:                        <span class="tok-c"># decision-relevant primary</span>
-        <span class="tok-k">print</span>(<span class="tok-s">f"decision cost = {sum(cost(o,t) for o,t in zip(outputs,targets))/len(targets):.3f}"</span>)
-    <span class="tok-c"># also: regression probe (MMLU-style) + worst-group cost (equity)</span></code></pre>
+  <pre class="mojo"><code><span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
+<span class="tok-k">from</span> std.python <span class="tok-k">import</span> Python
 
-  <pre class="mojo">
+<span class="tok-k">var</span> json = Python.import_module(<span class="tok-s">"json"</span>)
+
+<span class="tok-c"># format validity: does the output parse as the target schema at all?</span>
+<span class="tok-c"># A loss curve cannot tell you this — a model plateaus and still emits</span>
+<span class="tok-c"># text that no parser will accept.</span>
+<span class="tok-k">def</span> <span class="tok-f">parses</span>(o: String) <span class="tok-k">raises</span> -&gt; Bool:
+    <span class="tok-k">try</span>:
+        json.loads(o)
+        <span class="tok-k">return</span> <span class="tok-k">True</span>
+    except:
+        <span class="tok-k">return</span> <span class="tok-k">False</span>
+
+<span class="tok-k">def</span> <span class="tok-f">format_validity</span>(outs: List[String]) -&gt; Float64:
+    <span class="tok-k">var</span> ok = <span class="tok-num">0</span>
+    <span class="tok-k">for</span> i <span class="tok-k">in</span> <span class="tok-f">range</span>(<span class="tok-f">len</span>(outs)):
+        <span class="tok-k">if</span> parses(outs[i]):
+            ok += <span class="tok-num">1</span>
+    <span class="tok-k">return</span> Float64(ok) / Float64(<span class="tok-f">len</span>(outs))
+
 <span class="tok-k">def</span> <span class="tok-f">exact_match</span>(outs: List[String],
-                  tgts: List[String]) -&gt; Float64:
+                tgts: List[String]) -&gt; Float64:
     <span class="tok-k">var</span> hits = <span class="tok-num">0</span>
-    <span class="tok-k">for</span> i <span class="tok-k">in</span> range(len(outs)):
+    <span class="tok-k">for</span> i <span class="tok-k">in</span> <span class="tok-f">range</span>(<span class="tok-f">len</span>(outs)):
         <span class="tok-k">if</span> outs[i].strip() == tgts[i].strip():
             hits += <span class="tok-num">1</span>
-    <span class="tok-k">return</span> Float64(hits) / Float64(len(outs))
+    <span class="tok-k">return</span> Float64(hits) / Float64(<span class="tok-f">len</span>(outs))
 
 <span class="tok-c"># Elo update after one judged match (K = 32, S = 1/0/0.5):</span>
 <span class="tok-k">def</span> <span class="tok-f">elo_update</span>(ra: Float64, rb: Float64,
-                   s_a: Float64) -&gt; (Float64, Float64):
+               s_a: Float64) -&gt; (Float64, Float64):
     <span class="tok-k">var</span> ea = <span class="tok-num">1.0</span> / (<span class="tok-num">1.0</span> + <span class="tok-num">10.0</span> ** ((rb - ra) / <span class="tok-num">400.0</span>))
     <span class="tok-k">var</span> delta = <span class="tok-num">32.0</span> * (s_a - ea)
-    <span class="tok-k">return</span> (ra + delta, rb - delta)</code></pre>
+    <span class="tok-k">return</span> (ra + delta, rb - delta)
+
+<span class="tok-c"># decision cost is the primary metric when the outputs drive decisions —</span>
+<span class="tok-c"># see decision_aware_ml.html Section 8 for the loop.</span></code></pre>
 
   <p class="good">Report: one task metric + one regression check + tokens-per-call and VRAM
   before/after + worst-group cost. GPT-4-as-judge with Elo is fine for iteration; never ship on
@@ -575,7 +547,7 @@ few-shot prompting (3–5 examples in context)
 </div>
 
 <footer>
-<p>Fine-Tuning LLMs, code-first: VRAM math · LoRA · NF4 · merge &amp; serve · pipeline · decision flowchart · metrics — in Python and Mojo 1.x. Companions: <a href="ai_agents_python_vs_mojo.html" style="color:var(--acc2);">Building AI Agents</a> · <a href="decision_aware_ml.html" style="color:var(--acc2);">Decision-Aware ML</a>.</p>
+<p>Fine-Tuning LLMs, code-first: VRAM math · LoRA · NF4 · merge &amp; serve · pipeline · decision flowchart · metrics — in Mojo 1.x. Companion: <a href="decision_aware_ml.html" style="color:var(--acc2);">Decision-Aware ML</a>.</p>
 </footer>
 
 <script>
@@ -614,5 +586,142 @@ few-shot prompting (3–5 examples in context)
   })();
 </script>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body>
 </html>

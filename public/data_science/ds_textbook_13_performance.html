@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -124,10 +122,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="pipeline"><span class="sw"></span>data_pipeline.mojo</div>
-        <div class="tab" data-lang="python" data-group="pipeline"><span class="sw"></span>data_pipeline.py</div>
       </div>
       <div class="panes" data-group="pipeline">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — same pipeline, fewer lines</span>
+<span class="tok-kw">from</span> collections <span class="tok-kw">import</span> Dict
 
 <span class="tok-kw">struct</span> <span class="tok-ty">Record</span>:
     <span class="tok-kw">var</span> id: Int
@@ -152,20 +150,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
     <span class="tok-kw">for</span> path <span class="tok-kw">in</span> batches:
         <span class="tok-kw">var</span> results = process_batch(path)
         print(<span class="tok-str">f"Processed {len(results)} records"</span>)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — same pipeline</span>
-<span class="tok-kw">import</span> json
-
-<span class="tok-kw">def</span> <span class="tok-fn">process_batch</span>(path):
-    <span class="tok-kw">with</span> open(path) <span class="tok-kw">as</span> f:
-        data = json.load(f)
-    <span class="tok-kw">return</span> [r <span class="tok-kw">for</span> r <span class="tok-kw">in</span> data <span class="tok-kw">if</span> r[<span class="tok-str">"value"</span>] &gt; <span class="tok-num">0.0</span>]
-
-batches = [<span class="tok-str">"batch1.json"</span>, <span class="tok-str">"batch2.json"</span>]
-<span class="tok-kw">for</span> path <span class="tok-kw">in</span> batches:
-    results = process_batch(path)
-    print(<span class="tok-str">f"Processed {len(results)} records"</span>)</pre></div>
       </div>
     </div>
+
+    <p class="cap">The Python version of that pipeline is <code class="inline">import json</code>, a <code class="inline">with open(path) as f: data = json.load(f)</code> block, and a one-line list comprehension — <code class="inline">return [r for r in data if r["value"] &gt; 0.0]</code> — with no declared record type at all, so every element stays a dict of boxed objects and every iteration allocates.</p>
 
     <p>The Mojo version compiles to a fast native binary with owned types that keep allocations minimal; the Python version leans on C libraries under the hood. Crucially, you don't have to pick — Mojo can import and call those same Python libraries directly with <code class="inline">Python.import_module</code>.</p>
   </section>
@@ -185,12 +173,11 @@ batches = [<span class="tok-str">"batch1.json"</span>, <span class="tok-str">"ba
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="mosql"><span class="sw"></span>simd_transform.mojo</div>
-        <div class="tab" data-lang="python" data-group="mosql"><span class="sw"></span>simd_transform.py</div>
       </div>
       <div class="panes" data-group="mosql">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — SIMD-accelerated normalization (native syntax)</span>
-<span class="tok-kw">from</span> std.algorithm <span class="tok-kw">import</span> vectorize
-<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
+<span class="tok-kw">from</span> algorithm <span class="tok-kw">import</span> vectorize
+<span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt
 
 <span class="tok-kw">def</span> <span class="tok-fn">normalize_simd</span>(data: List[Float64]) -&gt; List[Float64]:
     <span class="tok-kw">var</span> n = len(data)
@@ -210,24 +197,20 @@ batches = [<span class="tok-str">"batch1.json"</span>, <span class="tok-str">"ba
     result.resize(n, <span class="tok-num">0.0</span>)
 
     <span class="tok-com"># Vectorized division — processes 4-8 elements per cycle</span>
-    <span class="tok-kw">def</span> <span class="tok-fn">div_normalize</span>(idx: Int) {mut result, imm data, imm mean, imm std}:
+    <span class="tok-kw">@parameter</span>
+    <span class="tok-kw">def</span> <span class="tok-fn">div_normalize</span>[<span class="tok-ty">simd_width</span>: Int](idx: Int):
         result[idx] = (data[idx] - mean) / std
 
-    vectorize[<span class="tok-num">8</span>](n, div_normalize)
+    vectorize[div_normalize, <span class="tok-num">8</span>](n)
     <span class="tok-kw">return</span> result
 
-<span class="tok-com"># The vectorize + unified closure pattern tells the compiler</span>
+<span class="tok-com"># The @parameter + vectorize pattern tells the compiler</span>
 <span class="tok-com"># to unroll the loop by 8 elements, using SIMD registers</span>
 <span class="tok-com"># directly. No manual SIMD intrinsics required.</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — normalization with NumPy</span>
-<span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">normalize</span>(data):
-    mean = np.mean(data)
-    std = np.std(data)
-    <span class="tok-kw">return</span> (data - mean) / std</pre></div>
       </div>
     </div>
+
+    <p class="cap">The <code class="inline">numpy</code> version of that same normalization is three lines: <code class="inline">mean = np.mean(data)</code>, <code class="inline">std = np.std(data)</code>, <code class="inline">return (data - mean) / std</code>. Each one is a C loop, so it is fast — but the caller is handing NumPy a fresh buffer and getting a new one back, and it cannot tell the compiler anything about the width.</p>
 
     <p>The contrast is stark: Mojo's <code class="inline">vectorize</code> gives you SIMD acceleration with a one-line decorator. Python's NumPy achieves speed by calling C under the hood, but any Python-level loop pays object overhead per element. For data scientists who need performance without leaving Python's syntax, Mojo is the clear choice.</p>
   </section>
@@ -302,7 +285,6 @@ batches = [<span class="tok-str">"batch1.json"</span>, <span class="tok-str">"ba
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="hybrid"><span class="sw"></span>mojo_worker.mojo</div>
-        <div class="tab" data-lang="python" data-group="hybrid"><span class="sw"></span>orchestrator.py</div>
       </div>
       <div class="panes" data-group="hybrid">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — inference worker for the hybrid pipeline</span>
@@ -316,16 +298,10 @@ batches = [<span class="tok-str">"batch1.json"</span>, <span class="tok-str">"ba
 
     <span class="tok-kw">def</span> <span class="tok-fn">predict</span>(self, features: List[Float64]) -&gt; List[Float64]:
         <span class="tok-kw">return</span> self.session.execute(features)</pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — orchestration importing the Mojo worker</span>
-<span class="tok-kw">import</span> mojo
-<span class="tok-kw">from</span> mojo import InferenceWorker
-
-worker = InferenceWorker(<span class="tok-str">"model.pt"</span>)
-features = [<span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>, <span class="tok-num">3.0</span>, <span class="tok-num">4.0</span>]
-predictions = worker.predict(features)
-print(<span class="tok-str">f"Predictions: {predictions}"</span>)</pre></div>
       </div>
     </div>
+
+    <p class="cap">The Python side of that split is three lines: <code class="inline">import mojo</code>, <code class="inline">from mojo import InferenceWorker</code>, then <code class="inline">worker = InferenceWorker("model.pt")</code> and <code class="inline">worker.predict(features)</code> — the same two methods the <code class="inline">InferenceWorker</code> struct declares on the Mojo side, called across the boundary.</p>
 
     <p>This architecture gives you the best of both worlds: Python handles orchestration, configuration, and the parts of the pipeline that change week to week, while Mojo's MAX Engine handles the compute-intensive inference. The boundary between them is a single import — no serialization, no subprocess, no separate runtime.</p>
 

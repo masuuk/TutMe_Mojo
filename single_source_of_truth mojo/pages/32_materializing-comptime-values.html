@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Materializing compile-time values at run time · Mojo v1 The Language Manual</title>
+<meta name="description" content="Turning parameters and comptime values into run-time data.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part V · Compile-Time Programming</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part V</span><span class="sep">/</span><span>Compile-Time Programming</span><span class="sep">/</span><span class="num">32</span></nav><h1>Materializing compile-time values at run time</h1>
+<p class="dek">Turning parameters and comptime values into run-time data.</p><p class="byline">Chapter 32 · 1,343 words · 14 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/materialization/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Mojo's compile-time metaprogramming makes it easy to make calculations at
+compile time for later use. The process of making a <em>compile-time value</em>
+available at run time is called <em>materialization</em>. For types that can be
+trivially copied, this isn't an issue. The compiler can simply insert the value
+into the compiled program wherever it's needed.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> threshold<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> some_calculation<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># calculate at compile time</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">1000</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4">    my_function<span class="tk-punctuation">(</span>i<span class="tk-punctuation">,</span> threshold<span class="tk-punctuation">)</span> <span class="tk-comment"># use value at runtime</span></span>
+</code></pre></figure>
+<p>However, Mojo also allows you to create instances of much more complex types at
+compile-time: types that dynamically allocate memory, like <code>List</code> and <code>Dict</code>.
+Re-using these values at run time presents some questions, like where the memory
+is allocated, who owns the values, and when the values are destroyed.</p>
+<p>This page describes when Mojo materializes values, and presents some techniques
+for avoiding unnecessary materialization of complex values.</p>
+<h2 class="h h--2" data-level="2" id="implicit-and-explicit-materialization">Implicit and explicit materialization<a aria-label="Link to Implicit and explicit materialization" class="h__link" href="#implicit-and-explicit-materialization"></a></h2>
+<p>When you use a <code>comptime</code> value at run time, you're explicitly or implicitly
+copying the value into a run-time variable:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> comptime_value <span class="tk-operator">=</span> <span class="tk-number">1000</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> runtime_value <span class="tk-operator">=</span> comptime_value</span>
+</code></pre></figure>
+<p>This process of moving a compile-time value to a run-time variable is called
+<em>materialization</em>. If the value is implicitly copyable, like an <code>Int</code> or <code>Bool</code>,
+Mojo treats it as <em>implicitly materializable</em> as well.</p>
+<p>But types that <strong>aren't</strong> implicitly copyable present other challenges. Consider
+the following code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">lookup_fn</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> list_of_values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">7</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Some computation, doesn't matter what it is.</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> idx <span class="tk-operator">=</span> dynamic_function<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># Look up another value</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> lookup <span class="tk-operator">=</span> list_of_values<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># Use the value</span></span>
+<span class="cl" data-line="12">        process<span class="tk-punctuation">(</span>lookup<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>This looks reasonable, but compiling it produces an error on this line:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> lookup <span class="tk-operator">=</span> list_of_values<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">cannot materialize comptime value of type 'List[Int]' to runtime</span>
+<span class="cl" data-line="2">because it is not 'ImplicitlyCopyable'</span>
+</code></pre></figure>
+<p>Just like Mojo forces you to explicitly copy a value that's expensive to
+copy, it forces you to explicitly materialize values that are expensive to
+materialize, by calling the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/value/materialize/" rel="noopener noreferrer"><code>materialize()</code></a> function.</p>
+<p>Here's the code above with explicit materialization added:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">lookup_fn</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> list_of_values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">7</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> idx <span class="tk-operator">=</span> dynamic_function<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># This is the problem</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> tmp<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> materialize<span class="tk-punctuation">[</span>list_of_values<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> lookup <span class="tk-operator">=</span> tmp<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># tmp is destroyed here</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12">        process<span class="tk-punctuation">(</span>lookup<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>This code materializes the list of values <em>inside</em> of the loop, which includes
+dynamically allocating heap memory and storing the four elements into that
+memory. Because the last use of <code>tmp</code> is on the next line, the memory then gets
+deallocated before the loop iterates. This creates and destroys the list on
+every iteration of the loop, which is clearly wasteful.</p>
+<p>A more efficient version would materialize the list <em>outside</em> of the loop:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">lookup_fn</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> list_of_values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">7</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> <span class="tk-builtin">list</span> <span class="tk-operator">=</span> materialize<span class="tk-punctuation">[</span>list_of_values<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>count<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> idx <span class="tk-operator">=</span> dynamic_function<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> lookup <span class="tk-operator">=</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10">        process<span class="tk-punctuation">(</span>lookup<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># materialized list is destroyed here</span></span>
+</code></pre></figure>
+<p>This is why Mojo requires you to explicitly materialize non-trivial values; it
+puts you in control of when your program allocates resources.</p>
+<h2 class="h h--2" data-level="2" id="global-lookup-tables">Global lookup tables<a aria-label="Link to Global lookup tables" class="h__link" href="#global-lookup-tables"></a></h2>
+<p>Mojo doesn't currently have a general-purpose mechanism for creating global
+static data. This is a problem for some performance-sensitive code where you
+want to use a static lookup table. Even if you declare the table as a <code>comptime</code>
+value, you need to materialize it each time you want to use the data.</p>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/globals/global_constant/" rel="noopener noreferrer"><code>global_constant()</code></a> function
+provides a solution for storing a compile-time value into static global storage,
+so you can access it without repeatedly materializing the value. However, this
+currently only works for self-contained values which don't include pointers to
+other locations in memory. That rules out using collection types like <code>List</code> and
+<code>Dict</code>.</p>
+<p>The easiest way to use <code>global_constant()</code> is with
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/array/Array/" rel="noopener noreferrer"><code>Array</code></a>, which
+allocates a statically sized array of elements on the stack. The following code
+uses <code>global_constant()</code> to create a static lookup table.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>builtin<span class="tk-punctuation">.</span><span class="tk-builtin">globals</span> <span class="tk-keyword">import</span> global_constant</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">use_lookup</span><span class="tk-punctuation">(</span>idx<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int64<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> numbers<span class="tk-punctuation">:</span> Array<span class="tk-punctuation">[</span>Int64<span class="tk-punctuation">,</span> <span class="tk-number">10</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="5"> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">14</span><span class="tk-punctuation">,</span> <span class="tk-number">34</span><span class="tk-punctuation">,</span> <span class="tk-number">63</span><span class="tk-punctuation">,</span> <span class="tk-number">101</span><span class="tk-punctuation">,</span> <span class="tk-number">148</span><span class="tk-punctuation">,</span> <span class="tk-number">204</span><span class="tk-punctuation">,</span> <span class="tk-number">269</span><span class="tk-punctuation">,</span> <span class="tk-number">343</span></span>
+<span class="cl" data-line="6"> <span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">ref</span> lookup_table <span class="tk-operator">=</span> global_constant<span class="tk-punctuation">[</span>numbers<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">if</span> idx <span class="tk-operator">&gt;=</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>lookup_table<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">return</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">return</span> lookup_table<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>use_lookup<span class="tk-punctuation">(</span><span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+</code></pre></figure>
+<p>At compile time, Mojo allocates the <code>numbers</code> array, and then the
+<code>global_constant()</code> function copies it into static constant memory, where the
+code can reference it without requiring any dynamic logic to create or populate
+the array. At run time, the <code>lookup_table</code> identifier receives an immutable
+reference to this memory.</p>
+<p>Note the use of <code>ref lookup_table</code> to bind the reference returned by
+<code>global_constant()</code>. Using <code>var lookup_table</code> would cause a compiler error,
+because it would trigger a copy, and <code>Array</code> doesn't support implicit
+copying.</p>
+<h2 class="h h--2" data-level="2" id="using-the-comptime-keyword">Using the <code>comptime</code> keyword<a aria-label="Link to Using the comptime keyword" class="h__link" href="#using-the-comptime-keyword"></a></h2>
+<p>Another approach that you can use to avoid materializing a complex value is to
+use the <code>comptime</code> keyword to control when Mojo evaluates an expression.
+Assigning an expression to a <code>comptime</code> value causes Mojo to evaluate the
+expression at compile time.</p>
+<p>For example, if you want to force a function to run at compile time:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> tmp <span class="tk-operator">=</span> calculate_something<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># executed at compile time</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> y <span class="tk-operator">=</span> x <span class="tk-operator">*</span> tmp  <span class="tk-comment"># executed at run time</span></span>
+</code></pre></figure>
+<p>If you're only creating a <code>comptime</code> value for a single use, you can use a
+<code>comptime</code> sub-expression instead:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> y <span class="tk-operator">=</span> x <span class="tk-operator">*</span> <span class="tk-keyword">comptime</span> <span class="tk-punctuation">(</span>calculate_something<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>This works exactly like the previous example, without creating a named temporary
+value. The <code>comptime</code> keyword here tells Mojo to evaluate the expression inside
+the parentheses (<code>calculate_something()</code>) at compile time.</p>
+<p>For example, you can use a <code>comptime</code> sub-expression when working with the
+<code>Layout</code> type, which determines how you store and retrieve data in a
+<code>LayoutTensor</code>. Materializing a <code>Layout</code> requires dynamic allocation, which
+isn't supported on GPUs. So calling this code on a GPU produces an error:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> layout <span class="tk-operator">=</span> Layout<span class="tk-punctuation">.</span>row_major<span class="tk-punctuation">(</span><span class="tk-number">16</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> layout<span class="tk-punctuation">.</span>size<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">//</span> WARP_SIZE  <span class="tk-comment"># Can't implicitly materialize layout</span></span>
+</code></pre></figure>
+<p>A <code>comptime</code> sub-expression fixes this issue:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> layout <span class="tk-operator">=</span> Layout<span class="tk-punctuation">.</span>row_major<span class="tk-punctuation">(</span><span class="tk-number">16</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-keyword">comptime</span> <span class="tk-punctuation">(</span>layout<span class="tk-punctuation">.</span>size<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-operator">//</span> WARP_SIZE</span>
+</code></pre></figure>
+<p>Now, the expression <code>layout.size()</code> gets evaluated at compile time, so there's
+no need to materialize the layout.</p>
+<p>You could also achieve the same effect using a named <code>comptime</code> value.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> layout <span class="tk-operator">=</span> Layout<span class="tk-punctuation">.</span>row_major<span class="tk-punctuation">(</span><span class="tk-number">16</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">comptime</span> layout_size <span class="tk-operator">=</span> layout<span class="tk-punctuation">.</span>size<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> layout_size <span class="tk-operator">//</span> WARP_SIZE</span>
+</code></pre></figure>
+<p>The <code>comptime</code> sub-expression is just a more compact way to express the same
+thing.</p>
+<h2 class="h h--2" data-level="2" id="materializing-literals">Materializing literals<a aria-label="Link to Materializing literals" class="h__link" href="#materializing-literals"></a></h2>
+<p>Literal values, like string literals and numeric literals are also materialized
+to their run-time equivalents, but this is mostly handled automatically by the
+compiler:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">comptime</span> str_literal <span class="tk-operator">=</span> <span class="tk-string">"Hello"</span> <span class="tk-comment"># at compile time, a StringLiteral</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> <span class="tk-builtin">str</span> <span class="tk-operator">=</span> str_literal  <span class="tk-comment"># at run time, a String.</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> static_str<span class="tk-punctuation">:</span> StaticString <span class="tk-operator">=</span> str_literal  <span class="tk-comment"># or a StaticString</span></span>
+</code></pre></figure>
+<p>Both <code>String</code> and <code>StaticString</code> can be implicitly created from a
+<code>StringLiteral</code>, but without a type annotation, Mojo defaults to materializing
+<code>StringLiteral</code> as a <code>String</code>.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/metaprogramming/materialization/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/metaprogramming/materialization/</a>, saved Thu, 01 Oct 2026 15:41:28 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/31_comptime-constraints-and-assertions.html"><span class="pager__dir">← Previous</span><span class="pager__title">Comptime constraints and assertions</span></a><a class="pager__link pager__link--next" href="../pages/33_reflection.html"><span class="pager__dir">Next →</span><span class="pager__title">Reflection</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#implicit-and-explicit-materialization">Implicit and explicit materialization</a></li><li class="rail__depth-2"><a href="#global-lookup-tables">Global lookup tables</a></li><li class="rail__depth-2"><a href="#using-the-comptime-keyword">Using the comptime keyword</a></li><li class="rail__depth-2"><a href="#materializing-literals">Materializing literals</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#implicit-and-explicit-materialization">Implicit and explicit materialization</a></li><li class="rail__depth-2"><a href="#global-lookup-tables">Global lookup tables</a></li><li class="rail__depth-2"><a href="#using-the-comptime-keyword">Using the comptime keyword</a></li><li class="rail__depth-2"><a href="#materializing-literals">Materializing literals</a></li></ol>
+<p class="rail__meta">Chapter 32 of 38 · Part V, Compile-Time Programming.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

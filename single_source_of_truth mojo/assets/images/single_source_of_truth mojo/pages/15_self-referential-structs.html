@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Self-referential structs · Mojo v1 The Language Manual</title>
+<meta name="description" content="Lists, sets, and graphs built out of Mojo itself.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part III · Abstraction &amp; Values</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part III</span><span class="sep">/</span><span>Abstraction &amp; Values</span><span class="sep">/</span><span class="num">15</span></nav><h1>Self-referential structs</h1>
+<p class="dek">Lists, sets, and graphs built out of Mojo itself.</p><p class="byline">Chapter 15 · 1,924 words · 11 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/structs/reference/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Some data structures don't fit well with value semantics. Lists, trees,
+and graphs all need nodes that point to each other. You can't build these by
+nesting one value inside another, because the type would keep growing forever.</p>
+<p>In Mojo, you build these shapes with pointers, heap allocation, and manual
+cleanup. The idea may feel new at first, but the pattern stays simple once you
+see it in small steps.</p>
+<h2 class="h h--2" data-level="2" id="avoid-direct-self-reference">Avoid direct self-reference<a aria-label="Link to Avoid direct self-reference" class="h__link" href="#avoid-direct-self-reference"></a></h2>
+<p>Mojo doesn't let you build a type that stores another instance of itself, even
+when nested within an <a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/optional/Optional/" rel="noopener noreferrer"><code>Optional</code></a>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Node</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> <span class="tk-builtin">next</span><span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Node<span class="tk-punctuation">]</span> <span class="tk-comment"># ERROR: Recursive reference</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># ...</span></span>
+</code></pre></figure>
+<p>Each <code>struct</code> has a fixed layout. If <code>Node</code> held another <code>Node</code> directly, the
+compiler wouldn't know how much space to reserve. Optional fields don't help,
+because the outer value still needs room for the inner one.</p>
+<p>Pointers solve this problem. Pointers have a fixed size, and they let values
+point at each other without blowing up the type.</p>
+<h2 class="h h--2" data-level="2" id="adding-self-referential-pointers">Adding self-referential pointers<a aria-label="Link to Adding self-referential pointers" class="h__link" href="#adding-self-referential-pointers"></a></h2>
+<p>The following code shows how to set up a node that can point to its own type.
+This sample gives you a node type with a value slot and a single link
+to the next node:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Node</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Writable <span class="tk-operator">&amp;</span> Deinitable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2">    Movable</span>
+<span class="cl" data-line="3"><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> NodePointer <span class="tk-operator">=</span> Pointer<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span> <span class="tk-comment"># The `Node`'s value</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> <span class="tk-builtin">next</span><span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">]</span> <span class="tk-comment"># Pointer to the next `Node`</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># Uses an `Optional` value to allow 'empty' Node construction</span></span>
+<span class="cl" data-line="12"> <span class="tk-comment"># that can be moved into newly allocated memory</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-boolean">None</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>value <span class="tk-operator">=</span> value</span>
+<span class="cl" data-line="15"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span></span>
+</code></pre></figure>
+<p>The code defines a type-specific <code>NodePointer</code> type alias built on
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/pointer/Pointer/" rel="noopener noreferrer"><code>Pointer</code></a>.</p>
+<p><a href="../pages/21_lifetimes-origins-and-references.html"><code>MutUntrackedOrigin</code></a>
+lets the pointer represent dynamically-allocated memory that the lifetime
+checker doesn't track. You need to both allocate and deallocate memory as
+needed.</p>
+<p>The <code>next</code> field is an <code>Optional[Self.NodePointer]</code> because a node may or may
+not link to another node. <code>Pointer</code> is non-nullable, so <code>Optional</code> provides the
+null state. <code>Optional[Pointer]</code> has the same memory layout as a raw pointer, so
+there's no overhead. For more on this pattern, see
+<a href="../pages/23_using-pointers.html#working-with-nullability">Working with nullability</a>.</p>
+<p>The optional <code>value</code> lets you create "empty" nodes, enabling you to move
+new <code>Node</code> memory allocations into place.</p>
+<h2 class="h h--2" data-level="2" id="building-nodes">Building nodes<a aria-label="Link to Building nodes" class="h__link" href="#building-nodes"></a></h2>
+<p>Here's the key pattern you can use in many reference structures:</p>
+<ol>
+<li class="">Allocate space.</li>
+<li class="">Construct a value-holding node.</li>
+<li class="">Write it into the allocated memory.</li>
+<li class="">Return the pointer.</li>
+</ol>
+<p>And here's an example of that pattern:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">make_node</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> node_ptr <span class="tk-operator">=</span> alloc<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">{</span>count <span class="tk-operator">=</span> <span class="tk-number">1</span><span class="tk-punctuation">}</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>unsafe_leak<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4">    node_ptr<span class="tk-punctuation">.</span>unsafe_write<span class="tk-punctuation">(</span>Self<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> node_ptr</span>
+</code></pre></figure>
+<p>In this case, constructing the node (<code>Self(value)</code>) is simple enough
+that it's inline with the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/pointer/Pointer/#unsafe_write" rel="noopener noreferrer"><code>unsafe_write()</code></a> call.</p>
+<p>This "allocate space, initialize, and write" approach creates safe
+pointer-based structures in Mojo.</p>
+<p><a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/alloc/alloc/" rel="noopener noreferrer"><code>alloc()</code></a> returns an
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/alloc/Allocation/" rel="noopener noreferrer"><code>Allocation</code></a>, an owning handle that the
+compiler requires you to release before it goes out of scope. That's the right
+default, but a node has to outlive the function that allocates it, so
+<code>make_node()</code> calls
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/alloc/Allocation/#unsafe_leak" rel="noopener noreferrer"><code>unsafe_leak()</code></a> to take the
+raw pointer out of the handle. Leaking transfers responsibility for the memory
+to you — see
+<a href="../pages/23_using-pointers.html#more-memory-allocation-patterns">More memory allocation patterns</a>
+for when to prefer each approach.</p>
+<h2 class="h h--2" data-level="2" id="freeing-nodes">Freeing nodes<a aria-label="Link to Freeing nodes" class="h__link" href="#freeing-nodes"></a></h2>
+<p>Releasing a node takes two steps:
+destroy the value stored in the memory, then release the memory itself.
+Because <code>make_node()</code> returns a raw pointer, you need to pair the
+leaked pointer back up with the layout you allocated it with to get an
+<code>Allocation</code> that <a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/alloc/dealloc/" rel="noopener noreferrer"><code>dealloc()</code></a> can consume:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">free_node</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> node_ptr<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    node_ptr<span class="tk-punctuation">.</span>unsafe_deinit_pointee<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4">    dealloc<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="5">        ThinAllocation<span class="tk-punctuation">(</span>unsafe_owned_ptr<span class="tk-operator">=</span>node_ptr<span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>unsafe_with_layout<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="6"> <span class="tk-punctuation">{</span>count <span class="tk-operator">=</span> <span class="tk-number">1</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The two steps are separate because <code>dealloc()</code> releases memory without running
+deinitializers on whatever the memory holds. Skipping
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/pointer/Pointer/#unsafe_deinit_pointee" rel="noopener noreferrer"><code>unsafe_deinit_pointee()</code></a>
+would leak whatever the node's value owns, which in this case is a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/string/string/String/" rel="noopener noreferrer"><code>String</code></a>'s heap buffer.</p>
+<p>Every place that removes a node calls this one method, so the pairing of
+<code>make_node()</code> and <code>free_node()</code> stays easy to audit.</p>
+<h2 class="h h--2" data-level="2" id="linking-nodes">Linking nodes<a aria-label="Link to Linking nodes" class="h__link" href="#linking-nodes"></a></h2>
+<p>To link nodes, create a new node and set your <code>next</code> pointer to point at it.
+This example shows how to <code>append()</code> a new node using a supplied value.
+If a <code>next</code> node already exists, the code frees it before appending
+the new node.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">append</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Free chain if replacing `next`</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">if</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> next_ptr <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">        next_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>free_chain<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6">        Self<span class="tk-punctuation">.</span>free_node<span class="tk-punctuation">(</span>next_ptr<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span> <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>make_node<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="walking-the-list">Walking the list<a aria-label="Link to Walking the list" class="h__link" href="#walking-the-list"></a></h2>
+<p>To walk the list, follow the chain until you reach the end.
+Recursive code makes this easy to read. This example prints
+the value stored at each node:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">print_list</span><span class="tk-punctuation">(</span>node<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> node<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Empty list"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> node_ptr <span class="tk-operator">=</span> node<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> current_value<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> node_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>value</span>
+<span class="cl" data-line="10"> <span class="tk-keyword">if</span> current_value<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>current_value<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">" "</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">if</span> node_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14">        Self<span class="tk-punctuation">.</span>print_list<span class="tk-punctuation">(</span>node_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The pattern is simple: check the value, print it if it exists,
+then move to the next link.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>This example uses a static method, but you can also implement
+it as an instance method.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="cleaning-up">Cleaning up<a aria-label="Link to Cleaning up" class="h__link" href="#cleaning-up"></a></h2>
+<p>Because you allocate each node yourself, you're also responsible
+for freeing it. This cleanup walks the chain and frees each node
+after destroying its pointee:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">free_chain</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> current <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">while</span> current<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> current_ptr <span class="tk-operator">=</span> current<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> next_node <span class="tk-operator">=</span> current_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span></span>
+<span class="cl" data-line="6">        Self<span class="tk-punctuation">.</span>free_node<span class="tk-punctuation">(</span>current_ptr<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">        current <span class="tk-operator">=</span> next_node</span>
+</code></pre></figure>
+<p>Note that the loop reads <code>current_ptr[].next</code> <em>before</em> freeing the node. Once
+<code>free_node()</code> returns, the pointer dangles and reading through it would be a
+use-after-free.</p>
+<p>The "head" node stays allocated unless you explicitly free it yourself:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">list_head<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>free_chain<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2">ListNode<span class="tk-punctuation">.</span>free_node<span class="tk-punctuation">(</span>list_head<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="deinitializers">Deinitializers<a aria-label="Link to Deinitializers" class="h__link" href="#deinitializers"></a></h3>
+<p>When you build real Mojo data structures, you usually want a safe API that
+hides raw pointers from users. In a complete linked-list type (rather than
+a small demo of linkable nodes) the parent list handles node allocation and
+freeing. Because it owns the nodes, it also performs cleanup in its
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/death/" rel="noopener noreferrer">deinitializer</a>.</p>
+<p>Here's a small example that shows how to deinitialize <code>self</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">LinkedList</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Writable <span class="tk-operator">&amp;</span> Deinitable<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">comptime</span> _Node <span class="tk-operator">=</span> Node<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> _head<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>_Node<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">__deinit__</span><span class="tk-punctuation">(</span><span class="tk-keyword">deinit</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-string">"""Clean up the list by freeing all nodes.</span></span>
+<span class="cl" data-line="8"><span class="tk-string"></span></span>
+<span class="cl" data-line="9"><span class="tk-string">        Notes:</span></span>
+<span class="cl" data-line="10"><span class="tk-string">            Time complexity: O(n) in len(self).</span></span>
+<span class="cl" data-line="11"><span class="tk-string"></span></span>
+<span class="cl" data-line="12"><span class="tk-string">        See Also:</span></span>
+<span class="cl" data-line="13"><span class="tk-string">            "Choose the form of the Destructor!"</span></span>
+<span class="cl" data-line="14"><span class="tk-string">            -- Gozer, "Ghostbusters" (1984).</span></span>
+<span class="cl" data-line="15"><span class="tk-string">        """</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> curr <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>_head</span>
+<span class="cl" data-line="17"> <span class="tk-keyword">while</span> curr<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">var</span> curr_ptr <span class="tk-operator">=</span> curr<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">var</span> <span class="tk-builtin">next</span> <span class="tk-operator">=</span> curr_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span></span>
+<span class="cl" data-line="20">            Self<span class="tk-punctuation">.</span>_Node<span class="tk-punctuation">.</span>free_node<span class="tk-punctuation">(</span>curr_ptr<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21">            curr <span class="tk-operator">=</span> <span class="tk-builtin">next</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Putting it together</p><div class="callout__body"><details class="disc"><summary class="disc__summary">View full sample code</summary><div><div><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> ThinAllocation<span class="tk-punctuation">,</span> dealloc</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">comptime</span> Element <span class="tk-operator">=</span> String  <span class="tk-comment"># Adapt for your type</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">comptime</span> ListNode <span class="tk-operator">=</span> Node<span class="tk-punctuation">[</span>Element<span class="tk-punctuation">]</span> <span class="tk-comment"># Constructing a LinkedList</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">struct</span> <span class="tk-class-name">Node</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Writable <span class="tk-operator">&amp;</span> Deinitable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>Movable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">comptime</span> NodePointer <span class="tk-operator">=</span> Pointer<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">,</span> MutUntrackedOrigin<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span> <span class="tk-comment"># The `Node`'s value</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> <span class="tk-builtin">next</span><span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">]</span> <span class="tk-comment"># Pointer to the next `Node`</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"> <span class="tk-comment"># Uses an `Optional` value to allow 'empty' Node construction</span></span>
+<span class="cl" data-line="14"> <span class="tk-comment"># that can be moved into newly allocated memory</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-boolean">None</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>value <span class="tk-operator">=</span> value</span>
+<span class="cl" data-line="17"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="18"></span>
+<span class="cl" data-line="19"> <span class="tk-comment"># Constructs a `Node` with a `value` with heap allocation and</span></span>
+<span class="cl" data-line="20"> <span class="tk-comment"># returns a pointer to the new `Node`.</span></span>
+<span class="cl" data-line="21"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">def</span> <span class="tk-function">make_node</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">var</span> node_ptr <span class="tk-operator">=</span> alloc<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">{</span>count <span class="tk-operator">=</span> <span class="tk-number">1</span><span class="tk-punctuation">}</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>unsafe_leak<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="24">        node_ptr<span class="tk-punctuation">.</span>unsafe_write<span class="tk-punctuation">(</span>Self<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">return</span> node_ptr</span>
+<span class="cl" data-line="26"></span>
+<span class="cl" data-line="27"> <span class="tk-comment"># Destroys the pointee, then releases the `Node`'s heap allocation by</span></span>
+<span class="cl" data-line="28"> <span class="tk-comment"># pairing the leaked pointer back up with the layout it was allocated with.</span></span>
+<span class="cl" data-line="29"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="30"> <span class="tk-keyword">def</span> <span class="tk-function">free_node</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> node_ptr<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="31">        node_ptr<span class="tk-punctuation">.</span>unsafe_deinit_pointee<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="32">        dealloc<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="33">            ThinAllocation<span class="tk-punctuation">(</span>unsafe_owned_ptr<span class="tk-operator">=</span>node_ptr<span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>unsafe_with_layout<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="34"> <span class="tk-punctuation">{</span>count <span class="tk-operator">=</span> <span class="tk-number">1</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="35"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="36"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="37"></span>
+<span class="cl" data-line="38"> <span class="tk-comment"># Constructs a `Node` with allocated memory, assigns a value, appends</span></span>
+<span class="cl" data-line="39"> <span class="tk-comment"># the pointer to `self.next`. Replaces any existing `next`.</span></span>
+<span class="cl" data-line="40"> <span class="tk-keyword">def</span> <span class="tk-function">append</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="41"> <span class="tk-comment"># Free chain if replacing `next`</span></span>
+<span class="cl" data-line="42"> <span class="tk-keyword">if</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="43"> <span class="tk-keyword">var</span> next_ptr <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="44">            next_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>free_chain<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="45">            Self<span class="tk-punctuation">.</span>free_node<span class="tk-punctuation">(</span>next_ptr<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="46"></span>
+<span class="cl" data-line="47"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span> <span class="tk-operator">=</span> Self<span class="tk-punctuation">.</span>make_node<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="48"></span>
+<span class="cl" data-line="49"> <span class="tk-comment"># Prints the list starting at this pointer's pointee</span></span>
+<span class="cl" data-line="50"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="51"> <span class="tk-keyword">def</span> <span class="tk-function">print_list</span><span class="tk-punctuation">(</span>node<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>NodePointer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="52"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> node<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="53"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Empty list"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="54"> <span class="tk-keyword">return</span></span>
+<span class="cl" data-line="55"></span>
+<span class="cl" data-line="56"> <span class="tk-keyword">var</span> node_ptr <span class="tk-operator">=</span> node<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="57"></span>
+<span class="cl" data-line="58"> <span class="tk-keyword">var</span> current_value<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Self<span class="tk-punctuation">.</span>T<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> node_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>value</span>
+<span class="cl" data-line="59"> <span class="tk-keyword">if</span> current_value<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="60"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>current_value<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">" "</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="61"></span>
+<span class="cl" data-line="62"> <span class="tk-keyword">if</span> node_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="63">            Self<span class="tk-punctuation">.</span>print_list<span class="tk-punctuation">(</span>node_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="64"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="65"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="66"></span>
+<span class="cl" data-line="67"> <span class="tk-comment"># Releases all successively allocated `Node` pointees. Does not release self.</span></span>
+<span class="cl" data-line="68"> <span class="tk-keyword">def</span> <span class="tk-function">free_chain</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="69"> <span class="tk-keyword">var</span> current <span class="tk-operator">=</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span></span>
+<span class="cl" data-line="70"> <span class="tk-keyword">while</span> current<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="71"> <span class="tk-keyword">var</span> current_ptr <span class="tk-operator">=</span> current<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="72"> <span class="tk-keyword">var</span> next_node <span class="tk-operator">=</span> current_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span></span>
+<span class="cl" data-line="73">            Self<span class="tk-punctuation">.</span>free_node<span class="tk-punctuation">(</span>current_ptr<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="74">            current <span class="tk-operator">=</span> next_node</span>
+<span class="cl" data-line="75"></span>
+<span class="cl" data-line="76"></span>
+<span class="cl" data-line="77"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="78"> <span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Element<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-string">"one"</span><span class="tk-punctuation">,</span> <span class="tk-string">"one"</span><span class="tk-punctuation">,</span> <span class="tk-string">"two"</span><span class="tk-punctuation">,</span> <span class="tk-string">"three"</span><span class="tk-punctuation">,</span> <span class="tk-string">"five"</span><span class="tk-punctuation">,</span> <span class="tk-string">"eight"</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="79"> <span class="tk-keyword">var</span> list_head <span class="tk-operator">=</span> ListNode<span class="tk-punctuation">.</span>make_node<span class="tk-punctuation">(</span>values<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="80"></span>
+<span class="cl" data-line="81"> <span class="tk-keyword">var</span> current <span class="tk-operator">=</span> list_head</span>
+<span class="cl" data-line="82"> <span class="tk-keyword">for</span> idx <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="83">        current<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>values<span class="tk-punctuation">[</span>idx<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="84">        current <span class="tk-operator">=</span> current<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span><span class="tk-builtin">next</span><span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="85"></span>
+<span class="cl" data-line="86">    ListNode<span class="tk-punctuation">.</span>print_list<span class="tk-punctuation">(</span>list_head<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="87"></span>
+<span class="cl" data-line="88"> <span class="tk-comment"># Demonstrates cleanup. In short-lived programs, the OS reclaims memory</span></span>
+<span class="cl" data-line="89"> <span class="tk-comment"># at exit</span></span>
+<span class="cl" data-line="90">    list_head<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>free_chain<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="91">    ListNode<span class="tk-punctuation">.</span>free_node<span class="tk-punctuation">(</span>list_head<span class="tk-punctuation">)</span></span>
+</code></pre></figure><p>Output:</p><figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">one one two three five eight</span>
+</code></pre></figure></div></div></details></div></aside>
+<h2 class="h h--2" data-level="2" id="what-next">What next?<a aria-label="Link to What next?" class="h__link" href="#what-next"></a></h2>
+<ul>
+<li class="">Learn more about <strong>pointers and memory safety</strong> in Mojo's
+<a href="../pages/23_using-pointers.html">using pointers</a>
+and <a href="../pages/21_lifetimes-origins-and-references.html">lifetime and origin rules</a> guides.</li>
+<li class="">Learn more about how to <strong>manage cleanup</strong> in the Mojo
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/death/" rel="noopener noreferrer">deinitializer</a> documentation.</li>
+</ul>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/structs/reference/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/structs/reference/</a>, saved Thu, 01 Oct 2026 15:47:53 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/14_operator-support.html"><span class="pager__dir">← Previous</span><span class="pager__title">Add operator support to custom types</span></a><a class="pager__link pager__link--next" href="../pages/16_traits.html"><span class="pager__dir">Next →</span><span class="pager__title">Traits</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#avoid-direct-self-reference">Avoid direct self-reference</a></li><li class="rail__depth-2"><a href="#adding-self-referential-pointers">Adding self-referential pointers</a></li><li class="rail__depth-2"><a href="#building-nodes">Building nodes</a></li><li class="rail__depth-2"><a href="#freeing-nodes">Freeing nodes</a></li><li class="rail__depth-2"><a href="#linking-nodes">Linking nodes</a></li><li class="rail__depth-2"><a href="#walking-the-list">Walking the list</a></li><li class="rail__depth-2"><a href="#cleaning-up">Cleaning up</a></li><li class="rail__depth-2"><a href="#what-next">What next?</a></li><li class="rail__depth-3"><a href="#deinitializers">Deinitializers</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#avoid-direct-self-reference">Avoid direct self-reference</a></li><li class="rail__depth-2"><a href="#adding-self-referential-pointers">Adding self-referential pointers</a></li><li class="rail__depth-2"><a href="#building-nodes">Building nodes</a></li><li class="rail__depth-2"><a href="#freeing-nodes">Freeing nodes</a></li><li class="rail__depth-2"><a href="#linking-nodes">Linking nodes</a></li><li class="rail__depth-2"><a href="#walking-the-list">Walking the list</a></li><li class="rail__depth-2"><a href="#cleaning-up">Cleaning up</a></li><li class="rail__depth-2"><a href="#what-next">What next?</a></li><li class="rail__depth-3"><a href="#deinitializers">Deinitializers</a></li></ol>
+<p class="rail__meta">Chapter 15 of 38 · Part III, Abstraction &amp; Values.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

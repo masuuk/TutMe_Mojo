@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Mojo structs · Mojo v1 The Language Manual</title>
+<meta name="description" content="Methods, constructors, overloading, and generic fields.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part III · Abstraction &amp; Values</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part III</span><span class="sep">/</span><span>Abstraction &amp; Values</span><span class="sep">/</span><span class="num">13</span></nav><h1>Mojo structs</h1>
+<p class="dek">Methods, constructors, overloading, and generic fields.</p><p class="byline">Chapter 13 · 2,663 words · 21 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/structs/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>A struct is Mojo's primary way to define your own type. When you want to model
+both data and behavior—whether that's a small value type, a numeric
+abstraction, or the foundation of a larger system—use a struct.</p>
+<p>At a high level, a Mojo struct lets you bundle data together with the
+operations that act on that data. This makes structs a natural way to represent
+concepts in your program, rather than passing loosely related values through
+functions.</p>
+<p>Each Mojo <code>struct</code> is a data structure that lets you encapsulate <em>fields</em> and
+<em>methods</em> to store and operate on data. Structs can define the following
+members:</p>
+<ul>
+<li class=""><strong>Fields</strong> are variables that store data relevant to the struct.</li>
+<li class=""><strong>Methods</strong> are functions defined in a struct that normally act upon the field
+data.</li>
+<li class=""><strong>Static methods</strong> are functions provided by the type to perform behaviors,
+provide constants, or create specialized instances.</li>
+<li class=""><strong>Dunder methods</strong> are named for their _d_ouble <em>under</em>-scored form, with
+<code>__</code> on both sides. Also called "special methods," <a href="../pages/13_mojo-structs.html#special-methods">they help define
+behaviors</a> such as initialization
+and allow structs to conform to <a href="../pages/16_traits.html">traits</a>.</li>
+<li class=""><strong><code>comptime</code> members</strong> enable compile-time references that can be used for
+optimization.</li>
+</ul>
+<p>For example, if you're building a graphics program, you can use a struct to
+define an <code>Image</code> that has fields to store information about each image (such
+as its component pixels) and methods that perform actions on it (such as
+rotating the image).</p>
+<p>Mojo's struct format is designed to provide a static, memory-safe data
+structure that's both powerful and performant. Unlike dynamic objects
+(such as Python classes) that can be modified freely at runtime,
+structs are defined at compile time, which allows Mojo to generate
+highly optimized code.</p>
+<p>All struct fields must be declared using <code>var</code> and include a type
+annotation. This requirement is part of Mojo's compile-time guarantees,
+helping ensure both performance and memory safety.</p>
+<h2 class="h h--2" data-level="2" id="struct-definition">Struct definition<a aria-label="Link to Struct definition" class="h__link" href="#struct-definition"></a></h2>
+<p>You can define a simple struct called <code>MyPair</code> with two fields like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> second<span class="tk-punctuation">:</span> Int</span>
+</code></pre></figure>
+<p>However, you can't instantiate this struct because it has no initializer
+method. So here it is with an initializer to initialize the two fields:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> second<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> first<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> second<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first <span class="tk-operator">=</span> first</span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second <span class="tk-operator">=</span> second</span>
+</code></pre></figure>
+<p>Notice that the first argument in the <code>__init__()</code> method is <code>out self</code>.
+You'll have a <code>self</code> argument as the first argument on all struct methods.
+It references the current struct instance (it allows code in the method to
+refer to "itself"). <em>When you call the initializer, you never pass a value
+for <code>self</code>—Mojo passes it in automatically.</em></p>
+<p>The <code>out</code> portion of <code>out self</code> is an <a href="../pages/20_ownership.html#argument-conventions">argument
+convention</a> that declares
+<code>self</code> as a mutable reference that starts out as uninitialized and must be
+initialized before the function returns.</p>
+<p>Many types use a field-wise initializer like the one shown for <code>MyPair</code> above:
+it takes an argument for each field, and initializes the fields directly from
+the arguments. To save typing, Mojo provides a
+<a class="ext" data-external="" href="https://mojolang.org/docs/reference/decorators/fieldwise-init/" rel="noopener noreferrer"><code>@fieldwise_init</code></a> decorator, which
+generates a field-wise initializer for the struct. So you can rewrite the
+<code>MyPair</code> example above like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> second<span class="tk-punctuation">:</span> Int</span>
+</code></pre></figure>
+<p>The <code>__init__()</code> method is one of many <a href="../pages/13_mojo-structs.html#special-methods">special methods</a>
+(also known as "dunder methods" because they have <em>d</em>ouble <em>under</em>scores) with
+pre-determined names.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>You can't assign values when you declare fields. You must initialize
+all of the struct's fields in the initializer. (If you try to leave a field
+uninitialized, the code won't compile.)</p></div></aside>
+<h2 class="h h--2" data-level="2" id="constructing-a-struct-type">Constructing a struct type<a aria-label="Link to Constructing a struct type" class="h__link" href="#constructing-a-struct-type"></a></h2>
+<p>Once you have an initializer, with <code>__init__()</code> or using <code>@fieldwise_init</code>,
+you can create an instance of <code>MyPair</code> and set the fields:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">Construct an instance</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> mine <span class="tk-operator">=</span> MyPair<span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>mine<span class="tk-punctuation">.</span>first<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">2</span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Initializer lists</p><div class="callout__body"><p>Mojo initializer lists let you construct instances without spelling
+out the full type name and parameters. If the full type can be inferred
+from context, pass the initializer arguments directly between braces,
+with or without keywords. For example <code>{0.5, fish="salmon"}</code> calls
+<code>__init__(0.5, fish="salmon")</code> on the appropriate struct type. This
+is equivalent to <code>MyStruct(0.5, fish="salmon")</code> if the type is inferred
+to be <code>MyStruct</code>.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="making-a-struct-copyable-and-movable">Making a struct Copyable<a aria-label="Link to Making a struct Copyable" class="h__link" href="#making-a-struct-copyable-and-movable"></a></h2>
+<p>By default, Mojo structs can be <em>moved</em>, but not <em>copied</em>.</p>
+<p>For example, the following code produces errors:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a <span class="tk-operator">=</span> MyPair<span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-comment"># Implicit copy</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> b <span class="tk-operator">=</span> a  <span class="tk-comment"># value of type 'MyPair' cannot be implicitly copied,</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># it does not conform to 'ImplicitlyCopyable'</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-comment"># Explicit copy</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">var</span> c <span class="tk-operator">=</span> a<span class="tk-punctuation">.</span>copy<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 'MyPair' has no attribute 'copy'</span></span>
+<span class="cl" data-line="9"> <span class="tk-comment"># it does not conform to 'Copyable'</span></span>
+<span class="cl" data-line="10"><span class="tk-comment"># Move</span></span>
+<span class="cl" data-line="11"><span class="tk-keyword">var</span> d <span class="tk-operator">=</span> a<span class="tk-operator">^</span> <span class="tk-comment"># OK</span></span>
+</code></pre></figure>
+<p>In most cases, you can make a struct copyable just by adding the
+<code>Copyable</code> <a href="../pages/16_traits.html">trait</a>.</p>
+<h3 class="h h--3" data-level="3" id="copyability">Copyability<a aria-label="Link to Copyability" class="h__link" href="#copyability"></a></h3>
+<p>To make a struct copyable, add the <code>Copyable</code> trait:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>In most cases, that's all you need to do. Mojo generates a copy
+initializer (<code>__init__(out self, *, copy: Self)</code> method) for you. You don't
+need to write your own unless you need custom logic in the copy
+initializer; for example, if your struct dynamically allocates memory. For
+more information, see the section on <a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#copy-constructor" rel="noopener noreferrer">copy
+initializers</a>.</p>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/copyable/Copyable/" rel="noopener noreferrer"><code>Copyable</code></a> trait provides two ways
+to copy a value: the <code>copy()</code>
+instance method and the copy initializer. Prefer the <code>copy()</code> method.</p>
+<h3 class="h h--3" data-level="3" id="implicit-copyability">Implicit copyability<a aria-label="Link to Implicit copyability" class="h__link" href="#implicit-copyability"></a></h3>
+<p>To make a struct implicitly copyable, add the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/copyable/ImplicitlyCopyable/" rel="noopener noreferrer"><code>ImplicitlyCopyable</code></a> trait:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">(</span>ImplicitlyCopyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p><code>ImplicitlyCopyable</code> automatically implies <code>Copyable</code> and <code>Movable</code>, so all
+the notes related to copyability apply here. A type should only be implicitly
+copyable if copying the type is inexpensive and has no side effects. Unnecessary
+copies can be a big drain on memory and performance, so use this trait with
+caution.</p>
+<h2 class="h h--2" data-level="2" id="fields">Fields<a aria-label="Link to Fields" class="h__link" href="#fields"></a></h2>
+<p>Fields store a struct's data. When you declare a field, it becomes part of the
+struct's memory layout. Because the compiler knows every field's type at
+compile time, it can:</p>
+<ul>
+<li class="">Calculate the struct's exact memory footprint</li>
+<li class="">Ensure all fields are initialized before use</li>
+<li class="">Generate fast, direct access to field data</li>
+<li class="">Prevent changes to the struct's layout at runtime</li>
+</ul>
+<p>Fields share the lifetime of their struct instance. They are created when the
+struct is created and destroyed when the struct is destroyed. This model avoids
+dangling references and partially constructed objects.</p>
+<p>Outside of your struct implementation, you access fields with dot notation
+(<code>my_struct.field_name</code>). Within the struct, your methods access fields using
+<code>self</code> (<code>self.field_name</code>). Mojo knows each field's location at compile time,
+making field access direct and efficient.</p>
+<h3 class="h h--3" data-level="3" id="field-requirements">Field requirements<a aria-label="Link to Field requirements" class="h__link" href="#field-requirements"></a></h3>
+<p><strong>You must</strong> declare field members with <code>var</code> in structs:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    value<span class="tk-punctuation">:</span> Int <span class="tk-comment"># Error. Missing `var` keyword</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> Int <span class="tk-comment"># Yes</span></span>
+</code></pre></figure>
+<p>Unlike local variables in functions, this requirement lets Mojo reason about a
+struct's layout and guarantees that its memory is safe and predictable.</p>
+<p><strong>You must</strong> use unique symbols for fields, methods, or <code>comptime</code> members.
+These all exist in the same namespace:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> count<span class="tk-punctuation">:</span> String <span class="tk-comment"># Error. Invalid redeclaration of `count`</span></span>
+</code></pre></figure>
+<p><strong>You can</strong> re-use a struct member's name for an argument or method variable.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> foo<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">use_argument</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> foo<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-comment"># Argument shadows field</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>foo<span class="tk-punctuation">)</span> <span class="tk-comment"># Prints argument value</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">use_local</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> foo <span class="tk-operator">=</span> value  <span class="tk-comment"># Local variable shadows field</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>foo<span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>foo<span class="tk-punctuation">)</span> <span class="tk-comment"># Prints local, then field</span></span>
+</code></pre></figure>
+<p><strong>You must</strong> mark <code>self</code> as mutable if updating a field value.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> foo<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">update_foo</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> new_value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>foo <span class="tk-operator">=</span> new_value</span>
+</code></pre></figure>
+<p><strong>You must</strong> initialize fields within initializers, and not
+at the point of declaration.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> foo<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">10</span> <span class="tk-comment"># Error: Unknown tokens</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">comptime</span> bar <span class="tk-operator">=</span> <span class="tk-number">10</span> <span class="tk-comment"># Yes</span></span>
+</code></pre></figure>
+<p><a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/#comptime-members" rel="noopener noreferrer"><code>comptime</code> members</a>
+are compile-time constants (not fields) and don't occupy instance
+storage, so they can be initialized at the point of declaration.</p>
+<h3 class="h h--3" data-level="3" id="field-conventions">Field conventions<a aria-label="Link to Field conventions" class="h__link" href="#field-conventions"></a></h3>
+<p>Like other Mojo elements, fields normally adhere to
+<a class="ext" data-external="" href="https://github.com/modular/modular/blob/mojo/v1.1.0/Mojo/docs/contributing/stdlib/stdlib-code-style.md#code-conventions" rel="noopener noreferrer">certain conventions</a>:</p>
+<p>You should use conventional naming for field members:</p>
+<ul>
+<li class="">Prefer lowercase snake_case for field names (for example, <code>user_count</code>,
+<code>max_capacity</code>).</li>
+<li class="">Use descriptive names that indicate purpose, and not their type (for example,
+<code>error_msg</code> not <code>msg_string</code>).</li>
+<li class="">For members meant for internal use or to maintain invariants, add an
+underscore prefix (for example, <code>_private_field</code>).</li>
+<li class="">For boolean fields, use <code>is_</code> or <code>has_</code> prefixes (for example, <code>is_valid</code>,
+<code>has_data</code>).</li>
+<li class="">Avoid single-letter names except for common mathematical conventions (such as
+<code>x</code>, <code>y</code>, <code>z</code> for coordinates).</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="methods">Methods<a aria-label="Link to Methods" class="h__link" href="#methods"></a></h2>
+<p>In addition to special methods like <code>__init__()</code>, you can add any other method
+you want to your struct. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyPair</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> first<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> second<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">get_sum</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>first <span class="tk-operator">+</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>second</span>
+</code></pre></figure>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> mine <span class="tk-operator">=</span> MyPair<span class="tk-punctuation">(</span><span class="tk-number">6</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>mine<span class="tk-punctuation">.</span>get_sum<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">14</span>
+</code></pre></figure>
+<p>Notice that <code>get_sum()</code> also uses the <code>self</code> argument, because this is
+the only way you can access the struct's fields in a method. The name <code>self</code> is
+just a convention, and you can use any name you want to refer to the struct
+instance that is always passed as the first argument.</p>
+<p>Methods that take the implicit <code>self</code> argument are called <em>instance methods</em>
+because they act on an instance of the struct.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>The <code>self</code> argument in a struct method is the only argument in a <code>def</code>
+function that doesn't require a type. You can include the type if you
+want, but you can elide it because Mojo already knows its type
+(<code>MyPair</code> in this case).</p></div></aside>
+<h2 class="h h--2" data-level="2" id="mutating-a-struct">Mutating methods<a aria-label="Link to Mutating methods" class="h__link" href="#mutating-a-struct"></a></h2>
+<p>By default, a struct's methods receive an immutable <code>self</code>,
+so they can't modify the struct's fields. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">increment</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>value <span class="tk-operator">+=</span> <span class="tk-number">1</span> <span class="tk-comment"># ERROR: expression must be mutable in assignment</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># ...</span></span>
+</code></pre></figure>
+<p>To allow a method to mutate the instance, declare its receiver as <code>mut self</code>.
+This makes <code>self</code> mutable inside the method and allows changes to its fields
+that persist after the method returns:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyStruct</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> value<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">increment</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>value <span class="tk-operator">+=</span> <span class="tk-number">1</span> <span class="tk-comment"># Works: Mutable `self` allows assignment</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment">#...</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Read more about mutable arguments and the <code>mut</code> keyword:
+<a href="../pages/20_ownership.html#mutable-arguments-mut">Mutable arguments (<code>mut</code>)</a></p></div></aside>
+<h3 class="h h--3" data-level="3" id="static-methods">Static methods<a aria-label="Link to Static methods" class="h__link" href="#static-methods"></a></h3>
+<p>A struct can have <em>static methods</em>. A static method can be called without
+creating an instance of the struct. Unlike instance methods, a static method
+doesn't receive the implicit <code>self</code> argument, so it can't access any fields on
+the struct.</p>
+<p>To declare a static method, use the
+<a class="ext" data-external="" href="https://mojolang.org/docs/reference/decorators/staticmethod/" rel="noopener noreferrer"><code>@staticmethod</code></a> decorator and don't
+include
+a <code>self</code> argument:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Logger</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">pass</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-punctuation">@staticmethod</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">log_info</span><span class="tk-punctuation">(</span>message<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Info: "</span><span class="tk-punctuation">,</span> message<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>You can invoke a static method by calling it on the type (in this case,
+<code>Logger</code>). You can also call it on an instance of the type. Both forms are
+shown below:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Logger<span class="tk-punctuation">.</span>log_info<span class="tk-punctuation">(</span><span class="tk-string">"Static method called."</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> l <span class="tk-operator">=</span> Logger<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3">l<span class="tk-punctuation">.</span>log_info<span class="tk-punctuation">(</span><span class="tk-string">"Static method called from instance."</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Info:  Static method called.</span>
+<span class="cl" data-line="2">Info:  Static method called from instance.</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="structs-compared-to-classes">Structs compared to classes<a aria-label="Link to Structs compared to classes" class="h__link" href="#structs-compared-to-classes"></a></h2>
+<p>If you're familiar with other object-oriented languages, then structs might
+sound a lot like classes, and there are some similarities, but also some
+important differences. Eventually, Mojo will also support classes to match the
+behavior of Python classes.</p>
+<p>So, let's compare Mojo structs to Python classes. They both support methods,
+fields, operator overloading, decorators for metaprogramming, and more, but
+their key differences are as follows:</p>
+<ul>
+<li class="">
+<p>Python classes are dynamic: they allow for dynamic dispatch, monkey-patching
+(or "swizzling"), and dynamically binding instance fields at runtime.</p>
+</li>
+<li class="">
+<p>Mojo structs are static: they are bound at compile-time (you cannot add
+methods at runtime). Structs allow you to trade flexibility for performance
+while being safe and easy to use.</p>
+</li>
+<li class="">
+<p>Mojo structs don't support inheritance ("sub-classing"), but a struct can
+implement <a href="../pages/16_traits.html">traits</a>.</p>
+</li>
+<li class="">
+<p>Python classes support class attributes—values that are shared by all
+instances of the class, equivalent to class variables or static data members
+in other languages.</p>
+</li>
+<li class="">
+<p>Mojo structs don't support static data members.</p>
+</li>
+</ul>
+<p>Syntactically, the biggest difference compared to a Python class is that all
+fields in a struct must be explicitly declared with <code>var</code>.</p>
+<p>In Mojo, the structure and contents of a struct are set at compile time and
+can't be changed while the program is running. Unlike in Python, where you can
+add, remove, or change attributes of an object on the fly, Mojo doesn't allow
+that for structs.</p>
+<p>However, the static nature of structs helps Mojo run your code faster. The
+program knows exactly where to find the struct's information and how to use it
+without any extra steps or delays at runtime.</p>
+<p>Mojo's structs also work really well with features you might already know from
+Python, like operator overloading (which lets you change how math symbols like
+<code>+</code> and <code>-</code> work with your own data, using <a href="../pages/13_mojo-structs.html#special-methods">special
+methods</a>).</p>
+<p>As mentioned above, Mojo builds all its standard types
+(<a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/#int" rel="noopener noreferrer"><code>Int</code></a>,
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/string/string/String/" rel="noopener noreferrer"><code>String</code></a>, etc.) from structs,
+rather than hardwiring them into the language itself. This gives you more
+flexibility and control when writing your code, and it means you can define your
+own types with all the same capabilities (there's no special treatment for the
+standard library types).</p>
+<h2 class="h h--2" data-level="2" id="special-methods">Special methods<a aria-label="Link to Special methods" class="h__link" href="#special-methods"></a></h2>
+<p>Special methods (or "dunder methods") such as <code>__init__()</code> are pre-determined
+method names that you can define in a struct to perform a special task.</p>
+<p>Although it's possible to call special methods with their method names, the
+point is that you never should, because Mojo automatically invokes them in
+circumstances where they're needed (which is why they're also called "magic
+methods"). For example, Mojo calls the <code>__init__()</code> method when you create
+an instance of the struct; and when Mojo destroys the instance, it calls the
+<code>__deinit__()</code> method (if it exists).</p>
+<p>Even operator behaviors that appear built-in (<code>+</code>, <code>&lt;</code>, <code>==</code>, <code>|</code>, and so on)
+are implemented as special methods that Mojo implicitly calls upon to perform
+operations or comparisons on the type that the operator is applied to.</p>
+<p>Mojo supports a long list of special methods; far too many to discuss here, but
+they generally match all of <a class="ext" data-external="" href="https://docs.python.org/3/reference/datamodel#special-method-names" rel="noopener noreferrer">Python's special
+methods</a>
+and they usually accomplish one of two types of tasks:</p>
+<ul>
+<li class="">
+<p>Operator overloading: A lot of special methods are designed to overload
+operators such as <code>&lt;</code> (less-than), <code>+</code> (add), and <code>|</code> (or) so they work
+appropriately with each type. For more information, see
+<a href="../pages/14_operator-support.html">Implement operators for custom
+types</a>.</p>
+</li>
+<li class="">
+<p>Lifecycle event handling: These special methods deal with the lifecycle
+and value ownership of an instance. For example, <code>__init__()</code> and
+<code>__deinit__()</code> demarcate the beginning and end of an instance lifetime,
+and other special methods define the behavior for other lifecycle events
+such as how to copy or move a value.</p>
+</li>
+</ul>
+<p>You can learn all about the lifecycle special methods in the <a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/" rel="noopener noreferrer">Value
+lifecycle</a> section. However, most structs are simple
+aggregations of other types, so unless your type requires custom behaviors when
+an instance is created, copied, moved, or destroyed, you can synthesize the
+essential lifecycle methods you need (and save yourself some time) using the
+<code>@fieldwise_init</code> decorator (described in
+<a href="../pages/13_mojo-structs.html#struct-definition">Struct definition</a>), and the <code>Copyable</code> and <code>Movable</code>
+traits (described in
+<a href="../pages/13_mojo-structs.html#making-a-struct-copyable-and-movable">Making a struct copyable</a>).</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/structs/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/structs/</a>, saved Thu, 01 Oct 2026 15:35:34 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/12_errors-and-context-managers.html"><span class="pager__dir">← Previous</span><span class="pager__title">Errors, error handling, and context managers</span></a><a class="pager__link pager__link--next" href="../pages/14_operator-support.html"><span class="pager__dir">Next →</span><span class="pager__title">Add operator support to custom types</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#struct-definition">Struct definition</a></li><li class="rail__depth-2"><a href="#constructing-a-struct-type">Constructing a struct type</a></li><li class="rail__depth-2"><a href="#making-a-struct-copyable-and-movable">Making a struct Copyable</a></li><li class="rail__depth-2"><a href="#fields">Fields</a></li><li class="rail__depth-2"><a href="#methods">Methods</a></li><li class="rail__depth-2"><a href="#mutating-a-struct">Mutating methods</a></li><li class="rail__depth-2"><a href="#structs-compared-to-classes">Structs compared to classes</a></li><li class="rail__depth-2"><a href="#special-methods">Special methods</a></li><li class="rail__depth-3"><a href="#copyability">Copyability</a></li><li class="rail__depth-3"><a href="#implicit-copyability">Implicit copyability</a></li><li class="rail__depth-3"><a href="#field-requirements">Field requirements</a></li><li class="rail__depth-3"><a href="#field-conventions">Field conventions</a></li><li class="rail__depth-3"><a href="#static-methods">Static methods</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#struct-definition">Struct definition</a></li><li class="rail__depth-2"><a href="#constructing-a-struct-type">Constructing a struct type</a></li><li class="rail__depth-2"><a href="#making-a-struct-copyable-and-movable">Making a struct Copyable</a></li><li class="rail__depth-2"><a href="#fields">Fields</a></li><li class="rail__depth-2"><a href="#methods">Methods</a></li><li class="rail__depth-2"><a href="#mutating-a-struct">Mutating methods</a></li><li class="rail__depth-2"><a href="#structs-compared-to-classes">Structs compared to classes</a></li><li class="rail__depth-2"><a href="#special-methods">Special methods</a></li><li class="rail__depth-3"><a href="#copyability">Copyability</a></li><li class="rail__depth-3"><a href="#implicit-copyability">Implicit copyability</a></li><li class="rail__depth-3"><a href="#field-requirements">Field requirements</a></li><li class="rail__depth-3"><a href="#field-conventions">Field conventions</a></li><li class="rail__depth-3"><a href="#static-methods">Static methods</a></li></ol>
+<p class="rail__meta">Chapter 13 of 38 · Part III, Abstraction &amp; Values.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

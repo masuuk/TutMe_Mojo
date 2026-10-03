@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -145,16 +145,16 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn" data-tab="ch5-arith-out">output</button>
       </div>
       <div class="tab-content active" id="ch5-arith-mojo">
-        <pre><code>def main():
-    print(7 + 3)   # 10, add
-    print(7 - 3)   # 4, subtract
-    print(7 * 3)   # 21, multiply
-    # Exponentiation uses two stars, not a caret
-    print(2 ** 8)  # 256
-    # Unary prefix operators
-    var a: Int8 = -128
-    print(~a)     # invert bits → 127
-</code></pre>
+        <pre><span class="fn">print</span>(<span class="num">7</span> + <span class="num">3</span>)   <span class="cmt"># 10, add</span>
+<span class="fn">print</span>(<span class="num">7</span> - <span class="num">3</span>)   <span class="cmt"># 4, subtract</span>
+<span class="fn">print</span>(<span class="num">7</span> * <span class="num">3</span>)   <span class="cmt"># 21, multiply</span>
+
+<span class="cmt"># Exponentiation uses two stars, not a caret</span>
+<span class="fn">print</span>(<span class="num">2</span> ** <span class="num">8</span>)  <span class="cmt"># 256</span>
+
+<span class="cmt"># Unary prefix operators</span>
+<span class="kw">var</span> a: <span class="type">Int8</span> = <span class="op">-</span><span class="num">128</span>
+<span class="fn">print</span>(<span class="op">~</span>a)     <span class="cmt"># invert bits → 127</span></pre>
       </div>
       <div class="tab-content" id="ch5-arith-out">
         <pre>10
@@ -181,19 +181,18 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <pre><span class="kw">var</span> a = <span class="op">-</span><span class="num">7</span>
 <span class="kw">var</span> b = <span class="num">4</span>
 <span class="fn">print</span>(a / b)    <span class="cmt"># -1  (truncates toward zero)</span>
-<span class="fn">print</span>(a # b)   <span class="cmt"># -2  (rounds toward negative infinity)</span></pre>
+<span class="fn">print</span>(a // b)   <span class="cmt"># -2  (rounds toward negative infinity)</span></pre>
       </div>
     </div>
 
     <ul>
       <li><code class="inline">/</code> — truncation toward zero.</li>
       <li><code class="inline">//</code> — floor division toward negative infinity.</li>
-      <li>For <pre><code>def main():
-    var a = -7
-    var b = 4
-    print(a / b)    # -1  (truncates toward zero)
-    print(a # b)   # -2  (rounds toward negative infinity)
-</code></pre>de-tabs">
+      <li>For floating-point types, <code class="inline">/</code> performs standard division and <code class="inline">//</code> returns a float rounded down to the nearest whole number. Both keep the operands' result type.</li>
+    </ul>
+
+    <p>The modulo operator <code class="inline">%</code> returns the remainder satisfying this invariant:</p>
+    <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch5-mod-mojo">Mojo</button>
       </div>
@@ -208,12 +207,16 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
     <h3>Associativity &amp; matrix multiply</h3>
     <p><code class="inline">**</code> is <strong>right-associative</strong> — one of only two right-associative operators in Mojo, the other being the ternary conditional:</p>
 
-    <div class="c<pre><code>def main():
-    # a == b * (a // b) + (a % b)
-    print(7 % 3)    # 1
-    print(-7 % 4)   # 1
-    print(7 % -4)   # -1
-</code></pre>rix multiplication (NumPy-style). Mojo has no built-in matrix type, but any type implementing <code class="inline">__matmul__()</code> can use it.</p>
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-exp-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch5-exp-mojo">
+        <pre><span class="fn">print</span>(<span class="num">2</span> ** <span class="num">3</span> ** <span class="num">2</span>)   <span class="cmt"># 512 — same as 2 ** (3 ** 2)</span></pre>
+      </div>
+    </div>
+
+    <p>The <code class="inline">@</code> operator performs matrix multiplication (NumPy-style). Mojo has no built-in matrix type, but any type implementing <code class="inline">__matmul__()</code> can use it.</p>
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
@@ -223,9 +226,11 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 
   <section id="comparisons">
     <h2>2. Comparisons</h2>
-    <p>Six comparison operators — <code class="inline">==</code>, <code class="inline">!=</code>, <code class="inline">&lt;</code>, <code class="inline">&lt;=</code>, <code class="inli<pre><code>def main():
-    print(2 ** 3 ** 2)   # 512 — same as 2 ** (3 ** 2)
-</code></pre>class="tab-btn active" data-tab="ch5-cmp-mojo">Mojo</button>
+    <p>Six comparison operators — <code class="inline">==</code>, <code class="inline">!=</code>, <code class="inline">&lt;</code>, <code class="inline">&lt;=</code>, <code class="inline">&gt;</code>, <code class="inline">&gt;=</code> — each returning a <code class="inline">Bool</code>:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-cmp-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch5-cmp-mojo">
         <pre><span class="fn">print</span>(<span class="num">10</span> > <span class="num">5</span>)     <span class="cmt"># True</span>
@@ -248,27 +253,31 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
     total += <span class="num">0.1</span>
 
 <span class="fn">print</span>(total == <span class="num">1.0</span>)       <span class="cmt"># False!</span>
-<span class="fn">print</span>(<span class="<pre><code>def main():
-    print(10 &gt; 5)     # True
-    print(10 == 10)   # True
-    print(10 != 10)   # False
-</code></pre>ain-mojo">Mojo</button>
+<span class="fn">print</span>(<span class="fn">isclose</span>(total, <span class="num">1.0</span>)) <span class="cmt"># True</span></pre>
+      </div>
+    </div>
+
+    <h3>Chained comparisons</h3>
+    <p>You can chain comparisons to check a range in one expression. The middle value is evaluated only once:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-chain-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch5-chain-mojo">
         <pre><span class="kw">var</span> x = <span class="num">5</span>
 <span class="fn">print</span>(<span class="num">1</span> &lt; x &lt; <span class="num">10</span>)        <span class="cmt"># True — 1 &lt; x and x &lt; 10</span>
 <span class="fn">print</span>(<span class="num">1</span> &lt; x &lt;= <span class="num">5</span> &lt; <span class="num">9</span>)    <span class="cmt"># True</span>
 
-<span class="kw">var</span> items = [<span c<pre><code>from std.math import isclose
+<span class="kw">var</span> items = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]
+<span class="kw">var</span> ok = <span class="num">0</span> &lt; <span class="fn">len</span>(items) &lt;= <span class="num">10</span>   <span class="cmt"># len() called once</span>
+<span class="fn">print</span>(ok)                 <span class="cmt"># True</span></pre>
+      </div>
+    </div>
 
-
-def main():
-    var total: Float64 = 0.0
-    for _ in range(10):
-        total += 0.1
-    print(total == 1.0)       # False!
-    print(isclose(total, 1.0)) # True
-</code></pre>ine freely in a chain: <code class="inline">a &lt; b in c is d</code> evaluates as <code class="inline">(a &lt; b) and (b in c) and (c is d)</code>.</p>
+    <div class="info-box">
+      <strong>💡 Key Insight:</strong>
+      <p>Comparison, membership, and identity operators share one precedence level, so they combine freely in a chain: <code class="inline">a &lt; b in c is d</code> evaluates as <code class="inline">(a &lt; b) and (b in c) and (c is d)</code>.</p>
     </div>
   </section>
 
@@ -282,14 +291,15 @@ def main():
       </div>
       <div class="tab-content active" id="ch5-bit-mojo">
         <pre><span class="fn">print</span>(<span class="num">12</span> &amp; <span class="num">10</span>)    <span class="cmt"># 8   (1100 &amp; 1010 = 1000)</span>
-<span class="fn">print</span>(<span class="num">12</span> | <span cla<pre><code>def main():
-    var x = 5
-    print(1 &lt; x &lt; 10)        # True — 1 &lt; x and x &lt; 10
-    print(1 &lt; x &lt;= 5 &lt; 9)    # True
-    var items = [1, 2, 3, 4, 5]
-    var ok = 0 &lt; len(items) &lt;= 10   # len() called once
-    print(ok)                 # True
-</code></pre>/span>
+<span class="fn">print</span>(<span class="num">12</span> | <span class="num">10</span>)    <span class="cmt"># 14  (1100 | 1010 = 1110)</span>
+<span class="fn">print</span>(<span class="num">12</span> ^ <span class="num">10</span>)    <span class="cmt"># 6   (1100 ^ 1010 = 0110)</span>
+<span class="fn">print</span>(<span class="num">1</span> &lt;&lt; <span class="num">4</span>)     <span class="cmt"># 16  shift left</span>
+<span class="fn">print</span>(<span class="num">64</span> &gt;&gt; <span class="num">3</span>)    <span class="cmt"># 8   shift right</span>
+
+<span class="cmt"># Building a flag register</span>
+<span class="kw">var</span> perms: <span class="type">UInt8</span> = <span class="num">0b0000</span>
+perms |= <span class="num">0b0100</span>    <span class="cmt"># set READ bit   → 0b0100</span>
+perms |= <span class="num">0b0001</span>    <span class="cmt"># set EXEC bit   → 0b0101</span>
 perms &amp;= <span class="num">0b0111</span>    <span class="cmt"># keep low bits  → still 0b0101</span>
 <span class="fn">print</span>(perms)       <span class="cmt"># 5</span></pre>
       </div>
@@ -310,19 +320,32 @@ perms &amp;= <span class="num">0b0111</span>    <span class="cmt"># keep low bit
 
     <div class="code-tabs">
       <div class="tabs-header">
-        <button class="tab-btn active" data-tab="ch5-bool-mojo">Mojo</button<pre><code>def main():
-    print(12 &amp; 10)    # 8   (1100 &amp; 1010 = 1000)
-    print(12 | 10)    # 14  (1100 | 1010 = 1110)
-    print(12 ^ 10)    # 6   (1100 ^ 1010 = 0110)
-    print(1 &lt;&lt; 4)     # 16  shift left
-    print(64 &gt;&gt; 3)    # 8   shift right
-    # Building a flag register
-    var perms: UInt8 = 0b0000
-    perms |= 0b0100    # set READ bit   → 0b0100
-    perms |= 0b0001    # set EXEC bit   → 0b0101
-    perms &amp;= 0b0111    # keep low bits  → still 0b0101
-    print(perms)       # 5
-</code></pre>n> <span class="fn">check_stock</span>() -&gt; <span class="type">Bool</span>:
+        <button class="tab-btn active" data-tab="ch5-bool-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch5-bool-mojo">
+        <pre><span class="kw">var</span> age = <span class="num">25</span>
+<span class="kw">var</span> has_ticket = <span class="kw">True</span>
+
+<span class="kw">if</span> age &gt;= <span class="num">18</span> <span class="kw">and</span> has_ticket:
+    <span class="fn">print</span>(<span class="str">"Enjoy the show"</span>)
+
+<span class="kw">if</span> age &lt; <span class="num">12</span> <span class="kw">or</span> age &gt;= <span class="num">65</span>:
+    <span class="fn">print</span>(<span class="str">"Discount applies"</span>)
+
+<span class="kw">if</span> <span class="kw">not</span> has_ticket:
+    <span class="fn">print</span>(<span class="str">"Please buy a ticket"</span>)</pre>
+      </div>
+    </div>
+
+    <h3>Short-circuit evaluation</h3>
+    <p><code class="inline">and</code> stops at the first false operand; <code class="inline">or</code> stops at the first true one. The right-hand side may never run:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-short-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch5-short-mojo">
+        <pre><span class="kw">def</span> <span class="fn">check_stock</span>() -&gt; <span class="type">Bool</span>:
     <span class="fn">print</span>(<span class="str">"checking stock..."</span>)
     <span class="kw">return</span> <span class="kw">True</span>
 
@@ -354,16 +377,19 @@ ok = <span class="kw">True</span> <span class="kw">or</span> <span class="fn">ch
         <pre><span class="kw">var</span> fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]
 
 <span class="kw">if</span> <span class="str">"banana"</span> <span class="kw">in</span> fruits:
-   <pre><code>def main():
-    var age = 25
-    var has_ticket = True
-    if age &gt;= 18 and has_ticket:
-        print(&quot;Enjoy the show&quot;)
-    if age &lt; 12 or age &gt;= 65:
-        print(&quot;Discount applies&quot;)
-    if not has_ticket:
-        print(&quot;Please buy a ticket&quot;)
-</code></pre><code class="inline">None</code>:</p>
+    <span class="fn">print</span>(<span class="str">"found banana"</span>)
+
+<span class="kw">if</span> <span class="str">"grape"</span> <span class="kw">not in</span> fruits:
+    <span class="fn">print</span>(<span class="str">"no grapes here"</span>)
+
+<span class="cmt"># Strings support substring tests</span>
+<span class="kw">if</span> <span class="str">"nan"</span> <span class="kw">in</span> <span class="str">"banana"</span>:
+    <span class="fn">print</span>(<span class="str">"substring!"</span>)</pre>
+      </div>
+    </div>
+
+    <h3>is / is not</h3>
+    <p>The identity operators test whether two references designate the same object. Their most common use is checking against <code class="inline">None</code>:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
@@ -382,14 +408,17 @@ ok = <span class="kw">True</span> <span class="kw">or</span> <span class="fn">ch
 
   <section id="string-ops">
     <h2>6. Operators on Strings</h2>
-<pre><code>def check_stock() -&gt; Bool:
-    print(&quot;checking stock...&quot;)
-    return True
 
-def main():
-    var ok = False and check_stock()   # no output — RHS skipped
-    ok = True or check_stock()         # no output — RHS skipped
-</code></pre>lass="kw">var</span> path = <span class="type">String</span>(<span class="str">"/home"</span>, <span class="str">"/"</span>, <span class="str">"user"</span>, <span class="str">"/notes"</span>)
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-str-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch5-str-mojo">
+        <pre><span class="kw">var</span> full = <span class="str">"Mo"</span> + <span class="str">"jo"</span>       <span class="cmt"># concatenation → "Mojo"</span>
+<span class="kw">var</span> rule = <span class="str">"="</span> * <span class="num">20</span>          <span class="cmt"># repetition</span>
+
+<span class="cmt"># Prefer the constructor when joining many pieces:</span>
+<span class="kw">var</span> path = <span class="type">String</span>(<span class="str">"/home"</span>, <span class="str">"/"</span>, <span class="str">"user"</span>, <span class="str">"/notes"</span>)
 <span class="fn">print</span>(path)</pre>
       </div>
     </div>
@@ -415,16 +444,20 @@ def main():
   </section>
 
   <section id="conditionals">
-    <h2>7. Cond<pre><code>def main():
-    var fruits = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;]
-    if &quot;banana&quot; in fruits:
-        print(&quot;found banana&quot;)
-    if &quot;grape&quot; not in fruits:
-        print(&quot;no grapes here&quot;)
-    # Strings support substring tests
-    if &quot;nan&quot; in &quot;banana&quot;:
-        print(&quot;substring!&quot;)
-</code></pre>= <span class="num">80</span>:
+    <h2>7. Conditionals</h2>
+
+    <p><code class="inline">if</code>/<code class="inline">elif</code>/<code class="inline">else</code> work as in Python:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-if-mojo">Mojo</button>
+        <button class="tab-btn" data-tab="ch5-if-out">output</button>
+      </div>
+      <div class="tab-content active" id="ch5-if-mojo">
+        <pre><span class="kw">def</span> <span class="fn">grade_for</span>(score: <span class="type">Int</span>) -&gt; <span class="type">String</span>:
+    <span class="kw">if</span> score &gt;= <span class="num">90</span>:
+        <span class="kw">return</span> <span class="str">"A"</span>
+    <span class="kw">elif</span> score &gt;= <span class="num">80</span>:
         <span class="kw">return</span> <span class="str">"B"</span>
     <span class="kw">elif</span> score &gt;= <span class="num">70</span>:
         <span class="kw">return</span> <span class="str">"C"</span>
@@ -443,13 +476,15 @@ def main():
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch5-oneline-mojo">Mojo</button>
-      </di<pre><code>def main():
-    var maybe: Optional[Int] = Optional(7)
-    if maybe is None:
-        print(&quot;nothing stored&quot;)
-    else:
-        print(maybe.value())   # 7
-</code></pre>ciative like <code class="inline">**</code>:</p>
+      </div>
+      <div class="tab-content active" id="ch5-oneline-mojo">
+        <pre><span class="kw">var</span> temperature = <span class="num">31</span>
+<span class="kw">if</span> temperature &gt; <span class="num">30</span>: <span class="fn">print</span>(<span class="str">"Stay hydrated"</span>)</pre>
+      </div>
+    </div>
+
+    <h3>The conditional expression (ternary)</h3>
+    <p>Pick between two values inline. The condition sits in the middle, and the expression is right-associative like <code class="inline">**</code>:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
@@ -458,13 +493,21 @@ def main():
       </div>
       <div class="tab-content active" id="ch5-ternary-mojo">
         <pre><span class="kw">var</span> age = <span class="num">20</span>
-<span class="kw">var</span> ticket = <span class="str">"adult"</span> <span class="kw">if</span> age &gt;= <span class="num">18</span> <span class="kw">else</span> <span class="str">"child"</span<pre><code>def main():
-    var full = &quot;Mo&quot; + &quot;jo&quot;       # concatenation → &quot;Mojo&quot;
-    var rule = &quot;=&quot; * 20          # repetition
-    # Prefer the constructor when joining many pieces:
-    var path = String(&quot;/home&quot;, &quot;/&quot;, &quot;user&quot;, &quot;/notes&quot;)
-    print(path)
-</code></pre>tatement — it's on the language roadmap. Chain <code class="inline">if</code>/<code class="inline">elif</code> for now.</p>
+<span class="kw">var</span> ticket = <span class="str">"adult"</span> <span class="kw">if</span> age &gt;= <span class="num">18</span> <span class="kw">else</span> <span class="str">"child"</span>
+<span class="fn">print</span>(ticket)
+
+<span class="cmt"># Usable anywhere an expression fits:</span>
+<span class="fn">print</span>(<span class="str">"even"</span> <span class="kw">if</span> age % <span class="num">2</span> == <span class="num">0</span> <span class="kw">else</span> <span class="str">"odd"</span>)</pre>
+      </div>
+      <div class="tab-content" id="ch5-ternary-out">
+        <pre>adult
+even</pre>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>💡 Key Insight:</strong>
+      <p>Mojo does not yet have a <code class="inline">match</code> or <code class="inline">switch</code> statement — it's on the language roadmap. Chain <code class="inline">if</code>/<code class="inline">elif</code> for now.</p>
     </div>
   </section>
 
@@ -490,9 +533,10 @@ def main():
       </div>
     </div>
 
-  <pre><code>def main():
-    print(&quot;Zebra&quot; &lt; &quot;ant&quot;)   # True — 'Z' (90) &lt; 'a' (97)
-</code></pre>o</button>
+    <h3>for over collections and ranges</h3>
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-for-mojo">Mojo</button>
         <button class="tab-btn" data-tab="ch5-for-out">output</button>
       </div>
       <div class="tab-content active" id="ch5-for-mojo">
@@ -503,19 +547,34 @@ def main():
     <span class="fn">print</span>(step)
 
 <span class="kw">var</span> scores = [<span class="num">72</span>, <span class="num">95</span>, <span class="num">88</span>]
-<span class="kw">for</span> s <span class="kw">in</span> scores:              <span class="cmt"># iterates immutable refs</<pre><code>def grade_for(score: Int) -&gt; String:
-    if score &gt;= 90:
-        return &quot;A&quot;
-    elif score &gt;= 80:
-        return &quot;B&quot;
-    elif score &gt;= 70:
-        return &quot;C&quot;
-    else:
-        return &quot;F&quot;
+<span class="kw">for</span> s <span class="kw">in</span> scores:              <span class="cmt"># iterates immutable refs</span>
+    <span class="fn">print</span>(s)</pre>
+      </div>
+      <div class="tab-content" id="ch5-for-out">
+        <pre>0
+1
+2
+10
+8
+6
+4
+2
+72
+95
+88</pre>
+      </div>
+    </div>
 
-def main():
-    print(grade_for(83))   # B
-</code></pre> class="cmt"># writes through the reference</span>
+    <p>To modify elements while iterating, request a mutable reference with <code class="inline">for ref</code>:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch5-refloop-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch5-refloop-mojo">
+        <pre><span class="kw">var</span> values = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
+<span class="kw">for</span> <span class="kw">ref</span> v <span class="kw">in</span> values:
+    v += <span class="num">10</span>                   <span class="cmt"># writes through the reference</span>
 <span class="fn">print</span>(values[<span class="num">0</span>])             <span class="cmt"># 11</span></pre>
       </div>
     </div>
@@ -531,10 +590,17 @@ def main():
     <span class="kw">if</span> i == <span class="num">3</span>:
         <span class="kw">continue</span>   <span class="cmt"># skip 3</span>
     <span class="kw">if</span> i == <span class="num">6</span>:
-        <span class="kw">break</span>   <pre><code>def main():
-    var temperature = 31
-    if temperature &gt; 30: print(&quot;Stay hydrated&quot;)
-</code></pre>   </div>
+        <span class="kw">break</span>      <span class="cmt"># exit loop entirely</span>
+    <span class="fn">print</span>(i)
+<span class="cmt"># 0 1 2 4 5</span></pre>
+      </div>
+      <div class="tab-content" id="ch5-break-out">
+        <pre>0
+1
+2
+4
+5</pre>
+      </div>
     </div>
 
     <h3>The for/else clause</h3>
@@ -546,13 +612,14 @@ def main():
         <button class="tab-btn" data-tab="ch5-forelse-out">output</button>
       </div>
       <div class="tab-content active" id="ch5-forelse-mojo">
-<pre><code>def main():
-    var age = 20
-    var ticket = &quot;adult&quot; if age &gt;= 18 else &quot;child&quot;
-    print(ticket)
-    # Usable anywhere an expression fits:
-    print(&quot;even&quot; if age % 2 == 0 else &quot;odd&quot;)
-</code></pre>ns — 16 never matched</span></pre>
+        <pre><span class="kw">var</span> haystack = [<span class="num">4</span>, <span class="num">8</span>, <span class="num">15</span>]
+
+<span class="kw">for</span> target <span class="kw">in</span> [<span class="num">8</span>, <span class="num">16</span>]:
+    <span class="kw">if</span> target <span class="kw">in</span> haystack:
+        <span class="fn">print</span>(target, <span class="str">"found"</span>)
+        <span class="kw">break</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"no match found"</span>)   <span class="cmt"># runs — 16 never matched</span></pre>
       </div>
       <div class="tab-content" id="ch5-forelse-out">
         <pre>8 found
@@ -575,24 +642,24 @@ no match found</pre>
         <tr><td><code>a // b</code></td><td>Floor division toward negative infinity</td></tr>
         <tr><td><code>a % b</code></td><td>Remainder; invariant <code>a == b*(a//b) + (a%b)</code></td></tr>
         <tr><td><code>a ** b</code></td><td>Exponentiation (right-associative); also <code>pow()</code>. The caret is XOR, not power!</td></tr>
-        <tr><td><code>-x  +x  ~x</code></td><td>Negate / identity / bitwise i<pre><code>def main():
-    var count = 3
-    while count &gt; 0:
-        print(count)
-        count -= 1
-</code></pre>&lt;&lt; &gt;&gt;</code></td><td>Bitwise AND/OR/XOR/shifts; precedence <code>~</code>, shifts, <code>&amp;</code>, <code>^</code>, <code>|</code></td></tr>
+        <tr><td><code>-x  +x  ~x</code></td><td>Negate / identity / bitwise invert</td></tr>
+        <tr><td><code>== != &lt; &lt;= &gt; &gt;=</code></td><td>Comparisons returning Bool; chainable, middle evaluated once; use <code>isclose()</code> for floats</td></tr>
+        <tr><td><code>&amp; | ^ &lt;&lt; &gt;&gt;</code></td><td>Bitwise AND/OR/XOR/shifts; precedence <code>~</code>, shifts, <code>&amp;</code>, <code>^</code>, <code>|</code></td></tr>
         <tr><td><code>and or not</code></td><td>Boolean words with short-circuit evaluation (no <code>&amp;&amp;</code>/<code>||</code>)</td></tr>
         <tr><td><code>in  not in</code></td><td>Membership in collections; substring test for strings</td></tr>
         <tr><td><code>is  is not</code></td><td>Identity; idiomatic for <code>x is None</code></td></tr>
-        <tr><td><code>a if c el<pre><code>def main():
-    for i in range(3):           # 0, 1, 2
-        print(i)
-    for step in range(10, 0, -2):  # 10, 8, 6, 4, 2
-        print(step)
-    var scores = [72, 95, 88]
-    for s in scores:              # iterates immutable refs
-        print(s)
-</code></pre>code>elif</code>.</li>
+        <tr><td><code>a if c else b</code></td><td>Ternary conditional expression (right-associative)</td></tr>
+        <tr><td><code>@</code></td><td>Matrix multiplication for types implementing <code>__matmul__()</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="info-box">
+      <strong>📋 Chapter Summary:</strong>
+      <ul style="margin-top:8px;">
+        <li>Operator syntax mirrors Python — but integer <code>/</code> truncates instead of promoting to float.</li>
+        <li><code>^</code> is XOR and the transfer sigil (<a href="mojo_07_ownership.html">Ch 7</a>); <code>**</code> is exponentiation.</li>
+        <li>Booleans use keywords with short-circuiting; truthiness comes from <code>Boolable</code>.</li>
+        <li>No <code>match</code>/<code>switch</code> yet — chain <code>if</code>/<code>elif</code>.</li>
         <li>Iterate immutably by default; <code>for ref</code> to mutate through a reference.</li>
         <li><code>for/else</code> runs after full iteration, skipped on <code>break</code>/<code>return</code>.</li>
       </ul>
@@ -618,12 +685,18 @@ window.addEventListener('scroll',()=>{
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',function(){
     const group=this.closest('.code-tabs');
-    group.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove<pre><code>def main():
-    var values = [1, 2, 3]
-    for ref v in values:
-        v += 10                   # writes through the reference
-    print(values[0])             # 11
-</code></pre>ry=>{
+    group.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    group.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    this.classList.add('active');
+    const target=group.querySelector('#'+this.getAttribute('data-tab'));
+    if(target) target.classList.add('active');
+  });
+});
+
+const sections=[...document.querySelectorAll('section[id]')];
+const dots=document.querySelectorAll('#miniToc a');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
     if(entry.isIntersecting){
       dots.forEach(d=>d.classList.toggle('active',d.getAttribute('href')==='#'+entry.target.id));
     }
@@ -631,22 +704,142 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 },{rootMargin:'-40% 0px -50% 0px'});
 sections.forEach(s=>obs.observe(s));
 </script>
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body>
 </html>
-<pre><code>def main():
-    for i in range(10):
-        if i == 3:
-            continue   # skip 3
-        if i == 6:
-            break      # exit loop entirely
-        print(i)
-    # 0 1 2 4 5
-</code></pre><pre><code>def main():
-    var haystack = [4, 8, 15]
-    for target in [8, 16]:
-        if target in haystack:
-            print(target, &quot;found&quot;)
-            break
-    else:
-        print(&quot;no match found&quot;)   # runs — 16 never matched
-</code></pre>

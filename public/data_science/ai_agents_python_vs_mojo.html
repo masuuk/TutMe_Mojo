@@ -15,8 +15,8 @@
     --panel-2: #1b2130;
     --border: #262d3d;
     --text: #e7e9ee;
-    --text-dim: #9aa3b5;
-    --text-faint: #6b7386;
+    --text-dim: #ffd98f;
+    --text-faint: #e0a83c;
     --py-accent: #7dd3fc;
     --py-accent-dim: #7dd3fc33;
     --mojo-accent: #fca5a5;
@@ -92,6 +92,12 @@
   .toc a:hover{ color: var(--text); background: var(--panel); text-decoration:none; }
   .toc a.active{ color: var(--gold); border-left-color: var(--gold); background: var(--gold-dim); }
   .toc .sub{ padding-left: 1.3rem; font-size: .8rem; }
+  .toc-related{
+    margin-top: 1.25rem;
+    padding-top: .85rem;
+    border-top: 1px solid var(--border);
+  }
+  .toc-related:first-of-type{ margin-top: .25rem; padding-top: 0; border-top: none; }
 
   .toc-progress{
     margin-top: 1.75rem;
@@ -101,26 +107,6 @@
   .toc-progress-label{ font-size: .7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .1em; margin-bottom:.5rem; }
   .toc-progress-bar{ height: 5px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
   .toc-progress-fill{ height:100%; width:0%; background: linear-gradient(90deg, var(--py-accent), var(--gold)); transition: width .1s linear; }
-
-  .toc-related{
-    margin-top: 1.5rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--border);
-  }
-  .toc-related-label{ font-size: .7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
-  .toc-related a{
-    display:flex; align-items:center; gap:.5rem;
-    color: var(--text-dim);
-    font-size: .8rem;
-    padding: .4rem .6rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    margin-bottom: .35rem;
-    transition: all .15s ease;
-  }
-  .toc-related a:hover{ color: var(--text); border-color: var(--gold); background: var(--gold-dim); text-decoration:none; }
-  .toc-related .tag{ margin-left:auto; font-size: .62rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; }
-  .toc-related .tag.ext{ color: var(--py-accent); }
 
   main{ padding: 3rem 3rem 6rem; min-width: 0; }
   @media (max-width: 640px){ main{ padding: 2rem 1.25rem 4rem; } }
@@ -194,7 +180,7 @@
   .context-box strong{ color: var(--text); }
   .context-box code{ color: var(--gold); }
 
-  /* ---------- Language tab switcher ---------- */
+  /* ---------- Code block labels ---------- */
   .lang-block{
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -207,23 +193,17 @@
     background: var(--panel-2);
     border-bottom: 1px solid var(--border);
   }
-  .lang-tab{
+  .lang-static{
     font-family: var(--mono);
     font-size: .82rem;
     font-weight: 500;
     padding: .8rem 1.3rem;
-    color: var(--text-faint);
-    background: transparent;
-    border: none;
-    cursor: pointer;
+    color: var(--mojo-accent);
+    background: var(--mojo-accent-dim);
+    border-bottom: 2px solid var(--mojo-accent);
     display:flex; align-items:center; gap:.5rem;
-    border-bottom: 2px solid transparent;
-    transition: all .15s ease;
   }
-  .lang-tab .dot{ width:7px; height:7px; border-radius:50%; background: currentColor; opacity:.4; }
-  .lang-tab[data-lang="python"].active{ color: var(--py-accent); border-bottom-color: var(--py-accent); background: var(--py-accent-dim); }
-  .lang-tab[data-lang="mojo"].active{ color: var(--mojo-accent); border-bottom-color: var(--mojo-accent); background: var(--mojo-accent-dim); }
-  .lang-tab:hover:not(.active){ color: var(--text-dim); }
+  .lang-static .dot{ width:7px; height:7px; border-radius:50%; background: currentColor; opacity:.75; }
 
   .lang-panel{ display:none; position: relative; }
   .lang-panel.active{ display:block; }
@@ -344,26 +324,6 @@
   .acc-body-inner li{ margin-bottom: .4rem; }
   .acc-body-inner code{ font-family: var(--mono); background: var(--code-bg); color: var(--gold); padding: .1rem .4rem; border-radius: 4px; font-size: .85rem; }
 
-  /* ---------- Related guides ---------- */
-  .related-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:1.5rem 0 2rem; }
-  .related-card{
-    display:block;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--gold);
-    padding: 1rem 1.2rem;
-    border-radius: var(--radius);
-    color: var(--text-dim);
-    transition: all .15s ease;
-  }
-  .related-card:hover{ border-color: var(--gold); background: var(--panel-2); transform: translateY(-2px); text-decoration:none; }
-  .related-card h4{ margin: 0 0 .4rem; font-family: var(--sans); font-size: .95rem; color: var(--gold); display:flex; align-items:center; gap:.45rem; }
-  .related-card p{ margin: 0; font-size: .85rem; }
-  .related-card code{ font-family: var(--mono); background: var(--code-bg); color: var(--gold); padding: .1rem .35rem; border-radius: 4px; font-size: .8rem; }
-  .related-grid .more{ display:grid; place-items:center; text-align:center; background: var(--gold-dim); border-left-color: var(--gold); }
-  .related-grid .more:hover{ background: var(--gold-dim); }
-  .related-grid .more span{ font-family: var(--mono); font-size: .8rem; color: var(--gold); line-height: 1.6; }
-
   /* ---------- Section badges ---------- */
   .badge-row{ display:flex; gap:.5rem; margin-bottom: 1rem; flex-wrap:wrap; }
   .badge{
@@ -385,18 +345,80 @@
     text-align: center;
   }
   footer .gold{ color: var(--gold); }
+  footer .footlinks{ display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom: .75rem; }
+  footer .footlinks a{ color: var(--text-dim); font-size: .8rem; padding: .25rem .5rem; border-radius: 6px; }
+  footer .footlinks a:hover{ color: var(--gold); background: var(--gold-dim); text-decoration:none; }
+
+  /* ---------- Breadcrumb cross-navigation ---------- */
+  .crumb{
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .75rem 1.5rem;
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .crumb a{ color: var(--text-dim); padding: .25rem .5rem; border-radius: 6px; }
+  .crumb a:hover{ color: var(--gold); background: var(--gold-dim); text-decoration:none; }
+  .crumb .sep{ color: var(--text-faint); }
+  .crumb .crumb-here{ color: var(--gold); }
+  .crumb .crumb-brand{ color: var(--gold); font-weight: 600; }
+
+  /* ---------- Related reading grid ---------- */
+  .rel{ display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:.75rem; }
+  .rel a{
+    display:flex; flex-direction:column; gap:.25rem;
+    padding: .95rem 1.15rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: .9rem;
+    transition: all .15s ease;
+  }
+  .rel a:hover{ border-color: var(--gold); background: var(--panel-2); transform: translateY(-1px); text-decoration:none; }
+  .rel a small{ color: var(--text-faint); font-size: .76rem; }
 
   @media print{
-    .toc, .copy-btn{ display:none; }
+    .toc, .copy-btn, .crumb{ display:none; }
     .shell{ display:block; }
   }
 </style>
 </head>
 <body>
 
+<div class="crumb">
+  <a class="crumb-brand" href="../index.html">TutMe🔥</a>
+  <span class="sep">/</span>
+  <a href="index.html">Data Science</a>
+  <span class="sep">/</span>
+  <a href="../mojo_v1/index.html">Fundamentals</a>
+  <span class="sep">/</span>
+  <span class="crumb-here">Guide · AI Agents (Python × Mojo)</span>
+</div>
+
 <div class="shell">
   <aside class="toc" id="toc">
     <div class="toc-brand">Guide // <span>Python × Mojo</span></div>
+    <div class="toc-related">
+      <div class="toc-progress-label">Back to</div>
+      <a href="../index.html">← TutMe Home</a>
+      <a href="index.html">← Data Science Hub</a>
+      <a href="../mojo_v1/index.html">← Fundamentals Hub</a>
+    </div>
+    <div class="toc-related">
+      <div class="toc-progress-label">Prerequisites &amp; related</div>
+      <a href="../mojo_v1/mojo_11_interop.html">Ch 11 · Python &amp; C Interop</a>
+      <a href="../mojo_v1/mojo_09_syntax_tour.html">Ch 09 · Mojo vs Python</a>
+      <a href="ds_textbook_06_interop.html">ds-textbook · Interop Bridge</a>
+      <a href="ds_advanced_03_interop.html">ds-advanced · Interop &amp; FFI</a>
+      <a href="fine_tuning_llms.html">Fine-Tuning LLMs</a>
+      <a href="numerical_python_to_mojo.html">Python → Mojo Numerical</a>
+    </div>
     <nav>
       <a href="#context" class="toc-link">Context</a>
       <a href="#basic-call" class="toc-link">1. Basic Call</a>
@@ -414,29 +436,16 @@
       <div class="toc-progress-label">Reading progress</div>
       <div class="toc-progress-bar"><div class="toc-progress-fill" id="progressFill"></div></div>
     </div>
-
-    <div class="toc-related">
-      <div class="toc-related-label">Related guides</div>
-      <a href="index.html">📚 Data Science Hub<span class="tag">hub</span></a>
-      <a href="fine_tuning_llms.html">🤖 Fine-Tuning LLMs<span class="tag">llm</span></a>
-      <a href="decision_aware_ml.html">🎯 Decision-Aware ML<span class="tag">llm</span></a>
-      <a href="data_science.html">📖 Data Science Textbook<span class="tag">ml</span></a>
-      <a href="perceptrons_and_activation.html">🧠 Perceptrons &amp; Activation<span class="tag">nn</span></a>
-      <a href="numerical_python_to_mojo.html">🔢 Python → Mojo Numerics<span class="tag">bridge</span></a>
-      <a href="../mojo_v1/mojo_11_interop.html">🔗 Mojo · Python &amp; C Interop<span class="tag ext">interop</span></a>
-      <a href="../mojo_v1/mojo_09_syntax_tour.html">📖 Mojo vs Python Syntax<span class="tag">syntax</span></a>
-      <a href="../index.html">🏠 Learning Hub<span class="tag">home</span></a>
-    </div>
   </aside>
 
   <main>
     <header class="page-head">
       <div class="eyebrow">Guide · AI Agent Engineering</div>
-      <h1>Building AI Agents<br><em>Python</em> vs. <em>Mojo</em></h1>
+      <h1>Building AI Agents<br><em>Mojo 1.x</em> on the Python ecosystem</h1>
       <p class="lede">
-        A practical, side-by-side reference for calling the OpenAI API and building conversational agents —
-        once in standard Python, once in Mojo using its native Python interoperability layer.
-        Toggle each code sample to compare implementations directly.
+        A practical reference for calling the OpenAI API and building conversational agents from
+        Mojo 1.x, using its native Python interoperability layer to reach the Python AI ecosystem.
+        Every listing is Mojo; the Python side is what it drives.
       </p>
     </header>
 
@@ -449,10 +458,11 @@
           single-turn API call, an agent remembers previous messages, allowing for coherent, multi-turn dialogues.
         </p>
         <p>
-          This guide explores building these agents in <strong>Python</strong> (the industry standard for AI tooling)
-          and <strong>Mojo</strong> (an emerging high-performance language positioned as a superset of Python).
-          The first sections cover the fundamentals; later sections progress to streaming, tool calling,
-          memory management, structured output, and production-grade error handling.
+          This guide builds those agents in <strong>Mojo 1.x</strong> — an emerging high-performance
+          language positioned as a superset of Python — and reaches <strong>Python</strong>, the industry
+          standard for AI tooling, through Mojo's interoperability layer. The first sections cover the
+          fundamentals; later sections progress to streaming, tool calling, memory management,
+          structured output, and production-grade error handling.
         </p>
       </div>
     </section>
@@ -476,58 +486,37 @@
 
       <div class="lang-block">
         <div class="lang-tabs">
-          <button class="lang-tab active" data-lang="python" onclick="switchLang(this,'basic')"><span class="dot"></span>Python</button>
-          <button class="lang-tab" data-lang="mojo" onclick="switchLang(this,'basic')"><span class="dot"></span>Mojo</button>
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel active" data-lang="python" data-group="basic">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code><span class="cm"># Import the OpenAI library</span>
-<span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+          <pre><code><span class="cm"># Import the Python interop standard library</span>
+<span class="kw">from</span> std.python <span class="kw">import</span> Python
 
-<span class="cm"># Initialize the client (uses OPENAI_API_KEY from environment variables)</span>
-client = OpenAI()
+<span class="cm"># Mojo requires an explicit main function with a 'raises' trait for error handling</span>
+<span class="kw">def</span> <span class="fn">main</span>() raises:
+    <span class="cm"># Import the Python OpenAI package</span>
+    <span class="kw">var</span> openai = Python.import_module(<span class="str">"openai"</span>)
 
-<span class="cm"># Create the chat completion request</span>
-response = client.chat.completions.create(
-    model=<span class="str">"gpt-5-mini"</span>,
-    messages=[
-        {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Explain what an AI agent is in one sentence."</span>},
-    ],
-)
+    <span class="cm"># Create the OpenAI client</span>
+    <span class="kw">var</span> client = openai.OpenAI()
 
-<span class="cm"># Extract and print the generated text</span>
-print(response.choices[0].message.content)</code></pre>
-        </div>
-        <div class="lang-panel" data-lang="mojo" data-group="basic">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code>def main():
-    # Import the Python interop standard library
-    from std.python import Python
-
-    # Mojo requires an explicit main function with a 'raises' trait for error handling
-    def main() raises:
-        # Import the Python OpenAI package
-        var openai = Python.import_module(&quot;openai&quot;)
-
-        # Create the OpenAI client
-        var client = openai.OpenAI()
-
-        # Build the request using Python's list and dict constructors via interop
-        var messages = Python.list(
-            Python.dict(
-                role=&quot;user&quot;,
-                content=&quot;Explain what an AI agent is in one sentence.&quot;
-            )
+    <span class="cm"># Build the request using Python's list and dict constructors via interop</span>
+    <span class="kw">var</span> messages = Python.list(
+        Python.dict(
+            role=<span class="str">"user"</span>,
+            content=<span class="str">"Explain what an AI agent is in one sentence."</span>
         )
+    )
 
-        # Send the request (calls the Python API directly)
-        var response = client.chat.completions.create(
-            model=&quot;gpt-5-mini&quot;,
-            messages=messages
-        )
+    <span class="cm"># Send the request (calls the Python API directly)</span>
+    <span class="kw">var</span> response = client.chat.completions.create(
+        model=<span class="str">"gpt-5-mini"</span>,
+        messages=messages
+    )
 
-        # Print the answer
-        print(response.choices[0].message.content)</code></pre>
+    <span class="cm"># Print the answer</span>
+    print(response.choices[0].message.content)</code></pre>
         </div>
       </div>
     </section>
@@ -546,47 +535,9 @@ print(response.choices[0].message.content)</code></pre>
 
       <div class="lang-block">
         <div class="lang-tabs">
-          <button class="lang-tab active" data-lang="python" onclick="switchLang(this,'loop')"><span class="dot"></span>Python</button>
-          <button class="lang-tab" data-lang="mojo" onclick="switchLang(this,'loop')"><span class="dot"></span>Mojo</button>
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel active" data-lang="python" data-group="loop">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
-
-<span class="cm"># Best practice: pass the API key explicitly or rely on environment variables</span>
-client = OpenAI(api_key=<span class="str">"YOUR_API_KEY"</span>)
-messages = []
-
-<span class="kw">while</span> <span class="kw">True</span>:
-    user_input = input(<span class="str">"You: "</span>)
-
-    <span class="cm"># Allow the user to exit the loop</span>
-    <span class="kw">if</span> user_input.strip().lower() <span class="kw">in</span> (<span class="str">"exit"</span>, <span class="str">"quit"</span>):
-        <span class="kw">break</span>
-
-    <span class="cm"># Append user message to history</span>
-    messages.append({
-        <span class="str">"role"</span>: <span class="str">"user"</span>,
-        <span class="str">"content"</span>: user_input
-    })
-
-    <span class="cm"># Send the entire conversation history to the model</span>
-    response = client.chat.completions.create(
-        model=<span class="str">"gpt-5-mini"</span>,
-        messages=messages,
-    )
-
-    reply = response.choices[0].message.content
-
-    <span class="cm"># Append the assistant's reply to history for future context</span>
-    messages.append({
-        <span class="str">"role"</span>: <span class="str">"assistant"</span>,
-        <span class="str">"content"</span>: reply
-    })
-
-    print(<span class="str">"Bot:"</span>, reply)</code></pre>
-        </div>
-        <div class="lang-panel" data-lang="mojo" data-group="loop">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           <pre><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
@@ -594,58 +545,60 @@ messages = []
     <span class="cm"># Import the Python OpenAI package</span>
     <span class="kw">var</span> openai = Python.import_module(<span class="str">"openai"</span>)
 
-  <pre><code>from std.python import Python
+    <span class="cm"># Create the OpenAI client with explicit API key</span>
+    <span class="kw">var</span> client = openai.OpenAI(
+        api_key=<span class="str">"YOUR_API_KEY"</span>
+    )
 
+    <span class="cm"># Initialize an empty Python list for conversation history</span>
+    <span class="kw">var</span> messages = Python.list()
 
-def main():
-    def main() raises:
-        # Import the Python OpenAI package
-        var openai = Python.import_module(&quot;openai&quot;)
+    <span class="kw">while</span> <span class="kw">True</span>:
+        <span class="cm"># Read a line from stdin using Mojo's builtin input()</span>
+        <span class="kw">var</span> user_input = input(<span class="str">"You: "</span>)
 
-        # Create the OpenAI client with explicit API key
-        var client = openai.OpenAI(
-            api_key=&quot;YOUR_API_KEY&quot;
+        <span class="cm"># Check for exit commands</span>
+        <span class="kw">var</span> cleaned = user_input.strip().lower()
+        <span class="kw">if</span> cleaned == <span class="str">"exit"</span> <span class="kw">or</span> cleaned == <span class="str">"quit"</span>:
+            <span class="kw">break</span>
+
+        <span class="cm"># Add user message using Python.dict()</span>
+        messages.append(
+            Python.dict(
+                role=<span class="str">"user"</span>,
+                content=user_input
+            )
         )
 
-        # Initialize an empty Python list for conversation history
-        var messages = Python.list()
+        <span class="cm"># Send conversation to OpenAI</span>
+        <span class="kw">var</span> response = client.chat.completions.create(
+            model=<span class="str">"gpt-5-mini"</span>,
+            messages=messages
+        )
 
-        while True:
-            # Read a line from stdin using Mojo's builtin input()
-            var user_input = input(&quot;You: &quot;)
+        <span class="cm"># Extract assistant response</span>
+        <span class="kw">var</span> reply = response.choices[0].message.content
 
-            # Check for exit commands
-            var cleaned = user_input.strip().lower()
-            if cleaned == &quot;exit&quot; or cleaned == &quot;quit&quot;:
-                break
-
-            # Add user message using Python.dict()
-            messages.append(
-                Python.dict(
-                    role=&quot;user&quot;,
-                    content=user_input
-                )
+        <span class="cm"># Add assistant response to conversation history</span>
+        messages.append(
+            Python.dict(
+                role=<span class="str">"assistant"</span>,
+                content=reply
             )
+        )
 
-            # Send conversation to OpenAI
-            var response = client.chat.completions.create(
-                model=&quot;gpt-5-mini&quot;,
-                messages=messages
-            )
+        <span class="cm"># Display response</span>
+        print(<span class="str">"Bot:"</span>, reply)</code></pre>
+        </div>
+      </div>
+    </section>
 
-            # Extract assistant response
-            var reply = response.choices[0].message.content
-
-            # Add assistant response to conversation history
-            messages.append(
-                Python.dict(
-                    role=&quot;assistant&quot;,
-                    content=reply
-                )
-            )
-
-            # Display response
-            print(&quot;Bot:&quot;, reply)</code></pre>>fine-tune output</span>
+    <section id="system-params">
+      <h2><span class="num">03</span> System Prompts &amp; Generation Parameters</h2>
+      <div class="badge-row">
+        <span class="badge">difficulty · easy</span>
+        <span class="badge">role-aware</span>
+        <span class="badge">fine-tune output</span>
       </div>
       <p>
         A <strong>system message</strong> steers the model's behaviour for the entire conversation — personality,
@@ -670,35 +623,9 @@ def main():
 
       <div class="lang-block">
         <div class="lang-tabs">
-          <button class="lang-tab active" data-lang="python" onclick="switchLang(this,'params')"><span class="dot"></span>Python</button>
-          <button class="lang-tab" data-lang="mojo" onclick="switchLang(this,'params')"><span class="dot"></span>Mojo</button>
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel active" data-lang="python" data-group="params">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
-
-client = OpenAI()
-
-messages = [
-    <span class="cm"># The system message shapes behaviour for the whole conversation</span>
-    {
-        <span class="str">"role"</span>: <span class="str">"system"</span>,
-        <span class="str">"content"</span>: <span class="str">"You are a coding mentor. Be brief, use short examples, and never assume the reader has prior knowledge."</span>,
-    },
-    {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"What is a closure?"</span>},
-]
-
-response = client.chat.completions.create(
-    model=<span class="str">"gpt-5-mini"</span>,
-    messages=messages,
-    temperature=0.7,   <span class="cm"># 0 = deterministic · 2 = wildly creative</span>
-    max_tokens=250,    <span class="cm"># cap the output length</span>
-    top_p=0.9,         <span class="cm"># nucleus sampling (alternative to temperature)</span>
-)
-
-print(response.choices[0].message.content)</code></pre>
-        </div>
-        <div class="lang-panel" data-lang="mojo" data-group="params">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           <pre><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
@@ -715,33 +642,38 @@ print(response.choices[0].message.content)</code></pre>
         Python.dict(role=<span class="str">"user"</span>, content=<span class="str">"What is a closure?"</span>),
     )
 
-    <span class="cm"># same generation parameters, passed straight through the interop layer<pre><code>from std.python import Python
+    <span class="cm"># same generation parameters, passed straight through the interop layer</span>
+    <span class="kw">var</span> response = client.chat.completions.create(
+        model=<span class="str">"gpt-5-mini"</span>,
+        messages=messages,
+        temperature=0.7,
+        max_tokens=250,
+        top_p=0.9,
+    )
 
+    print(response.choices[0].message.content)</code></pre>
+        </div>
+      </div>
+    </section>
 
-def main():
-    def main() raises:
-        var openai = Python.import_module(&quot;openai&quot;)
-        var client = openai.OpenAI()
+    <section id="streaming">
+      <h2><span class="num">04</span> Streaming Responses</h2>
+      <div class="badge-row">
+        <span class="badge">difficulty · moderate</span>
+        <span class="badge">low latency</span>
+        <span class="badge">SSE</span>
+      </div>
+      <p>
+        Long answers feel slow if the client waits for the <em>entire</em> completion before printing anything.
+        Setting <code>stream=True</code> returns a Server-Sent Events (SSE) iterator that yields text
+        <strong>tokens as they are generated</strong> — output appears progressively, like in ChatGPT.
+      </p>
+      <p>
+        In the parameters you learn to inspect here: each chunk carries a <code>delta</code> rather than a full
+        <code>message</code>, so you rebuild the answer by printing deltas as they arrive.
+      </p>
 
-        # The system message shapes behaviour for the whole conversation
-        var messages = Python.list(
-            Python.dict(
-                role=&quot;system&quot;,
-                content=&quot;You are a coding mentor. Be brief, use short examples, and never assume the reader has prior knowledge.&quot;,
-            ),
-            Python.dict(role=&quot;user&quot;, content=&quot;What is a closure?&quot;),
-        )
-
-        # same generation parameters, passed straight through the interop layer
-        var response = client.chat.completions.create(
-            model=&quot;gpt-5-mini&quot;,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=250,
-            top_p=0.9,
-        )
-
-        print(response.choices[0].message.content)</code></pre>t-box">
+      <div class="context-box">
         <h4>⏱️ When to stream</h4>
         <p>
           Stream for anything user-facing. The perceived latency of a 2,000-token answer drops from several
@@ -752,34 +684,9 @@ def main():
 
       <div class="lang-block">
         <div class="lang-tabs">
-          <button class="lang-tab active" data-lang="python" onclick="switchLang(this,'stream')"><span class="dot"></span>Python</button>
-          <button class="lang-tab" data-lang="mojo" onclick="switchLang(this,'stream')"><span class="dot"></span>Mojo</button>
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel active" data-lang="python" data-group="stream">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
-
-client = OpenAI()
-
-messages = [
-    {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Explain why 'cloud' is a misnomer, in exactly 5 sentences."</span>},
-]
-
-<span class="cm"># stream=True returns an SSE iterator instead of a single whole response</span>
-stream = client.chat.completions.create(
-    model=<span class="str">"gpt-5-mini"</span>,
-    messages=messages,
-    stream=True,
-)
-
-<span class="cm"># Each chunk carries a delta — print it as it arrives</span>
-<span class="kw">for</span> chunk <span class="kw">in</span> stream:
-    delta = chunk.choices[0].delta.content
-    <span class="kw">if</span> delta:
-        print(delta, end=<span class="str">""</span>, flush=<span class="kw">True</span>)
-print()</code></pre>
-        </div>
-        <div class="lang-panel" data-lang="mojo" data-group="stream">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           <pre><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
@@ -802,31 +709,32 @@ print()</code></pre>
     <span class="kw">for</span> <span class="kw">var</span> chunk <span class="kw">in</span> stream:
         <span class="kw">var</span> delta = chunk.choices[0].delta.content
         <span class="kw">if</span> delta:
-            print(<pre><code>from std.python import Python
+            print(delta, end=<span class="str">""</span>)   <span class="cm"># accumulate on one line, token by token</span>
+    print()</code></pre>
+        </div>
+      </div>
+    </section>
 
+    <section id="tool-calling">
+      <h2><span class="num">05</span> Tool Calling: From Chatbot to Agent</h2>
+      <div class="badge-row">
+        <span class="badge">difficulty · advanced</span>
+        <span class="badge">action-oriented</span>
+        <span class="badge">the agent primitive</span>
+      </div>
+      <p>
+        A chatbot only talks. An <strong>agent acts</strong> — and the standard mechanism is <em>tool calling</em>
+        (function calling). You describe a function to the model; when the model decides the answer requires that
+        function, it returns a <em>request</em> instead of text. Your code executes the function locally and feeds
+        the result back as a special <code>role: "tool"</code> message, then the model composes its final answer
+        using that real data.
+      </p>
 
-def main():
-    def main() raises:
-        var openai = Python.import_module(&quot;openai&quot;)
-        var client = openai.OpenAI()
-
-        var messages = Python.list(
-            Python.dict(role=&quot;user&quot;, content=&quot;Explain why 'cloud' is a misnomer, in exactly 5 sentences.&quot;),
-        )
-
-        # stream=True returns an SSE iterator instead of a single whole response
-        var stream = client.chat.completions.create(
-            model=&quot;gpt-5-mini&quot;,
-            messages=messages,
-            stream=True,
-        )
-
-        # Iterate the Python iterator from Mojo and print deltas as they arrive
-        for var chunk in stream:
-            var delta = chunk.choices[0].delta.content
-            if delta:
-                print(delta, end=&quot;&quot;)   # accumulate on one line, token by token
-        print()</code></pre>LangChain, AutoGen). From here you
+      <div class="context-box mojo">
+        <h4>💡 Why this is the key step</h4>
+        <p>
+          This loop — <code>model requests → you execute → tool result feeds back → model answers</code> —
+          is the core of every serious agent framework (OpenAI Assistants, LangChain, AutoGen). From here you
           can chain multiple tools: weather lookup, database queries, file operations, web search. The same
           pattern works identically in Python and through Mojo's interop layer.
         </p>
@@ -836,76 +744,9 @@ def main():
 
       <div class="lang-block">
         <div class="lang-tabs">
-          <button class="lang-tab active" data-lang="python" onclick="switchLang(this,'tools')"><span class="dot"></span>Python</button>
-          <button class="lang-tab" data-lang="mojo" onclick="switchLang(this,'tools')"><span class="dot"></span>Mojo</button>
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel active" data-lang="python" data-group="tools">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
-<span class="kw">import</span> json
-
-client = OpenAI()
-
-<span class="cm"># A tool: a plain Python function. Swap the body for a real weather API in production.</span>
-<span class="kw">def</span> <span class="fn">get_weather</span>(city: <span class="cls">str</span>) -&gt; <span class="cls">str</span>:
-    <span class="kw">return</span> <span class="str">f"Current conditions in {city}: 21°C, partly cloudy, 10% chance of rain."</span>
-
-<span class="cm"># 1) Describe the tool so the model knows it exists and how to call it</span>
-tools = [
-    {
-        <span class="str">"type"</span>: <span class="str">"function"</span>,
-        <span class="str">"function"</span>: {
-            <span class="str">"name"</span>: <span class="str">"get_weather"</span>,
-            <span class="str">"description"</span>: <span class="str">"Get the current weather for a city"</span>,
-            <span class="str">"parameters"</span>: {
-                <span class="str">"type"</span>: <span class="str">"object"</span>,
-                <span class="str">"properties"</span>: {
-                    <span class="str">"city"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>, <span class="str">"description"</span>: <span class="str">"City name"</span>},
-                },
-                <span class="str">"required"</span>: [<span class="str">"city"</span>],
-            },
-        },
-    }
-]
-
-messages = [
-    {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Should I bring an umbrella in Berlin tomorrow?"</span>},
-]
-
-<span class="cm"># 2) Ask, letting the model decide when to use the tool ("auto")</span>
-response = client.chat.completions.create(
-    model=<span class="str">"gpt-5-mini"</span>,
-    messages=messages,
-    tools=tools,
-    tool_choice=<span class="str">"auto"</span>,
-)
-
-message = response.choices[0].message
-
-<span class="kw">if</span> message.tool_calls:
-    <span class="cm"># 3) The model requested a call — execute it locally...</span>
-    <span class="kw">for</span> call <span class="kw">in</span> message.tool_calls:
-        args = json.loads(call.function.arguments)   <span class="cm"># the model's arguments as JSON</span>
-        result = get_weather(**args)
-
-        <span class="cm"># 4) ...and feed the result back as a "tool" message</span>
-        messages.append({
-            <span class="str">"role"</span>: <span class="str">"tool"</span>,
-            <span class="str">"tool_call_id"</span>: call.id,
-            <span class="str">"content"</span>: result,
-        })
-
-    <span class="cm"># 5) Ask again with the tool result in context for the final answer</span>
-    final = client.chat.completions.create(
-        model=<span class="str">"gpt-5-mini"</span>,
-        messages=messages,
-        tools=tools,
-    )
-    print(final.choices[0].message.content)
-<span class="kw">else</span>:
-    print(message.content)</code></pre>
-        </div>
-        <div class="lang-panel" data-lang="mojo" data-group="tools">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           <pre><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
@@ -930,81 +771,89 @@ message = response.choices[0].message
                     properties=Python.dict(
                         city=Python.dict(
                             type=<span class="str">"string"</span>,
-                            descr<pre><code>from std.python import Python
-
-
-def main():
-    # A tool: a plain Mojo function. Swap the body for a real weather API in production.
-    def get_weather(city: String) -&gt; String:
-        return &quot;Current conditions in &quot; + city + &quot;: 21°C, partly cloudy, 10% chance of rain.&quot;
-
-    def main() raises:
-        var openai = Python.import_module(&quot;openai&quot;)
-        var json = Python.import_module(&quot;json&quot;)
-        var client = openai.OpenAI()
-
-        # 1) Describe the tool so the model knows it exists and how to call it
-        var tools = Python.list(
-            Python.dict(
-                type=&quot;function&quot;,
-                function=Python.dict(
-                    name=&quot;get_weather&quot;,
-                    description=&quot;Get the current weather for a city&quot;,
-                    parameters=Python.dict(
-                        type=&quot;object&quot;,
-                        properties=Python.dict(
-                            city=Python.dict(
-                                type=&quot;string&quot;,
-                                description=&quot;City name&quot;,
-                            )
-                        ),
-                        required=Python.list(&quot;city&quot;),
+                            description=<span class="str">"City name"</span>,
+                        )
                     ),
+                    required=Python.list(<span class="str">"city"</span>),
                 ),
-            )
+            ),
         )
+    )
 
-        var messages = Python.list(
-            Python.dict(
-                role=&quot;user&quot;,
-                content=&quot;Should I bring an umbrella in Berlin tomorrow?&quot;,
-            )
+    <span class="kw">var</span> messages = Python.list(
+        Python.dict(
+            role=<span class="str">"user"</span>,
+            content=<span class="str">"Should I bring an umbrella in Berlin tomorrow?"</span>,
         )
+    )
 
-        # 2) Ask, letting the model decide when to use the tool (&quot;auto&quot;)
-        var response = client.chat.completions.create(
-            model=&quot;gpt-5-mini&quot;,
+    <span class="cm"># 2) Ask, letting the model decide when to use the tool ("auto")</span>
+    <span class="kw">var</span> response = client.chat.completions.create(
+        model=<span class="str">"gpt-5-mini"</span>,
+        messages=messages,
+        tools=tools,
+        tool_choice=<span class="str">"auto"</span>,
+    )
+
+    <span class="kw">var</span> message = response.choices[0].message
+
+    <span class="kw">if</span> message.tool_calls:
+        <span class="cm"># 3) The model requested a call — execute it locally...</span>
+        <span class="kw">for</span> <span class="kw">var</span> call <span class="kw">in</span> message.tool_calls:
+            <span class="kw">var</span> args = json.loads(call.function.arguments)
+            <span class="kw">var</span> result = get_weather(String(py=args[<span class="str">"city"</span>]))
+
+            <span class="cm"># 4) ...and feed the result back as a "tool" message</span>
+            messages.append(
+                Python.dict(
+                    role=<span class="str">"tool"</span>,
+                    tool_call_id=call.id,
+                    content=result,
+                )
+            )
+
+        <span class="cm"># 5) Ask again with the tool result in context for the final answer</span>
+        <span class="kw">var</span> final = client.chat.completions.create(
+            model=<span class="str">"gpt-5-mini"</span>,
             messages=messages,
             tools=tools,
-            tool_choice=&quot;auto&quot;,
         )
+        print(final.choices[0].message.content)
+    <span class="kw">else</span>:
+        print(message.content)</code></pre>
+        </div>
+      </div>
 
-        var message = response.choices[0].message
+      <div class="context-box">
+        <h4>🔁 Generalize the pattern</h4>
+        <p>
+          The weather function is interchangeable: replace it with a <code>search_docs()</code>,
+          <code>query_db()</code>, <code>send_email()</code>, or any other function. Register multiple tools in
+          the <code>tools</code> list and the model picks. Production agents usually wrap steps 3–5 in a
+          <code>while</code> loop so the model can chain several tool calls before answering.
+        </p>
+      </div>
+    </section>
 
-        if message.tool_calls:
-            # 3) The model requested a call — execute it locally...
-            for var call in message.tool_calls:
-                var args = json.loads(call.function.arguments)
-                var result = get_weather(String(py=args[&quot;city&quot;]))
+    <section id="memory">
+      <h2><span class="num">06</span> Memory Management &amp; Context Limits</h2>
+      <div class="badge-row">
+        <span class="badge">difficulty · advanced</span>
+        <span class="badge">cost control</span>
+        <span class="badge">scaling state</span>
+      </div>
+      <p>
+        Every turn resends the entire <code>messages</code> history — so token usage (and cost) grows linearly
+        with conversation length, and eventually you bump into the model's context window. Robust agents manage
+        memory explicitly. The simplest strategy is a <strong>sliding window</strong>: keep the system prompt,
+        forget the oldest turns once history exceeds a budget.
+      </p>
 
-                # 4) ...and feed the result back as a &quot;tool&quot; message
-                messages.append(
-                    Python.dict(
-                        role=&quot;tool&quot;,
-                        tool_call_id=call.id,
-                        content=result,
-                    )
-                )
-
-            # 5) Ask again with the tool result in context for the final answer
-            var final = client.chat.completions.create(
-                model=&quot;gpt-5-mini&quot;,
-                messages=messages,
-                tools=tools,
-            )
-            print(final.choices[0].message.content)
-        else:
-            print(message.content)</code></pre>ry</em>, then replace the old turns with that summary. <strong>Selective recall:</strong>
+      <div class="context-box">
+        <h4>🧠 Beyond the sliding window</h4>
+        <p>
+          <strong>Summarization:</strong> when the window fills, ask the model to condense everything so far into
+          a short <em>memory</em>, then replace the old turns with that summary. <strong>Selective recall:</strong>
           keep factual answers (preferences, facts learned) and drop chit-chat. <strong>External memory:</strong>
           store long-term facts in a vector database and inject relevant snippets on each turn.
         </p>
@@ -1012,45 +861,9 @@ def main():
 
       <div class="lang-block">
         <div class="lang-tabs">
-          <button class="lang-tab active" data-lang="python" onclick="switchLang(this,'memory')"><span class="dot"></span>Python</button>
-          <button class="lang-tab" data-lang="mojo" onclick="switchLang(this,'memory')"><span class="dot"></span>Mojo</button>
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel active" data-lang="python" data-group="memory">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
-
-client = OpenAI()
-MAX_HISTORY = 10  <span class="cm"># keep at most 10 turns in context</span>
-
-messages = [
-    {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"You are a pithy assistant. Answer in one or two sentences."</span>},
-]
-
-<span class="kw">def</span> <span class="fn">trim</span>(history):
-    <span class="cm"># Drop the oldest turns once the history grows past MAX_HISTORY</span>
-    <span class="kw">while</span> len(history) &gt; MAX_HISTORY:
-        history.pop(<span class="num">0</span>)
-
-<span class="kw">while</span> <span class="kw">True</span>:
-    user_input = input(<span class="str">"You: "</span>)
-    <span class="kw">if</span> user_input.strip().lower() <span class="kw">in</span> (<span class="str">"exit"</span>, <span class="str">"quit"</span>):
-        <span class="kw">break</span>
-
-    messages.append({<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: user_input})
-    trim(messages)
-
-    response = client.chat.completions.create(
-        model=<span class="str">"gpt-5-mini"</span>,
-        messages=messages,
-    )
-    reply = response.choices[0].message.content
-
-    messages.append({<span class="str">"role"</span>: <span class="str">"assistant"</span>, <span class="str">"content"</span>: reply})
-    trim(messages)
-
-    print(<span class="str">"Bot:"</span>, reply)</code></pre>
-        </div>
-        <div class="lang-panel" data-lang="mojo" data-group="memory">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           <pre><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
@@ -1119,32 +932,9 @@ messages = [
 
       <div class="lang-block">
         <div class="lang-tabs">
-          <button class="lang-tab active" data-lang="python" onclick="switchLang(this,'json')"><span class="dot"></span>Python</button>
-          <button class="lang-tab" data-lang="mojo" onclick="switchLang(this,'json')"><span class="dot"></span>Mojo</button>
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel active" data-lang="python" data-group="json">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-          <pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
-<span class="kw">import</span> json
-
-client = OpenAI()
-
-response = client.chat.completions.create(
-    model=<span class="str">"gpt-5-mini"</span>,
-    messages=[
-        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"You output valid JSON only. No markdown, no prose."</span>},
-        {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"List 3 fruits with a color and a price each."</span>},
-    ],
-    response_format={<span class="str">"type"</span>: <span class="str">"json_object"</span>},   <span class="cm"># guarantee valid JSON output</span>
-)
-
-<span class="cm"># Parse and work with the data programmatically</span>
-data = json.loads(response.choices[0].message.content)
-
-<span class="kw">for</span> fruit <span class="kw">in</span> data[<span class="str">"fruits"</span>]:
-    print(f<span class="str">"{fruit['name']} — {fruit['color']} — ${fruit['price']}"</span>)</code></pre>
-        </div>
-        <div class="lang-panel" data-lang="mojo" data-group="json">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           <pre><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
@@ -1181,47 +971,25 @@ data = json.loads(response.choices[0].message.content)
       <p>
         Networks fail, and LLM providers throttle bursts. A production agent treats API errors as a fact of life:
         <strong>rate limits</strong> deserve exponential backoff so you don't hammer the endpoint; transient
-        <strong>connection errors</strong> deserve plain retri<pre><code>from std.python import Python
+        <strong>connection errors</strong> deserve plain retries; hard failures (auth, malformed request) should
+        propagate immediately.
+      </p>
 
+      <div class="context-box mojo">
+        <h4>💡 Mojo error interop</h4>
+        <p>
+          Mojo's <code>def main() raises</code> propagates any Python exception surfaced from the interop call as
+          a Mojo error. Because Mojo cannot easily distinguish specific Python exception types through interop,
+          the Mojo example catches broadly with a bare <code>except:</code> — catch the typed error
+          on the Python side of the bridge when you need that granularity.
+        </p>
+      </div>
 
-def main():
-    def main() raises:
-        var openai = Python.import_module(&quot;openai&quot;)
-        var json = Python.import_module(&quot;json&quot;)
-        var client = openai.OpenAI()
-
-        var response = client.chat.completions.create(
-            model=&quot;gpt-5-mini&quot;,
-            messages=Python.list(
-                Python.dict(role=&quot;system&quot;, content=&quot;You output valid JSON only. No markdown, no prose.&quot;),
-                Python.dict(role=&quot;user&quot;, content=&quot;List 3 fruits with a color and a price each.&quot;),
-            ),
-            response_format=Python.dict(type=&quot;json_object&quot;),   # guarantee valid JSON output
-        )
-
-        # Parse via interop and work with the data programmatically
-        var data = json.loads(response.choices[0].message.content)
-
-        for var fruit in data[&quot;fruits&quot;]:
-            print(String(py=fruit[&quot;name&quot;]) + &quot; — &quot; + String(py=fruit[&quot;color&quot;]) + &quot; — $&quot; + String(py=fruit[&quot;price&quot;]))</code></pre> class="kw">try</span>:
-            response = client.chat.completions.create(
-                model=<span class="str">"gpt-5-mini"</span>,
-                messages=messages,
-            )
-            <span class="kw">return</span> response.choices[0].message.content
-        <span class="kw">except</span> RateLimitError:
-            wait = <span class="num">2</span> ** attempt   <span class="cm"># exponential backoff: 1s, 2s, 4s</span>
-            print(f<span class="str">"Rate limited — retrying in {wait}s"</span>)
-            time.sleep(wait)
-        <span class="kw">except</span> APIConnectionError:
-            print(<span class="str">"Network error — retrying"</span>)
-            time.sleep(<span class="num">1</span>)
-    <span class="kw">raise</span> RuntimeError(<span class="str">"Exceeded max retries"</span>)
-
-messages = [{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Why is the sky blue?"</span>}]
-print(get_reply(messages))</code></pre>
+      <div class="lang-block">
+        <div class="lang-tabs">
+          <span class="lang-static"><span class="dot"></span>Mojo 1.x</span>
         </div>
-        <div class="lang-panel" data-lang="mojo" data-group="errors">
+        <div class="lang-panel active">
           <button class="copy-btn" onclick="copyCode(this)">Copy</button>
           <pre><code><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
@@ -1406,72 +1174,42 @@ print(get_reply(messages))</code></pre>
     </section>
 
     <section id="continue">
-      <h2><span class="num">11</span> Continue Exploring</h2>
+      <h2>Continue in the tutorial</h2>
       <p>
-        Agent engineering sits on top of three neighbouring topics: LLM training and serving, the model
-        foundations the APIs hide, and the Mojo ↔ Python bridge this whole guide drives. Each card below
-        jumps to the page that covers it.
+        This guide builds on the tutorial's interop chapters — study them first if any Mojo syntax here feels unfamiliar,
+        then jump between the hub and related shelves.
       </p>
-      <div class="related-grid">
-        <a class="related-card" href="fine_tuning_llms.html">
-          <h4>🤖 Fine-Tuning LLMs</h4>
-          <p>LoRA, QLoRA &amp; VRAM math — how the models your agent calls are adapted, merged and served.</p>
-        </a>
-        <a class="related-card" href="decision_aware_ml.html">
-          <h4>🎯 Decision-Aware ML</h4>
-          <p>Predict-then-optimize and cost-weighted LLM fine-tuning for agent decision loops.</p>
-        </a>
-        <a class="related-card" href="data_science.html">
-          <h4>📊 Data Science Textbook</h4>
-          <p>The full ask → act workflow, including an LLM &amp; prompting section.</p>
-        </a>
-        <a class="related-card" href="perceptrons_and_activation.html">
-          <h4>🧠 Perceptrons &amp; Activation</h4>
-          <p>Neural-network foundations up to transformers — the machinery these APIs hide.</p>
-        </a>
-        <a class="related-card" href="../mojo_v1/mojo_11_interop.html">
-          <h4>🔗 Mojo · Python &amp; C Interop</h4>
-          <p>Chapter 11 of the Mojo textbook — the <code>std.python</code> bridge every example relies on.</p>
-        </a>
-        <a class="related-card" href="../mojo_v1/mojo_09_syntax_tour.html">
-          <h4>📖 Mojo vs Python Syntax</h4>
-          <p>The side-by-side syntax map behind each Python → Mojo translation above.</p>
-        </a>
-        <a class="related-card more" href="index.html">
-          <span>📚 Data Science Hub —<br>all books &amp; topic guides</span>
-        </a>
-        <a class="related-card more" href="../index.html">
-          <span>🏠 Learning Hub —<br>the full TutMe library</span>
-        </a>
+      <div class="rel">
+        <a href="../index.html">TutMe Home<small>Landing · all learning tracks</small></a>
+        <a href="index.html">Data Science Hub<small>The full data-science shelf</small></a>
+        <a href="../mojo_v1/mojo_11_interop.html">Ch 11 · Python &amp; C Interop<small>Mojo 1.x textbook prerequisite</small></a>
+        <a href="../mojo_v1/mojo_09_syntax_tour.html">Ch 09 · Mojo vs Python<small>Syntax tour reference</small></a>
+        <a href="ds_textbook_06_interop.html">The Python Interop Bridge<small>ds-textbook · Chapter 06</small></a>
+        <a href="ds_advanced_03_interop.html">Interoperability &amp; FFI<small>ds-advanced · Chapter 03</small></a>
+        <a href="fine_tuning_llms.html">Fine-Tuning LLMs<small>LoRA &amp; QLoRA — equations &amp; code</small></a>
+        <a href="neural_network.html">NN from Scratch<small>2-2-1 MLP, every weight explicit</small></a>
+        <a href="mlp_xor.html">ML Lab · Neural Nets<small>XOR 2-4-1 MLP, columns-as-examples</small></a>
+        <a href="nn_mojo.html">3-4-1 NN · Mojo &amp; NumPy<small>One network, written twice</small></a>
+        <a href="numoj.html">nj · NumPy-Shaped Library<small>The same net in 36 lines</small></a>
+        <a href="numerical_python_to_mojo.html">Python → Mojo Numerical<small>Same calculation, two mental models</small></a>
       </div>
     </section>
 
     <footer>
-      <p>
-        <a href="../index.html">Learning Hub</a> · <a href="index.html">Data Science</a> ·
-        <a href="fine_tuning_llms.html">Fine-Tuning LLMs</a> · <a href="decision_aware_ml.html">Decision-Aware ML</a> ·
-        <a href="../mojo_v1/mojo_11_interop.html">Mojo Interop</a>
-      </p>
-      <p style="margin-top:.6rem;">
-        Generated documentation for AI agent development <span class="gold">·</span> Python &amp; Mojo interoperability<br>
-        Sections 01–08 (progressive agent design) &nbsp;·&nbsp; 09–10 (reference &amp; production guide)
-      </p>
+      <div class="footlinks">
+        <a href="../index.html">Home</a>
+        <a href="index.html">Data Science</a>
+        <a href="../mojo_v1/index.html">Fundamentals</a>
+        <a href="../applications/index.html">Applications</a>
+        <a href="../praxis/index.html">Praxis</a>
+      </div>
+      Generated documentation for AI agent development <span class="gold">·</span> Python &amp; Mojo interoperability<br>
+      Sections 01–08 (progressive agent design) &nbsp;·&nbsp; 09–10 (reference &amp; production guide)
     </footer>
   </main>
 </div>
 
 <script>
-  // --- Tab switching (scoped by data-group so multiple code blocks stay independent) ---
-  function switchLang(btn, group){
-    const tabsWrap = btn.closest('.lang-block');
-    tabsWrap.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    const lang = btn.getAttribute('data-lang');
-    tabsWrap.querySelectorAll('.lang-panel[data-group="' + group + '"]').forEach(p => {
-      p.classList.toggle('active', p.getAttribute('data-lang') === lang);
-    });
-  }
-
   // --- Copy to clipboard ---
   function copyCode(btn){
     const codeEl = btn.parentElement.querySelector('code');

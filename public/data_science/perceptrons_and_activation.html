@@ -107,7 +107,7 @@
 
         .hero-subtitle {
             font-size: 1.25rem;
-            color: #94a3b8;
+            color: #ffe4a3;
             max-width: 650px;
             margin: 0 auto 40px;
             line-height: 1.8;
@@ -507,7 +507,7 @@
         }
 
         .code-tab-btn:hover {
-            color: #94a3b8;
+            color: #ffe4a3;
             background: rgba(255, 255, 255, 0.05);
         }
 
@@ -570,13 +570,13 @@
         /* Footer */
         footer {
             background: #0f172a;
-            color: #94a3b8;
+            color: #ffd98f;
             padding: 40px;
             text-align: center;
         }
 
         footer p {
-            color: #94a3b8;
+            color: #ffe4a3;
             margin: 0;
         }
 
@@ -623,6 +623,10 @@
   <a href="time_series_analytics.html" style="color:#9fd3ff;text-decoration:none;">📈 Time Series Analytics</a>
   <a href="linear_regression.html" style="color:#9fd3ff;text-decoration:none;">📉 Linear Regression</a>
   <a href="decision_aware_ml.html" style="color:#9fd3ff;text-decoration:none;">🧩 Decision-Aware ML</a>
+  <a href="ai_agents_python_vs_mojo.html" style="color:#9fd3ff;text-decoration:none;">💬 AI Agents · Python vs Mojo</a>
+  <a href="neural_network.html" style="color:#9fd3ff;text-decoration:none;">🔬 NN from Scratch</a>
+  <a href="mlp_xor.html" style="color:#9fd3ff;text-decoration:none;">🤖 MLP XOR Lab</a>
+  <a href="nn_mojo.html" style="color:#9fd3ff;text-decoration:none;">🧮 3-4-1 NN in Mojo &amp; NumPy</a>
   <a href="../index.html" style="color:#9fd3ff;text-decoration:none;">🏠 Home</a>
 </nav>
 
@@ -639,7 +643,7 @@
             <p class="hero-subtitle">
                 A code-first guide to the building blocks of neural networks.
                 From the original perceptron to modern activation functions — every equation,
-                every derivative, implemented in Python and Mojo 1.x.
+                every derivative, implemented in Mojo 1.x.
             </p>
             <div class="hero-cta">
                 <a href="#chapter-1" class="btn btn-primary">
@@ -756,64 +760,13 @@
 
             <div class="code-tabs" data-tab-group="perceptron">
                 <div class="code-tab-header">
-                    <button class="code-tab-btn active" data-tab="python">
-                        <span class="lang-icon">🐍</span> Python
-                    </button>
-                    <button class="code-tab-btn" data-tab="mojo">
+                    <button class="code-tab-btn active" data-tab="mojo-perceptron">
                         <span class="lang-icon">🔥</span> Mojo 1.x
-                        <span class="mojo-badge">NEW</span>
-                    </button>
+                        </button>
                 </div>
-                <div class="code-tab-content active" data-tab-content="python">
-                    <pre><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-
-<span class="tok-k">class</span> <span class="tok-n">Perceptron</span>:
-    <span class="tok-k">def</span> <span class="tok-f">__init__</span>(<span class="tok-k">self</span>, learning_rate=<span class="tok-num">0.1</span>, epochs=<span class="tok-num">100</span>):
-        <span class="tok-k">self</span>.lr = learning_rate
-        <span class="tok-k">self</span>.epochs = epochs
-        <span class="tok-k">self</span>.weights = None
-        <span class="tok-k">self</span>.bias = None
-
-    <span class="tok-k">def</span> <span class="tok-f">step_function</span>(<span class="tok-k">self</span>, z):
-        <span class="tok-s">&quot;&quot;</span><span class="tok-s">&quot;The activation function for a standard perceptron.&quot;</span><span class="tok-s">&quot;&quot;</span>
-        <span class="tok-k">return</span> np.where(z &gt;= <span class="tok-num">0</span>, <span class="tok-num">1</span>, <span class="tok-num">0</span>)
-
-    <span class="tok-k">def</span> <span class="tok-f">fit</span>(<span class="tok-k">self</span>, X, y):
-        n_samples, n_features = X.shape
-        <span class="tok-k">self</span>.weights = np.zeros(n_features)
-        <span class="tok-k">self</span>.bias = <span class="tok-num">0</span>
-
-        <span class="tok-k">for</span> _ <span class="tok-k">in</span> <span class="tok-k">range</span>(<span class="tok-k">self</span>.epochs):
-            errors = <span class="tok-num">0</span>
-            <span class="tok-k">for</span> idx, x_i <span class="tok-k">in</span> enumerate(X):
-                z = np.dot(x_i, <span class="tok-k">self</span>.weights) + <span class="tok-k">self</span>.bias
-                y_predicted = <span class="tok-k">self</span>.step_function(z)
-
-                update = <span class="tok-k">self</span>.lr * (y[idx] - y_predicted)
-                <span class="tok-k">self</span>.weights += update * x_i
-                <span class="tok-k">self</span>.bias += update
-                errors += int(update != <span class="tok-num">0.0</span>)
-            
-            <span class="tok-k">if</span> errors == <span class="tok-num">0</span>:
-                <span class="tok-k">break</span>
-
-    <span class="tok-k">def</span> <span class="tok-f">predict</span>(<span class="tok-k">self</span>, X):
-        z = np.dot(X, <span class="tok-k">self</span>.weights) + <span class="tok-k">self</span>.bias
-        <span class="tok-k">return</span> <span class="tok-k">self</span>.step_function(z)
-
-<span class="tok-c"># --- Test the Perceptron (Logical AND Gate) ---</span>
-X = np.array([[<span class="tok-num">0</span>, <span class="tok-num">0</span>], [<span class="tok-num">0</span>, <span class="tok-num">1</span>], [<span class="tok-num">1</span>, <span class="tok-num">0</span>], [<span class="tok-num">1</span>, <span class="tok-num">1</span>]])
-y = np.array([<span class="tok-num">0</span>, <span class="tok-num">0</span>, <span class="tok-num">0</span>, <span class="tok-num">1</span>])
-
-p = Perceptron(learning_rate=<span class="tok-num">0.1</span>, epochs=<span class="tok-num">10</span>)
-p.fit(X, y)
-
-<span class="tok-k">print</span>(<span class="tok-s">&quot;Perceptron Predictions for AND gate:&quot;</span>)
-<span class="tok-k">for</span> xi <span class="tok-k">in</span> X:
-    <span class="tok-k">print</span>(<span class="tok-s">f&quot;{xi} -&gt; {p.predict(xi)}&quot;</span>)</code></pre>
-                </div>
-                <div class="code-tab-content" data-tab-content="mojo">
+                <div class="code-tab-content active" id="mojo-perceptron" data-tab-content="mojo">
                     <pre><code><span class="tok-k">from</span> std.math <span class="tok-k">import</span> sqrt, exp, min, max
+<span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
 
 <span class="tok-k">struct</span> <span class="tok-n">Perceptron</span>:
     <span class="tok-k">var</span> lr: Float64
@@ -899,13 +852,13 @@ p.fit(X, y)
             </div>
 
             <div class="note">
-                <strong>Expected output:</strong>
+                <strong>Expected output (Mojo 1.x):</strong>
                 <div class="output">
-                    Predictions for AND gate:<br>
-                    [0 0] -> 0<br>
-                    [0 1] -> 0<br>
-                    [1 0] -> 0<br>
-                    [1 1] -> 1
+                    Perceptron Predictions for AND gate:<br>
+                    [0.0, 0.0] -> 0<br>
+                    [0.0, 1.0] -> 0<br>
+                    [1.0, 0.0] -> 0<br>
+                    [1.0, 1.0] -> 1
                 </div>
             </div>
 
@@ -914,39 +867,14 @@ p.fit(X, y)
 
             <div class="code-tabs" data-tab-group="decision-boundary">
                 <div class="code-tab-header">
-                    <button class="code-tab-btn active" data-tab="python">
-                        <span class="lang-icon">🐍</span> Python
-                    </button>
-                    <button class="code-tab-btn" data-tab="mojo">
+                    <button class="code-tab-btn active" data-tab="mojo-decision-boundary">
                         <span class="lang-icon">🔥</span> Mojo 1.x
-                        <span class="mojo-badge">NEW</span>
-                    </button>
+                        </button>
                 </div>
-                <div class="code-tab-content active" data-tab-content="python">
-                    <pre><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-<span class="tok-k">import</span> matplotlib.pyplot <span class="tok-k">as</span> plt
-
-<span class="tok-k">def</span> <span class="tok-f">plot_decision_boundary</span>(X, y, model):
-    plt.scatter(X[:,<span class="tok-num">0</span>], X[:,<span class="tok-num">1</span>], c=y, cmap=<span class="tok-s">&#39;viridis&#39;</span>, edgecolors=<span class="tok-s">&#39;k&#39;</span>, s=<span class="tok-num">100</span>)
-    plt.xlabel(<span class="tok-s">&#39;x1&#39;</span>)
-    plt.ylabel(<span class="tok-s">&#39;x2&#39;</span>)
-    
-    w1, w2 = model.weights
-    b = model.bias
-    x1_vals = np.linspace(-<span class="tok-num">0.5</span>, <span class="tok-num">1.5</span>, <span class="tok-num">100</span>)
-    x2_vals = -(w1 * x1_vals + b) / w2
-    plt.plot(x1_vals, x2_vals, <span class="tok-s">&#39;r--&#39;</span>, label=<span class="tok-s">&#39;Decision boundary&#39;</span>)
-    plt.xlim(-<span class="tok-num">0.5</span>, <span class="tok-num">1.5</span>)
-    plt.ylim(-<span class="tok-num">0.5</span>, <span class="tok-num">1.5</span>)
-    plt.legend()
-    plt.title(<span class="tok-s">&#39;Perceptron Decision Boundary (AND Gate)&#39;</span>)
-    plt.show()
-
-plot_decision_boundary(X, y, p)</code></pre>
-                </div>
-                <div class="code-tab-content" data-tab-content="mojo">
+                <div class="code-tab-content active" id="mojo-decision-boundary" data-tab-content="mojo">
                     <pre><code><span class="tok-c"># Mojo uses Python interop for matplotlib</span>
-<span class="tok-k">from</span> python <span class="tok-k">import</span> Python
+<span class="tok-k">from</span> std.python <span class="tok-k">import</span> Python
+<span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
 
 <span class="tok-k">def</span> <span class="tok-f">plot_decision_boundary</span>(
     X: List[List[Float64]], 
@@ -1096,72 +1024,19 @@ plot_decision_boundary(X, y, p)</code></pre>
             </div>
             <p>This is why every framework pairs softmax with cross-entropy — the ugly full Jacobian <span class="math">&part;p<sub>i</sub>/&part;z<sub>j</sub> = p<sub>i</sub>(&delta;<sub>ij</sub> &minus; p<sub>j</sub>)</span> never needs to be formed explicitly.</p>
 
-            <p><strong>Numerical stability rule:</strong> always subtract the max logit first (both implementations below do): <span class="math">softmax(z) = softmax(z &minus; max(z))</span> — mathematically identical, but <span class="math">e<sup>z</sup></span> no longer overflows.</p>
+            <p><strong>Numerical stability rule:</strong> always subtract the max logit first (the implementation below does): <span class="math">softmax(z) = softmax(z &minus; max(z))</span> — mathematically identical, but <span class="math">e<sup>z</sup></span> no longer overflows.</p>
 
             <h3>2.6 Implementation</h3>
 
             <div class="code-tabs" data-tab-group="activations">
                 <div class="code-tab-header">
-                    <button class="code-tab-btn active" data-tab="python">
-                        <span class="lang-icon">🐍</span> Python
-                    </button>
-                    <button class="code-tab-btn" data-tab="mojo">
+                    <button class="code-tab-btn active" data-tab="mojo-activations">
                         <span class="lang-icon">🔥</span> Mojo 1.x
-                        <span class="mojo-badge">NEW</span>
-                    </button>
+                        </button>
                 </div>
-                <div class="code-tab-content active" data-tab-content="python">
-                    <pre><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
-
-<span class="tok-c"># --- 1. Sigmoid ---</span>
-<span class="tok-k">def</span> <span class="tok-f">sigmoid</span>(z):
-    z = np.clip(z, -<span class="tok-num">500</span>, <span class="tok-num">500</span>)  <span class="tok-c"># Prevent overflow</span>
-    <span class="tok-k">return</span> <span class="tok-num">1.0</span> / (<span class="tok-num">1.0</span> + np.exp(-z))
-
-<span class="tok-k">def</span> <span class="tok-f">sigmoid_derivative</span>(z):
-    s = sigmoid(z)
-    <span class="tok-k">return</span> s * (<span class="tok-num">1</span> - s)
-
-<span class="tok-c"># --- 2. Tanh ---</span>
-<span class="tok-k">def</span> <span class="tok-f">tanh</span>(z):
-    <span class="tok-k">return</span> np.tanh(z)
-
-<span class="tok-k">def</span> <span class="tok-f">tanh_derivative</span>(z):
-    <span class="tok-k">return</span> <span class="tok-num">1</span> - np.tanh(z)**<span class="tok-num">2</span>
-
-<span class="tok-c"># --- 3. ReLU ---</span>
-<span class="tok-k">def</span> <span class="tok-f">relu</span>(z):
-    <span class="tok-k">return</span> np.maximum(<span class="tok-num">0</span>, z)
-
-<span class="tok-k">def</span> <span class="tok-f">relu_derivative</span>(z):
-    <span class="tok-k">return</span> np.where(z &gt; <span class="tok-num">0</span>, <span class="tok-num">1</span>, <span class="tok-num">0</span>)
-
-<span class="tok-c"># --- 4. Leaky ReLU ---</span>
-<span class="tok-k">def</span> <span class="tok-f">leaky_relu</span>(z, alpha=<span class="tok-num">0.01</span>):
-    <span class="tok-k">return</span> np.where(z &gt; <span class="tok-num">0</span>, z, alpha * z)
-
-<span class="tok-k">def</span> <span class="tok-f">leaky_relu_derivative</span>(z, alpha=<span class="tok-num">0.01</span>):
-    <span class="tok-k">return</span> np.where(z &gt; <span class="tok-num">0</span>, <span class="tok-num">1</span>, alpha)
-
-<span class="tok-c"># --- 5. Softmax ---</span>
-<span class="tok-k">def</span> <span class="tok-f">softmax</span>(z):
-    z_shifted = z - np.max(z, axis=-<span class="tok-num">1</span>, keepdims=True)
-    exp_z = np.exp(z_shifted)
-    <span class="tok-k">return</span> exp_z / np.sum(exp_z, axis=-<span class="tok-num">1</span>, keepdims=True)
-
-<span class="tok-c"># --- Testing the Functions ---</span>
-test_input = np.array([-<span class="tok-num">2.0</span>, -<span class="tok-num">1.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>])
-
-<span class="tok-k">print</span>(<span class="tok-s">&quot;Input:       &quot;</span>, test_input)
-<span class="tok-k">print</span>(<span class="tok-s">&quot;Sigmoid:     &quot;</span>, np.round(sigmoid(test_input), <span class="tok-num">3</span>))
-<span class="tok-k">print</span>(<span class="tok-s">&quot;Tanh:        &quot;</span>, np.round(tanh(test_input), <span class="tok-num">3</span>))
-<span class="tok-k">print</span>(<span class="tok-s">&quot;ReLU:        &quot;</span>, relu(test_input))
-<span class="tok-k">print</span>(<span class="tok-s">&quot;Leaky ReLU:  &quot;</span>, leaky_relu(test_input))
-<span class="tok-k">print</span>(<span class="tok-s">&quot;Softmax:     &quot;</span>, np.round(softmax(test_input), <span class="tok-num">4</span>))</code></pre>
-                </div>
-                <div class="code-tab-content" data-tab-content="mojo">
-                    <pre><code><span class="tok-k">from</span> math <span class="tok-k">import</span> exp, min, max
-<span class="tok-k">from</span> collections <span class="tok-k">import</span> List
+                <div class="code-tab-content active" id="mojo-activations" data-tab-content="mojo">
+                    <pre><code><span class="tok-k">from</span> std.math <span class="tok-k">import</span> exp, min, max
+<span class="tok-k">from</span> std.collections <span class="tok-k">import</span> List
 
 <span class="tok-c"># --- 1. Sigmoid ---</span>
 <span class="tok-k">def</span> <span class="tok-f">sigmoid</span>(z: Float64) -&gt; Float64:
@@ -1278,47 +1153,27 @@ test_input = np.array([-<span class="tok-num">2.0</span>, -<span class="tok-num"
 
             <div class="code-tabs" data-tab-group="numeric-tour">
                 <div class="code-tab-header">
-                    <button class="code-tab-btn active" data-tab="python">
-                        <span class="lang-icon">🐍</span> Python
-                    </button>
-                    <button class="code-tab-btn" data-tab="mojo">
+                    <button class="code-tab-btn active" data-tab="mojo-numeric-tour">
                         <span class="lang-icon">🔥</span> Mojo 1.x
-                        <span class="mojo-badge">NEW</span>
-                    </button>
+                        </button>
                 </div>
-                <div class="code-tab-content active" data-tab-content="python">
-                    <pre><code><span class="tok-k">import</span> numpy <span class="tok-k">as</span> np
+                <div class="code-tab-content active" id="mojo-numeric-tour" data-tab-content="mojo">
+                    <pre>from std.math import exp, tanh, max
+from std.collections import List
 
-z = np.array([-<span class="tok-num">6.0</span>, -<span class="tok-num">2.0</span>, -<span class="tok-num">0.5</span>, <span class="tok-num">0.0</span>, <span class="tok-num">0.5</span>, <span class="tok-num">2.0</span>, <span class="tok-num">6.0</span>])
-
-<span class="tok-k">print</span>(<span class="tok-s">f&quot;{'z':&gt;6} | {'sigmoid':&gt;8} {'σ′':&gt;8} | {'tanh':&gt;8} {'t′':&gt;8} | {'relu':&gt;6} {'r′':&gt;3} | {'leaky':&gt;8}&quot;</span>)
-<span class="tok-k">for</span> v <span class="tok-k">in</span> z:
-    s = <span class="tok-num">1</span> / (<span class="tok-num">1</span> + np.exp(-v))
-    t = np.tanh(v)
-    <span class="tok-k">print</span>(<span class="tok-s">f&quot;{v:6.1f} | {s:8.4f} {s*(1-s):8.5f} | {t:8.4f} {1-t*t:8.5f} |&quot;</span>
-          <span class="tok-s">f&quot;{max(0.0, v):6.1f} {1 if v &gt; 0 else 0:3d} | {max(0.01*v, v):8.4f}&quot;</span>)
-
-<span class="tok-c"># what to see in the table:</span>
-<span class="tok-c">#  σ′(±6) ≈ 0.0025 — saturated: almost no gradient flows</span>
-<span class="tok-c">#  t′(0)  = 1.0 vs σ′(0) = 0.25 — tanh starts 4× stronger</span>
-<span class="tok-c">#  r′(z&gt;0) = 1 exactly — ReLU gradient never decays</span></code></pre>
-                </div>
-                <div class="code-tab-content" data-tab-content="mojo">
-                    <pre><code><span class="tok-k">from</span> std.math <span class="tok-k">import</span> exp, tanh, max
-
-<span class="tok-k">def</span> <span class="tok-f">main</span>():
-    <span class="tok-k">var</span> z = List[Float64]([-<span class="tok-num">6.0</span>, -<span class="tok-num">2.0</span>, -<span class="tok-num">0.5</span>, <span class="tok-num">0.0</span>, <span class="tok-num">0.5</span>, <span class="tok-num">2.0</span>, <span class="tok-num">6.0</span>])
-    <span class="tok-k">print</span>(<span class="tok-s">"    z  |  sigmoid     σ′   |   tanh      t′   |  relu  r′  |  leaky"</span>)
-    <span class="tok-k">for</span> i <span class="tok-k">in</span> range(len(z)):
-        <span class="tok-k">var</span> v = z[i]
-        <span class="tok-k">var</span> s = <span class="tok-num">1.0</span> / (<span class="tok-num">1.0</span> + exp(-v))          <span class="tok-c"># sigmoid</span>
-        <span class="tok-k">var</span> t = tanh(v)
-        <span class="tok-k">var</span> leaky = max(<span class="tok-num">0.01</span> * v, v)
-        <span class="tok-k">print</span>(v, <span class="tok-s">" |"</span>, s, s * (<span class="tok-num">1.0</span> - s),
-              <span class="tok-s">"|"</span>, t, <span class="tok-num">1.0</span> - t * t,
-              <span class="tok-s">"|"</span>, max(<span class="tok-num">0.0</span>, v), <span class="tok-s">"|"</span>, leaky)
-    <span class="tok-c"># σ′(±6) ≈ 0.0025: saturated.  t′(0) = 1 vs σ′(0) = 0.25.</span>
-    <span class="tok-c"># ReLU: gradient exactly 1 for z &gt; 0 — never decays.</span></code></pre>
+def main():
+    var z = List[Float64]([-6.0, -2.0, -0.5, 0.0, 0.5, 2.0, 6.0])
+    print("    z  |  sigmoid     σ′   |   tanh      t′   |  relu  r′  |  leaky")
+    for i in range(len(z)):
+        var v = z[i]
+        var s = 1.0 / (1.0 + exp(-v))          # sigmoid
+        var t = tanh(v)
+        var leaky = max(0.01 * v, v)
+        print(v, " |", s, s * (1.0 - s),
+              "|", t, 1.0 - t * t,
+              "|", max(0.0, v), "|", leaky)
+    # σ′(±6) ≈ 0.0025: saturated.  t′(0) = 1 vs σ′(0) = 0.25.
+    # ReLU: gradient exactly 1 for z &gt; 0 — never decays.</pre>
                 </div>
             </div>
 
@@ -1407,7 +1262,7 @@ z = np.array([-<span class="tok-num">6.0</span>, -<span class="tok-num">2.0</spa
                 <li>Show &sigma;&prime;(z) = &sigma;(z)(1 &minus; &sigma;(z)) in two lines, and compute the gradient product through 10 sigmoid layers at saturation.</li>
                 <li>Prove XOR is not linearly separable via the convex-hull argument; why does AND have margin exactly 1/&radic;2 after scaling?</li>
                 <li>Why must softmax subtract the max logit? Give an input where the naive form overflows and the shifted form does not.</li>
-                <li>Run the numeric tour (Chapter 3) in both languages and extend it with GELU: f(z) = z&middot;&Phi;(z), where &Phi; is the standard normal CDF.</li>
+                <li>Run the numeric tour (Chapter 3) and extend it with GELU: f(z) = z&middot;&Phi;(z), where &Phi; is the standard normal CDF.</li>
                 <li>Train the Mojo perceptron on OR, then on XOR, and count epochs — verify XOR never converges.</li>
             </ol>
         </article>
@@ -1456,5 +1311,142 @@ z = np.array([-<span class="tok-num">6.0</span>, -<span class="tok-num">2.0</spa
     </script>
     
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body>
 </html>

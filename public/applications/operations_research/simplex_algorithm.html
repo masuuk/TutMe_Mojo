@@ -18,8 +18,8 @@
   --line:       rgba(212,175,106,0.22);
   --line-soft:  rgba(212,175,106,0.12);
   --paper:      #e8e6f0;
-  --paper-dim:  #a9a6bd;
-  --paper-faint:#6f6c80;
+  --paper-dim:  #ffd98f;
+  --paper-faint:#e0a83c;
   --gold:       #d4af6a;
   --gold-dim:   #b8904a;
   --gold-soft:  #f0d8a8;
@@ -546,7 +546,7 @@ main section.reveal.in{ opacity:1; transform:none; }
       <li><a href="#sec-4">Example A — Wyndor Glass</a></li>
       <li><a href="#sec-5">Example B — product mix</a></li>
       <li><a href="#sec-6">Big-M &amp; Two-Phase</a></li>
-      <li><a href="#sec-7">Python implementations</a></li>
+      <li><a href="#sec-7">Mojo implementations</a></li>
       <li><a href="#sec-8">Try it yourself</a></li>
       <li><a href="#sec-9">Mojo 1.x implementation</a></li>
       <li><a href="#sec-10">Duality &amp; shadow prices</a></li>
@@ -882,7 +882,7 @@ main section.reveal.in{ opacity:1; transform:none; }
       <h2><span class="num">06</span> When the origin is not feasible: Big-M and Two-Phase</h2>
       <p class="lede">Artificial variables, a penalty, or a fake objective — how real constraints get their start.</p>
 
-      <p>Both worked examples so far started happy: all constraints <span class="katex-inline" data-tex="\le">≤</span> with <span class="katex-inline" data-tex="b_i \ge 0">b_i ≥ 0</span>, so the origin is immediately feasible. Real problems bring <span class="katex-inline" data-tex="\ge">≥</span> and <span class="katex-inline" data-tex="=">=</span> constraints and negative right-hand sides. Two classical repairs — <b>Big-M</b> and <b>Two-Phase</b> — both add <em>artificial variables</em> to manufacture a starting basis, then get rid of them. Both are implemented in <code>two_phase.py</code> (section 7.2).</p>
+      <p>Both worked examples so far started happy: all constraints <span class="katex-inline" data-tex="\le">≤</span> with <span class="katex-inline" data-tex="b_i \ge 0">b_i ≥ 0</span>, so the origin is immediately feasible. Real problems bring <span class="katex-inline" data-tex="\ge">≥</span> and <span class="katex-inline" data-tex="=">=</span> constraints and negative right-hand sides. Two classical repairs — <b>Big-M</b> and <b>Two-Phase</b> — both add <em>artificial variables</em> to manufacture a starting basis, then get rid of them. Section 7.1 shows the loop, and section 7.2 is where all of it becomes a single HiGHS call.</p>
 
       <p>First, normalize: any row with <span class="katex-inline" data-tex="b_i &lt; 0">b_i &lt; 0</span> gets multiplied through by −1 (flipping its sense). Then each row gets its columns:</p>
 
@@ -895,7 +895,7 @@ main section.reveal.in{ opacity:1; transform:none; }
         </tbody>
       </table>
 
-      <p>A small running example — solve it by hand both ways, then check it against HiGHS in section 7.4:</p>
+      <p>A small running example — solve it by hand both ways, then check it against HiGHS in section 7.2:</p>
 
       <div class="example-frame">
         <div class="lp-statement">
@@ -938,7 +938,7 @@ main section.reveal.in{ opacity:1; transform:none; }
             <tr class="objrow"><td>Z</td><td>0</td><td>1</td><td>2</td><td>M−2</td><td class="rhs">−8</td></tr>
           </tbody>
         </table>
-        <p class="tableau-note">All coefficients ≥ 0 for large M — optimal: <b>Z = −8, so min C = 8 at x = (4, 0)</b> — exactly what HiGHS reports in section 7.4. The practical drawback of Big-M is numerical: "huge" M (often 10⁶ or more alongside coefficients of size 1) pollutes the ratio tests with round-off.</p>
+        <p class="tableau-note">All coefficients ≥ 0 for large M — optimal: <b>Z = −8, so min C = 8 at x = (4, 0)</b> — exactly what HiGHS reports in section 7.2. The practical drawback of Big-M is numerical: "huge" M (often 10⁶ or more alongside coefficients of size 1) pollutes the ratio tests with round-off.</p>
 
         <h3>Two-Phase — solve a fake LP first</h3>
 
@@ -977,7 +977,7 @@ main section.reveal.in{ opacity:1; transform:none; }
         <p class="tableau-note"><b>Z = −8, min C = 8 at (4, 0)</b> — same answer as Big-M, with no giant constants anywhere.</p>
 
         <div class="callout">
-          <b>One fine point.</b> If an artificial stays <em>basic at value zero</em> at the end of Phase I (a degenerate row), pivot it out on any nonzero non-artificial entry, or drop the row if it is entirely zero — a redundant constraint. <code>two_phase.py</code> handles both cases.
+          <b>One fine point.</b> If an artificial stays <em>basic at value zero</em> at the end of Phase I (a degenerate row), pivot it out on any nonzero non-artificial entry, or drop the row if it is entirely zero — a redundant constraint. HiGHS handles both cases for you (section 7.2).
         </div>
       </div>
     </section>
@@ -985,364 +985,158 @@ main section.reveal.in{ opacity:1; transform:none; }
 
     <!-- ============================================================ -->
     <section id="sec-7">
-      <h2><span class="num">07</span> Python implementations <span class="badge verified">all outputs verified below</span></h2>
-      <p class="lede">Three stops on one road: a from-scratch tableau solver, the same solver generalized to Two-Phase and vectorized with NumPy, and what you'd actually ship — SciPy's <code>linprog</code>.</p>
+      <h2><span class="num">07</span> Mojo implementations <span class="badge verified">all outputs verified below</span></h2>
+      <p class="lede">Two shapes of the same solver: the tableau loop flattened down to its essentials, and the one-line library call you would actually ship — SciPy's <code>linprog</code>, reached from Mojo.</p>
 
-      <h3>7.1 &nbsp;<code>simplex.py</code> — from scratch</h3>
-      <p>Deliberately the algorithm from section 2 and nothing more: a list-of-lists tableau, Dantzig's most-negative-coefficient rule for entering, and the ratio test with Bland's tie-break for leaving.</p>
+      <p>The from-scratch solver &mdash; Dantzig's most-negative-coefficient rule for entering, the ratio test, Bland's tie-break for leaving &mdash; is transcribed to Mojo in <a href="#sec-9">section 9</a>, where every step of the algorithm from section 2 maps onto a line of code. The two listings here are the shapes you actually meet in practice.</p>
+
+      <p>All of them assume the happy standard form of section 2: every constraint <span class="katex-inline" data-tex="\le">≤</span>, every <span class="katex-inline" data-tex="b_i \ge 0">b_i ≥ 0</span>, so the all-slack origin is immediately a feasible corner. Section 6's toolkit is what lifts that restriction &mdash; flip negative RHS rows, add surplus and artificial columns, run Phase I to manufacture a feasible starting basis, then Phase II to optimize from there. Section 7.2 is where that entire sequence collapses into a single call.</p>
+
+      <h3>7.1 &nbsp;<code>simplex_tight.mojo</code> — the from-scratch loop, with no bookkeeping</h3>
+      <p>Once the algorithm is trusted, the label-tracking machinery of section 9 can go. In the Mojo version there is no <code>basis</code> array and no tie-break rule: each pivot is one row normalization plus one elimination sweep, and the solution is read straight off the right-hand-side column by recognising which column has become a unit vector. Same five steps, same numbers &mdash; a shorter program.</p>
 
       <div class="code-block">
-        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--python)"></span>python — simplex.py</span></div>
-        <div class="code-panels"><pre><code class="lang-py">"""
-simplex.py -- the tableau (dictionary) form of the primal simplex method,
-from scratch, for LPs already in the happy standard form:
+        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--mojo)"></span>mojo 1.x — simplex_tight.mojo</span></div>
+        <div class="code-panels"><pre><code class="lang-mojo"># simplex_tight.mojo -- the same five-step method, flattened: each pivot
+# updates the tableau with one row normalization plus one elimination sweep.
+# Mojo 1.x -- same idioms as simplex.mojo, minus the basis bookkeeping.
 
-    maximize    c . x
-    subject to  A x &lt;= b,   x &gt;= 0,   b &gt;= 0
+def solve(c: List[Float64], A: List[List[Float64]], b: List[Float64]) raises -&gt; Tuple[List[Float64], Float64, Int]:
+    var m = len(A)                       # constraint rows
+    var n = len(c)                       # structural variables
+    var ncols = n + m + 1                # tableau columns, RHS included
 
-Entering variable : Dantzig's rule (most negative reduced cost).
-Leaving variable  : minimum-ratio test, ties broken by Bland's rule
-                    (smallest variable index) -- guarantees termination
-                    even on degenerate problems.
-"""
-
-def simplex(c, A, b):
-    m, n = len(A), len(c)
-
-    # ---- build the initial tableau -------------------------------------
-    # Layout: m constraint rows + 1 objective row; columns are
-    #   [ x1 .. xn | s1 .. sm | RHS ]
-    # Row i starts as the constraint, then gets its slack identity block.
-    T = [list(map(float, r)) + [0.0] * m + [float(b[i])]
-         for i, r in enumerate(A)]
+    # ---- build the tableau: [ A | I | b ] ----
+    var T = List[List[Float64]]()
     for i in range(m):
-        T[i][n + i] = 1.0                       # slack s_i has coefficient 1 in row i
-    T.append([-float(v) for v in c] + [0.0] * m + [0.0])   # objective row = -c
-    basis = list(range(n, n + m))               # slacks are the starting basis
+        var row = A[i].copy()
+        for k in range(m):
+            row.append(1.0 if k == i else 0.0)   # slack identity block
+        row.append(b[i])                         # RHS
+        T.append(row^)
 
-    # ---- pivot loop ------------------------------------------------------
-    def is_optimal():
-        # Optimal when every objective-row coefficient is &gt;= 0:
-        # no variable can enter and increase z any further.
-        return all(v &gt;= -1e-10 for v in T[m][:-1])
+    var obj: List[Float64] = [-v for v in c]    # negated objective
+    for _ in range(m + 1):
+        obj.append(0.0)                         # slack columns + RHS start at zero
+    T.append(obj^)
 
-    iteration = 0
-    while not is_optimal():
-        # 1) entering variable: column with the most negative reduced cost
-        col = min(range(n + m), key=lambda j: T[m][j])
+    # ---- pivot loop: no basis array, no Bland tie-break ----
+    var iteration = 0
+    while True:
+        var col = -1                     # entering column: most negative reduced cost
+        var best = -1e-10
+        for j in range(n + m):
+            if T[m][j] &lt; best:
+                best = T[m][j]
+                col = j
+        if col == -1:
+            break                        # optimal
 
-        # 2) leaving variable: minimum ratio RHS / pivot-column entry,
-        #    over rows with a strictly positive entry (others can't block)
-        candidates = [(T[i][-1] / T[i][col], basis[i], i)
-                      for i in range(m) if T[i][col] &gt; 1e-10]
-        if not candidates:
-            raise ValueError("Problem is unbounded")
-        _, _, row = min(candidates, key=lambda t: (t[0], t[1]))   # Bland tie-break
+        var row = -1                     # leaving row: strict minimum ratio
+        var best_ratio = 1e30
+        for i in range(m):
+            if T[i][col] &gt; 1e-10:
+                var ratio = T[i][ncols - 1] / T[i][col]
+                if ratio &lt; best_ratio:
+                    best_ratio = ratio
+                    row = i
+        if row == -1:
+            raise Error("Problem is unbounded")
 
-        # 3) pivot: normalize the leaving row, then Gauss-Jordan the column
-        pivot = T[row][col]
-        T[row] = [v / pivot for v in T[row]]
-        for i in range(m + 1):
-            if i != row and abs(T[i][col]) &gt; 1e-12:
-                factor = T[i][col]
-                T[i] = [T[i][k] - factor * T[row][k] for k in range(n + m + 1)]
-        basis[row] = col                          # entering variable replaces it
+        var pivot = T[row][col]          # normalize the pivot row...
+        for k in range(ncols):
+            T[row][k] = T[row][k] / pivot
+        for i in range(m + 1):           # ...and Gauss-Jordan the column
+            if i != row:
+                var factor = T[i][col]
+                if abs(factor) &gt; 1e-12:
+                    for k in range(ncols):
+                        T[i][k] = T[i][k] - factor * T[row][k]
         iteration += 1
 
-    # ---- read the answer off the final tableau ---------------------------
-    solution = [0.0] * n                          # nonbasic variables stay at 0
-    for i, bv in enumerate(basis):
-        if bv &lt; n:                                # a structural variable in the basis
-            solution[bv] = T[i][-1]               # ... has the row's RHS as value
-    return solution, T[m][-1], iteration          # x, Z, pivots
+    # ---- read the solution with no labels: column j belongs to row i when
+    # ---- column j of the constraint block is the unit vector e_i
+    var solution: List[Float64] = [0.0 for _ in range(n)]
+    for i in range(m):
+        for j in range(n):
+            var is_basic = true
+            for r in range(m):
+                var want = 1.0 if r == i else 0.0
+                if abs(T[r][j] - want) &gt; 1e-9:
+                    is_basic = false
+            if is_basic:
+                solution[j] = T[i][ncols - 1]
+
+    return (solution^, T[m][ncols - 1], iteration)   # x, Z, pivots
 
 
-if __name__ == "__main__":
-    # Example A -- Wyndor Glass Co. (Hillier &amp; Lieberman)
-    x, z, it = simplex(c=[3, 5], A=[[1, 0], [0, 2], [3, 2]], b=[4, 12, 18])
-    print(f"Example A: x = {x}, Z = {z}  (in {it} pivots)")
+def main() raises:
+    var c1: List[Float64] = [3.0, 5.0]
+    var A1: List[List[Float64]] = [[1.0, 0.0], [0.0, 2.0], [3.0, 2.0]]
+    var b1: List[Float64] = [4.0, 12.0, 18.0]
+    var (x1, z1, k1) = solve(c1, A1, b1)
+    print("Example A: x =", x1[0], x1[1], " Z =", z1, " pivots =", k1)
 
-    # Example B -- three-variable production problem
-    x, z, it = simplex(c=[5, 4, 3], A=[[2, 3, 1], [4, 1, 2], [3, 4, 2]], b=[5, 11, 8])
-    print(f"Example B: x = {x}, Z = {z}  (in {it} pivots)")
-</code></pre>
+    var c2: List[Float64] = [5.0, 4.0, 3.0]
+    var A2: List[List[Float64]] = [[2.0, 3.0, 1.0], [4.0, 1.0, 2.0], [3.0, 4.0, 2.0]]
+    var b2: List[Float64] = [5.0, 11.0, 8.0]
+    var (x2, z2, k2) = solve(c2, A2, b2)
+    print("Example B: x =", x2[0], x2[1], x2[2], " Z =", z2, " pivots =", k2)
+
+    # Example C -- two coupled capacity constraints
+    var c3: List[Float64] = [3.0, 2.0]
+    var A3: List[List[Float64]] = [[1.0, 1.0], [1.0, 3.0]]
+    var b3: List[Float64] = [4.0, 6.0]
+    var (x3, z3, k3) = solve(c3, A3, b3)
+    print("Example C: x =", x3[0], x3[1], " Z =", z3, " pivots =", k3)</code></pre>
           <div class="output-panel">
-            <p class="out-head">$ python3 simplex.py</p>
-            <pre>Example A: x = [2.0, 6.0], Z = 36.0  (in 2 pivots)
-Example B: x = [2.0, 0.0, 1.0], Z = 13.0  (in 2 pivots)</pre>
+            <p class="out-head">$ mojo run simplex_tight.mojo</p>
+            <pre>Example A: x = 2.0 6.0  Z = 36.0  pivots = 2
+Example B: x = 2.0 0.0 1.0  Z = 13.0  pivots = 2
+Example C: x = 4.0 0.0  Z = 12.0  pivots = 1</pre>
           </div>
         </div>
       </div>
 
-      <p>Both agree with the hand-worked tableaus of sections 3 and 4.</p>
+      <p>Note the two simplifications versus <code>simplex.mojo</code> in section 9: no Bland tie-break (the scan keeps the first strict minimum) and no exact-fraction arithmetic &mdash; fine for textbook sizes. The cost of dropping the <code>basis</code> array is a cubic unit-vector test at the end instead of a linear lookup, which is invisible at this size and irrelevant at any real one. Example C is a reminder to always check a claimed optimum: the "obvious" corner (3, 1) with Z = 11 is <em>not</em> optimal &mdash; the edge keeps improving to (4, 0) with Z = 12, which the solver finds in one pivot.</p>
 
-      <h3>7.2 &nbsp;<code>two_phase.py</code> — the general solver (≥, =, negative RHS)</h3>
-      <p>This is section 6 turned into code: normalize the RHS, add slack/surplus/artificial columns as needed, run Phase I when artificials exist, install the real objective, and finish with Phase II.</p>
-
-      <div class="code-block">
-        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--python)"></span>python — two_phase.py</span></div>
-        <div class="code-panels"><pre><code class="lang-py">"""
-two_phase.py -- a general small-LP solver for the *non-happy* cases:
-
-    maximize    c . x
-    subject to  A_i . x  sense_i  b_i,    sense in {'&lt;=', '&gt;=', '='}
-                x &gt;= 0
-
-Rows with '&gt;=' or '=' get an artificial variable, and Phase I first
-minimizes the sum of artificials to find a feasible corner; Phase II
-then optimizes the real objective from there. Negative right-hand
-sides are fixed by multiplying the row (and its sense) by -1.
-"""
-
-def _pivot(T, basis, row, col):
-    """One Gauss-Jordan pivot: make T[row][col] = 1 and every other
-    entry of column col (objective row included) equal to 0."""
-    piv = T[row][col]
-    T[row] = [v / piv for v in T[row]]               # normalize the pivot row
-    for i in range(len(T)):                          # sweep the other rows
-        if i != row and abs(T[i][col]) &gt; 1e-12:
-            f = T[i][col]
-            T[i] = [T[i][k] - f * T[row][k] for k in range(len(T[i]))]
-    basis[row] = col                                 # entering variable takes the slot
-
-
-def _run_simplex(T, basis, ncols, allowed=None, max_iter=1000):
-    """Pivot the tableau to optimality.  Entering: most negative reduced
-    cost over the allowed columns; leaving: minimum ratio with Bland's
-    tie-break.  Returns the pivot count."""
-    if allowed is None:
-        allowed = range(ncols)
-    m = len(T) - 1                                   # constraint rows; last row = objective
-    for it in range(max_iter):
-        obj = T[-1]
-        col = min(allowed, key=lambda j: (obj[j], j))
-        if obj[col] &gt;= -1e-10:                       # nothing negative -&gt; optimal
-            return it
-        row, best = -1, float("inf")
-        for i in range(m):                           # minimum-ratio test
-            if T[i][col] &gt; 1e-10:
-                r = T[i][-1] / T[i][col]
-                if r &lt; best - 1e-12 or (r &lt; best + 1e-12 and (row == -1 or basis[i] &lt; basis[row])):
-                    best, row = r, i
-        if row == -1:                                # no row blocks the entering column
-            raise ValueError("unbounded")
-        _pivot(T, basis, row, col)
-    raise RuntimeError("iteration limit exceeded")
-
-
-def solve_lp(c, A, b, senses):
-    """maximize c.x  s.t.  A[i].x sense[i] b[i],  x &gt;= 0.
-    Returns (x, Z, pivots). Raises ValueError on infeasible/unbounded."""
-    m, n = len(A), len(c)
-    A = [list(map(float, r)) for r in A]
-    b = [float(v) for v in b]
-    senses = list(senses)
-
-    # ---- step 0: make every RHS &gt;= 0 (flip the row, flip the sense) ----
-    for i in range(m):
-        if b[i] &lt; 0:
-            A[i] = [-v for v in A[i]]
-            b[i] = -b[i]
-            senses[i] = {"&lt;=": "&gt;=", "&gt;=": "&lt;=", "=": "="}[senses[i]]
-
-    # ---- step 1: column layout  [ x | slack/surplus | artificials ] ----
-    art_rows = [i for i in range(m) if senses[i] != "&lt;="]
-    art_col = {i: n + m + k for k, i in enumerate(art_rows)}
-    ncols = n + m + len(art_rows)
-
-    # ---- step 2: constraint rows ----
-    # '&lt;=' gets a slack (+1); '&gt;=' gets a surplus (-1) plus an
-    # artificial (+1); '=' gets just an artificial.
-    T = []
-    for i in range(m):
-        row = A[i] + [0.0] * (m + len(art_rows))
-        row[n + i] = 1.0 if senses[i] == "&lt;=" else -1.0
-        if senses[i] != "&lt;=":
-            row[art_col[i]] = 1.0
-        T.append(row + [b[i]])
-    basis = [n + i if senses[i] == "&lt;=" else art_col[i] for i in range(m)]
-
-    pivots = 0
-    if art_rows:
-        # ---- step 3: Phase I -- maximize -(sum of artificials) ----
-        w = [0.0] * (ncols + 1)
-        for i in art_rows:
-            w[art_col[i]] = 1.0                     # objective row = -c, c = -1 on artificials
-        for i in art_rows:                          # price out the basic artificials
-            w = [w[j] - T[i][j] for j in range(ncols + 1)]
-        T.append(w)
-        pivots += _run_simplex(T, basis, ncols)
-        if T[-1][-1] &lt; -1e-8:                       # -(sum a) still negative -&gt; no corner
-            raise ValueError("infeasible")
-        # push zero-valued basic artificials out of the basis (their row
-        # is degenerate, so pivoting on any nonzero non-artificial entry
-        # keeps feasibility while freeing the column)
-        for i in range(m):
-            if basis[i] in art_col.values():
-                for j in range(n + m):
-                    if abs(T[i][j]) &gt; 1e-10:
-                        _pivot(T, basis, i, j)
-                        pivots += 1
-                        break
-
-    # ---- step 4: Phase II -- install the real objective, priced out ----
-    z = [-v for v in c] + [0.0] * (m + len(art_rows)) + [0.0]
-    for i in range(m):                              # eliminate basic columns from z
-        f = z[basis[i]]
-        if abs(f) &gt; 1e-12:
-            z = [z[j] - f * T[i][j] for j in range(ncols + 1)]
-    if art_rows:
-        T[-1] = z                                   # overwrite the Phase-I row...
-    else:
-        T.append(z)                                 # ... or append when there was no Phase I
-    pivots += _run_simplex(T, basis, ncols, allowed=range(n + m))  # artificials stay out
-
-    x = [0.0] * n
-    for i in range(m):
-        if basis[i] &lt; n:
-            x[basis[i]] = T[i][-1]
-    return x, T[-1][-1], pivots
-
-
-if __name__ == "__main__":
-    # Wyndor Glass (section: worked example A) -- pure '&lt;=', Phase II only
-    x, z, k = solve_lp([3, 5], [[1, 0], [0, 2], [3, 2]], [4, 12, 18], ["&lt;="] * 3)
-    print(f"Wyndor:        x = {x},  Z = {z}  ({k} pivots)")
-
-    # Product mix (worked example B)
-    x, z, k = solve_lp([5, 4, 3], [[2, 3, 1], [4, 1, 2], [3, 4, 2]], [5, 11, 8], ["&lt;="] * 3)
-    print(f"Product mix:   x = {x},  Z = {z}  ({k} pivots)")
-
-    # A '&gt;=' row:  min C = 2x1 + 3x2  s.t.  x1 + x2 &gt;= 4   (maximize -C)
-    x, z, k = solve_lp([-2, -3], [[1, 1]], [4], ["&gt;="])
-    print(f"Min example:   x = {x},  max(-C) = {z}  -&gt;  min C = {-z}  ({k} pivots)")
-
-    # An infeasible pair:  x1 &lt;= 1 and x1 &gt;= 3 cannot both hold
-    try:
-        solve_lp([1, 0], [[1, 0], [1, 0]], [1, 3], ["&lt;=", "&gt;="])
-    except ValueError as e:
-        print(f"Infeasible:    caught '{e}' as expected")
-</code></pre>
-          <div class="output-panel">
-            <p class="out-head">$ python3 two_phase.py</p>
-            <pre>Wyndor:        x = [2.0, 6.0],  Z = 36.0  (2 pivots)
-Product mix:   x = [2.0, 0.0, 1.0],  Z = 13.0  (2 pivots)
-Min example:   x = [4.0, 0.0],  max(-C) = -8.0  -&gt;  min C = 8.0  (1 pivots)
-Infeasible:    caught 'infeasible' as expected</pre>
-          </div>
-        </div>
-      </div>
-
-      <p>Compare the third line with the hand-worked Phase I/II of section 6 — same one pivot, same answer.</p>
-
-      <h3>7.3 &nbsp;<code>simplex_numpy.py</code> — the same solver, vectorized</h3>
-      <p>Once the algorithm is trusted, the loop-in-a-loop bookkeeping gives way to whole-row operations: every pivot updates the tableau with one vectorized row subtraction instead of element-by-element arithmetic.</p>
+      <h3>7.2 &nbsp;<code>linprog_demo.mojo</code> — what you'd actually ship</h3>
+      <p>For real workloads you don't maintain a tableau at all — you call a solver. SciPy's <code>linprog</code> wraps the HiGHS library (a modern dual simplex / interior-point implementation in C++), and Mojo reaches it through the interop bridge. Two caveats trip people up: it <em>minimizes</em> by default, so a maximization problem needs a negated objective, and <code>≥</code> constraints must be multiplied through by −1 to become <code>≤</code>. The point of the listing below is the shape: <strong>Mojo owns the program</strong> — the objective, the constraints, the printing — and SciPy is called as a library from inside a compiled <code>def</code>.</p>
 
       <div class="code-block">
-        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--python)"></span>python — simplex_numpy.py</span></div>
-        <div class="code-panels"><pre><code class="lang-py">"""simplex_numpy.py -- the same five-step method, vectorized: each pivot
-updates the tableau with one whole-row subtraction instead of element loops."""
+        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--mojo)"></span>mojo 1.x — linprog_demo.mojo</span></div>
+        <div class="code-panels"><pre><code class="lang-mojo"># linprog_demo.mojo -- Mojo driving SciPy's linprog (HiGHS) through interop.
+# Mojo 1.x: def functions, `var` bindings, `from std.python import Python`.
 
-import numpy as np
+from std.python import Python
 
-def simplex(c, A, b, max_iter=100):
-    """Solve  max c^T x  s.t.  Ax &lt;= b,  x &gt;= 0.  Returns (x, objective, iterations)."""
-    m, n = A.shape
-    # Tableau: [ A | I | b ] with the negated objective on the bottom row
-    tableau = np.zeros((m + 1, n + m + 1))
-    tableau[:m, :n] = A
-    tableau[:m, n:n + m] = np.eye(m)
-    tableau[:m, -1] = b
-    tableau[m, :n] = -c
-    basis = list(range(n, n + m))
+def main():
+    var optimize = Python.import_module("scipy.optimize")
 
-    for it in range(max_iter):
-        # Optimality: all reduced costs non-negative
-        if np.all(tableau[m, :-1] &gt;= -1e-12):
-            break
-        enter = np.argmin(tableau[m, :-1])            # most negative reduced cost
-        ratios = [tableau[i, -1] / tableau[i, enter]
-                  if tableau[i, enter] &gt; 1e-12 else np.inf
-                  for i in range(m)]                  # minimum-ratio test
-        leave = int(np.argmin(ratios))
-        if ratios[leave] == np.inf:
-            raise ValueError("Unbounded")
+    # --- Maximization: Example A (Wyndor Glass) -----------------------
+    # linprog minimizes, so maximize Z = 3x1 + 5x2  becomes  minimize -Z
+    var res = optimize.linprog(
+        c=[-3, -5],                 # negated objective
+        A_ub=[[1, 0],               # x1 &lt;= 4
+              [0, 2],               # 2x2 &lt;= 12
+              [3, 2]],              # 3x1 + 2x2 &lt;= 18
+        b_ub=[4, 12, 18],
+        bounds=[(0, None), (0, None)],
+        method="highs")
+    print("max Z = ", -res.fun, "  at  x1 = ", res.x[0], ", x2 = ", res.x[1])
 
-        # Pivot: normalize the leaving row, then eliminate the entering
-        # column everywhere else with one vectorized step per row
-        tableau[leave, :] /= tableau[leave, enter]
-        for i in range(m + 1):
-            if i != leave:
-                tableau[i, :] -= tableau[i, enter] * tableau[leave, :]
-        basis[leave] = enter
-
-    x = np.zeros(n)
-    for i, bi in enumerate(basis):
-        if bi &lt; n:
-            x[bi] = tableau[i, -1]
-    return x, tableau[m, -1], it          # it == number of pivots performed
-
-
-# Example A -- Wyndor Glass
-x, z, k = simplex(np.array([3, 5]),
-                  np.array([[1, 0], [0, 2], [3, 2]]),
-                  np.array([4, 12, 18]))
-print(f"Example A: x = {x},  Z = {z:.4f}  ({k} pivots)")
-
-# Example B -- three-product mix
-x, z, k = simplex(np.array([5, 4, 3]),
-                  np.array([[2, 3, 1], [4, 1, 2], [3, 4, 2]]),
-                  np.array([5, 11, 8]))
-print(f"Example B: x = {x},  Z = {z:.4f}  ({k} pivots)")
-
-# Example C -- two coupled capacity constraints
-x, z, k = simplex(np.array([3, 2]),
-                  np.array([[1, 1], [1, 3]]),
-                  np.array([4, 6]))
-print(f"Example C: x = {x},  Z = {z:.4f}  ({k} pivots)")
-</code></pre>
+    # --- Minimization with a >= constraint ----------------------------
+    # minimize C = 2x1 + 3x2  s.t.  x1 + x2 >= 4,  x >= 0
+    # x1 + x2 >= 4   becomes   -x1 - x2 <= -4
+    var res_min = optimize.linprog(
+        c=[2, 3],
+        A_ub=[[-1, -1]],
+        b_ub=[-4],
+        bounds=[(0, None), (0, None)],
+        method="highs")
+    print("min C = ", res_min.fun, "  at  x1 = ", res_min.x[0], ", x2 = ", res_min.x[1])</code></pre>
           <div class="output-panel">
-            <p class="out-head">$ python3 simplex_numpy.py</p>
-            <pre>Example A: x = [2. 6.],  Z = 36.0000  (2 pivots)
-Example B: x = [2. 0. 1.],  Z = 13.0000  (2 pivots)
-Example C: x = [4. 0.],  Z = 12.0000  (1 pivots)</pre>
-          </div>
-        </div>
-      </div>
-
-      <p>Note the two simplifications versus <code>simplex.py</code>: no Bland tie-break (<code>np.argmin</code> keeps the first minimum), and no exact-fraction arithmetic — fine for textbook sizes. Example C is a reminder to always check a claimed optimum: the "obvious" corner (3, 1) with Z = 11 is <em>not</em> optimal — the edge keeps improving to (4, 0) with Z = 12, which the solver finds in one pivot.</p>
-
-      <h3>7.4 &nbsp;<code>linprog_demo.py</code> — what you'd actually ship</h3>
-      <p>For real workloads you don't maintain a tableau at all — you call a solver. SciPy's <code>linprog</code> wraps the HiGHS library (a modern dual simplex / interior-point implementation in C++). Two caveats trip people up: it <em>minimizes</em> by default, so a maximization problem needs a negated objective, and <code>≥</code> constraints must be multiplied through by −1 to become <code>≤</code>:</p>
-
-      <div class="code-block">
-        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--python)"></span>python — linprog_demo.py</span></div>
-        <div class="code-panels"><pre><code class="lang-py">"""linprog_demo.py -- what you'd actually ship: SciPy's linprog (HiGHS)."""
-from scipy.optimize import linprog
-
-# --- Maximization: Example A (Wyndor Glass) -----------------------
-# linprog minimizes, so maximize Z = 3x1 + 5x2  becomes  minimize -Z
-res = linprog(c=[-3, -5],              # negated objective
-              A_ub=[[1, 0],            # x1 &lt;= 4
-                    [0, 2],            # 2x2 &lt;= 12
-                    [3, 2]],           # 3x1 + 2x2 &lt;= 18
-              b_ub=[4, 12, 18],
-              bounds=[(0, None), (0, None)],
-              method='highs')
-print(f"max Z = {-res.fun:.2f}  at  x1 = {res.x[0]:.2f}, x2 = {res.x[1]:.2f}")
-
-# --- Minimization with a &gt;= constraint ----------------------------
-# minimize C = 2x1 + 3x2  s.t.  x1 + x2 &gt;= 4,  x &gt;= 0
-# x1 + x2 &gt;= 4   becomes   -x1 - x2 &lt;= -4
-res_min = linprog(c=[2, 3],
-                  A_ub=[[-1, -1]],
-                  b_ub=[-4],
-                  bounds=[(0, None), (0, None)],
-                  method='highs')
-print(f"min C = {res_min.fun:.2f}  at  x1 = {res_min.x[0]:.2f}, x2 = {res_min.x[1]:.2f}")
-</code></pre>
-          <div class="output-panel">
-            <p class="out-head">$ python3 linprog_demo.py</p>
+            <p class="out-head">$ mojo run linprog_demo.mojo</p>
             <pre>max Z = 36.00  at  x1 = 2.00, x2 = 6.00
 min C = 8.00  at  x1 = 4.00, x2 = 0.00</pre>
           </div>
@@ -1405,17 +1199,17 @@ min C = 8.00  at  x1 = 4.00, x2 = 0.00</pre>
       <p>Mojo 1.x (shipped with Modular's 26.5 release) offers Python-shaped syntax with compile-time typing and ownership — attractive for the simplex inner loop, which is dense linear algebra on a mutable 2-D structure. Four language notes, all visible in the listing:</p>
 
       <ul>
-        <li><b><code>def</code> is the one function keyword.</b> The old <code>fn</code>/<code>def</code> split is gone — <code>fn</code> is deprecated as of v26.2. A <code>def</code> is fully compiled when annotated; <code>raises</code> marks code that can raise.</li>
-        <li><b><code>var</code> declares a mutable binding</b> — required at function scope in Mojo, and the only kind of local binding (immutable <code>let</code> is gone).</li>
+        <li><b><code>def</code> is the one function keyword.</b> A <code>def</code> is fully compiled when annotated; <code>raises</code> marks code that can raise.</li>
+        <li><b><code>var</code> declares a binding</b> — required at function scope in Mojo, and the only kind of local binding.</li>
         <li><b>A <code>List</code> owns its elements</b> — it is <em>not</em> implicitly copyable. Appending a locally built list into a list-of-lists requires the transfer operator <code>^</code> (you give ownership away), and duplicating an existing list requires an explicit <code>.copy()</code>. A plain <code>var row = A[i]</code> won't compile.</li>
         <li><b>List literals</b> (<code>[3.0, 5.0]</code>) and <b>comprehensions</b> (<code>[-v for v in c]</code>) build new owned values — they cut boilerplate without relaxing ownership.</li>
       </ul>
 
-      <p>Same solver contract as <code>simplex.py</code>: returns the solution vector, the optimal value, and the pivot count.</p>
+      <p>Same solver contract as <code>simplex.mojo</code> in section 9: returns the solution vector, the optimal value, and the pivot count.</p>
 
       <div class="code-block">
-        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--mojo)"></span>mojo 1.0 — simplex.mojo</span></div>
-        <div class="code-panels"><pre><code># simplex.mojo -- tableau-form primal simplex for standard-form LPs:
+        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--mojo)"></span>mojo 1.x — simplex.mojo</span></div>
+        <div class="code-panels"><pre><code class="lang-mojo"># simplex.mojo -- tableau-form primal simplex for standard-form LPs:
 #   maximize c^T x  subject to  A x &lt;= b,  x &gt;= 0,  b &gt;= 0
 # Mojo 1.x (Modular 26.5) -- def functions, `var` bindings, List[Float64].
 
@@ -1465,7 +1259,7 @@ def solve(c: List[Float64], A: List[List[Float64]], b: List[Float64]) raises -&g
                     best_ratio = ratio   # strict improvement, or a tie won
                     row = i              # ... by the smaller basis index (Bland)
         if row == -1:
-            raise Error(&quot;Problem is unbounded&quot;)
+            raise Error("Problem is unbounded")
 
         var pivot = T[row][col]          # normalize the pivot row...
         for k in range(ncols):
@@ -1493,21 +1287,16 @@ def main() raises:
     var c1: List[Float64] = [3.0, 5.0]
     var A1: List[List[Float64]] = [[1.0, 0.0], [0.0, 2.0], [3.0, 2.0]]
     var b1: List[Float64] = [4.0, 12.0, 18.0]
-    var t1 = solve(c1, A1, b1)
-    var x1 = t1[0].copy()
-    var z1 = t1[1]
-    var k1 = t1[2]
-    print(&quot;Example A: x =&quot;, x1[0], x1[1], &quot; Z =&quot;, z1, &quot; pivots =&quot;, k1)
+    var (x1, z1, k1) = solve(c1, A1, b1)
+    print("Example A: x =", x1[0], x1[1], " Z =", z1, " pivots =", k1)
 
     # Example B -- three-variable production problem (section 4)
     var c2: List[Float64] = [5.0, 4.0, 3.0]
     var A2: List[List[Float64]] = [[2.0, 3.0, 1.0], [4.0, 1.0, 2.0], [3.0, 4.0, 2.0]]
     var b2: List[Float64] = [5.0, 11.0, 8.0]
-    var t2 = solve(c2, A2, b2)
-    var x2 = t2[0].copy()
-    var z2 = t2[1]
-    var k2 = t2[2]
-    print(&quot;Example B: x =&quot;, x2[0], x2[1], x2[2], &quot; Z =&quot;, z2, &quot; pivots =&quot;, k2)</code></pre>
+    var (x2, z2, k2) = solve(c2, A2, b2)
+    print("Example B: x =", x2[0], x2[1], x2[2], " Z =", z2, " pivots =", k2)
+</code></pre>
           <div class="output-panel">
             <p class="out-head">$ mojo run simplex.mojo</p>
             <pre>Example A: x = 2.0 6.0  Z = 36.0  pivots = 2
@@ -1591,104 +1380,8 @@ Example B: x = 2.0 0.0 1.0  Z = 13.0  pivots = 2</pre>
 
       <h3>The certificates, checked by machine</h3>
 
-      <p>The program below extends the section-7.1 solver by a handful of lines: run the primal, lift <span class="katex-inline" data-tex="y^*">y*</span> out of the final objective row, then verify all three certificates — dual feasibility, the zero gap <span class="katex-inline" data-tex="b \cdot y = Z^*">b·y = Z*</span>, and complementary slackness in both directions:</p>
-
-      <div class="code-block">
-        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--python)"></span>python — dual_prices.py</span></div>
-        <div class="code-panels"><pre><code class="lang-py">"""
-dual_prices.py -- read the dual solution straight out of the final
-simplex tableau, then verify the three duality certificates:
-
-    strong duality            b . y == Z*
-    dual feasibility          A^T y &gt;= c,   y &gt;= 0
-    complementary slackness   y_i * (b - A x*)_i == 0
-                              x_j * (A^T y - c)_j == 0
-
-Primal:  max c^T x   s.t.  A x &lt;= b,  x &gt;= 0
-Dual:    min b^T y   s.t.  A^T y &gt;= c,  y &gt;= 0
-"""
-
-def simplex_tableau(c, A, b):
-    """The from-scratch solver, returning the final tableau too."""
-    m, n = len(A), len(c)
-    T = [list(map(float, r)) + [0.0] * m + [float(b[i])]
-         for i, r in enumerate(A)]
-    for i in range(m):
-        T[i][n + i] = 1.0
-    T.append([-float(v) for v in c] + [0.0] * m + [0.0])
-    basis = list(range(n, n + m))
-
-    while min(T[m][:-1]) &lt; -1e-10:
-        col = min(range(n + m), key=lambda j: T[m][j])            # Dantzig rule
-        cand = [(T[i][-1] / T[i][col], basis[i], i)
-                for i in range(m) if T[i][col] &gt; 1e-10]           # ratio test
-        if not cand:
-            raise ValueError("unbounded")
-        _, _, row = min(cand, key=lambda t: (t[0], t[1]))         # Bland tie-break
-        piv = T[row][col]
-        T[row] = [v / piv for v in T[row]]
-        for i in range(m + 1):
-            if i != row:
-                f = T[i][col]
-                T[i] = [T[i][k] - f * T[row][k] for k in range(n + m + 1)]
-        basis[row] = col
-
-    x = [0.0] * n
-    for i, bv in enumerate(basis):
-        if bv &lt; n:
-            x[bv] = T[i][-1]
-    return x, T[m][-1], T
-
-
-def duality_report(name, c, A, b):
-    m, n = len(A), len(c)
-    x, z, T = simplex_tableau(c, A, b)
-    # y* is simply the objective row under the slack columns
-    y = [T[m][n + i] for i in range(m)]
-    w = sum(b[i] * y[i] for i in range(m))
-    slack = [b[i] - sum(A[i][j] * x[j] for j in range(n)) for i in range(m)]
-    surplus = [sum(A[i][j] * y[i] for i in range(m)) - c[j] for j in range(n)]
-
-    feas = all(v &gt;= -1e-9 for v in y) and all(v &gt;= -1e-9 for v in surplus)
-    compl = (all(y[i] * slack[i] &lt; 1e-9 for i in range(m)) and
-             all(x[j] * surplus[j] &lt; 1e-9 for j in range(n)))
-
-    print(name)
-    print(f"  primal: x = {x}   Z* = {z}")
-    print(f"  dual:   y = {y}   b.y = {w}   gap = {abs(z - w)}")
-    print(f"  row slack b-Ax     = {slack}   (y_i = 0 wherever slack &gt; 0)")
-    print(f"  col surplus A^Ty-c = {surplus}   (x_j = 0 wherever surplus &gt; 0)")
-    print(f"  checks: dual-feasible={feas}  strong-duality={abs(z - w) &lt; 1e-9}  "
-          f"complementary-slackness={compl}")
-    print()
-
-
-if __name__ == "__main__":
-    duality_report("Example A (Wyndor Glass)",
-                   c=[3, 5], A=[[1, 0], [0, 2], [3, 2]], b=[4, 12, 18])
-    duality_report("Example B (product mix)",
-                   c=[5, 4, 3], A=[[2, 3, 1], [4, 1, 2], [3, 4, 2]], b=[5, 11, 8])
-</code></pre>
-          <div class="output-panel">
-            <p class="out-head">$ python3 dual_prices.py</p>
-            <pre>Example A (Wyndor Glass)
-  primal: x = [2.0, 6.0]   Z* = 36.0
-  dual:   y = [0.0, 1.5, 1.0]   b.y = 36.0   gap = 0.0
-  row slack b-Ax     = [2.0, 0.0, 0.0]   (y_i = 0 wherever slack &gt; 0)
-  col surplus A^Ty-c = [0.0, 0.0]   (x_j = 0 wherever surplus &gt; 0)
-  checks: dual-feasible=True  strong-duality=True  complementary-slackness=True
-
-Example B (product mix)
-  primal: x = [2.0, 0.0, 1.0]   Z* = 13.0
-  dual:   y = [1.0, 0.0, 1.0]   b.y = 13.0   gap = 0.0
-  row slack b-Ax     = [0.0, 1.0, 0.0]   (y_i = 0 wherever slack &gt; 0)
-  col surplus A^Ty-c = [0.0, 3.0, 0.0]   (x_j = 0 wherever surplus &gt; 0)
-  checks: dual-feasible=True  strong-duality=True  complementary-slackness=True</pre>
-          </div>
-        </div>
-      </div>
-
-      <p>Every check passes on both examples, and the numbers land exactly where the theory says: Wyndor prices its plants <span class="katex-inline" data-tex="(0, \tfrac{3}{2}, 1)">(0, 3/2, 1)</span> — plant 1 free, plant 2 at $1.50 an hour, finishing at $1 an hour — while Example B prices <span class="katex-inline" data-tex="(1, 0, 1)">(1, 0, 1)</span> with x₂'s dual column slack by exactly 3. In Mojo the addition is literally one line (you already have the final tableau <code>T</code>):</p>
+      <p>Three certificates decide whether a claimed primal/dual pair is genuine, and every one of them is readable straight off the final tableau that section 9's solver already holds: <strong>dual feasibility</strong> <span class="katex-inline" data-tex="A^T y \ge c">Aᵀy ≥ c</span> with y ≥ 0, the <strong>zero gap</strong> <span class="katex-inline" data-tex="b \cdot y = Z^*">b·y = Z*</span>, and <strong>complementary slackness</strong> in both directions — y_i = 0 wherever row i has slack left over, x_j = 0 wherever column j has surplus. Lifting y* out of the objective row is the only new step:</p>
+      <p>Read them off the two optimal tableaus and the numbers land exactly where the theory says: Wyndor prices its plants <span class="katex-inline" data-tex="(0, \tfrac{3}{2}, 1)">(0, 3/2, 1)</span> — plant 1 free, plant 2 at $1.50 an hour, finishing at $1 an hour — while Example B prices <span class="katex-inline" data-tex="(1, 0, 1)">(1, 0, 1)</span> with x₂'s dual column slacking by exactly 3. In Mojo the whole extraction is one line (you already have the final tableau <code>T</code>):</p>
 
       <div class="code-block">
         <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--mojo)"></span>mojo — the y*-extraction</span></div>
@@ -1699,23 +1392,25 @@ var y: List[Float64] = [T[m][n + i] for i in range(m)]</code></pre></div>
       <p>The dual is also just an LP, and can be fed to the solver you'd ship — transpose the data, negate the <code>≥</code> rows, and HiGHS returns the very prices simplex had found between the lines:</p>
 
       <div class="code-block">
-        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--python)"></span>python — the dual of Example A, solved directly</span></div>
-        <div class="code-panels"><pre><code class="lang-py">from scipy.optimize import linprog
-
-# Solve the DUAL of Example A directly with HiGHS:
+        <div class="code-tabs"><span class="tab-label"><span class="dot" style="background:var(--mojo)"></span>mojo — the dual of Example A, solved directly</span></div>
+        <div class="code-panels"><pre><code class="lang-mojo"># Solve the DUAL of Example A directly with HiGHS, from Mojo:
 #   min 4y1 + 12y2 + 18y3   s.t.  y1 + 3y3 &gt;= 3,  2y2 + 2y3 &gt;= 5,  y &gt;= 0
 # linprog wants &lt;=, so the dual constraints are negated:  -A^T y &lt;= -c.
-res = linprog(c=[4, 12, 18],              # b becomes the dual objective
-              A_ub=[[-1, 0, -3],          # -(y1 + 3y3) &lt;= -3
-                    [0, -2, -2]],         # -(2y2 + 2y3) &lt;= -5
-              b_ub=[-3, -5],
-              bounds=[(0, None)] * 3,
-              method='highs')
-print(f"dual solved directly: y = {res.x},  W* = {res.fun:.2f}")
-</code></pre>
+from std.python import Python
+
+def main():
+    var optimize = Python.import_module("scipy.optimize")
+    var res = optimize.linprog(
+        c=[4, 12, 18],                  # b becomes the dual objective
+        A_ub=[[-1, 0, -3],              # -(y1 + 3y3) &lt;= -3
+              [0, -2, -2]],             # -(2y2 + 2y3) &lt;= -5
+        b_ub=[-3, -5],
+        bounds=[(0, None), (0, None), (0, None)],
+        method="highs")
+    print("dual solved directly: y = ", res.x, "  W* = ", res.fun)</code></pre>
           <div class="output-panel">
-            <p class="out-head">$ python3 dual_linprog.py</p>
-            <pre>dual solved directly: y = [0.  1.5 1. ],  W* = 36.00</pre>
+            <p class="out-head">$ mojo run dual_linprog.mojo</p>
+            <pre>dual solved directly: y = [0.  1.5 1. ]  W* = 36.00</pre>
           </div>
         </div>
       </div>
@@ -1747,7 +1442,7 @@ print(f"dual solved directly: y = {res.x},  W* = {res.fun:.2f}")
         <details class="acc-item">
           <summary>Getting from "any LP" to standard form</summary>
           <div class="acc-body">
-            <p>Section 5's toolkit — flip negative RHS rows, add slacks/surpluses/artificials, run Phase I — covers <span class="katex-inline" data-tex="\ge">≥</span>, <span class="katex-inline" data-tex="=">=</span>, and negative right-hand sides. Free (unsigned) variables need one more trick: split <span class="katex-inline" data-tex="x = x^+ - x^-">x = x⁺ − x⁻</span> with <span class="katex-inline" data-tex="x^+, x^- \ge 0">x⁺, x⁻ ≥ 0</span>. After that, Phase I either finds a feasible corner or proves there isn't one, and Phase II optimizes from there — exactly what <code>two_phase.py</code> implements.</p>
+            <p>Section 5's toolkit — flip negative RHS rows, add slacks/surpluses/artificials, run Phase I — covers <span class="katex-inline" data-tex="\ge">≥</span>, <span class="katex-inline" data-tex="=">=</span>, and negative right-hand sides. Free (unsigned) variables need one more trick: split <span class="katex-inline" data-tex="x = x^+ - x^-">x = x⁺ − x⁻</span> with <span class="katex-inline" data-tex="x^+, x^- \ge 0">x⁺, x⁻ ≥ 0</span>. After that, Phase I either finds a feasible corner or proves there isn't one, and Phase II optimizes from there — exactly what HiGHS absorbs for you in section 7.2.</p>
           </div>
         </details>
       </div>
@@ -1761,11 +1456,10 @@ print(f"dual solved directly: y = {res.x},  W* = {res.fun:.2f}")
       <table class="gentable">
         <thead><tr><th>implementation</th><th>use it for</th><th>watch out for</th></tr></thead>
         <tbody>
-          <tr><td><code>simplex.py</code> (from scratch)</td><td>Learning; small, clean LPs; generating worked tableaus</td><td>Standard form with b ≥ 0 only; floats, not exact fractions</td></tr>
-          <tr><td><code>two_phase.py</code></td><td>Any small LP: ≥, =, negative RHS; infeasibility detection</td><td>Still dense lists — fine to a few hundred variables</td></tr>
-          <tr><td><code>simplex_numpy.py</code></td><td>Same algorithm, vectorized; quick prototyping</td><td>No Bland tie-break (argmin keeps first); dense arrays</td></tr>
-          <tr><td><code>linprog(method="highs")</code></td><td>Everything real: production, sparse, large</td><td>Remember it <em>minimizes</em>; flip ≥ rows; read the status</td></tr>
-          <tr><td>Mojo <code>simplex.mojo</code></td><td>Same algorithm with compile-time typing/ownership; hot loops</td><td>Ownership bookkeeping (^, .copy()); smaller ecosystem</td></tr>
+          <tr><td>Mojo <code>simplex.mojo</code> (section 9, from scratch)</td><td>Learning; small, clean LPs; generating worked tableaus</td><td>Standard form with b ≥ 0 only; floats, not exact fractions</td></tr>
+          <tr><td>Mojo <code>simplex_tight.mojo</code> (section 7.1)</td><td>Same algorithm, flattened — no basis labels, no tie-break</td><td>No Bland tie-break (first strict minimum wins); cubic unit-vector read-out</td></tr>
+          <tr><td><code>linprog(method="highs")</code> from Mojo (section 7.2)</td><td>Everything real: production, sparse, large — and any <code>≥</code>, <code>=</code>, or negative RHS</td><td>Remember it <em>minimizes</em>; flip ≥ rows; read the status</td></tr>
+          <tr><td>Mojo, typed and owned <code>List[List[Float64]]</code></td><td>Same algorithm with compile-time typing/ownership; hot loops</td><td>Ownership bookkeeping (^, .copy()); smaller ecosystem</td></tr>
         </tbody>
       </table>
 
@@ -1790,7 +1484,7 @@ print(f"dual solved directly: y = {res.x},  W* = {res.fun:.2f}")
 
     <footer class="pagefoot">
       <span>the simplex method — a tutorial</span>
-      <span>theory · big-m · two-phase · python · numpy · scipy · mojo 1.0 · duality</span>
+      <span>theory · big-m · two-phase · python · numpy · scipy · mojo 1.x · duality</span>
       <span>more books: <a href="operations_research.html">OR textbook</a> · <a href="../finance/the_annuity_codex.html">finance</a> · <a href="../geomatics/gnss_surveying.html">geomatics</a> · <a href="../../index.html">hub</a></span>
       <span style="color:var(--gold)">class dismissed — for good this time.</span>
     </footer>
@@ -1835,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ---- lightweight syntax highlighting for the code listings ----
   var PY_KW  = ['def','return','if','else','elif','for','while','in','not','and','or','is','None','True','False','import','from','as','raise','try','except','pass','lambda','class','with','break','continue'];
-  var MJ_KW  = ['def','var','comptime','mut','struct','imm','raises','raise','return','for','in','while','if','else','elif','True','False','try','except','break','continue','and','or','not','None','import','from','pass','is','as','out'];
+  var MJ_KW  = ['def','var','let','alias','struct','fn','raises','raise','return','for','in','while','if','else','elif','True','False','try','except','break','continue','and','or','not','None','import','from','pass','is','as'];
   var PY_FN  = ['print','len','range','min','max','all','abs','sum','enumerate','float','list','map','int','str','ValueError','RuntimeError','np','array','zeros','eye','argmin','inf'];
   var MJ_FN  = ['print','len','range','abs','List','Float64','Int','Tuple','Bool','Error','copy','append'];
   var TOKEN = /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|#[^\n]*|\bdef\s+[A-Za-z_]\w*|\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b|\b[A-Za-z_]\w*\b)/g;
@@ -2014,6 +1708,143 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 });
+</script>
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
 </script>
 </body>
 </html>

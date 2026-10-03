@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Mojo tips for Python devs · Mojo v1 The Language Manual</title>
+<meta name="description" content="A translation table for people who already code Python.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part I · Orientation</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part I</span><span class="sep">/</span><span>Orientation</span><span class="sep">/</span><span class="num">04</span></nav><h1>Mojo tips for Python devs</h1>
+<p class="dek">A translation table for people who already code Python.</p><p class="byline">Chapter 04 · 3,396 words · 35 code blocks · <a class="ext" href="https://mojolang.org/nightly/docs/manual/python-to-mojo/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Mojo is designed with Python programmers in mind, but it isn't "just Python,
+only faster." Mojo introduces a type system, ownership-aware semantics,
+and low-level control that, as a Python developer, you may not have had
+to reason about to make your code work.</p>
+<p>This guide offers a practical resource for Python developers.
+It shows how familiar Python patterns translate into Mojo, where your
+instincts still apply and where Mojo asks you to build a new mental
+model.</p>
+<p>This isn't a tutorial. It's a core set of language migration tips and
+patterns to support you as you migrate to Mojo.</p>
+<h2 class="h h--2" data-level="2" id="mojos-core-model-for-python-developers">Mojo's core model for Python developers<a aria-label="Link to Mojo's core model for Python developers" class="h__link" href="#mojos-core-model-for-python-developers"></a></h2>
+<p>Mojo looks like Python but its execution model is closer to Rust,
+Swift, C++, and other systems languages. Key differences
+from Python include:</p>
+<ul>
+<li class=""><strong>Mojo is statically typed.</strong> In Python, types are optional hints that
+the interpreter <em>mostly</em> ignores at runtime. In Mojo, types are
+first-class. The compiler uses them to generate fast, specialized
+machine code.</li>
+<li class=""><strong>Mojo compiles to machine code.</strong> Python runs through an interpreter
+that translates your code at runtime, adding overhead to every
+operation. Mojo compiles directly to native machine code. This gives
+you fast and predictable performance, with no interpreter overhead.</li>
+<li class=""><strong>Mojo prefers <em>value semantics</em> and explicit mutability.</strong> In Python,
+most objects are mutable references, so assigning a list doesn't copy
+it. In Mojo, assigning or passing a value typically creates an
+independent copy. Changes to one value don't affect others unless you
+make sharing explicit. This keeps data flow clear and enables safe
+parallelism.</li>
+<li class=""><strong>Mojo supports modern ownership, but it doesn't trap you in "safe-only"
+abstractions.</strong> With ownership, the compiler tracks which variables and fields
+control a value's lifetime. That lets Mojo manage memory effectively, without
+a garbage collector or reference counting. When you need low-level control,
+such as interfacing with C-language libraries, you can manage memory
+explicitly using <code>alloc()</code>, <code>dealloc()</code> and <code>Pointer</code>.</li>
+<li class=""><strong>Mojo brings together ideas from Rust, C++, and Python.</strong> It combines
+Python's readability with a performance model inspired by systems
+languages like Rust and C++.</li>
+</ul>
+<p>Understanding these differences is essential for writing correct, fast
+Mojo.</p>
+<h2 class="h h--2" data-level="2" id="moving-from-python-to-mojo">Moving from Python to Mojo<a aria-label="Link to Moving from Python to Mojo" class="h__link" href="#moving-from-python-to-mojo"></a></h2>
+<p>This section introduces a curated set of migration topics that
+explore common Mojo patterns.</p>
+<h3 class="h h--3" data-level="3" id="value-semantics">Value semantics<a aria-label="Link to Value semantics" class="h__link" href="#value-semantics"></a></h3>
+<p>In Mojo, when you assign a value to a new variable, it's given a
+unique owned value, not a second reference pointing to the same data.
+This can catch new adopters off guard.</p>
+<p>In Python, both <code>a</code> and <code>b</code> refer to the same list:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2">b <span class="tk-operator">=</span> a</span>
+<span class="cl" data-line="3">b<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 2, 3, 4]</span></span>
+<span class="cl" data-line="5"><span class="tk-comment"># a changed because b and a both point to the same list</span></span>
+</code></pre></figure>
+<p>In Mojo, assignment gives you a copy. If you're not working with
+trivial types (like <code>Int</code> or <code>Bool</code>) or types with built-in copy
+semantics (like <code>String</code>), you may need to use an explicit
+copy call. You can also use and create types that are implicitly
+copyable.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-string">"hello"</span> <span class="tk-comment"># hello</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> b <span class="tk-operator">=</span> a        <span class="tk-comment"># hello, implicit copy</span></span>
+<span class="cl" data-line="3">b <span class="tk-operator">=</span> b <span class="tk-operator">+</span> <span class="tk-string">" world"</span> <span class="tk-comment"># hello world</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">)</span> <span class="tk-comment"># hello</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>b<span class="tk-punctuation">)</span> <span class="tk-comment"># hello world</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">var</span> c<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">var</span> d <span class="tk-operator">=</span> c<span class="tk-punctuation">.</span>copy<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># d is an independent copy</span></span>
+<span class="cl" data-line="9">d<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 2, 3, 4]</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c<span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 2, 3]  c is unchanged</span></span>
+</code></pre></figure>
+<p>Mojo uses <code>var</code> to declare variables. A <code>var</code> binding owns its value.
+Using <code>var</code> consistently makes your code easier to read. It's clear when
+you introduce a new binding and when you reassign an existing one.</p>
+<p>To use Python-like reference behavior, declare <code>b</code> with <code>ref</code>
+instead of <code>var</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">ref</span> b <span class="tk-operator">=</span> a <span class="tk-comment"># b is a reference to the same value</span></span>
+<span class="cl" data-line="3">b<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-comment"># The list updates. a still owns the list.</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 2, 3, 4]</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="mutability">Mutability<a aria-label="Link to Mutability" class="h__link" href="#mutability"></a></h3>
+<p>In both Python and Mojo, almost everything you create can be changed
+after the fact. In Mojo, there are some special rules.</p>
+<p><strong>Python</strong>:</p>
+<p>Nearly everything is mutable.</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a <span class="tk-operator">=</span> <span class="tk-number">10</span> <span class="tk-comment"># 10</span></span>
+<span class="cl" data-line="2">b <span class="tk-operator">=</span> a        <span class="tk-comment"># 10</span></span>
+<span class="cl" data-line="3">b <span class="tk-operator">=</span> b <span class="tk-operator">+</span> <span class="tk-number">10</span> <span class="tk-comment"># 20</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">,</span> b<span class="tk-punctuation">)</span> <span class="tk-comment"># 10 20</span></span>
+</code></pre></figure>
+<p><strong>Mojo</strong>:</p>
+<p>All variables are mutable by default. Function arguments aren't
+mutable by default.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-number">10</span> <span class="tk-comment"># 10</span></span>
+<span class="cl" data-line="2">x <span class="tk-operator">=</span> <span class="tk-number">20</span> <span class="tk-comment"># 20, with a warning that x's previous assignment</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># to 10 was never used</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">    value <span class="tk-operator">+=</span> <span class="tk-number">1</span> <span class="tk-comment"># Error, expression must be mutable</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">var</span> y <span class="tk-operator">=</span> <span class="tk-number">20</span></span>
+<span class="cl" data-line="9">foo<span class="tk-punctuation">(</span>y<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Default immutability in the function gives the compiler more room to
+optimize. Using the <code>mut</code> keyword in the argument declaration makes
+it mutable.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    value <span class="tk-operator">+=</span> <span class="tk-number">1</span> <span class="tk-comment"># This works</span></span>
+</code></pre></figure>
+<p>Explicit mutability makes code easier to reason about because mutability is
+visible. You can look at a function signature and immediately see which
+values can change and which can't.</p>
+<h2 class="h h--2" data-level="2" id="numbers">Numbers<a aria-label="Link to Numbers" class="h__link" href="#numbers"></a></h2>
+<p>Python gives you <code>int</code> and <code>float</code> with arbitrary precision. Mojo takes a
+different approach: it uses explicit, fixed-width numeric types so the
+compiler can optimize aggressively and scale across parallel execution.</p>
+<p>Mojo provides concrete numeric types like <code>Int</code>, <code>Int8</code>, <code>Int16</code>,
+<code>Int32</code>, <code>Int64</code>, <code>Float16</code>, <code>Float32</code>, and <code>Float64</code>. Fixed width isn't a
+limitation in Mojo, it's a feature that lets the compiler pack numbers with
+known sizes into memory.</p>
+<h3 class="h h--3" data-level="3" id="simd-types">SIMD types<a aria-label="Link to SIMD types" class="h__link" href="#simd-types"></a></h3>
+<p>In many languages, SIMD shows up later as a specialized tool for advanced
+users. In Mojo, SIMD is part of the core compute model. Mojo implements its
+primitive numeric types as SIMD values under the hood.</p>
+<p>That lets the compiler operate on multiple values with a single hardware
+instruction. When you choose the right numeric type, you give the
+compiler more room to generate faster code.</p>
+<h3 class="h h--3" data-level="3" id="int-types">Int types<a aria-label="Link to Int types" class="h__link" href="#int-types"></a></h3>
+<p><strong>Python</strong>:</p>
+<p>Python's <code>int</code> uses arbitrary precision. It can hold integers as large as
+memory allows.</p>
+<p><strong>Mojo's <code>Int</code> type</strong>:</p>
+<p>The general <code>Int</code> type maps to your machine's native word size. This is
+typically 64 bits on a 64-bit system. You can always check:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>sys <span class="tk-keyword">import</span> size_of</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> a<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">5</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> <span class="tk-builtin">bytes</span> <span class="tk-operator">=</span> size_of<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">bytes</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 8 on a 64-bit system</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="floating-point-types">Floating point types<a aria-label="Link to Floating point types" class="h__link" href="#floating-point-types"></a></h3>
+<p><strong>Python</strong>:</p>
+<p>In Python, <code>float</code> is always 64-bit.</p>
+<p><strong>Mojo</strong>:</p>
+<p>Mojo floating point types <em>aren't</em> arbitrary precision.
+Mojo doesn't provide a default floating point type, the way it does
+with integers. That means there's no built-in <code>Float</code> type.</p>
+<p>When you're just starting with Mojo, stick to <code>Float32</code> or <code>Float64</code>
+floating point.</p>
+<h3 class="h h--3" data-level="3" id="division-and-types">Division and types<a aria-label="Link to Division and types" class="h__link" href="#division-and-types"></a></h3>
+<p>Mojo division behaves differently than in Python.
+In Python, dividing two integers always produces a float:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a <span class="tk-operator">=</span> <span class="tk-number">7</span></span>
+<span class="cl" data-line="2">b <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-number">7</span> <span class="tk-operator">/</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 3.5 — always float</span></span>
+</code></pre></figure>
+<p>In Mojo, if you want integer division to return a floating-point result,
+you must use explicit casting:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">7</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> b<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>Float64<span class="tk-punctuation">(</span>a<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> Float64<span class="tk-punctuation">(</span>b<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 3.5 — explicit float division</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="mojo-division-operators">Mojo division operators<a aria-label="Link to Mojo division operators" class="h__link" href="#mojo-division-operators"></a></h3>
+<p>In Mojo, <code>/</code> returns a value that always matches the type of the
+operands. A floating point number divided by a floating point number
+returns a floating point number, and an integer divided by an integer
+returns an integer:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">7</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> b<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>a <span class="tk-operator">/</span> b<span class="tk-punctuation">)</span> <span class="tk-comment"># 3, result type matches operand type</span></span>
+</code></pre></figure>
+<p>Python programmers may be a bit surprised that / isn't "true division."
+It returns a truncated result, but the result is biased towards zero:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> c <span class="tk-operator">=</span> <span class="tk-operator">-</span><span class="tk-number">7</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> d <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c <span class="tk-operator">/</span> d<span class="tk-punctuation">)</span> <span class="tk-comment"># -3, not -4, truncates towards zero</span></span>
+</code></pre></figure>
+<p><code>//</code> performs floored division, in the direction of negative
+infinity:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>c <span class="tk-operator">//</span> d<span class="tk-punctuation">)</span> <span class="tk-comment"># -4, not -3, truncates towards negative infinity</span></span>
+</code></pre></figure>
+<p>Like <code>/</code>, the type returned by <code>//</code> is preserved from the operands:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> e<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">7.0</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> f<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-number">2.0</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e <span class="tk-operator">//</span> f<span class="tk-punctuation">)</span> <span class="tk-comment"># 3.0, floors toward negative infinity</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e <span class="tk-operator">/</span> f<span class="tk-punctuation">)</span> <span class="tk-comment"># 3.5</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">var</span> g<span class="tk-punctuation">:</span> Float64 <span class="tk-operator">=</span> <span class="tk-operator">-</span><span class="tk-number">7.0</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>g <span class="tk-operator">//</span> f<span class="tk-punctuation">)</span> <span class="tk-comment"># -4.0, floors toward negative infinity</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>g <span class="tk-operator">/</span> f<span class="tk-punctuation">)</span> <span class="tk-comment"># -3.5</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="data-structures-lists">Data structures: lists<a aria-label="Link to Data structures: lists" class="h__link" href="#data-structures-lists"></a></h2>
+<p><strong>Python</strong>:</p>
+<p>In Python, lists are dynamic. They can hold mixed types and grow freely.</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">nums <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-string">"one"</span><span class="tk-punctuation">,</span> <span class="tk-number">2.0</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2">nums<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-comment"># ['one', 2.0, 3, 4]</span></span>
+</code></pre></figure>
+<p><strong>Mojo</strong>:</p>
+<p>A typed list holds only one element type. In this example, that type is Int.
+This allows the list implementation to pack data efficiently, using less space
+and improving performance. Mojo uses packed data rather than indirect
+references:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> nums<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2">nums<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 2, 3, 4]</span></span>
+</code></pre></figure>
+<p>To store different kinds of values, define the element type as a <code>Variant</code>
+that enumerates permitted types. Variant lets a single element type represent
+multiple concrete value types:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>utils <span class="tk-keyword">import</span> Variant</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">comptime</span> MixedType <span class="tk-operator">=</span> Variant<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Float64<span class="tk-punctuation">,</span> String<span class="tk-punctuation">,</span> Bool<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> mixed_list <span class="tk-operator">=</span> List<span class="tk-punctuation">[</span>MixedType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6">mixed_list<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>MixedType<span class="tk-punctuation">(</span><span class="tk-number">42</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">mixed_list<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>MixedType<span class="tk-punctuation">(</span><span class="tk-number">3.14</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8">mixed_list<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>MixedType<span class="tk-punctuation">(</span><span class="tk-string">"hello"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9">mixed_list<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>MixedType<span class="tk-punctuation">(</span><span class="tk-boolean">True</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> mixed_list<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>item<span class="tk-punctuation">)</span> <span class="tk-comment"># Output lines: 42, 3.14, hello, and True</span></span>
+</code></pre></figure>
+<p><code>Variant</code> tells the Mojo compiler which types are used, so it can allocate and
+manage memory correctly.</p>
+<h2 class="h h--2" data-level="2" id="data-structures-dictionaries">Data structures: dictionaries<a aria-label="Link to Data structures: dictionaries" class="h__link" href="#data-structures-dictionaries"></a></h2>
+<p>Python dicts are dynamic. Keys and values can be anything. Mojo uses
+efficient dictionary implementations (Swiss tables) for fast data storage and
+retrieval. Typed dictionaries support efficient packing and data access.</p>
+<p><strong>Python</strong>:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">counts <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-string">"a"</span><span class="tk-punctuation">:</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-string">"b"</span><span class="tk-punctuation">:</span> <span class="tk-string">"two"</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="2">counts<span class="tk-punctuation">[</span><span class="tk-string">"c"</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">3.0</span> <span class="tk-comment"># {'a': 1, 'b': 'two', 'c': 3.0}</span></span>
+</code></pre></figure>
+<p><strong>Mojo</strong>:</p>
+<p>A typed declaration like <code>Dict[String, Int]</code> tells the compiler exactly
+what element types to expect for keys and values. This enables tighter,
+faster code. As with other Mojo collections, you can use <code>Variant</code> to
+broaden the range of permitted element types:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> counts<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-string">"a"</span><span class="tk-punctuation">:</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-string">"b"</span><span class="tk-punctuation">:</span> <span class="tk-number">2</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="2">counts<span class="tk-punctuation">[</span><span class="tk-string">"c"</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">3</span> <span class="tk-comment"># {a: 1, b: 2, c: 3}</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="comprehensions">Comprehensions<a aria-label="Link to Comprehensions" class="h__link" href="#comprehensions"></a></h2>
+<p>Python's comprehensions have direct Mojo analogs. The syntax is
+essentially identical.</p>
+<p><strong>Mojo</strong>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> list_squares <span class="tk-operator">=</span> <span class="tk-punctuation">[</span>x <span class="tk-operator">*</span> x <span class="tk-keyword">for</span> x <span class="tk-keyword">in</span> <span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span> <span class="tk-keyword">if</span> x <span class="tk-operator">%</span> <span class="tk-number">2</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># [0, 4, 16], list</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> positive_numbers <span class="tk-operator">=</span> <span class="tk-punctuation">[</span>x <span class="tk-keyword">for</span> x <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span> <span class="tk-keyword">if</span> x <span class="tk-operator">&gt;</span> <span class="tk-number">0</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"><span class="tk-comment"># [1, 2], list</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">var</span> dict_squares <span class="tk-operator">=</span> <span class="tk-punctuation">{</span>x<span class="tk-punctuation">:</span> x <span class="tk-operator">*</span> x <span class="tk-keyword">for</span> x <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">3</span><span class="tk-punctuation">)</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="8"><span class="tk-comment">#  {0: 0, 1: 1, 2: 4}, dict</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-keyword">var</span> upper_case <span class="tk-operator">=</span> <span class="tk-punctuation">{</span>k<span class="tk-punctuation">:</span> v<span class="tk-punctuation">.</span>upper<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">for</span> k<span class="tk-punctuation">,</span> v <span class="tk-keyword">in</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-string">"one"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-punctuation">(</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-string">"two"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="11"><span class="tk-comment"># {1: ONE, 2: TWO}, dict</span></span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13"><span class="tk-keyword">var</span> number_set <span class="tk-operator">=</span> <span class="tk-punctuation">{</span>x <span class="tk-keyword">for</span> x <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="14"><span class="tk-comment"># {0, 1, 2, 3, 4}, set</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="iteration">Iteration<a aria-label="Link to Iteration" class="h__link" href="#iteration"></a></h2>
+<p>In terms of syntax, Mojo's <code>for</code> and <code>while</code> loops align with
+Python. Use <code>break</code> and <code>continue</code> for control flow.</p>
+<p><strong>Mojo using a typed for-loop</strong>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> nums<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> squares2<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">for</span> x <span class="tk-keyword">in</span> nums<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">if</span> x <span class="tk-operator">%</span> <span class="tk-number">2</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">        squares2<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>x <span class="tk-operator">*</span> x<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>squares2<span class="tk-punctuation">)</span> <span class="tk-comment"># [0, 4, 16]</span></span>
+</code></pre></figure>
+<p><strong>Mojo using a while loop</strong>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> squares3<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> idx <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">while</span> idx <span class="tk-operator">&lt;</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    squares3<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>idx <span class="tk-operator">*</span> idx<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6">    idx <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>squares3<span class="tk-punctuation">)</span> <span class="tk-comment"># [0, 1, 4]</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="function-definitions">Function definitions<a aria-label="Link to Function definitions" class="h__link" href="#function-definitions"></a></h2>
+<p>In Python, you can write a function without specifying the types of its
+arguments or return value. In Mojo, you must declare types explicitly.</p>
+<p><strong>Python</strong>:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">add</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">,</span> b<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> a <span class="tk-operator">+</span> b</span>
+</code></pre></figure>
+<p><strong>Mojo</strong>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">add</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> a <span class="tk-operator">+</span> b</span>
+</code></pre></figure>
+<p>The optional <code>-&gt;</code> syntax declares the return type.</p>
+<h2 class="h h--2" data-level="2" id="error-handling">Error handling<a aria-label="Link to Error handling" class="h__link" href="#error-handling"></a></h2>
+<p>Error handling in Mojo looks very similar to Python. You raise and catch
+exceptions.</p>
+<p><strong>Python</strong>:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> ValueError<span class="tk-punctuation">(</span><span class="tk-string">"bad input"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> ValueError <span class="tk-keyword">as</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span> <span class="tk-comment"># bad input</span></span>
+</code></pre></figure>
+<p>The <code>raises</code> keyword in function and method declarations indicates that
+a function may generate or propagate errors.</p>
+<p><strong>Mojo</strong>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"bad input"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span> <span class="tk-comment"># bad input</span></span>
+</code></pre></figure>
+<p>You can specify error types by adding a type name after the <code>raises</code>
+keyword. This lets you catch the error and use the type instance
+directly in your <code>except</code> clause:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyCustomError</span><span class="tk-punctuation">(</span>Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> message<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">test_typed_error</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises MyCustomError<span class="tk-punctuation">:</span> <span class="tk-comment"># Typed error</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">raise</span> MyCustomError<span class="tk-punctuation">(</span><span class="tk-string">"custom error occurred"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9">    test_typed_error<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e<span class="tk-punctuation">.</span>message<span class="tk-punctuation">)</span> <span class="tk-comment"># custom error occurred</span></span>
+</code></pre></figure>
+<p>Functions that don't handle the errors they raise automatically
+delegate error handling to their caller. You must declare these
+functions with the <code>raises</code> keyword:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">another_raising_function</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"Message"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Error raised here</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">raising_function</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    another_raising_function<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Error continues to pass</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> <span class="tk-function">handles_errors</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9">        raising_function<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Error handled in this non-raising function</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># handle error here</span></span>
+</code></pre></figure>
+<p>Note that in Mojo, each <code>try/except</code> statement can handle a single error type.</p>
+<h2 class="h h--2" data-level="2" id="types-classes-vs-structs">Types: classes vs structs<a aria-label="Link to Types: classes vs structs" class="h__link" href="#types-classes-vs-structs"></a></h2>
+<p>Python classes are flexible and dynamic. You can add attributes at
+runtime, mix types, and override behavior freely. Mojo uses <code>struct</code>, a
+statically typed alternative that the compiler can optimize
+aggressively.</p>
+<p>Mojo structs are stack-allocated. The value lives in a fast, fixed-size
+region of memory rather than on the heap, where a garbage collector
+must track and clean it up.</p>
+<p><strong>Python</strong>:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">class</span> <span class="tk-class-name">Point</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span>self<span class="tk-punctuation">,</span> x<span class="tk-punctuation">,</span> y<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">        self<span class="tk-punctuation">.</span>x <span class="tk-operator">=</span> x</span>
+<span class="cl" data-line="4">        self<span class="tk-punctuation">.</span>y <span class="tk-operator">=</span> y</span>
+</code></pre></figure>
+<p><strong>Mojo</strong>:</p>
+<p>Mojo initializers require <code>out self</code>. The <code>out</code> keyword indicates
+that the method returns a value through an argument. In initializers,
+that argument is <code>self</code>, and the instance's fields are guaranteed
+to be fully initialized:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">Point</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> x<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> y<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>x <span class="tk-operator">=</span> x</span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>y <span class="tk-operator">=</span> y</span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> point <span class="tk-operator">=</span> Point<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>point<span class="tk-punctuation">.</span>x<span class="tk-punctuation">,</span> point<span class="tk-punctuation">.</span>y<span class="tk-punctuation">)</span> <span class="tk-comment"># 5, 3</span></span>
+</code></pre></figure>
+<p>Structs deliver performance and predictability.</p>
+<h2 class="h h--2" data-level="2" id="types-variable-static-typing">Types: variable static typing<a aria-label="Link to Types: variable static typing" class="h__link" href="#types-variable-static-typing"></a></h2>
+<p><strong>Python</strong>:</p>
+<p>In Python, you may assign different types to the same variable.</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a <span class="tk-operator">=</span> <span class="tk-string">"x"</span> <span class="tk-comment"># String</span></span>
+<span class="cl" data-line="2">a <span class="tk-operator">=</span> <span class="tk-number">10</span> <span class="tk-comment"># Not an error</span></span>
+</code></pre></figure>
+<p><strong>Mojo</strong>:</p>
+<p>In Mojo, once a name is bound in a scope, its type is fixed and
+can't be rebound to a different type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-number">1</span> <span class="tk-comment"># Int</span></span>
+<span class="cl" data-line="2">a <span class="tk-operator">=</span> <span class="tk-string">"string"</span> <span class="tk-comment"># Error: can't implicitly convert String to Int</span></span>
+</code></pre></figure>
+<p>When you use <code>Variant</code>, you can switch between the types it enumerates.
+The variable itself remains statically typed as a <code>Variant</code>, even though
+the concrete value it holds may change:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>utils <span class="tk-keyword">import</span> Variant</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>testing <span class="tk-keyword">import</span> <span class="tk-operator">*</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">comptime</span> StringOrInt <span class="tk-operator">=</span> Variant<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">var</span> a<span class="tk-punctuation">:</span> StringOrInt <span class="tk-operator">=</span> <span class="tk-number">1</span> <span class="tk-comment"># Initial value, 1</span></span>
+<span class="cl" data-line="7">assert_true<span class="tk-punctuation">(</span>a<span class="tk-punctuation">.</span>unsafe_get<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9">a <span class="tk-operator">=</span> <span class="tk-string">"string"</span> <span class="tk-comment"># Not an error, "string"</span></span>
+<span class="cl" data-line="10">assert_true<span class="tk-punctuation">(</span>a<span class="tk-punctuation">.</span>unsafe_get<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-string">"string"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="types-and-polymorphism-duck-typing-vs-traits">Types and polymorphism: duck typing vs. traits<a aria-label="Link to Types and polymorphism: duck typing vs. traits" class="h__link" href="#types-and-polymorphism-duck-typing-vs-traits"></a></h2>
+<p>In Python, duck typing means you don't declare what interface an object
+must have. If it has the method you call, it works at runtime. This is
+flexible, but it gives you no safety net.</p>
+<p>Mojo uses traits to solve the same problem explicitly. A trait defines
+the methods a type must implement or provides a default implementation.
+The compiler verifies that any type used in that role actually provides
+those methods, so mistakes surface before your code runs.</p>
+<p><strong>Python duck typing</strong>:</p>
+<figure class="cb" data-lang="python"><figcaption class="cb__bar"><span class="cb__lang">Python</span><span class="cb__spacer"></span><button aria-label="Copy Python code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">sketch</span><span class="tk-punctuation">(</span>shape<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    shape<span class="tk-punctuation">.</span>draw<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Works if shape has draw(), fails at runtime if not</span></span>
+</code></pre></figure>
+<p><strong>Mojo traits</strong>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">trait</span> Drawable<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">def</span> <span class="tk-function">draw</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span> <span class="tk-comment"># required method</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> sketch<span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Drawable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>shape<span class="tk-punctuation">:</span> T<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">    shape<span class="tk-punctuation">.</span>draw<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Compiler guarantees shape has `draw()`</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="memory-management">Memory management<a aria-label="Link to Memory management" class="h__link" href="#memory-management"></a></h2>
+<p>In Python, memory access is indirect, which adds overhead. Mojo uses
+direct memory access, speeding up execution.</p>
+<p>Python manages memory automatically using reference counting and a
+garbage collector. Reference counting deallocates objects when their
+count reaches zero. The garbage collector runs in the background to
+clean up objects that are no longer reachable. This removes the need
+to manage memory manually, but it also means you have no control over
+when collection happens.</p>
+<p>Mojo uses ownership semantics with ASAP ("as soon as possible")
+destruction. The compiler knows exactly when a value is used for the
+last time and its lifetime ends. Memory is freed at that point, without
+waiting for a garbage collector to run.</p>
+<p>If you need manual memory control, Mojo offers a suite of pointer and
+allocation options. You get convenience by default, and precise
+<code>alloc()</code> and <code>dealloc()</code> control when you reach for it.</p>
+<h2 class="h h--2" data-level="2" id="python-instincts-that-may-surprise-you-in-mojo">Python instincts that may surprise you in Mojo<a aria-label="Link to Python instincts that may surprise you in Mojo" class="h__link" href="#python-instincts-that-may-surprise-you-in-mojo"></a></h2>
+<p><strong>"I don't need types."</strong>:</p>
+<p>In Python, that's often fine. In Mojo, types are how the compiler
+generates fast, optimized code. Untyped code works in dynamic languages
+like Python, but it can leave performance, correctness, readability, and
+maintainability on the table.</p>
+<p><strong>"Everything is mutable."</strong>:</p>
+<p>In Mojo, variables are mutable by default, but function and method
+arguments may not be.</p>
+<p><strong>"I can mix types in a list."</strong>:</p>
+<p>Mojo collections use static types and benefit from the performance that
+brings.</p>
+<p><strong>"Threads are how I parallelize."</strong>:</p>
+<p>Python threads are limited by the GIL. Mojo supports parallelism at
+multiple levels, from data-parallel SIMD operations to multi-threaded
+GPU execution. This isn't limited to threads. Mojo enables low-level
+SIMD parallelism and higher-level parallelism across GPUs.</p>
+<p><strong>"Classes are the natural way to structure things."</strong>:</p>
+<p>Mojo's <code>struct</code> value type and its traits offer a better fit for
+performance-sensitive code.</p>
+<h2 class="h h--2" data-level="2" id="use-mojo-with-ai-coding-assistants">Use Mojo with AI coding assistants<a aria-label="Link to Use Mojo with AI coding assistants" class="h__link" href="#use-mojo-with-ai-coding-assistants"></a></h2>
+<p>If you're using an AI coding assistant to help translate Python code
+to Mojo, install Mojo agent skills. The <code>mojo-python-interop</code> skill
+handles the patterns that trip models up like <code>PythonObject</code> wrapping,
+<code>import</code> conventions, and type conversions between the two languages.</p>
+<figure class="cb" data-lang="bash"><figcaption class="cb__bar"><span class="cb__lang">Bash</span><span class="cb__spacer"></span><button aria-label="Copy Bash code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">npx skills <span class="tk-function">add</span> modular/skills</span>
+</code></pre></figure>
+<p>This installs all four <a href="../pages/37_mojo-ai-skills.html">Mojo agent skills</a>,
+including <code>mojo-syntax</code> for general language accuracy.</p>
+<h2 class="h h--2" data-level="2" id="the-mojo-mindset">The Mojo mindset<a aria-label="Link to The Mojo mindset" class="h__link" href="#the-mojo-mindset"></a></h2>
+<p>Mojo gives you Pythonic ergonomics with systems-level control. That
+control comes when you embrace types, ownership, and value semantics.
+You don't have to use all of it at once, but it's there for when you
+need it.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/nightly/docs/manual/python-to-mojo/" rel="noopener noreferrer" data-external>https://mojolang.org/nightly/docs/manual/python-to-mojo/</a>, saved Thu, 01 Oct 2026 15:30:23 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/03_mojo-language-basics.html"><span class="pager__dir">← Previous</span><span class="pager__title">Mojo language basics</span></a><a class="pager__link pager__link--next" href="../pages/05_variables.html"><span class="pager__dir">Next →</span><span class="pager__title">Variables</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#mojos-core-model-for-python-developers">Mojo's core model for Python developers</a></li><li class="rail__depth-2"><a href="#moving-from-python-to-mojo">Moving from Python to Mojo</a></li><li class="rail__depth-2"><a href="#numbers">Numbers</a></li><li class="rail__depth-2"><a href="#data-structures-lists">Data structures: lists</a></li><li class="rail__depth-2"><a href="#data-structures-dictionaries">Data structures: dictionaries</a></li><li class="rail__depth-2"><a href="#comprehensions">Comprehensions</a></li><li class="rail__depth-2"><a href="#iteration">Iteration</a></li><li class="rail__depth-2"><a href="#function-definitions">Function definitions</a></li><li class="rail__depth-2"><a href="#error-handling">Error handling</a></li><li class="rail__depth-2"><a href="#types-classes-vs-structs">Types: classes vs structs</a></li><li class="rail__depth-2"><a href="#types-variable-static-typing">Types: variable static typing</a></li><li class="rail__depth-2"><a href="#types-and-polymorphism-duck-typing-vs-traits">Types and polymorphism: duck typing vs. traits</a></li><li class="rail__depth-2"><a href="#memory-management">Memory management</a></li><li class="rail__depth-2"><a href="#python-instincts-that-may-surprise-you-in-mojo">Python instincts that may surprise you in Mojo</a></li><li class="rail__depth-2"><a href="#use-mojo-with-ai-coding-assistants">Use Mojo with AI coding assistants</a></li><li class="rail__depth-2"><a href="#the-mojo-mindset">The Mojo mindset</a></li><li class="rail__depth-3"><a href="#value-semantics">Value semantics</a></li><li class="rail__depth-3"><a href="#mutability">Mutability</a></li><li class="rail__depth-3"><a href="#simd-types">SIMD types</a></li><li class="rail__depth-3"><a href="#int-types">Int types</a></li><li class="rail__depth-3"><a href="#floating-point-types">Floating point types</a></li><li class="rail__depth-3"><a href="#division-and-types">Division and types</a></li><li class="rail__depth-3"><a href="#mojo-division-operators">Mojo division operators</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#mojos-core-model-for-python-developers">Mojo's core model for Python developers</a></li><li class="rail__depth-2"><a href="#moving-from-python-to-mojo">Moving from Python to Mojo</a></li><li class="rail__depth-2"><a href="#numbers">Numbers</a></li><li class="rail__depth-2"><a href="#data-structures-lists">Data structures: lists</a></li><li class="rail__depth-2"><a href="#data-structures-dictionaries">Data structures: dictionaries</a></li><li class="rail__depth-2"><a href="#comprehensions">Comprehensions</a></li><li class="rail__depth-2"><a href="#iteration">Iteration</a></li><li class="rail__depth-2"><a href="#function-definitions">Function definitions</a></li><li class="rail__depth-2"><a href="#error-handling">Error handling</a></li><li class="rail__depth-2"><a href="#types-classes-vs-structs">Types: classes vs structs</a></li><li class="rail__depth-2"><a href="#types-variable-static-typing">Types: variable static typing</a></li><li class="rail__depth-2"><a href="#types-and-polymorphism-duck-typing-vs-traits">Types and polymorphism: duck typing vs. traits</a></li><li class="rail__depth-2"><a href="#memory-management">Memory management</a></li><li class="rail__depth-2"><a href="#python-instincts-that-may-surprise-you-in-mojo">Python instincts that may surprise you in Mojo</a></li><li class="rail__depth-2"><a href="#use-mojo-with-ai-coding-assistants">Use Mojo with AI coding assistants</a></li><li class="rail__depth-2"><a href="#the-mojo-mindset">The Mojo mindset</a></li><li class="rail__depth-3"><a href="#value-semantics">Value semantics</a></li><li class="rail__depth-3"><a href="#mutability">Mutability</a></li><li class="rail__depth-3"><a href="#simd-types">SIMD types</a></li><li class="rail__depth-3"><a href="#int-types">Int types</a></li><li class="rail__depth-3"><a href="#floating-point-types">Floating point types</a></li><li class="rail__depth-3"><a href="#division-and-types">Division and types</a></li><li class="rail__depth-3"><a href="#mojo-division-operators">Mojo division operators</a></li></ol>
+<p class="rail__meta">Chapter 04 of 38 · Part I, Orientation.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

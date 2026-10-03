@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Lambda expressions · Mojo v1 The Language Manual</title>
+<meta name="description" content="Anonymous functions and closures over surrounding scope.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">09</span></nav><h1>Lambda expressions</h1>
+<p class="dek">Anonymous functions and closures over surrounding scope.</p><p class="byline">Chapter 09 · 2,423 words · 21 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/functions/lambda/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>A <strong>lambda function</strong> is a small, anonymous function. Like a named
+function, it accepts arguments, returns a value, and can capture values
+from the surrounding scope. The difference is that you can write a lambda
+exactly where it's used instead of giving it a separate declaration.</p>
+<p>Lambdas are most useful when an algorithm stays the same but one small
+piece of its behavior changes. A transformation needs to know how to
+convert values. A sort needs to know how to compare them. A validator
+needs to decide whether a value satisfies a rule. A callback needs to know
+what to do when another part of the program invokes it.</p>
+<p>You could write a separate named function for each of these needs, but
+when the behavior is short and used in only one place, a lambda keeps it
+next to the algorithm that uses it. The algorithm stays easy to read,
+and the behavior doesn't need a permanent name.</p>
+<h2 class="h h--2" data-level="2" id="creating-a-lambda">Creating a lambda<a aria-label="Link to Creating a lambda" class="h__link" href="#creating-a-lambda"></a></h2>
+<p>A lambda expression looks like a function declaration without a name:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x <span class="tk-operator">+</span> <span class="tk-number">1</span></span>
+</code></pre></figure>
+<p>The body is always a single expression. When you call the lambda, the
+expression is evaluated and its result returned:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> inc <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x <span class="tk-operator">+</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>inc<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 5</span></span>
+</code></pre></figure>
+<p>They're the same behavior you'd expect from a named function with less ceremony:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">inc</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> x <span class="tk-operator">+</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>inc<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 5</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="inline-lambdas">Inline lambdas<a aria-label="Link to Inline lambdas" class="h__link" href="#inline-lambdas"></a></h3>
+<p>A lambda doesn't have to be assigned to a variable. You can write it
+directly as an argument when a function needs a small piece of custom
+behavior:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">transform<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x <span class="tk-operator">+</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3">    values</span>
+<span class="cl" data-line="4"><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Inline lambdas work best when behavior is short and obvious. As they grow,
+assigning them to a local variable often makes the surrounding code easier
+to read.</p>
+<p>When passing lambdas to other functions, you bind the lambda as an
+argument. This allows the function to call it wherever that behavior is
+needed. It can also pass the lambda to other functions or use it in
+recursive calls. For example, a search algorithm can carry a lambda through
+recursion to provide lightweight, customizable pattern matching.</p>
+<h3 class="h h--3" data-level="3" id="using-lambdas-for-side-effects">Using lambdas for side effects<a aria-label="Link to Using lambdas for side effects" class="h__link" href="#using-lambdas-for-side-effects"></a></h3>
+<p>You can use lambdas to call a function for each element in a collection
+without producing a result. This is useful for side effects, such as
+updating state. Lambda return types are optional. When omitted, they
+default to None:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># `histogram`, defined in a later example, is a dictionary of counts</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> collector <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>n<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">mut</span> histogram<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span> increment<span class="tk-punctuation">(</span>histogram<span class="tk-punctuation">,</span> n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-builtin">apply</span><span class="tk-punctuation">(</span>collector<span class="tk-punctuation">,</span> counts<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="higher-order-functions">Higher-order functions<a aria-label="Link to Higher-order functions" class="h__link" href="#higher-order-functions"></a></h2>
+<p>Higher-order functions separate algorithms from custom logic supplied by
+the caller. When you scaffold an algorithm, you can delegate the parts that
+change to the caller. Lambda expressions are the perfect way to define that
+behavior.</p>
+<p>Imagine you're converting a collection of values to a new type. The
+algorithm knows how to visit every element, build a new collection, and
+return the result. It doesn't know how each value should be converted.
+Using a lambda lets you customize behavior at the callsite without
+changing the transformation function. You choose any effect so long
+as the shape of the lambda matches:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Convert an Int to c_int</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> c_int<span class="tk-punctuation">:</span> c_int<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-comment"># Double an Int value</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> value <span class="tk-operator">*</span> <span class="tk-number">2</span></span>
+</code></pre></figure>
+<p>All higher-order functions in Mojo share one thing in common: they accept
+functions as arguments, not parameters, using infer-only typing.</p>
+<h3 class="h h--3" data-level="3" id="bubble-sort">Bubble sort<a aria-label="Link to Bubble sort" class="h__link" href="#bubble-sort"></a></h3>
+<p>Lambdas make it easy to wrap a comparator. Consider this bubble sort
+implementation. <code>F</code> describes the shape of a user-supplied comparison
+function:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> bubble_sort<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    T<span class="tk-punctuation">:</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Deinitable<span class="tk-punctuation">,</span> F<span class="tk-punctuation">:</span> <span class="tk-keyword">def</span><span class="tk-punctuation">(</span>T<span class="tk-punctuation">,</span> T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">,</span> <span class="tk-operator">//</span></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>compare_fn<span class="tk-punctuation">:</span> F<span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">for</span> end <span class="tk-keyword">in</span> <span class="tk-builtin">reversed</span><span class="tk-punctuation">(</span><span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>end<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">if</span> compare_fn<span class="tk-punctuation">(</span>values<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> values<span class="tk-punctuation">[</span>i <span class="tk-operator">+</span> <span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">                values<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> values<span class="tk-punctuation">[</span>i <span class="tk-operator">+</span> <span class="tk-number">1</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> values<span class="tk-punctuation">[</span>i <span class="tk-operator">+</span> <span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> values<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>You can define a free function to compare values, and pass them to
+<code>bubble_sort</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">ascending</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> x <span class="tk-operator">&gt;</span> y</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">,</span> <span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">9</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6">    bubble_sort<span class="tk-punctuation">(</span>ascending<span class="tk-punctuation">,</span> values<span class="tk-punctuation">)</span> <span class="tk-comment"># [1, 1, 3, 4, 5, 9]</span></span>
+</code></pre></figure>
+<p>Or, you can write the comparison inline with a lambda:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">bubble_sort<span class="tk-punctuation">(</span><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span> a <span class="tk-operator">&gt;</span> b<span class="tk-punctuation">,</span> values<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>It's the same result, with no function declaration. This is a key lambda
+feature. You can write behavior without giving it a name or exposing it
+through a permanent API, and your algorithm can use it immediately.</p>
+<p>Flip the comparison from greater-than to less-than to sort in the opposite
+order.</p>
+<h2 class="h h--2" data-level="2" id="thin-lambdas-and-parameters">Thin lambdas and parameters<a aria-label="Link to Thin lambdas and parameters" class="h__link" href="#thin-lambdas-and-parameters"></a></h2>
+<p>A thin lambda carries no state. That means, it won't capture values from
+the surrounding scope and it doesn't declare a compile-time parameter list
+with unbound values. It's just a one-expression function written in-line.</p>
+<p>Consider this transformation function. It uses a thin function pointer
+parameter to transform each element of a list:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> inplace_transform<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    T<span class="tk-punctuation">:</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Deinitable<span class="tk-punctuation">,</span> <span class="tk-operator">//</span><span class="tk-punctuation">,</span> f<span class="tk-punctuation">:</span> <span class="tk-keyword">def</span><span class="tk-punctuation">(</span>T<span class="tk-punctuation">)</span> thin <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> T</span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">for</span> index <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span>index<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> f<span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">[</span>index<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Notice how the function pointer is passed as a parameter and declared with
+the <code>thin</code> effect.</p>
+<p>You can call <code>inplace_transform</code> with a simple algorithm to double each
+value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> numbers<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">,</span> <span class="tk-number">5</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3">    inplace_transform<span class="tk-punctuation">[</span><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x <span class="tk-operator">*</span> <span class="tk-number">2</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>numbers<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"transformed numbers: {numbers}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># [2, 4, 6, 8, 10]</span></span>
+</code></pre></figure>
+<p>This example works because the lambda doesn't capture state, so it isn't
+a <em>closure</em>. Contrast this with the next example, which won't compile:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> factor <span class="tk-operator">=</span> <span class="tk-number">3</span></span>
+<span class="cl" data-line="2">inplace_transform<span class="tk-punctuation">[</span><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x <span class="tk-operator">**</span> factor<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>numbers<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>factor</code> is declared in the same scope as the lambda, and the lambda
+captures it. This one thing makes the lambda a closure and can't be used at
+compile-time as the function pointer parameter needed by
+<code>inplace_transform()</code>.</p>
+<h2 class="h h--2" data-level="2" id="lambdas-and-closures">Lambdas and closures<a aria-label="Link to Lambdas and closures" class="h__link" href="#lambdas-and-closures"></a></h2>
+<p>Lambdas that capture values from the surrounding scope are closures.
+Instead of passing values into the lambda, the closure retrieves them
+from the surrounding context, allowing you to write more concise code.</p>
+<p>You specify the convention used to capture and manipulate values in the
+lambda expression. When not specified, this defaults to immutable
+references (<code>imm</code>). You can read more about closure conventions in the
+<a class="ext" data-external="" href="https://mojolang.org/docs/reference/closure-declarations/#capture-conventions" rel="noopener noreferrer">Mojo language
+reference</a>.</p>
+<p>There are two ways to use lambda closures: direct calls, and runtime
+arguments.</p>
+<h3 class="h h--3" data-level="3" id="using-closures-with-direct-calls">Using closures with direct calls<a aria-label="Link to Using closures with direct calls" class="h__link" href="#using-closures-with-direct-calls"></a></h3>
+<p>In this example, the lambda closure captures <code>x</code> and <code>y</code> from the
+surrounding scope. The lambda is called immediately, and the result is
+returned. Updating the values of <code>x</code> and <code>y</code> and calling the lambda again
+returns a new result:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> <span class="tk-number">3.0</span><span class="tk-punctuation">,</span> <span class="tk-number">4.5</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> magnitude <span class="tk-operator">=</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">lambda</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Float64<span class="tk-punctuation">:</span> <span class="tk-punctuation">(</span>x<span class="tk-operator">**</span><span class="tk-number">2</span> <span class="tk-operator">+</span> y<span class="tk-operator">**</span><span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-operator">**</span> <span class="tk-number">0.5</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> distance <span class="tk-operator">=</span> magnitude<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"distance of ({x}, {y}): {distance}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 5.408326913175031</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8">x<span class="tk-punctuation">,</span> y <span class="tk-operator">=</span> <span class="tk-operator">-</span><span class="tk-number">2.5</span><span class="tk-punctuation">,</span> <span class="tk-number">1.5</span></span>
+<span class="cl" data-line="9">distance <span class="tk-operator">=</span> magnitude<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"distance of ({x}, {y}): {distance}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 2.9154759474226504</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="runtime-arguments">Runtime arguments<a aria-label="Link to Runtime arguments" class="h__link" href="#runtime-arguments"></a></h3>
+<p>Runtime arguments can accept both thin lambdas and closures. Here's a
+<code>transform()</code> function that uses a runtime argument, with an infer-only
+function type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> transform<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">,</span> U<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3">    F<span class="tk-punctuation">:</span> <span class="tk-keyword">def</span><span class="tk-punctuation">(</span>T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> U<span class="tk-punctuation">,</span> <span class="tk-operator">//</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>f<span class="tk-punctuation">:</span> F<span class="tk-punctuation">,</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> List<span class="tk-punctuation">[</span>U<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> <span class="tk-punctuation">[</span>f<span class="tk-punctuation">(</span>item<span class="tk-punctuation">)</span> <span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> <span class="tk-builtin">list</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>In the preceding section, the following lambda closure wouldn't compile
+because it was passed at compile-time to a parameter, which doesn't accept
+closures. <code>transform()</code> uses a runtime function argument. Now, the code
+compiles and runs:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> numbers<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">,</span> <span class="tk-number">6</span><span class="tk-punctuation">,</span> <span class="tk-number">8</span><span class="tk-punctuation">,</span> <span class="tk-number">10</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> factor <span class="tk-operator">=</span> <span class="tk-number">3</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> transformed <span class="tk-operator">=</span> transform<span class="tk-punctuation">(</span><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x<span class="tk-operator">**</span>factor<span class="tk-punctuation">,</span> numbers<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"transformed numbers: {transformed}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># [8, 64, 216, 512, 1000]</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7">factor <span class="tk-operator">=</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="8">transformed <span class="tk-operator">=</span> transform<span class="tk-punctuation">(</span><span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x<span class="tk-operator">**</span>factor<span class="tk-punctuation">,</span> numbers<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"transformed numbers: {transformed}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># [4, 16, 36, 64, 100]</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="capturing-and-mutating-state">Capturing and mutating state<a aria-label="Link to Capturing and mutating state" class="h__link" href="#capturing-and-mutating-state"></a></h2>
+<p>A closure can update the values it captures without mentioning those values
+in its own code. This next example showcases lambdas to create a histogram
+of word lengths.</p>
+<p>The code starts with an <code>apply()</code> function. It calls a function for each
+member of a list. As you can see from its function type (<code>F</code>), it takes
+lambdas that don't return a value. The lambda is called for its side
+effects, not for the value of its expression:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-builtin">apply</span><span class="tk-punctuation">[</span>T<span class="tk-punctuation">:</span> Copyable<span class="tk-punctuation">,</span> F<span class="tk-punctuation">:</span> <span class="tk-keyword">def</span><span class="tk-punctuation">(</span>T<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">,</span> <span class="tk-operator">//</span><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>f<span class="tk-punctuation">:</span> F<span class="tk-punctuation">,</span> i<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>T<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> i<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">        f<span class="tk-punctuation">(</span>item<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>In this example, a closure will update a captured histogram dictionary. It
+does this by calling <code>increment[]()</code>. This function updates a dictionary by
+increasing the value for a given key by one:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> increment<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    Key<span class="tk-punctuation">:</span> ImplicitlyCopyable <span class="tk-operator">&amp;</span> Hashable <span class="tk-operator">&amp;</span> Equatable <span class="tk-operator">&amp;</span> Deinitable</span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> d<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>Key<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> key<span class="tk-punctuation">:</span> Key<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4">    d<span class="tk-punctuation">[</span>key<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> d<span class="tk-punctuation">.</span>get<span class="tk-punctuation">(</span>key<span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">)</span> <span class="tk-operator">+</span> <span class="tk-number">1</span></span>
+</code></pre></figure>
+<p>This example is given a string of words. It removes punctuation and splits
+the string into a word list. Then, it counts the length of each word using
+a lambda:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> words <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"Lorem ipsum dolor sit amet, consectetur adipiscing elit. "</span></span>
+<span class="cl" data-line="3"> <span class="tk-string">"Sed fringilla nons sapien quis pharetra."</span></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>replace<span class="tk-punctuation">(</span><span class="tk-string">","</span><span class="tk-punctuation">,</span> <span class="tk-string">""</span><span class="tk-punctuation">)</span><span class="tk-punctuation">.</span>replace<span class="tk-punctuation">(</span><span class="tk-string">"."</span><span class="tk-punctuation">,</span> <span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">var</span> word_list <span class="tk-operator">=</span> <span class="tk-punctuation">[</span>String<span class="tk-punctuation">(</span>w<span class="tk-punctuation">)</span> <span class="tk-keyword">for</span> w <span class="tk-keyword">in</span> words<span class="tk-punctuation">.</span>split<span class="tk-punctuation">(</span><span class="tk-string">" "</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"word_list: {word_list}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-comment"># Count each word</span></span>
+<span class="cl" data-line="9"><span class="tk-keyword">var</span> counter <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span> x<span class="tk-punctuation">.</span>count_codepoints<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">var</span> counts <span class="tk-operator">=</span> transform<span class="tk-punctuation">(</span>counter<span class="tk-punctuation">,</span> word_list<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Initial counts: {counts}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"><span class="tk-comment"># [5, 5, 5, 3, 4, 11, 10, 4, 3, 9, 4, 6, 4, 8]</span></span>
+</code></pre></figure>
+<p>To build the histogram, the next lambda captures the histogram dictionary
+and uses <code>increment[]()</code> to update the count for each word length:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Create a histogram of the counts</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> histogram<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> collector <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>n<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-punctuation">{</span><span class="tk-keyword">mut</span> histogram<span class="tk-punctuation">}</span><span class="tk-punctuation">:</span> increment<span class="tk-punctuation">(</span>histogram<span class="tk-punctuation">,</span> n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-builtin">apply</span><span class="tk-punctuation">(</span>collector<span class="tk-punctuation">,</span> counts<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Histogram: {histogram}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-comment"># {5: 3, 3: 2, 4: 4, 11: 1, 10: 1, 9: 1, 6: 1, 8: 1}</span></span>
+</code></pre></figure>
+<p>The <code>mut</code> capture establishes that the lambda can mutate the captured
+variable. <code>apply()</code> calls this lambda for each word length, updating
+the histogram dictionary as it goes.</p>
+<p>A final lambda transforms each count into stars. It's the kind of
+effortless transformation that makes lambdas so useful:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> stars <span class="tk-operator">=</span> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>n<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span> <span class="tk-string">"*"</span> <span class="tk-operator">*</span> n</span>
+<span class="cl" data-line="2"><span class="tk-keyword">for</span> key <span class="tk-keyword">in</span> histogram<span class="tk-punctuation">.</span>keys<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"{key}: {stars(histogram.get(key, 0))}"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="lambdas-and-ffi-interop">Lambdas and FFI interop<a aria-label="Link to Lambdas and FFI interop" class="h__link" href="#lambdas-and-ffi-interop"></a></h2>
+<p>Thin lambdas work well with C FFI. This final example uses a lambda to sort
+a list of integers using the C standard library <code>qsort()</code> function. The
+lambda is passed as the comparator to <code>qsort()</code> to sort the list in
+ascending order:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>ffi <span class="tk-keyword">import</span> external_call<span class="tk-punctuation">,</span> c_int<span class="tk-punctuation">,</span> c_size_t</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>sys <span class="tk-keyword">import</span> size_of</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">11</span><span class="tk-punctuation">,</span> <span class="tk-number">10</span><span class="tk-punctuation">,</span> <span class="tk-number">9</span><span class="tk-punctuation">,</span> <span class="tk-number">6</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># Transform is defined earlier on this page</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> c_values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> transform<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span>v<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> c_int<span class="tk-punctuation">:</span> c_int<span class="tk-punctuation">(</span>v<span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> values</span>
+<span class="cl" data-line="10"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12">    external_call<span class="tk-punctuation">[</span><span class="tk-string">"qsort"</span><span class="tk-punctuation">,</span> NoneType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="13">        c_values<span class="tk-punctuation">.</span>unsafe_ptr<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span> <span class="tk-comment"># values are passed as an opaque pointer</span></span>
+<span class="cl" data-line="14">        c_size_t<span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>c_values<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="15">        c_size_t<span class="tk-punctuation">(</span>size_of<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">lambda</span> <span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="17">            a<span class="tk-punctuation">:</span> MutOpaquePointer<span class="tk-punctuation">[</span>MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="18">            b<span class="tk-punctuation">:</span> MutOpaquePointer<span class="tk-punctuation">[</span>MutUntrackedOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="19"> <span class="tk-punctuation">)</span> abi<span class="tk-punctuation">(</span><span class="tk-string">"C"</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> c_int<span class="tk-punctuation">:</span> a<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="20"> <span class="tk-operator">-</span> b<span class="tk-punctuation">.</span>unsafe_bitcast<span class="tk-punctuation">[</span>c_int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="21"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="22"> <span class="tk-comment"># Bitcasting retrieves the `c_int` values from the opaque pointer</span></span>
+<span class="cl" data-line="23"></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"Sorted keys: {c_values}"</span><span class="tk-punctuation">)</span> <span class="tk-comment"># [3, 4, 5, 6, 9, 10, 11]</span></span>
+</code></pre></figure>
+<p>Don't miss first lambda call shown in this example. It converts a list
+of integers to a list of <code>c_int</code> values with <code>transform()</code> before passing
+them to "qsort".</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/functions/lambda/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/functions/lambda/</a>, saved Thu, 01 Oct 2026 15:39:24 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/08_functions.html"><span class="pager__dir">← Previous</span><span class="pager__title">Functions</span></a><a class="pager__link pager__link--next" href="../pages/10_closures.html"><span class="pager__dir">Next →</span><span class="pager__title">Closures</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#creating-a-lambda">Creating a lambda</a></li><li class="rail__depth-2"><a href="#higher-order-functions">Higher-order functions</a></li><li class="rail__depth-2"><a href="#thin-lambdas-and-parameters">Thin lambdas and parameters</a></li><li class="rail__depth-2"><a href="#lambdas-and-closures">Lambdas and closures</a></li><li class="rail__depth-2"><a href="#capturing-and-mutating-state">Capturing and mutating state</a></li><li class="rail__depth-2"><a href="#lambdas-and-ffi-interop">Lambdas and FFI interop</a></li><li class="rail__depth-3"><a href="#inline-lambdas">Inline lambdas</a></li><li class="rail__depth-3"><a href="#using-lambdas-for-side-effects">Using lambdas for side effects</a></li><li class="rail__depth-3"><a href="#bubble-sort">Bubble sort</a></li><li class="rail__depth-3"><a href="#using-closures-with-direct-calls">Using closures with direct calls</a></li><li class="rail__depth-3"><a href="#runtime-arguments">Runtime arguments</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#creating-a-lambda">Creating a lambda</a></li><li class="rail__depth-2"><a href="#higher-order-functions">Higher-order functions</a></li><li class="rail__depth-2"><a href="#thin-lambdas-and-parameters">Thin lambdas and parameters</a></li><li class="rail__depth-2"><a href="#lambdas-and-closures">Lambdas and closures</a></li><li class="rail__depth-2"><a href="#capturing-and-mutating-state">Capturing and mutating state</a></li><li class="rail__depth-2"><a href="#lambdas-and-ffi-interop">Lambdas and FFI interop</a></li><li class="rail__depth-3"><a href="#inline-lambdas">Inline lambdas</a></li><li class="rail__depth-3"><a href="#using-lambdas-for-side-effects">Using lambdas for side effects</a></li><li class="rail__depth-3"><a href="#bubble-sort">Bubble sort</a></li><li class="rail__depth-3"><a href="#using-closures-with-direct-calls">Using closures with direct calls</a></li><li class="rail__depth-3"><a href="#runtime-arguments">Runtime arguments</a></li></ol>
+<p class="rail__meta">Chapter 09 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

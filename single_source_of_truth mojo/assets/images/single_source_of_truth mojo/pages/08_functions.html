@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Functions · Mojo v1 The Language Manual</title>
+<meta name="description" content="Parameters, returns, default and keyword arguments, raising and yielding.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">08</span></nav><h1>Functions</h1>
+<p class="dek">Parameters, returns, default and keyword arguments, raising and yielding.</p><p class="byline">Chapter 08 · 3,911 words · 40 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/functions/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Mojo uses the <code>def</code> keyword to define functions.</p>
+<h2 class="h h--2" data-level="2" id="anatomy-of-a-function">Anatomy of a function<a aria-label="Link to Anatomy of a function" class="h__link" href="#anatomy-of-a-function"></a></h2>
+<p>A Mojo function declaration can include the following elements:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">def function_name[</span>
+<span class="cl" data-line="2">​    parameters ...</span>
+<span class="cl" data-line="3">](</span>
+<span class="cl" data-line="4">​    arguments ...</span>
+<span class="cl" data-line="5">) -&gt; return_value_type:</span>
+<span class="cl" data-line="6">​    function_body</span>
+</code></pre></figure>
+<p>Functions can have:</p>
+<ul>
+<li class="">Parameters: A function can optionally take one or more compile-time
+<em>parameter</em> values used for metaprogramming.</li>
+<li class="">Arguments: A function can also optionally take one or more run-time
+<em>arguments</em>.</li>
+<li class="">Return value: A function can optionally return a value.</li>
+<li class="">Function body: Statements that run when you call the function.
+Function definitions must include a body.</li>
+</ul>
+<p>You can omit all of the optional parts of the function, so the minimal
+function is something like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">do_nothing</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">pass</span></span>
+</code></pre></figure>
+<p>If a function takes no parameters, you can omit the square brackets, but the
+parentheses are always required.</p>
+<p>Although you can't leave out the function body, you can use the <code>pass</code> statement
+to define a function that does nothing.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Struct methods</p><div class="callout__body"><p>Functions declared inside a struct are called <em>methods</em>. They can include the
+same elements as regular functions, but follow a few extra rules. For more
+information, see the page on <a href="../pages/13_mojo-structs.html">structs</a>.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="arguments-and-parameters">Arguments and parameters<a aria-label="Link to Arguments and parameters" class="h__link" href="#arguments-and-parameters"></a></h3>
+<p>Functions take two kinds of inputs: <em>arguments</em> and <em>parameters</em>. Arguments are
+familiar from many other languages: they are run-time values passed into the
+function.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">max</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> a <span class="tk-keyword">if</span> a <span class="tk-operator">&gt;</span> b <span class="tk-keyword">else</span> b</span>
+</code></pre></figure>
+<p>On the other hand, you can think of a parameter as a compile-time variable that
+becomes a run-time constant. For example, consider the following function with a
+parameter:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> add_tensors<span class="tk-punctuation">[</span>rank<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> MyTensor<span class="tk-punctuation">[</span>rank<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> MyTensor<span class="tk-punctuation">[</span>rank<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> MyTensor<span class="tk-punctuation">[</span>rank<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># ...</span></span>
+</code></pre></figure>
+<p>In this case, the <code>rank</code> value needs to be specified in a way that can be
+determined at compilation time, such as a literal or expression.</p>
+<p>When you compile a program that uses this code, the compiler produces a unique
+version of the function for each unique <code>rank</code> value used in the program, with
+<code>rank</code> treated as a constant within each specialized version.</p>
+<p>This usage of "parameter"
+is probably different from what you're used to from other languages, where
+"parameter" and "argument" are often used interchangeably. In Mojo, "parameter"
+and "parameter expression" refer to compile-time values, and "argument" and
+"expression" refer to run-time values.</p>
+<p>By default, both arguments and parameters can be specified either by position or
+by keyword. These forms can also be mixed in the same function call.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># positional</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> x <span class="tk-operator">=</span> <span class="tk-builtin">max</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">7</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Positionally, a=5 and b=7</span></span>
+<span class="cl" data-line="3"><span class="tk-comment"># keyword</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">var</span> y <span class="tk-operator">=</span> <span class="tk-builtin">max</span><span class="tk-punctuation">(</span>b<span class="tk-operator">=</span><span class="tk-number">3</span><span class="tk-punctuation">,</span> a<span class="tk-operator">=</span><span class="tk-number">9</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-comment"># mixed</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">var</span> z <span class="tk-operator">=</span> <span class="tk-builtin">max</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> b<span class="tk-operator">=</span><span class="tk-number">7</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Positionally, a=5</span></span>
+</code></pre></figure>
+<p>For more information on arguments, see <a href="../pages/08_functions.html#function-arguments">Function arguments</a>
+on this page. For more information on parameters, see
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/" rel="noopener noreferrer">Parameterization: compile-time metaprogramming</a>.</p>
+<h2 class="h h--2" data-level="2" id="function-requirements">Function requirements<a aria-label="Link to Function requirements" class="h__link" href="#function-requirements"></a></h2>
+<p>A function has the following requirements:</p>
+<ul>
+<li class="">
+<p>You must declare the type of each function parameter and argument.</p>
+</li>
+<li class="">
+<p>If a function doesn't return a value, you can either omit the return type or
+declare <code>None</code> as the return type.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># The following function definitions are equivalent</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">greet</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello,"</span><span class="tk-punctuation">,</span> name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">greet</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Hello,"</span><span class="tk-punctuation">,</span> name<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>If the function returns a value, you must either declare the return type using
+the <code><strong>-&gt;</strong> <var>type</var></code> syntax or provide a
+<a href="../pages/08_functions.html#named-results">named result</a> in the argument list.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># The following function definitions are equivalent</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">incr</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> a <span class="tk-operator">+</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">incr</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> <span class="tk-keyword">out</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">  b <span class="tk-operator">=</span> a <span class="tk-operator">+</span> <span class="tk-number">1</span></span>
+</code></pre></figure>
+<p>For more information, see the <a href="../pages/08_functions.html#return-values">Return values</a> section of this
+page.</p>
+</li>
+</ul>
+<h2 class="h h--2" data-level="2" id="function-arguments">Function arguments<a aria-label="Link to Function arguments" class="h__link" href="#function-arguments"></a></h2>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Functions with / and * in the argument list</p><div class="callout__body"><p>You might see the following characters in
+place of arguments: slash (<code>/</code>) and/or star (<code>*</code>). For example:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">myfunc</span><span class="tk-punctuation">(</span>pos_only<span class="tk-punctuation">,</span> <span class="tk-operator">/</span><span class="tk-punctuation">,</span> pos_or_keyword<span class="tk-punctuation">,</span> <span class="tk-operator">*</span><span class="tk-punctuation">,</span> keyword_only<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure><p>Arguments <strong>before</strong> the <code>/</code> can be passed only by position. Arguments <strong>after</strong>
+the <code>*</code> can be passed only by keyword. For details, see
+<a href="../pages/08_functions.html#positional-only-and-keyword-only-arguments">Positional-only and keyword-only arguments</a></p><p>You may also see argument names prefixed with one or two stars (<code>*</code>):</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">myfunc2</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>names<span class="tk-punctuation">,</span> <span class="tk-keyword">var</span> <span class="tk-operator">**</span>attributes<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+</code></pre></figure><p>An argument name prefixed by a single star character, like <code>*names</code> identifies a
+<a href="../pages/08_functions.html#variadic-arguments">variadic argument</a>, while an argument name prefixed with
+a double star, like <code>**attributes</code> identifies a
+<a href="../pages/08_functions.html#variadic-keyword-arguments">variadic keyword-only argument</a>.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="optional-arguments">Optional arguments<a aria-label="Link to Optional arguments" class="h__link" href="#optional-arguments"></a></h3>
+<p>An optional argument is one that includes a default value, such as the <code>exp</code>
+argument here:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">my_pow</span><span class="tk-punctuation">(</span>base<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> exp<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> base<span class="tk-operator">**</span>exp</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">use_defaults</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Uses the default value for `exp`</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> z <span class="tk-operator">=</span> my_pow<span class="tk-punctuation">(</span><span class="tk-number">3</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>z<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>However, you can't define a default value for an argument that's declared with
+the <a href="../pages/20_ownership.html#mutable-arguments-mut"><code>mut</code></a> argument
+convention.</p>
+<p>Any optional arguments must appear after any required arguments. <a href="../pages/08_functions.html#positional-only-and-keyword-only-arguments">Keyword-only
+arguments</a>, discussed later, can
+also be either required or optional.</p>
+<h3 class="h h--3" data-level="3" id="keyword-arguments">Keyword arguments<a aria-label="Link to Keyword arguments" class="h__link" href="#keyword-arguments"></a></h3>
+<p>You can also use keyword arguments when calling a function. Keyword arguments
+are specified using the format
+<code><var>argument_name</var> = <var>argument_value</var></code>.
+You can pass keyword arguments in any order:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">my_pow</span><span class="tk-punctuation">(</span>base<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> exp<span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> base<span class="tk-operator">**</span>exp</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">use_keywords</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Uses keyword argument names (with order reversed)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> z <span class="tk-operator">=</span> my_pow<span class="tk-punctuation">(</span>exp<span class="tk-operator">=</span><span class="tk-number">3</span><span class="tk-punctuation">,</span> base<span class="tk-operator">=</span><span class="tk-number">2</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>z<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="variadic-arguments">Variadic arguments<a aria-label="Link to Variadic arguments" class="h__link" href="#variadic-arguments"></a></h3>
+<p>Variadic arguments let a function accept a variable number of arguments. To
+define a function that takes a variadic argument, use the variadic argument
+syntax <code>*<var>argument_name</var></code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">sum</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>values<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> <span class="tk-builtin">sum</span><span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">for</span> value <span class="tk-keyword">in</span> values<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-builtin">sum</span> <span class="tk-operator">=</span> <span class="tk-builtin">sum</span> <span class="tk-operator">+</span> value</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> <span class="tk-builtin">sum</span></span>
+</code></pre></figure>
+<p>The variadic argument <code>values</code> here is a placeholder that accepts any number of
+passed positional arguments.</p>
+<p>You can define zero or more arguments before the variadic argument. When calling
+the function, Mojo assigns any remaining positional arguments to the variadic
+argument, so any arguments declared <strong>after</strong> the variadic argument can only be
+specified by keyword (see
+<a href="../pages/08_functions.html#positional-only-and-keyword-only-arguments">Positional-only and keyword-only arguments</a>).</p>
+<p>Variadic arguments fall into two categories:</p>
+<ul>
+<li class="">Homogeneous variadic arguments, where all of the passed arguments are the same
+type—all <a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/#int" rel="noopener noreferrer"><code>Int</code></a>, or all
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/string/string/String/" rel="noopener noreferrer"><code>String</code></a>, for example.</li>
+<li class="">Heterogeneous variadic arguments, which can accept a set of different argument
+types.</li>
+</ul>
+<p>The following sections describe how to work with homogeneous and heterogeneous
+variadic arguments.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Variadic parameters</p><div class="callout__body"><p>Mojo also supports variadic <em>parameters</em>, but with some limitations—for details
+see <a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/#variadic-parameters" rel="noopener noreferrer">variadic parameters</a>.</p></div></aside>
+<h4 class="h h--4" data-level="4" id="homogeneous-variadic-arguments">Homogeneous variadic arguments<a aria-label="Link to Homogeneous variadic arguments" class="h__link" href="#homogeneous-variadic-arguments"></a></h4>
+<p>When defining a homogeneous variadic argument (all arguments must be the same
+type), use <code>*<var>argument_name</var>: <var>argument_type</var></code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">greet</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>names<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>Inside the function body, the variadic argument is available as an iterable list
+for ease of use. Concretely, that type is named
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/variadics/VariadicList/" rel="noopener noreferrer"><code>VariadicList</code></a>. Here is a
+simple example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">sum</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>values<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> <span class="tk-builtin">sum</span><span class="tk-punctuation">:</span> Int <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">for</span> value <span class="tk-keyword">in</span> values<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-builtin">sum</span> <span class="tk-operator">=</span> <span class="tk-builtin">sum</span> <span class="tk-operator">+</span> value</span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> <span class="tk-builtin">sum</span></span>
+</code></pre></figure>
+<p>Iterating over this list directly with a <code>for..in</code> loop currently produces a
+reference to the element, which can be mutable with a <code>mut</code> variadic list. Use
+the <code>ref</code> binding pattern to capture a mutable reference if you
+want to mutate the elements of the list:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">make_worldly</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-operator">*</span>strs<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> <span class="tk-keyword">ref</span> i <span class="tk-keyword">in</span> strs<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">        i <span class="tk-operator">+=</span> <span class="tk-string">" world"</span></span>
+</code></pre></figure>
+<p>You can also directly index the list with integers as well:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">make_worldly2</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-operator">*</span>strs<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-builtin">len</span><span class="tk-punctuation">(</span>strs<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">        strs<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span> <span class="tk-operator">+=</span> <span class="tk-string">" world"</span></span>
+</code></pre></figure>
+<h4 class="h h--4" data-level="4" id="heterogeneous-variadic-arguments">Heterogeneous variadic arguments<a aria-label="Link to Heterogeneous variadic arguments" class="h__link" href="#heterogeneous-variadic-arguments"></a></h4>
+<p>Implementing heterogeneous variadic arguments (each argument type may be
+different) is somewhat more complicated than homogeneous variadic arguments. To
+handle multiple argument types, the function must be
+<a href="../pages/17_parameterized-declarations.html">parameterized</a>, which requires using
+<a href="../pages/16_traits.html">traits</a> and <a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/" rel="noopener noreferrer">parameters</a>. So
+the syntax may look a little unfamiliar if you haven't worked with those
+features.</p>
+<p>The signature for a function with a heterogeneous variadic argument looks like
+this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> count_many_things<span class="tk-punctuation">[</span><span class="tk-operator">*</span>ArgTypes<span class="tk-punctuation">:</span> Intable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>args<span class="tk-punctuation">:</span> <span class="tk-operator">*</span>ArgTypes<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>The parameter list, <code>[*ArgTypes: Intable]</code> specifies that the function takes an
+<code>ArgTypes</code> parameter, which is a list of types, all of which conform to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/int/Intable/" rel="noopener noreferrer"><code>Intable</code></a> trait. The asterisk in <code>*ArgTypes</code>
+indicates that <code>ArgTypes</code> is a <strong>variadic type parameter</strong> (a list of types).</p>
+<p>The argument list, <code>(*args: *ArgTypes)</code> has the familiar <code>*args</code> for the
+variadic argument, but instead of a single type, its type is defined as the
+variadic type list <code>*ArgTypes</code>. The asterisk in <code>*args</code> indicates a
+<strong>variadic argument</strong>, and the asterisk in <code>*ArgTypes</code> refers to the
+variadic type parameter.</p>
+<p>This means that each argument in <code>args</code> has a corresponding type in <code>ArgTypes</code>,
+so <code>args[<var>n</var>]</code> is of type
+<code>ArgTypes[<var>n</var>]</code>.</p>
+<p>Inside the function, <code>args</code> becomes a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/variadics/VariadicPack/" rel="noopener noreferrer"><code>VariadicPack</code></a> because the
+syntax <code>*args: *ArgTypes</code> creates a heterogeneous variadic argument. That
+means each element in <code>args</code> can be a different type that requires a
+different amount of memory. To iterate through the <code>VariadicPack</code>, the
+compiler must know each element's type, so you must use a <a href="../pages/30_compile-time-evaluation.html#comptime-for"><code>comptime for</code>
+loop</a>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> count_many_things<span class="tk-punctuation">[</span><span class="tk-operator">*</span>ArgTypes<span class="tk-punctuation">:</span> Intable<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>args<span class="tk-punctuation">:</span> <span class="tk-operator">*</span>ArgTypes<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> total <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span>args<span class="tk-punctuation">.</span>__len__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">        total <span class="tk-operator">+=</span> Int<span class="tk-punctuation">(</span>args<span class="tk-punctuation">[</span>i<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> total</span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>count_many_things<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">11.7</span><span class="tk-punctuation">,</span> <span class="tk-number">12</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-comment"># 28</span></span>
+</code></pre></figure>
+<p>Notice that when calling <code>count_many_things()</code>, you don't actually pass in
+a list of argument types. You only need to pass in the arguments, and Mojo
+generates the <code>ArgTypes</code> list itself.</p>
+<h4 class="h h--4" data-level="4" id="variadic-keyword-arguments">Variadic keyword arguments<a aria-label="Link to Variadic keyword arguments" class="h__link" href="#variadic-keyword-arguments"></a></h4>
+<p>Mojo functions also support variadic keyword arguments (<code>**kwargs</code>). Variadic
+keyword arguments let you pass an arbitrary number of keyword
+arguments. To define a function that takes a variadic keyword argument, use the
+variadic keyword argument syntax <code>var **<var>kw_argument_name</var></code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print_nicely</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> <span class="tk-operator">**</span>kwargs<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> kwargs<span class="tk-punctuation">.</span>items<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>item<span class="tk-punctuation">.</span>key<span class="tk-punctuation">,</span> <span class="tk-string">"="</span><span class="tk-punctuation">,</span> item<span class="tk-punctuation">.</span>value<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Calling it with any number of keyword arguments prints each one:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># prints:</span></span>
+<span class="cl" data-line="2"><span class="tk-comment"># `a = 7`</span></span>
+<span class="cl" data-line="3"><span class="tk-comment"># `y = 8`</span></span>
+<span class="cl" data-line="4">print_nicely<span class="tk-punctuation">(</span>a<span class="tk-operator">=</span><span class="tk-number">7</span><span class="tk-punctuation">,</span> y<span class="tk-operator">=</span><span class="tk-number">8</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>In this example, the argument name <code>kwargs</code> is a placeholder that accepts any
+number of keyword arguments. Inside the body of the function, you can access
+the arguments as a dictionary of keywords and argument values (specifically,
+an instance of
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/StringDict/" rel="noopener noreferrer"><code>StringDict</code></a>).</p>
+<p>There are currently a few limitations:</p>
+<ul>
+<li class="">
+<p>Variadic keyword arguments must be declared with the <code>var</code> <a href="../pages/20_ownership.html#argument-conventions">argument
+convention</a> (the
+function owns the argument dictionary and may mutate it); no other
+convention is supported:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Not supported.</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">imm_kwargs</span><span class="tk-punctuation">(</span>imm <span class="tk-operator">**</span>kwargs<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>All the variadic keyword arguments must have the same type, and this
+determines the type of the argument dictionary. For example, if the argument
+is <code>var **kwargs: Float64</code> then the argument dictionary is a
+<code>StringDict[Float64]</code>.</p>
+</li>
+<li class="">
+<p>The argument type must conform to the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/copyable/Copyable/" rel="noopener noreferrer"><code>Copyable</code></a> trait.</p>
+</li>
+<li class="">
+<p>Dictionary unpacking isn't supported yet:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">takes_dict</span><span class="tk-punctuation">(</span>d<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">  print_nicely<span class="tk-punctuation">(</span><span class="tk-operator">**</span>d<span class="tk-punctuation">)</span> <span class="tk-comment"># Not supported yet.</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>Variadic keyword <em>parameters</em> aren't supported yet:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Not supported yet.</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> var_kwparams<span class="tk-punctuation">[</span><span class="tk-operator">**</span>kwparams<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="positional-only-and-keyword-only-arguments">Positional-only and keyword-only arguments<a aria-label="Link to Positional-only and keyword-only arguments" class="h__link" href="#positional-only-and-keyword-only-arguments"></a></h3>
+<p>When defining a function, you can restrict some arguments so that they can
+be passed only as positional arguments, or they can be passed only as keyword
+arguments.</p>
+<p>To define positional-only arguments, add a slash character (<code>/</code>) to the
+argument list. Any arguments before the <code>/</code> are positional-only: they can't be
+passed as keyword arguments. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">min</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> <span class="tk-operator">/</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> a <span class="tk-keyword">if</span> a <span class="tk-operator">&lt;</span> b <span class="tk-keyword">else</span> b</span>
+</code></pre></figure>
+<p>This <code>min()</code> function can be called with <code>min(1, 2)</code> but can't be called using
+keywords, like <code>min(a=1, b=2)</code>.</p>
+<p>There are several reasons you might want to write a function with
+positional-only arguments:</p>
+<ul>
+<li class="">The argument names aren't meaningful for the caller.</li>
+<li class="">You want the freedom to change the argument names later on without breaking
+backward compatibility.</li>
+</ul>
+<p>For example, in the <code>min()</code> function, the argument names don't add any real
+information, and there's no reason to specify arguments by keyword.</p>
+<p>For more information on positional-only arguments, see <a class="ext" data-external="" href="https://peps.python.org/pep-0570/" rel="noopener noreferrer">PEP 570 – Python
+Positional-Only Parameters</a>.</p>
+<p>Keyword-only arguments are the inverse of positional-only arguments: they can
+be specified only by keyword. If a function accepts variadic arguments, any
+arguments defined <em>after</em> the variadic arguments are treated as keyword-only.
+For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">sort</span><span class="tk-punctuation">(</span><span class="tk-operator">*</span>values<span class="tk-punctuation">:</span> Float64<span class="tk-punctuation">,</span> ascending<span class="tk-punctuation">:</span> Bool <span class="tk-operator">=</span> <span class="tk-boolean">True</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>In this example, you can pass any number of
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/simd/#float64" rel="noopener noreferrer"><code>Float64</code></a> values, optionally
+followed by the keyword <code>ascending</code> argument:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">sort<span class="tk-punctuation">(</span><span class="tk-number">1.1</span><span class="tk-punctuation">,</span> <span class="tk-number">6.5</span><span class="tk-punctuation">,</span> <span class="tk-number">4.3</span><span class="tk-punctuation">,</span> ascending<span class="tk-operator">=</span><span class="tk-boolean">False</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>If the function doesn't accept variadic arguments, you can add a single star
+(<code>*</code>) to the argument list to separate the keyword-only arguments:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">kw_only_args</span><span class="tk-punctuation">(</span>a1<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> a2<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> <span class="tk-operator">*</span><span class="tk-punctuation">,</span> double<span class="tk-punctuation">:</span> Bool<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> product <span class="tk-operator">=</span> a1 <span class="tk-operator">*</span> a2</span>
+<span class="cl" data-line="3"> <span class="tk-keyword">if</span> double<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> product <span class="tk-operator">*</span> <span class="tk-number">2</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> product</span>
+</code></pre></figure>
+<p>Keyword-only arguments often have default values, but this isn't required. If a
+keyword-only argument doesn't have a default value, it's a <em>required
+keyword-only argument</em>. It must be specified, and it must be specified by
+keyword.</p>
+<p>Any required keyword-only arguments must appear in the signature before
+any optional keyword-only arguments. That is, arguments appear in the following
+sequence in a function signature:</p>
+<ul>
+<li class="">Required positional arguments.</li>
+<li class="">Optional positional arguments.</li>
+<li class="">Variadic arguments.</li>
+<li class="">Required keyword-only arguments.</li>
+<li class="">Optional keyword-only arguments.</li>
+<li class="">Variadic keyword arguments.</li>
+</ul>
+<p>For more information on keyword-only arguments, see <a class="ext" data-external="" href="https://peps.python.org/pep-3102/" rel="noopener noreferrer">PEP 3102 – Keyword-Only
+Arguments</a>.</p>
+<h2 class="h h--2" data-level="2" id="overloaded-functions">Overloaded functions<a aria-label="Link to Overloaded functions" class="h__link" href="#overloaded-functions"></a></h2>
+<p>All function declarations must specify argument types, so if you want a
+function to work with different data types, you need to implement
+separate versions of the function that each specify different argument types.
+This is called "overloading" a function.</p>
+<p>For example, here's an overloaded <code>add()</code> function that can accept either
+<code>Int</code> or <code>String</code> types:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">add</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> x <span class="tk-operator">+</span> y</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">add</span><span class="tk-punctuation">(</span>x<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> y<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">return</span> x <span class="tk-operator">+</span> y</span>
+</code></pre></figure>
+<p>If you pass anything other than <code>Int</code> or <code>String</code> to the <code>add()</code> function,
+you'll get a compiler error. That is, unless <code>Int</code> or <code>String</code> can implicitly
+cast the type into their own type. For example, <code>String</code> includes an overloaded
+version of its initializer (<code>__init__()</code>) that supports
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#constructors-and-implicit-conversion" rel="noopener noreferrer">implicit conversion</a>
+from a <a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/string_literal/StringLiteral/" rel="noopener noreferrer"><code>StringLiteral</code></a> value.
+Thus, you can also pass a <code>StringLiteral</code> to a function that expects a <code>String</code>.</p>
+<p>When resolving an overloaded function call, the Mojo compiler picks the
+candidate that best fits the call according to the rules in
+<a href="../pages/08_functions.html#overload-resolution">Overload resolution</a>, or reports the call as
+ambiguous if no single candidate is best.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Overload sets</p><div class="callout__body"><p>An "overload set" is a collection of function overloads that share
+the same name but different signatures.</p><ul>
+<li class="">Overload sets can't be extended by imports, aliases, or parameters.</li>
+<li class="">To avoid issues with local functions using the same name as an imported
+one, use an aliased import.
+<code>from package import foo as imported_foo</code> won't conflict with a local
+function named <code>foo</code>.</li>
+</ul></div></aside>
+<h3 class="h h--3" data-level="3" id="overload-resolution">Overload resolution<a aria-label="Link to Overload resolution" class="h__link" href="#overload-resolution"></a></h3>
+<p>When resolving an overloaded function, Mojo looks at:</p>
+<ul>
+<li class="">The number, position, and keyword of each argument.</li>
+<li class="">The type of each argument and each compile-time parameter.</li>
+<li class="">The argument conventions on each argument.</li>
+<li class="">Whether the candidate is an instance method or
+<a href="../pages/13_mojo-structs.html#static-methods">static method</a>.</li>
+<li class="">Whether an initializer allows
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#constructors-and-implicit-conversion" rel="noopener noreferrer">implicit conversion</a>.</li>
+</ul>
+<p>Mojo does <strong>not</strong> look at the return type, the <code>raises</code> effect, or any
+context surrounding the call. Two functions that differ only in return
+type or in whether they <code>raises</code> are duplicate definitions—the compiler
+rejects the second declaration.</p>
+<p>The overload resolution logic filters for candidates according to the following
+rules, in order of precedence:</p>
+<ol>
+<li class="">Candidates requiring the smallest number of implicit conversions (in both
+arguments and parameters).</li>
+<li class="">Candidates without variadic arguments.</li>
+<li class="">Candidates without variadic parameters.</li>
+<li class="">Candidates with the shortest parameter signature.</li>
+<li class="">Non-<code>@staticmethod</code> candidates (over <code>@staticmethod</code> ones, if available).</li>
+</ol>
+<p>If the compiler can't figure out which function to use, you can resolve the
+ambiguity by explicitly casting your value to a supported argument type. For
+example, the following code calls the overloaded <code>foo()</code> function,
+but both implementations accept an argument that supports <a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#constructors-and-implicit-conversion" rel="noopener noreferrer">implicit
+conversion</a>
+from <code>String</code>. So, the call to <code>foo("Hello")</code> is ambiguous and creates a
+compiler error. You can fix this by casting the value to the type you really
+want:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">MyString</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">@implicit</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> string<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">pass</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">struct</span> <span class="tk-class-name">YourString</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">@implicit</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> string<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">pass</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> MyString<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"MyString"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"><span class="tk-keyword">def</span> <span class="tk-function">foo</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> YourString<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"YourString"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17"><span class="tk-keyword">def</span> <span class="tk-function">call_foo</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="18"> <span class="tk-comment"># Both `foo` overloads can accept `"Hello"`, so Mojo doesn't know</span></span>
+<span class="cl" data-line="19"> <span class="tk-comment"># which one to call.</span></span>
+<span class="cl" data-line="20">    foo<span class="tk-punctuation">(</span>MyString<span class="tk-punctuation">(</span><span class="tk-string">"Hello"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>For the full overload-resolution rules and edge cases, see the
+<a class="ext" data-external="" href="https://mojolang.org/docs/reference/function-declarations/#function-overloads" rel="noopener noreferrer">function declarations
+reference</a>.</p>
+<h2 class="h h--2" data-level="2" id="return-values">Return values<a aria-label="Link to Return values" class="h__link" href="#return-values"></a></h2>
+<p>Return value types are declared in the signature using the
+<code><strong>-&gt;</strong> <var>type</var></code> syntax. Values are
+passed using the <code>return</code> keyword, which ends the function and returns the
+identified value (if any) to the caller.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">get_greeting</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> <span class="tk-string">"Hello"</span></span>
+</code></pre></figure>
+<p>By default, the value is returned to the caller as an owned value. As with
+arguments, a return value may be <a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#constructors-and-implicit-conversion" rel="noopener noreferrer">implicitly
+converted</a> to
+the named return type. For example, the previous example calls <code>return</code> with a
+string literal, <code>"Hello"</code>, which is implicitly converted to a <code>String</code>.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Returning a reference</p><div class="callout__body"><p>A function can also return a mutable or immutable reference using a <code>ref</code> return
+value. For details, see
+<a href="../pages/21_lifetimes-origins-and-references.html">Lifetimes, origins, and references</a>.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="named-results">Named results<a aria-label="Link to Named results" class="h__link" href="#named-results"></a></h3>
+<p>Named function results allow a function to return a value that can't be moved or
+copied. Named result syntax lets you specify a named, uninitialized variable to
+return to the caller using the <code>out</code> argument convention:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">get_name_tag</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> <span class="tk-keyword">out</span> name_tag<span class="tk-punctuation">:</span> NameTag<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    name_tag <span class="tk-operator">=</span> NameTag<span class="tk-punctuation">(</span>name<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The <code>out</code> argument convention identifies an uninitialized variable that the
+function must initialize. (This is the same as the <code>out</code> convention used in
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/lifecycle/life/#constructor" rel="noopener noreferrer">struct initializers</a>.) The <code>out</code>
+argument for a named result can appear anywhere in the argument list, but by
+convention, it should be the last argument in the list.</p>
+<p>A function can declare only one return value, whether it's declared using an
+<code>out</code> argument or using the standard <code><strong>-&gt;</strong>
+<var>type</var></code> syntax.</p>
+<p>A function with a named result argument doesn't need to include an explicit
+<code>return</code> statement, as shown above. If the function terminates without a
+<code>return</code>, or at a <code>return</code> statement with no value, the value of the <code>out</code>
+argument is returned to the caller. If it includes a <code>return</code> statement with a
+value, that value is returned to the caller, as usual.</p>
+<p>The fact that a function uses a named result is transparent to the caller. That
+is, these two signatures are interchangeable to the caller:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">get_name_tag</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> NameTag<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">get_name_tag</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> <span class="tk-keyword">out</span> name_tag<span class="tk-punctuation">:</span> NameTag<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>In both cases, the call looks like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> tag <span class="tk-operator">=</span> get_name_tag<span class="tk-punctuation">(</span><span class="tk-string">"Judith"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Because the return value is assigned to this special <code>out</code> variable, it doesn't
+need to be moved or copied when it's returned to the caller. This means that you
+can create a function that returns a type that can't be moved or copied, and
+which takes several steps to initialize:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">ImmovableObject</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>name <span class="tk-operator">=</span> name<span class="tk-operator">^</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">def</span> <span class="tk-function">create_immovable_object</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> <span class="tk-keyword">out</span> obj<span class="tk-punctuation">:</span> ImmovableObject<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">    obj <span class="tk-operator">=</span> ImmovableObject<span class="tk-punctuation">(</span>name<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9">    obj<span class="tk-punctuation">.</span>name <span class="tk-operator">+=</span> <span class="tk-string">"!"</span></span>
+<span class="cl" data-line="10"> <span class="tk-comment"># obj is implicitly returned</span></span>
+</code></pre></figure>
+<p>To the caller, it's an ordinary function call:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> my_obj <span class="tk-operator">=</span> create_immovable_object<span class="tk-punctuation">(</span><span class="tk-string">"Blob"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>By contrast, the following function with a standard return value doesn't work:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">create_immovable_object2</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> ImmovableObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> obj <span class="tk-operator">=</span> ImmovableObject<span class="tk-punctuation">(</span>name<span class="tk-operator">^</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3">    obj<span class="tk-punctuation">.</span>name <span class="tk-operator">+=</span> <span class="tk-string">"!"</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> obj<span class="tk-operator">^</span> <span class="tk-comment"># Error: ImmovableObject is not copyable or movable</span></span>
+</code></pre></figure>
+<p>Because <code>create_immovable_object2</code> uses a local variable to store the object
+while it's under construction, the return call requires it to be either moved
+or copied to the callee. This isn't an issue if the newly-created value is
+returned immediately:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">create_immovable_object3</span><span class="tk-punctuation">(</span><span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> ImmovableObject<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> ImmovableObject<span class="tk-punctuation">(</span>name<span class="tk-operator">^</span><span class="tk-punctuation">)</span> <span class="tk-comment"># OK</span></span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="raising-and-non-raising-functions">Raising and non-raising functions<a aria-label="Link to Raising and non-raising functions" class="h__link" href="#raising-and-non-raising-functions"></a></h2>
+<p>By default, when a function raises an error, the function terminates immediately
+and the error propagates to the calling function. If the calling function
+doesn't handle the error, it continues to propagate up the call stack.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">raises_error</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"There was an error."</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Mojo functions are <em>non-raising</em> by default. To declare that a function can
+propagate an error to its caller, add the <code>raises</code> keyword to the function
+signature. A non-raising function that calls a raising function <strong>must handle
+any possible errors</strong>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># This function will not compile</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">unhandled_error</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    raises_error<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Error: can't call raising function in a non-raising context</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># Explicitly handle the error</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">handle_error</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">        raises_error<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Handled an error:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-comment"># Explicitly propagate the error</span></span>
+<span class="cl" data-line="13"><span class="tk-keyword">def</span> <span class="tk-function">propagate_error</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14">    raises_error<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>All of the examples above use the built-in
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/error/Error/" rel="noopener noreferrer"><code>Error</code></a> type. Mojo also supports
+<em>typed errors</em>, where you specify a custom error type a function can raise:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">validate</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises ValidationError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-punctuation">.</span><span class="tk-punctuation">.</span><span class="tk-punctuation">.</span></span>
+</code></pre></figure>
+<p>For more information, see
+<a href="../pages/12_errors-and-context-managers.html">Errors, error handling, and context managers</a>.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/functions/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/functions/</a>, saved Thu, 01 Oct 2026 15:32:44 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/07_operators.html"><span class="pager__dir">← Previous</span><span class="pager__title">Operators</span></a><a class="pager__link pager__link--next" href="../pages/09_lambda-expressions.html"><span class="pager__dir">Next →</span><span class="pager__title">Lambda expressions</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#anatomy-of-a-function">Anatomy of a function</a></li><li class="rail__depth-2"><a href="#function-requirements">Function requirements</a></li><li class="rail__depth-2"><a href="#function-arguments">Function arguments</a></li><li class="rail__depth-2"><a href="#overloaded-functions">Overloaded functions</a></li><li class="rail__depth-2"><a href="#return-values">Return values</a></li><li class="rail__depth-2"><a href="#raising-and-non-raising-functions">Raising and non-raising functions</a></li><li class="rail__depth-3"><a href="#arguments-and-parameters">Arguments and parameters</a></li><li class="rail__depth-3"><a href="#optional-arguments">Optional arguments</a></li><li class="rail__depth-3"><a href="#keyword-arguments">Keyword arguments</a></li><li class="rail__depth-3"><a href="#variadic-arguments">Variadic arguments</a></li><li class="rail__depth-3"><a href="#positional-only-and-keyword-only-arguments">Positional-only and keyword-only arguments</a></li><li class="rail__depth-3"><a href="#overload-resolution">Overload resolution</a></li><li class="rail__depth-3"><a href="#named-results">Named results</a></li><li class="rail__depth-4"><a href="#homogeneous-variadic-arguments">Homogeneous variadic arguments</a></li><li class="rail__depth-4"><a href="#heterogeneous-variadic-arguments">Heterogeneous variadic arguments</a></li><li class="rail__depth-4"><a href="#variadic-keyword-arguments">Variadic keyword arguments</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#anatomy-of-a-function">Anatomy of a function</a></li><li class="rail__depth-2"><a href="#function-requirements">Function requirements</a></li><li class="rail__depth-2"><a href="#function-arguments">Function arguments</a></li><li class="rail__depth-2"><a href="#overloaded-functions">Overloaded functions</a></li><li class="rail__depth-2"><a href="#return-values">Return values</a></li><li class="rail__depth-2"><a href="#raising-and-non-raising-functions">Raising and non-raising functions</a></li><li class="rail__depth-3"><a href="#arguments-and-parameters">Arguments and parameters</a></li><li class="rail__depth-3"><a href="#optional-arguments">Optional arguments</a></li><li class="rail__depth-3"><a href="#keyword-arguments">Keyword arguments</a></li><li class="rail__depth-3"><a href="#variadic-arguments">Variadic arguments</a></li><li class="rail__depth-3"><a href="#positional-only-and-keyword-only-arguments">Positional-only and keyword-only arguments</a></li><li class="rail__depth-3"><a href="#overload-resolution">Overload resolution</a></li><li class="rail__depth-3"><a href="#named-results">Named results</a></li><li class="rail__depth-4"><a href="#homogeneous-variadic-arguments">Homogeneous variadic arguments</a></li><li class="rail__depth-4"><a href="#heterogeneous-variadic-arguments">Heterogeneous variadic arguments</a></li><li class="rail__depth-4"><a href="#variadic-keyword-arguments">Variadic keyword arguments</a></li></ol>
+<p class="rail__meta">Chapter 08 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

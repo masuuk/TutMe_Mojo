@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -120,7 +120,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (PyTorch)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -131,23 +130,11 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <span class="kw">for</span> batch <span class="kw">in</span> loader.shard(cfg.rank, cfg.world_size):
         <span class="kw">var</span> loss = model.forward(batch.data, batch.labels)
         loss.backward()
-        <span class="com"># Synchronize gradients across all ranks</span>
+        <span class="com">// Synchronize gradients across all ranks</span>
         <span class="kw">for</span> param <span class="kw">in</span> model.parameters():
             all_reduce(param.grad, op=ReduceOp.AVG, group=cfg.group)
         model.optimizer.step()
         model.zero_grad()</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> torch.distributed <span class="kw">as</span> dist
-<span class="kw">from</span> torch.nn.parallel <span class="kw">import</span> DistributedDataParallel <span class="kw">as</span> DDP
-
-dist.init_process_group(<span class="str">"nccl"</span>)
-model = DDP(model.to(rank), device_ids=[rank])
-
-<span class="kw">for</span> batch <span class="kw">in</span> loader:
-    loss = model(batch)
-    loss.backward()
-    <span class="com"># Gradients synced automatically via DDP hooks</span>
-    optimizer.step()
-    optimizer.zero_grad()</code></pre>
       </div>
     </div>
 
@@ -172,7 +159,7 @@ model = DDP(model.to(rank), device_ids=[rank])
     topology=Topology.RING
 )
 
-<span class="com"># For multi-node: set node rank and IP</span>
+<span class="com">// For multi-node: set node rank and IP</span>
 cfg.set_node(
     node_rank=<span class="num">0</span>,
     node_count=<span class="num">2</span>,
@@ -190,7 +177,6 @@ cfg.set_node(
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo3">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (PyTorch)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -198,31 +184,19 @@ cfg.set_node(
 <span class="kw">from</span> tensor <span class="kw">import</span> Tensor, Float16, Float32
 
 <span class="kw">def</span> <span class="fn">train_step</span>(model: Model, batch: Batch):
-    <span class="com"># Autocast wraps forward pass in reduced precision</span>
+    <span class="com">// Autocast wraps forward pass in reduced precision</span>
     <span class="kw">with</span> autocast(dtype=Float16):
         <span class="kw">var</span> logits = model.forward(batch.data)
         <span class="kw">var</span> loss = cross_entropy(logits, batch.labels)
 
-    <span class="com"># Loss scaling prevents underflow in FP16 gradients</span>
+    <span class="com">// Loss scaling prevents underflow in FP16 gradients</span>
     <span class="kw">var</span> scaled_loss = loss * amp.scale_factor()
     scaled_loss.backward()
 
-    <span class="com"># Unscaled gradients in FP32 master weights</span>
+    <span class="com">// Unscaled gradients in FP32 master weights</span>
     amp.unscale(model.optimizer)
     model.optimizer.step()
     amp.update_scale()</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">from</span> torch.cuda.amp <span class="kw">import</span> autocast, GradScaler
-
-scaler = GradScaler()
-
-<span class="kw">with</span> autocast():
-    logits = model(batch.data)
-    loss = cross_entropy(logits, batch.labels)
-
-scaler.scale(loss).backward()
-scaler.unscale_(optimizer)
-scaler.step(optimizer)
-scaler.update()</code></pre>
       </div>
     </div>
 
@@ -249,12 +223,11 @@ scaler.update()</code></pre>
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo4">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (PyTorch)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo4"><code><span class="kw">from</span> checkpoint <span class="kw">import</span> CheckpointManager, CheckpointConfig
-<span class="kw">from</span> std.time <span class="kw">import</span> now
+<span class="kw">from</span> time <span class="kw">import</span> now
 
 <span class="kw">var</span> ckpt_cfg = CheckpointConfig(
     dir=<span class="str">"/checkpoints/run_001"</span>,
@@ -268,26 +241,13 @@ scaler.update()</code></pre>
 <span class="kw">for</span> epoch <span class="kw">in</span> range(max_epochs):
     train_epoch(model, loader, cfg)
     <span class="kw">if</span> epoch % <span class="num">5</span> == <span class="num">0</span>:
-        <span class="com"># Atomic save: metadata.json written last</span>
+        <span class="com">// Atomic save: metadata.json written last</span>
         mgr.save({
             <span class="str">"model"</span>: model.state_dict(),
             <span class="str">"optimizer"</span>: optimizer.state_dict(),
             <span class="str">"epoch"</span>: epoch,
             <span class="str">"timestamp"</span>: now()
         })</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">import</span> torch
-
-<span class="kw">def</span> <span class="fn">save_checkpoint</span>(model, optimizer, epoch, path):
-    torch.save({
-        <span class="str">"model"</span>: model.state_dict(),
-        <span class="str">"optimizer"</span>: optimizer.state_dict(),
-        <span class="str">"epoch"</span>: epoch,
-    }, path)
-
-<span class="kw">for</span> epoch <span class="kw">in</span> range(max_epochs):
-    train_epoch(model, loader)
-    <span class="kw">if</span> epoch % <span class="num">5</span> == <span class="num">0</span>:
-        save_checkpoint(model, optimizer, epoch, f<span class="str">"ckpt_{epoch}.pt"</span>)</code></pre>
       </div>
     </div>
 
@@ -307,15 +267,15 @@ scaler.update()</code></pre>
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo5"><code><span class="kw">var</span> mgr = CheckpointManager(ckpt_cfg)
 
-<span class="com"># First save: full checkpoint</span>
+<span class="com">// First save: full checkpoint</span>
 mgr.save(model.state_dict(), full=<span class="num">True</span>)
 
-<span class="com"># Subsequent saves: only diff from previous</span>
+<span class="com">// Subsequent saves: only diff from previous</span>
 <span class="kw">for</span> step <span class="kw">in</span> range(<span class="num">1000</span>):
     train_step(model, batch)
     <span class="kw">if</span> step % <span class="num">100</span> == <span class="num">0</span>:
         mgr.save(model.state_dict(), full=<span class="num">False</span>)
-        <span class="com"># Only ~2-5% of tensors typically change per step</span></code></pre>
+        <span class="com">// Only ~2-5% of tensors typically change per step</span></code></pre>
       </div>
     </div>
   </section>
@@ -327,7 +287,6 @@ mgr.save(model.state_dict(), full=<span class="num">True</span>)
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo6">Mojo 1.x</div>
-        <div class="tab" data-target="python">Python (PyTorch)</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -335,7 +294,7 @@ mgr.save(model.state_dict(), full=<span class="num">True</span>)
     CosineAnnealingLR, WarmupLinear, SequentialScheduler
 )
 
-<span class="com"># Build a warmup + cosine decay schedule</span>
+<span class="com">// Build a warmup + cosine decay schedule</span>
 <span class="kw">var</span> schedule = SequentialScheduler([
     WarmupLinear(
         warmup_steps=<span class="num">1000</span>,
@@ -348,24 +307,14 @@ mgr.save(model.state_dict(), full=<span class="num">True</span>)
     )
 ])
 
-<span class="com"># Composable: combine with gradient accumulation</span>
+<span class="com">// Composable: combine with gradient accumulation</span>
 <span class="kw">var</span> effective_lr = schedule.lr_at(step) * cfg.grad_accum_steps
 
-<span class="com"># Stateful: save/restore with checkpoint</span>
+<span class="com">// Stateful: save/restore with checkpoint</span>
 mgr.save({
     <span class="str">"model"</span>: model.state_dict(),
     <span class="str">"scheduler"</span>: schedule.state_dict()
 })</code></pre>
-        <pre class="code-block" id="python"><code><span class="kw">from</span> torch.optim.lr_scheduler <span class="kw">import</span> CosineAnnealingLR
-<span class="kw">from</span> torch.optim.lr_scheduler <span class="kw">import</span> LinearLR, SequentialLR
-
-warmup = LinearLR(optimizer, start_factor=<span class="num">0.01</span>, total_iters=<span class="num">1000</span>)
-cosine = CosineAnnealingLR(optimizer, T_max=<span class="num">50000</span>, eta_min=<span class="num">1e-6</span>)
-scheduler = SequentialLR(optimizer, [warmup, cosine], milestones=[<span class="num">1000</span>])
-
-<span class="kw">for</span> step <span class="kw">in</span> range(<span class="num">50000</span>):
-    train_step(model, batch)
-    scheduler.step()</code></pre>
       </div>
     </div>
 

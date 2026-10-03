@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -139,15 +139,13 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn" data-tab="ch11-np-out">output</button>
       </div>
       <div class="tab-content active" id="ch11-np-mojo">
-        <pre><code>from std.python import Python
+        <pre><span class="kw">from</span> std.python <span class="kw">import</span> Python
 
-
-def main():
-    def main() raises:
-        var np = Python.import_module(&quot;numpy&quot;)
-        var ar = np.arange(15).reshape(3, 5)
-        print(ar)
-        print(ar.shape)</code></pre>
+<span class="kw">def</span> <span class="fn">main</span>() <span class="kw">raises</span>:
+    <span class="kw">var</span> np = Python.<span class="fn">import_module</span>(<span class="str">"numpy"</span>)
+    <span class="kw">var</span> ar = np.<span class="fn">arange</span>(<span class="num">15</span>).<span class="fn">reshape</span>(<span class="num">3</span>, <span class="num">5</span>)
+    <span class="fn">print</span>(ar)
+    <span class="fn">print</span>(ar.shape)</pre>
       </div>
       <div class="tab-content" id="ch11-np-out">
         <pre>[[ 0  1  2  3  4]
@@ -264,18 +262,17 @@ py_list[<span class="num">0</span>] = <span class="str">"aardvark"</span>
       </div>
     </div>
 
-    <p>On the Mojo side, Python needs to find a function named <code class="inline">PyInit_&lt;module&gt;()</code> (for <code class="inline">foo.mojo</code> that's <code class="inline">PyInit_foo()</code>). Inside it, a <code class="inline">PythonModuleBuilder</code> declares everything Python can see:</p>
+    <p>On the Mojo side, Python needs to find a function named <code class="inline">PyInit_&lt;module&gt;()</code> (for <code class="inline">foo.mojo</code> that's <code class="inline">PyInit_foo()</code>). Inside it, a <code class="inline">PythonModuleBuilder</code> declares everything Python can see. The Python entry point that drives all of this is three lines long: <code class="inline">import mojo.importer</code> installs the import hook, <code class="inline">import mojo_module</code> loads the extension module, and <code class="inline">print(mojo_module.factorial(5))</code> prints <code class="inline">120</code>.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch11-fact-mojo">mojo_module.mojo</button>
-        <button class="tab-btn" data-tab="ch11-fact-py">main.py</button>
         <button class="tab-btn" data-tab="ch11-fact-out">output</button>
       </div>
       <div class="tab-content active" id="ch11-fact-mojo">
         <pre><span class="kw">from</span> std.python <span class="kw">import</span> PythonObject
 <span class="kw">from</span> std.python.bindings <span class="kw">import</span> PythonModuleBuilder
-<span class="kw">import</span> std.math
+<span class="kw">from</span> std <span class="kw">import</span> math
 <span class="kw">from</span> std.os <span class="kw">import</span> abort
 
 <span class="fn">@export</span>
@@ -291,12 +288,6 @@ py_list[<span class="num">0</span>] = <span class="str">"aardvark"</span>
     <span class="cmt"># Raises if py_obj is not convertible to a Mojo Int:</span>
     <span class="kw">var</span> n = <span class="type">Int</span>(py=py_obj)
     <span class="kw">return</span> math.<span class="fn">factorial</span>(n)</pre>
-      </div>
-      <div class="tab-content" id="ch11-fact-py">
-        <pre><span class="kw">import</span> mojo.importer
-<span class="kw">import</span> mojo_module
-
-<span class="fn">print</span>(mojo_module.factorial(<span class="num">5</span>))</pre>
       </div>
       <div class="tab-content" id="ch11-fact-out">
         <pre>120</pre>
@@ -332,7 +323,7 @@ py_list[<span class="num">0</span>] = <span class="str">"aardvark"</span>
 
   <section id="binding">
     <h2>4. Binding Types &amp; Methods</h2>
-    <p>Functions are only the start — full Mojo types can be bound into Python as real Python type objects with constructors, methods, and static methods.</p>
+    <p>Functions are only the start — full Mojo types can be bound into Python as real Python type objects with constructors, methods, and static methods. From the caller's side the bound type is used like any other class: <code class="inline">Person("Sarah", 32)</code> runs the registered <code class="inline">py_init</code>, <code class="inline">person.get_name()</code> returns <code class="inline">Sarah</code>, and <code class="inline">person.set_age(33)</code> writes the field back through the registered method.</p>
 
     <h3>Registering a type</h3>
     <p><code class="inline">add_type[T]("Name")</code> returns a <code class="inline">PythonTypeBuilder</code> that you use to attach the rest of the surface. Bound types must implement <code class="inline">Writable</code>; extra traits unlock specific features — <code class="inline">Movable</code> for custom initializers (<code class="inline">def_py_init</code>), plus <code class="inline">Defaultable</code> for zero-argument construction (<code class="inline">def_init_defaultable</code>).</p>
@@ -340,7 +331,6 @@ py_list[<span class="num">0</span>] = <span class="str">"aardvark"</span>
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch11-type-mojo">mojo_module.mojo</button>
-        <button class="tab-btn" data-tab="ch11-type-py">Python usage</button>
         <button class="tab-btn" data-tab="ch11-type-out">output</button>
       </div>
       <div class="tab-content active" id="ch11-type-mojo">
@@ -381,15 +371,6 @@ py_list[<span class="num">0</span>] = <span class="str">"aardvark"</span>
     <span class="kw">except</span> e:
         <span class="fn">abort</span>(<span class="str">"error creating Mojo module"</span>)</pre>
       </div>
-      <div class="tab-content" id="ch11-type-py">
-        <pre><span class="kw">import</span> mojo.importer
-<span class="kw">from</span> mojo_module <span class="kw">import</span> Person
-
-person = Person(<span class="str">"Sarah"</span>, <span class="num">32</span>)
-<span class="fn">print</span>(person)                    <span class="cmt"># Person(Sarah, 32)</span>
-<span class="fn">print</span>(person.get_name())        <span class="cmt"># Sarah</span>
-person.set_age(<span class="num">33</span>)</pre>
-      </div>
       <div class="tab-content" id="ch11-type-out">
         <pre>Person(Sarah, 32)
 Sarah</pre>
@@ -412,12 +393,11 @@ Sarah</pre>
     </ul>
 
     <h3>Keyword arguments</h3>
-    <p>Python keyword arguments reach Mojo through an unsugared trailing parameter of type <code class="inline">StringDict[PythonObject]</code> (from <code class="inline">std.collections</code>). Python's native <code class="inline">**kwargs</code> and keyword-only syntax (<code class="inline">def foo(*, x: Int)</code>) are not yet supported:</p>
+    <p>Python keyword arguments reach Mojo through an unsugared trailing parameter of type <code class="inline">StringDict[PythonObject]</code> (from <code class="inline">std.collections</code>). Python's native <code class="inline">**kwargs</code> and keyword-only syntax (<code class="inline">def foo(*, x: Int)</code>) are not yet supported. The call site is ordinary Python — <code class="inline">mojo_module.sum_kwargs_ints(a=10, b=20, c=30)</code> returns <code class="inline">60</code>, with every keyword collected into that trailing dictionary:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch11-kwargs-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch11-kwargs-py">Python call</button>
       </div>
       <div class="tab-content active" id="ch11-kwargs-mojo">
         <pre><span class="kw">from</span> std.collections <span class="kw">import</span> StringDict
@@ -427,10 +407,6 @@ Sarah</pre>
     <span class="kw">for</span> entry <span class="kw">in</span> kwargs.<span class="fn">items</span>():
         total += <span class="type">Int</span>(entry.value)
     <span class="kw">return</span> PythonObject(total)</pre>
-      </div>
-      <div class="tab-content" id="ch11-kwargs-py">
-        <pre><span class="cmt"># returns 60 — kwargs land in the trailing StringDict:</span>
-result = mojo_module.sum_kwargs_ints(a=<span class="num">10</span>, b=<span class="num">20</span>, c=<span class="num">30</span>)</pre>
       </div>
     </div>
   </section>
@@ -455,19 +431,13 @@ result = mojo_module.sum_kwargs_ints(a=<span class="num">10</span>, b=<span clas
     </table>
 
     <h3>Writing Pythonic code in Mojo</h3>
-    <p>When porting Python, you can lean on <code class="inline">PythonObject</code>'s flexibility instead of converting everything into strongly-typed Mojo values — let runtime exceptions surface your mistakes, Python-style. The rule of thumb: <strong>any Python builtin is reachable as <code class="inline">Python.&lt;builtin&gt;()</code></strong>.</p>
+    <p>When porting Python, you can lean on <code class="inline">PythonObject</code>'s flexibility instead of converting everything into strongly-typed Mojo values — let runtime exceptions surface your mistakes, Python-style. The rule of thumb: <strong>any Python builtin is reachable as <code class="inline">Python.&lt;builtin&gt;()</code></strong>. The port below is close to a transcription: the Python original <code class="inline">def foo(x, y, z): x[y] = int(z); x = y + z</code> becomes the same three statements with <code class="inline">PythonObject</code> annotations and <code class="inline">Python.int(z)</code> in place of the bare builtin. That is the point — the body barely changes, only the types and the builtin lookup.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
-        <button class="tab-btn active" data-tab="ch11-port-py">Python original</button>
-        <button class="tab-btn" data-tab="ch11-port-mojo">Mojo port</button>
+        <button class="tab-btn active" data-tab="ch11-port-mojo">Mojo port</button>
       </div>
-      <div class="tab-content active" id="ch11-port-py">
-        <pre><span class="kw">def</span> <span class="fn">foo</span>(x, y, z):
-    x[y] = <span class="fn">int</span>(z)
-    x = y + z</pre>
-      </div>
-      <div class="tab-content" id="ch11-port-mojo">
+      <div class="tab-content active" id="ch11-port-mojo">
         <pre><span class="kw">def</span> <span class="fn">foo</span>(x: PythonObject, y: PythonObject, z: PythonObject) -&gt; PythonObject:
     x[y] = Python.<span class="fn">int</span>(z)
     x = y + z</pre>
@@ -475,12 +445,11 @@ result = mojo_module.sum_kwargs_ints(a=<span class="num">10</span>, b=<span clas
     </div>
 
     <h3>Variadic arguments</h3>
-    <p>Python's <code class="inline">*args</code> syntax isn't supported by <code class="inline">def_function</code> (fixed arity only). The lower-level <code class="inline">def_py_function</code> receives all arguments as a tuple and leaves arity validation to you:</p>
+    <p>Python's <code class="inline">*args</code> syntax isn't supported by <code class="inline">def_function</code> (fixed arity only). The lower-level <code class="inline">def_py_function</code> receives all arguments as a tuple and leaves arity validation to you. Called from Python as <code class="inline">mojo_module.sum_args(1, 2, 3, 4)</code>, it sees <code class="inline">args_tuple = (1, 2, 3, 4)</code> and returns <code class="inline">10</code>:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch11-var-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch11-var-py">Python call</button>
       </div>
       <div class="tab-content active" id="ch11-var-mojo">
         <pre><span class="kw">def</span> <span class="fn">sum_args</span>(py_self: PythonObject, args_tuple: PythonObject) <span class="kw">raises</span>:
@@ -490,9 +459,6 @@ result = mojo_module.sum_kwargs_ints(a=<span class="num">10</span>, b=<span clas
     <span class="kw">return</span> total
 
 <span class="cmt"># registered with: b.def_py_function[sum_args]("sum_args")</span></pre>
-      </div>
-      <div class="tab-content" id="ch11-var-py">
-        <pre><span class="fn">print</span>(mojo_module.sum_args(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>))   <span class="cmt"># 10</span></pre>
       </div>
     </div>
 

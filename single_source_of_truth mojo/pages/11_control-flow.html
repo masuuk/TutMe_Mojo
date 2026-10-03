@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Control flow · Mojo v1 The Language Manual</title>
+<meta name="description" content="Branching, looping, and the Mojo equivalents of Python's statements.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">11</span></nav><h1>Control flow</h1>
+<p class="dek">Branching, looping, and the Mojo equivalents of Python's statements.</p><p class="byline">Chapter 11 · 1,959 words · 52 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/control-flow/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Mojo includes several traditional control flow structures for conditional and
+repeated execution of code blocks.</p>
+<h2 class="h h--2" data-level="2" id="the-if-statement">The <code>if</code> statement<a aria-label="Link to The if statement" class="h__link" href="#the-if-statement"></a></h2>
+<p>Mojo supports the <code>if</code> statement for conditional code execution. With it you can
+conditionally execute an indented code block if a given
+<a href="../pages/06_types.html#booleans">boolean</a> expression evaluates to <code>True</code>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> temp_celsius <span class="tk-operator">=</span> Float64<span class="tk-punctuation">(</span><span class="tk-number">25</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> temp_celsius <span class="tk-operator">&gt;</span> <span class="tk-number">20</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"It is warm."</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"The temperature is"</span><span class="tk-punctuation">,</span> temp_celsius <span class="tk-operator">*</span> <span class="tk-number">9</span> <span class="tk-operator">/</span> <span class="tk-number">5</span> <span class="tk-operator">+</span> <span class="tk-number">32</span><span class="tk-punctuation">,</span> <span class="tk-string">"Fahrenheit."</span> <span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">It is warm.</span>
+<span class="cl" data-line="2">The temperature is 77.0 Fahrenheit.</span>
+</code></pre></figure>
+<p>You can write the entire <code>if</code> statement as a single line if all you need to
+execute conditionally is a single, short statement.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> temp_celsius <span class="tk-operator">=</span> <span class="tk-number">22</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> temp_celsius <span class="tk-operator">&lt;</span> <span class="tk-number">15</span><span class="tk-punctuation">:</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"It is cool."</span><span class="tk-punctuation">)</span> <span class="tk-comment"># Skipped because condition is False</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">if</span> temp_celsius <span class="tk-operator">&gt;</span> <span class="tk-number">20</span><span class="tk-punctuation">:</span> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"It is warm."</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">It is warm.</span>
+</code></pre></figure>
+<p>Optionally, an <code>if</code> statement can include any number of additional <code>elif</code>
+clauses, each specifying a boolean condition and associated code block to
+execute if <code>True</code>. The conditions are tested in the order given. When a
+condition evaluates to <code>True</code>, the associated code block is executed and no
+further conditions are tested.</p>
+<p>Additionally, an <code>if</code> statement can include an optional <code>else</code> clause providing
+a code block to execute if all conditions evaluate to <code>False</code>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> temp_celsius <span class="tk-operator">=</span> <span class="tk-number">25</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> temp_celsius <span class="tk-operator">&lt;=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"It is freezing."</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">elif</span> temp_celsius <span class="tk-operator">&lt;</span> <span class="tk-number">20</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"It is cool."</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">elif</span> temp_celsius <span class="tk-operator">&lt;</span> <span class="tk-number">30</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"It is warm."</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"It is hot."</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">It is warm.</span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Mojo doesn't support the equivalent of a Python <code>match</code> or C <code>switch</code>
+statement for pattern matching and conditional execution.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="short-circuit-evaluation">Short-circuit evaluation<a aria-label="Link to Short-circuit evaluation" class="h__link" href="#short-circuit-evaluation"></a></h3>
+<p>Mojo follows
+<a class="ext" data-external="" href="https://en.wikipedia.org/wiki/Short-circuit_evaluation" rel="noopener noreferrer">short-circuit evaluation</a>
+semantics for boolean operators. If the first argument to an <code>or</code> operator
+evaluates to <code>True</code>, the second argument is not evaluated.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">true_func</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Executing true_func"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> <span class="tk-boolean">True</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">false_func</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Executing false_func"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> <span class="tk-boolean">False</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">'Short-circuit "or" evaluation'</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">if</span> true_func<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">or</span> false_func<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"True result"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Short-circuit "or" evaluation</span>
+<span class="cl" data-line="2">Executing true_func</span>
+<span class="cl" data-line="3">True result</span>
+</code></pre></figure>
+<p>If the first argument to an <code>and</code> operator evaluates to <code>False</code>, the second
+argument is not evaluated.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">'Short-circuit "and" evaluation'</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> false_func<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-keyword">and</span> true_func<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"True result"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Short-circuit "and" evaluation</span>
+<span class="cl" data-line="2">Executing false_func</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="conditional-expressions">Conditional expressions<a aria-label="Link to Conditional expressions" class="h__link" href="#conditional-expressions"></a></h3>
+<p>Mojo also supports conditional expressions (or what is sometimes called a
+<a class="ext" data-external="" href="https://en.wikipedia.org/wiki/Ternary_conditional_operator" rel="noopener noreferrer"><em>ternary conditional operator</em></a>)
+using the syntax<code><var>true_result</var> if <var>boolean_expression</var>
+else <var>false_result</var></code>, just as in Python. This is most often used
+as a concise way to assign one of two different values to a variable, based on a
+boolean condition.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> temp_celsius <span class="tk-operator">=</span> <span class="tk-number">15</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> forecast <span class="tk-operator">=</span> <span class="tk-string">"warm"</span> <span class="tk-keyword">if</span> temp_celsius <span class="tk-operator">&gt;</span> <span class="tk-number">20</span> <span class="tk-keyword">else</span> <span class="tk-string">"cool"</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"The forecast for today is"</span><span class="tk-punctuation">,</span> forecast<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">The forecast for today is cool</span>
+</code></pre></figure>
+<p>The alternative, written as a multi-line <code>if</code> statement, is more verbose.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> forecast<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="2"><span class="tk-keyword">if</span> temp_celsius <span class="tk-operator">&gt;</span> <span class="tk-number">20</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    forecast <span class="tk-operator">=</span> <span class="tk-string">"warm"</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5">    forecast <span class="tk-operator">=</span> <span class="tk-string">"cool"</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"The forecast for today is"</span><span class="tk-punctuation">,</span> forecast<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">The forecast for today is cool</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="the-while-statement">The <code>while</code> statement<a aria-label="Link to The while statement" class="h__link" href="#the-while-statement"></a></h2>
+<p>The <code>while</code> loop repeatedly executes a code block while a given boolean
+expression evaluates to <code>True</code>. For example, the following loop prints values
+from the Fibonacci series that are less than 50.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> fib_prev <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> fib_curr <span class="tk-operator">=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>fib_prev<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">while</span> fib_curr <span class="tk-operator">&lt;</span> <span class="tk-number">50</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">","</span><span class="tk-punctuation">,</span> fib_curr<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">    fib_prev<span class="tk-punctuation">,</span> fib_curr <span class="tk-operator">=</span> fib_curr<span class="tk-punctuation">,</span> fib_prev <span class="tk-operator">+</span> fib_curr</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">0, 1, 1, 2, 3, 5, 8, 13, 21, 34</span>
+</code></pre></figure>
+<p>A <code>continue</code> statement skips execution of the rest of the code block and
+resumes with the loop test expression.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> n <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">while</span> n <span class="tk-operator">&lt;</span> <span class="tk-number">5</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    n <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> n <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>n<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">1, 2, 4, 5,</span>
+</code></pre></figure>
+<p>A <code>break</code> statement terminates execution of the loop.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> n <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">while</span> n <span class="tk-operator">&lt;</span> <span class="tk-number">5</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    n <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> n <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">break</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>n<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">1, 2,</span>
+</code></pre></figure>
+<p>Optionally, a <code>while</code> loop can include an <code>else</code> clause. The body of the <code>else</code>
+clause executes when the loop's boolean condition evaluates to <code>False</code>, even if
+it occurs the first time tested.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> n <span class="tk-operator">=</span> <span class="tk-number">5</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">while</span> n <span class="tk-operator">&lt;</span> <span class="tk-number">4</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">    n <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Loop completed"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Loop completed</span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>The <code>else</code> clause does <em>not</em> execute if a <code>break</code> or <code>return</code> statement
+exits the <code>while</code> loop.</p></div></aside>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> n <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">while</span> n <span class="tk-operator">&lt;</span> <span class="tk-number">5</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">    n <span class="tk-operator">+=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> n <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">break</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Executing else clause"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">1</span>
+<span class="cl" data-line="2">2</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="the-for-statement">The <code>for</code> statement<a aria-label="Link to The for statement" class="h__link" href="#the-for-statement"></a></h2>
+<p>The <code>for</code> loop iterates over a sequence, executing a code block for each
+element in the sequence.
+The Mojo <code>for</code> loop can iterate over any type that implements an <code>__iter__()</code>
+method that returns a type that defines <code>__next__()</code> and <code>__len__()</code> methods.</p>
+<h3 class="h h--3" data-level="3" id="iterating-over-mojo-collections">Iterating over Mojo collections<a aria-label="Link to Iterating over Mojo collections" class="h__link" href="#iterating-over-mojo-collections"></a></h3>
+<p>All of the collection types in the <a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/" rel="noopener noreferrer"><code>collections</code></a>
+module support <code>for</code> loop iteration. See the
+<a href="../pages/06_types.html#collection-types">Collection types</a> documentation for more
+information on Mojo collection types.</p>
+<p>The following shows an example of iterating over a Mojo
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/list/List/" rel="noopener noreferrer"><code>List</code></a>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> states<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-string">"California"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Hawaii"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Oregon"</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">for</span> state <span class="tk-keyword">in</span> states<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>state<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">California</span>
+<span class="cl" data-line="2">Hawaii</span>
+<span class="cl" data-line="3">Oregon</span>
+</code></pre></figure>
+<p>The same technique works for iterating over a Mojo
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/set/Set/" rel="noopener noreferrer"><code>Set</code></a>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>collections <span class="tk-keyword">import</span> Set</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> values <span class="tk-operator">=</span> <span class="tk-punctuation">{</span><span class="tk-number">42</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> values<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>item<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">42</span>
+<span class="cl" data-line="2">0</span>
+</code></pre></figure>
+<p>There are two techniques for iterating over a Mojo
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/Dict/" rel="noopener noreferrer"><code>Dict</code></a>. The first is to iterate directly
+using the <code>Dict</code>, which produces a sequence of the dictionary's keys.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> capitals<span class="tk-punctuation">:</span> Dict<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">{</span></span>
+<span class="cl" data-line="2"> <span class="tk-string">"California"</span><span class="tk-punctuation">:</span> <span class="tk-string">"Sacramento"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3"> <span class="tk-string">"Hawaii"</span><span class="tk-punctuation">:</span> <span class="tk-string">"Honolulu"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4"> <span class="tk-string">"Oregon"</span><span class="tk-punctuation">:</span> <span class="tk-string">"Salem"</span></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">}</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-keyword">for</span> <span class="tk-keyword">var</span> state <span class="tk-keyword">in</span> capitals<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"{capitals[state]}, {state}"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Sacramento, California</span>
+<span class="cl" data-line="2">Honolulu, Hawaii</span>
+<span class="cl" data-line="3">Salem, Oregon</span>
+</code></pre></figure>
+<p>The second approach to iterating over a Mojo <code>Dict</code> is to invoke its
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/Dict/#items" rel="noopener noreferrer"><code>items()</code></a> method, which produces a
+sequence of <a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/dict/#dictentry" rel="noopener noreferrer"><code>DictEntry</code></a> objects.
+Within the loop body, you can then access the <code>key</code> and <code>value</code> fields of the
+entry.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">for</span> item <span class="tk-keyword">in</span> capitals<span class="tk-punctuation">.</span>items<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>t<span class="tk-string">"{item.value}, {item.key}"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Sacramento, California</span>
+<span class="cl" data-line="2">Honolulu, Hawaii</span>
+<span class="cl" data-line="3">Salem, Oregon</span>
+</code></pre></figure>
+<h4 class="h h--4" data-level="4" id="iterating-using-references">Iterating using references<a aria-label="Link to Iterating using references" class="h__link" href="#iterating-using-references"></a></h4>
+<p>The Mojo collection iterators all return
+<a href="../pages/21_lifetimes-origins-and-references.html#working-with-references">references</a>, which
+are captured immutably into the loop variable. If you'd like to get a reference
+to a mutable element, add the <code>ref</code> keyword in front of the loop variable to
+create a reference binding that matches the element reference.</p>
+<p>This can be useful if you want to mutate the value in the collection:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> values<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">,</span> <span class="tk-number">7</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">6</span><span class="tk-punctuation">,</span> <span class="tk-number">11</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">for</span> <span class="tk-keyword">ref</span> value <span class="tk-keyword">in</span> values<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">if</span> value <span class="tk-operator">%</span> <span class="tk-number">2</span> <span class="tk-operator">!=</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4">        value <span class="tk-operator">-=</span> <span class="tk-number">1</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span>values<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">[0, 4, 6, 2, 6, 10]</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="iterating-ranges">Iterating ranges<a aria-label="Link to Iterating ranges" class="h__link" href="#iterating-ranges"></a></h3>
+<p>Another type of iterable provided by the Mojo standard library is a <em>range</em>,
+which is a sequence of integers generated by the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/range/range/" rel="noopener noreferrer"><code>range()</code></a> function. It differs from the
+collection types shown above in that it's implemented as a
+<a class="ext" data-external="" href="https://en.wikipedia.org/wiki/Generator_(computer_programming)" rel="noopener noreferrer">generator</a>,
+producing each value as needed rather than materializing the entire sequence
+in memory. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>i<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">0, 1, 2, 3, 4,</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="for-loop-control-statements"><code>for</code> loop control statements<a aria-label="Link to for loop control statements" class="h__link" href="#for-loop-control-statements"></a></h3>
+<p>A <code>continue</code> statement skips execution of the rest of the code block and
+resumes the loop with the next element of the collection.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> i <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>i<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">0, 1, 2, 4,</span>
+</code></pre></figure>
+<p>A <code>break</code> statement terminates execution of the loop.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> i <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">break</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>i<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">0, 1, 2,</span>
+</code></pre></figure>
+<p>Optionally, a <code>for</code> loop can include an <code>else</code> clause. The body of the <code>else</code>
+clause executes after iterating over all of the elements in a collection.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>i<span class="tk-punctuation">,</span> end<span class="tk-operator">=</span><span class="tk-string">", "</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"\nFinished executing 'for' loop"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">0, 1, 2, 3, 4,</span>
+<span class="cl" data-line="2">Finished executing 'for' loop</span>
+</code></pre></figure>
+<p>The <code>else</code> clause executes even if the collection is empty.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>collections <span class="tk-keyword">import</span> List</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> empty<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> empty<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Finished executing 'for' loop"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Finished executing 'for' loop</span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>The <code>else</code> clause does <em>not</em> execute if a <code>break</code> or <code>return</code> statement
+terminates the <code>for</code> loop.</p></div></aside>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>collections <span class="tk-keyword">import</span> List</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> animals<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-string">"cat"</span><span class="tk-punctuation">,</span> <span class="tk-string">"aardvark"</span><span class="tk-punctuation">,</span> <span class="tk-string">"hippopotamus"</span><span class="tk-punctuation">,</span> <span class="tk-string">"dog"</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">for</span> animal <span class="tk-keyword">in</span> animals<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">if</span> animal <span class="tk-operator">==</span> <span class="tk-string">"dog"</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Found a dog"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">break</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"No dog found"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Found a dog</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="iterating-over-python-collections">Iterating over Python collections<a aria-label="Link to Iterating over Python collections" class="h__link" href="#iterating-over-python-collections"></a></h3>
+<p>The Mojo <code>for</code> loop supports iterating over Python collection types. Each item
+retrieved by the loop is a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python_object/PythonObject/" rel="noopener noreferrer"><code>PythonObject</code></a> wrapper around
+the Python object. Refer to the <a href="../pages/25_python-types.html">Python types</a>
+documentation for more information on manipulating Python objects from Mojo.</p>
+<p>The following is a simple example of iterating over a mixed-type Python list.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># Create a mixed-type Python list</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> py_list <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span><span class="tk-builtin">list</span><span class="tk-punctuation">(</span><span class="tk-number">42</span><span class="tk-punctuation">,</span> <span class="tk-string">"cat"</span><span class="tk-punctuation">,</span> <span class="tk-number">3.14159</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">for</span> py_obj <span class="tk-keyword">in</span> py_list<span class="tk-punctuation">:</span> <span class="tk-comment"># Each element is of type "PythonObject"</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>py_obj<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">42</span>
+<span class="cl" data-line="2">cat</span>
+<span class="cl" data-line="3">3.14159</span>
+</code></pre></figure>
+<p>There are two techniques for iterating over a Python dictionary. The first is to
+iterate directly using the dictionary, which produces a sequence of its keys.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># Create a mixed-type Python dictionary</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> py_dict <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>evaluate<span class="tk-punctuation">(</span><span class="tk-string">"{'a': 1, 'b': 2.71828, 'c': 'sushi'}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">for</span> py_key <span class="tk-keyword">in</span> py_dict<span class="tk-punctuation">:</span> <span class="tk-comment"># Each key is of type "PythonObject"</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>py_key<span class="tk-punctuation">,</span> py_dict<span class="tk-punctuation">[</span>py_key<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a 1</span>
+<span class="cl" data-line="2">b 2.71828</span>
+<span class="cl" data-line="3">c sushi</span>
+</code></pre></figure>
+<p>The second approach to iterating over a Python dictionary is to invoke its
+<code>items()</code> method, which produces a sequence of 2-tuple objects.
+Within the loop body, you can then access the key and value by index.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># Create a mixed-type Python dictionary</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> py_dict <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>evaluate<span class="tk-punctuation">(</span><span class="tk-string">"{'a': 1, 'b': 2.71828, 'c': 'sushi'}"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">for</span> py_tuple <span class="tk-keyword">in</span> py_dict<span class="tk-punctuation">.</span>items<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span> <span class="tk-comment"># Each 2-tuple is of type "PythonObject"</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>py_tuple<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">,</span> py_tuple<span class="tk-punctuation">[</span><span class="tk-number">1</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">a 1</span>
+<span class="cl" data-line="2">b 2.71828</span>
+<span class="cl" data-line="3">c sushi</span>
+</code></pre></figure>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/control-flow/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/control-flow/</a>, saved Thu, 01 Oct 2026 15:33:50 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/10_closures.html"><span class="pager__dir">← Previous</span><span class="pager__title">Closures</span></a><a class="pager__link pager__link--next" href="../pages/12_errors-and-context-managers.html"><span class="pager__dir">Next →</span><span class="pager__title">Errors, error handling, and context managers</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#the-if-statement">The if statement</a></li><li class="rail__depth-2"><a href="#the-while-statement">The while statement</a></li><li class="rail__depth-2"><a href="#the-for-statement">The for statement</a></li><li class="rail__depth-3"><a href="#short-circuit-evaluation">Short-circuit evaluation</a></li><li class="rail__depth-3"><a href="#conditional-expressions">Conditional expressions</a></li><li class="rail__depth-3"><a href="#iterating-over-mojo-collections">Iterating over Mojo collections</a></li><li class="rail__depth-3"><a href="#iterating-ranges">Iterating ranges</a></li><li class="rail__depth-3"><a href="#for-loop-control-statements">for loop control statements</a></li><li class="rail__depth-3"><a href="#iterating-over-python-collections">Iterating over Python collections</a></li><li class="rail__depth-4"><a href="#iterating-using-references">Iterating using references</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#the-if-statement">The if statement</a></li><li class="rail__depth-2"><a href="#the-while-statement">The while statement</a></li><li class="rail__depth-2"><a href="#the-for-statement">The for statement</a></li><li class="rail__depth-3"><a href="#short-circuit-evaluation">Short-circuit evaluation</a></li><li class="rail__depth-3"><a href="#conditional-expressions">Conditional expressions</a></li><li class="rail__depth-3"><a href="#iterating-over-mojo-collections">Iterating over Mojo collections</a></li><li class="rail__depth-3"><a href="#iterating-ranges">Iterating ranges</a></li><li class="rail__depth-3"><a href="#for-loop-control-statements">for loop control statements</a></li><li class="rail__depth-3"><a href="#iterating-over-python-collections">Iterating over Python collections</a></li><li class="rail__depth-4"><a href="#iterating-using-references">Iterating using references</a></li></ol>
+<p class="rail__meta">Chapter 11 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

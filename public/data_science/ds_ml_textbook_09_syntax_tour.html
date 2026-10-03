@@ -3,7 +3,7 @@
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter 9 — Mojo vs Python: A Side-by-Side Syntax Tour · Mojo 1.x Textbook</title>
+<title>Chapter 9 — Mojo vs Python: A Syntax Tour · Mojo 1.x Textbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
 
@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -122,21 +122,20 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 <div class="wrap">
 <div class="container">
   <span class="kicker">Chapter 9</span>
-  <h1>🔀 Mojo vs Python: A <span class="highlight">Side-by-Side</span> Syntax Tour</h1>
-  <p class="dek">Seven classic problems implemented in Mojo and Python — the fastest way to internalize Mojo's syntax by comparing it against what you already know.</p>
+  <h1>🔀 Mojo vs Python: A <span class="highlight">Syntax Tour</span></h1>
+  <p class="dek">Seven classic problems implemented in Mojo 1.x. Each one is a single program, with the Python habit it replaces called out in prose — the fastest way to internalize the syntax if you already write Python.</p>
 
   <section id="quadratic">
     <h2>1. Quadratic Equation Solver</h2>
-    <p>Given coefficients <strong>a</strong>, <strong>b</strong>, and <strong>c</strong>, solve <code class="inline">ax² + bx + c = 0</code> using the quadratic formula. This example shows function signatures, conditionals, and the <code class="inline">math</code> module in Mojo and Python.</p>
+    <p>Given coefficients <strong>a</strong>, <strong>b</strong>, and <strong>c</strong>, solve <code class="inline">ax² + bx + c = 0</code> using the quadratic formula. This example shows function signatures, conditionals, and the <code class="inline">math</code> module in a single screen.</p>
     <p>Like Python, Mojo uses indentation — not curly braces — to delimit blocks. Where Python opens a block with a colon and indents, Mojo does exactly the same: there are no <code class="inline">{ }</code> in sight.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-quad-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-quad-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-quad-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> sqrt
+        <pre><span class="kw">from</span> math <span class="kw">import</span> sqrt
 
 <span class="kw">def</span> <span class="fn">solve_quadratic</span>(a: Float64, b: Float64, c: Float64) -&gt; (Float64, Float64):
     <span class="kw">var</span> discriminant = b * b - <span class="num">4.0</span> * a * c
@@ -150,75 +149,46 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
     <span class="kw">var</span> (r1, r2) = solve_quadratic(<span class="num">1.0</span>, <span class="op">-</span><span class="num">5.0</span>, <span class="num">6.0</span>)
     <span class="fn">print</span>(<span class="str">"x1 ="</span>, r1, <span class="str">"x2 ="</span>, r2)</pre>
       </div>
-      <div class="tab-content" id="ch9-quad-py">
-        <pre><span class="kw">import</span> math
-
-<span class="kw">def</span> <span class="fn">solve_quadratic</span>(a: float, b: float, c: float) -&gt; tuple[float, float]:
-    discriminant = b * b - <span class="num">4.0</span> * a * c
-    <span class="kw">if</span> discriminant &lt; <span class="num">0.0</span>:
-        <span class="kw">raise</span> <span class="type">ValueError</span>(<span class="str">"No real roots"</span>)
-    root1 = (-b + math.<span class="fn">sqrt</span>(discriminant)) / (<span class="num">2.0</span> * a)
-    root2 = (-b - math.<span class="fn">sqrt</span>(discriminant)) / (<span class="num">2.0</span> * a)
-    <span class="kw">return</span> (root1, root2)
-
-r1, r2 = <span class="fn">solve_quadratic</span>(<span class="num">1.0</span>, <span class="op">-</span><span class="num">5.0</span>, <span class="num">6.0</span>)
-<span class="fn">print</span>(<span class="str">f"x1 = </span>{r1}<span class="str">  x2 = </span>{r2}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box">
       <strong>💡 Key Insight:</strong>
-      <p>Mojo raises an exception like Python, using the <code class="inline">raise</code> keyword directly on a string. Errors propagate the same way you're used to from Python — no return-type ceremony required.</p>
+      <p>Mojo raises an exception like Python, using the <code class="inline">raise</code> keyword directly on a string. Errors propagate the same way you're used to from Python — no return-type ceremony required. Two spellings do change: Python's <code class="inline">ValueError("No real roots")</code> becomes a bare <code class="inline">raise "No real roots"</code>, and the square root is <code class="inline">sqrt(discriminant)</code> from the <code class="inline">math</code> import rather than <code class="inline">math.sqrt(discriminant)</code>.</p>
     </div>
   </section>
 
   <section id="compound">
     <h2>2. Compound Interest</h2>
-    <p>Calculate accumulated value using <code class="inline">A = P(1 + r/n)^(nt)</code>. This highlights how each language handles exponentiation, floating-point arithmetic, and formatted output.</p>
+    <p>Calculate accumulated value using <code class="inline">A = P(1 + r/n)^(nt)</code>. This highlights how Mojo handles exponentiation, floating-point arithmetic, and formatted output.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-compound-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-compound-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-compound-mojo">
-        <pre><span class="kw">from</span> std.math <span class="kw">import</span> pow
+        <pre>from std.math import pow
 
-<span class="kw">def</span> <span class="fn">compound_interest</span>(
+def compound_interest(
     principal: Float64,
     rate: Float64,
     times_per_year: Int64,
     years: Int64
 ) -&gt; Float64:
-    <span class="kw">var</span> n = Float64(times_per_year)
-    <span class="kw">var</span> t = Float64(years)
-    <span class="kw">var</span> base = <span class="num">1.0</span> + rate / n
-    <span class="kw">var</span> exponent = pow(base, n * t)
-    <span class="kw">return</span> principal * exponent
+    var n = Float64(times_per_year)
+    var t = Float64(years)
+    var base = 1.0 + rate / n
+    var exponent = pow(base, n * t)
+    return principal * exponent
 
-<span class="kw">def</span> <span class="fn">main</span>():
-    <span class="kw">var</span> amount = compound_interest(<span class="num">10000.0</span>, <span class="num">0.05</span>, <span class="num">12</span>, <span class="num">10</span>)
-    <span class="fn">print</span>(<span class="str">"Accumulated:"</span>, amount)</pre>
-      </div>
-      <div class="tab-content" id="ch9-compound-py">
-        <pre><span class="kw">def</span> <span class="fn">compound_interest</span>(
-    principal: float,
-    rate: float,
-    times_per_year: int,
-    years: int
-) -&gt; float:
-    base = <span class="num">1.0</span> + rate / times_per_year
-    exponent = times_per_year * years
-    <span class="kw">return</span> principal * base ** exponent
-
-amount = <span class="fn">compound_interest</span>(<span class="num">10000.0</span>, <span class="num">0.05</span>, <span class="num">12</span>, <span class="num">10</span>)
-<span class="fn">print</span>(<span class="str">f"Accumulated: </span>{amount:<span class="num">.2f</span>}<span class="str">"</span>)</pre>
+def main():
+    var amount = compound_interest(10000.0, 0.05, 12, 10)
+    print("Accumulated:", amount)</pre>
       </div>
     </div>
 
     <div class="info-box tip-box">
       <strong>🚀 Pro Tip:</strong>
-      <p>Python uses the <code class="inline">**</code> operator for exponentiation. Mojo supports both: the <code class="inline">**</code> operator on numeric types and the <code class="inline">pow(base, exp)</code> function for explicit exponentiation.</p>
+      <p>Python uses the <code class="inline">**</code> operator for exponentiation. Mojo supports both: the <code class="inline">**</code> operator on numeric types and the <code class="inline">pow(base, exp)</code> function for explicit exponentiation. Formatted output splits the same way: Python's <code class="inline">f"Accumulated: {amount:.2f}"</code> becomes a t-string, <code class="inline">t"Accumulated: {amount:.2f}"</code>.</p>
     </div>
   </section>
 
@@ -229,47 +199,34 @@ amount = <span class="fn">compound_interest</span>(<span class="num">10000.0</sp
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-npv-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-npv-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-npv-mojo">
-        <pre><code>def npv(rate: Float64, cash_flows: List[Float64]) -&gt; Float64:
-    var total: Float64 = 0.0
-    for t in range(len(cash_flows)):
-        total += cash_flows[t] / (1.0 + rate) ** Float64(t)
-    return total
-
-def main():
-    var flows: List[Float64] = [-1000.0, 300.0, 420.0, 680.0]
-    var result = npv(0.08, flows)
-    print(&quot;NPV =&quot;, result)</code></pre>
-      </div>
-      <div class="tab-content" id="ch9-npv-py">
-        <pre><span class="kw">def</span> <span class="fn">npv</span>(rate: float, cash_flows: list[float]) -&gt; float:
-    total = <span class="num">0.0</span>
-    <span class="kw">for</span> t, cf <span class="kw">in</span> <span class="fn">enumerate</span>(cash_flows):
-        total += cf / (<span class="num">1.0</span> + rate) ** t
+        <pre><span class="kw">def</span> <span class="fn">npv</span>(rate: Float64, cash_flows: List[Float64]) -&gt; Float64:
+    <span class="kw">var</span> total: Float64 = <span class="num">0.0</span>
+    <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(len(cash_flows)):
+        total += cash_flows[t] / (<span class="num">1.0</span> + rate) ** Float64(t)
     <span class="kw">return</span> total
 
-flows = [<span class="op">-</span><span class="num">1000.0</span>, <span class="num">300.0</span>, <span class="num">420.0</span>, <span class="num">680.0</span>]
-result = <span class="fn">npv</span>(<span class="num">0.08</span>, flows)
-<span class="fn">print</span>(<span class="str">f"NPV = </span>{result:<span class="num">.2f</span>}<span class="str">"</span>)</pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> flows = List[Float64](<span class="op">-</span><span class="num">1000.0</span>, <span class="num">300.0</span>, <span class="num">420.0</span>, <span class="num">680.0</span>)
+    <span class="kw">var</span> result = npv(<span class="num">0.08</span>, flows)
+    <span class="fn">print</span>(<span class="str">"NPV ="</span>, result)</pre>
       </div>
     </div>
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
-      <p>Mojo's <code class="inline">**</code> operator handles <code class="inline">Float64</code> exponents directly. In production finance code, prefer an integer exponent when you can — it's faster and avoids floating-point drift in the discount factor.</p>
+      <p>Mojo's <code class="inline">**</code> operator handles <code class="inline">Float64</code> exponents directly. In production finance code, prefer an integer exponent when you can — it's faster and avoids floating-point drift in the discount factor. There is no <code class="inline">enumerate</code> either: the loop walks indices with <code class="inline">range(len(cash_flows))</code> and indexes the list, which is why the exponent is cast with <code class="inline">Float64(t)</code> instead of being used bare.</p>
     </div>
   </section>
 
   <section id="simultaneous">
     <h2>4. Simultaneous Equations (Cramer's Rule)</h2>
-    <p>Solve a 2×2 system using Cramer's rule. This example demonstrates <strong>structs</strong>: Mojo's <code class="inline">struct</code> and Python's <code class="inline">dataclass</code>.</p>
+    <p>Solve a 2×2 system using Cramer's rule. This example demonstrates <strong>structs</strong> — Mojo's <code class="inline">struct</code>, taking over the job Python's <code class="inline">@dataclass</code> does.
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-simult-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-simult-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-simult-mojo">
         <pre><span class="kw">struct</span> <span class="type">System2x2</span>:
@@ -303,31 +260,6 @@ result = <span class="fn">npv</span>(<span class="num">0.08</span>, flows)
     <span class="kw">var</span> (x, y) = sys.solve()
     <span class="fn">print</span>(<span class="str">"x ="</span>, x, <span class="str">"y ="</span>, y)</pre>
       </div>
-      <div class="tab-content" id="ch9-simult-py">
-        <pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
-
-<span class="kw">@dataclass</span>
-<span class="kw">class</span> <span class="type">System2x2</span>:
-    a1: float
-    b1: float
-    c1: float
-    a2: float
-    b2: float
-    c2: float
-
-    <span class="kw">def</span> <span class="fn">solve</span>(self) -&gt; tuple[float, float]:
-        det = self.a1 * self.b2 <span class="op">-</span> self.a2 * self.b1
-        <span class="kw">if</span> det == <span class="num">0.0</span>:
-            <span class="kw">raise</span> <span class="type">ValueError</span>(<span class="str">"No unique solution"</span>)
-        x = (self.c1 * self.b2 <span class="op">-</span> self.c2 * self.b1) / det
-        y = (self.a1 * self.c2 <span class="op">-</span> self.a2 * self.c1) / det
-        <span class="kw">return</span> (x, y)
-
-<span class="cmt"># 2x + 3y = 8,  4x - y = 2</span>
-sys = System2x2(<span class="num">2.0</span>, <span class="num">3.0</span>, <span class="num">8.0</span>, <span class="num">4.0</span>, <span class="op">-</span><span class="num">1.0</span>, <span class="num">2.0</span>)
-x, y = sys.<span class="fn">solve</span>()
-<span class="fn">print</span>(<span class="str">f"x = </span>{x}<span class="str">  y = </span>{y}<span class="str">"</span>)</pre>
-      </div>
     </div>
 
     <div class="info-box">
@@ -338,44 +270,28 @@ x, y = sys.<span class="fn">solve</span>()
 
   <section id="factorial">
     <h2>5. Factorial (Iterative &amp; Recursive)</h2>
-    <p>Implement factorial both iteratively and recursively. This highlights loops, recursion, type annotations, and how each language handles base cases.</p>
+    <p>Implement factorial both iteratively and recursively. This highlights loops, recursion, type annotations, and how Mojo handles the base case.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-fact-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-fact-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-fact-mojo">
-        <pre><code>def factorial_iter(n: Int64) -&gt; Int64:
-    var result: Int64 = 1
-    for i in range(2, Int(n) + 1):
-        result *= Int64(i)
-    return result
-
-def factorial_rec(n: Int64) -&gt; Int64:
-    if n &lt;= 1:
-        return 1
-    return n * factorial_rec(n - 1)
-
-def main():
-    for i in range(11):
-        print(i, &quot;! =&quot;, factorial_iter(Int64(i)),
-              &quot;|&quot;, factorial_rec(Int64(i)))</code></pre>
-      </div>
-      <div class="tab-content" id="ch9-fact-py">
-        <pre><span class="kw">def</span> <span class="fn">factorial_iter</span>(n: int) -&gt; int:
-    result = <span class="num">1</span>
+        <pre><span class="kw">def</span> <span class="fn">factorial_iter</span>(n: Int64) -&gt; Int64:
+    <span class="kw">var</span> result: Int64 = <span class="num">1</span>
     <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>, n + <span class="num">1</span>):
         result *= i
     <span class="kw">return</span> result
 
-<span class="kw">def</span> <span class="fn">factorial_rec</span>(n: int) -&gt; int:
+<span class="kw">def</span> <span class="fn">factorial_rec</span>(n: Int64) -&gt; Int64:
     <span class="kw">if</span> n &lt;= <span class="num">1</span>:
         <span class="kw">return</span> <span class="num">1</span>
     <span class="kw">return</span> n * <span class="fn">factorial_rec</span>(n - <span class="num">1</span>)
 
-<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">11</span>):
-    <span class="fn">print</span>(<span class="str">f"</span>{i}<span class="str">! = </span>{<span class="fn">factorial_iter</span>(i)}<span class="str"> | </span>{<span class="fn">factorial_rec</span>(i)}<span class="str">"</span>)</pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">11</span>):
+        <span class="fn">print</span>(i, <span class="str">"! ="</span>, <span class="fn">factorial_iter</span>(i),
+              <span class="str">"|"</span>, <span class="fn">factorial_rec</span>(i))</pre>
       </div>
     </div>
 
@@ -387,51 +303,36 @@ def main():
 
   <section id="fibonacci">
     <h2>6. Fibonacci Sequence</h2>
-    <p>Generate the first N Fibonacci numbers. This example reveals differences in mutable state, list construction, and iteration patterns in Mojo and Python.</p>
+    <p>Generate the first N Fibonacci numbers. This example reveals how mutable state, list construction, and iteration patterns work in Mojo.</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch9-fib-mojo">Mojo</button>
-        <button class="tab-btn" data-tab="ch9-fib-py">Python</button>
       </div>
       <div class="tab-content active" id="ch9-fib-mojo">
-        <pre><code>def fibonacci(n: Int64) -&gt; List[Int64]:
-    if n &lt;= 0:
-        return List[Int64]()
-    var seq = List[Int64]()
-    seq.append(0)
-    if n &gt; 1:
-        seq.append(1)
-    for i in range(2, Int(n)):
-        var next_val = seq[i - 1] + seq[i - 2]
-        seq.append(next_val)
-    return seq^
-
-def main():
-    var fib = fibonacci(15)
-    for val in fib:
-        print(val, end=&quot; &quot;)
-    print()</code></pre>
-      </div>
-      <div class="tab-content" id="ch9-fib-py">
-        <pre><span class="kw">def</span> <span class="fn">fibonacci</span>(n: int) -&gt; list[int]:
+        <pre><span class="kw">def</span> <span class="fn">fibonacci</span>(n: Int64) -&gt; List[Int64]:
     <span class="kw">if</span> n &lt;= <span class="num">0</span>:
-        <span class="kw">return</span> []
-    seq = [<span class="num">0</span>]
+        <span class="kw">return</span> List[Int64]()
+    <span class="kw">var</span> seq = List[Int64]()
+    seq.append(<span class="num">0</span>)
     <span class="kw">if</span> n &gt; <span class="num">1</span>:
         seq.append(<span class="num">1</span>)
     <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>, n):
-        seq.append(seq[i <span class="op">-</span> <span class="num">1</span>] + seq[i <span class="op">-</span> <span class="num">2</span>])
+        <span class="kw">var</span> next_val = seq[i <span class="op">-</span> <span class="num">1</span>] + seq[i <span class="op">-</span> <span class="num">2</span>]
+        seq.append(next_val)
     <span class="kw">return</span> seq
 
-fib = <span class="fn">fibonacci</span>(<span class="num">15</span>)
-<span class="fn">print</span>(<span class="str">" "</span>.<span class="fn">join</span>(<span class="fn">map</span>(str, fib)))</pre>
+<span class="kw">def</span> <span class="fn">main</span>():
+    <span class="kw">var</span> fib = fibonacci(<span class="num">15</span>)
+    <span class="kw">for</span> val <span class="kw">in</span> fib:
+        <span class="fn">print</span>(val, end=<span class="str">" "</span>)
+    <span class="fn">print</span>()</pre>
       </div>
     </div>
 
     <div class="info-box warning-box">
       <strong>⚠️ Watch Out:</strong>
-      <p>Mojo's <code class="inline">List</code> grows dynamically like Python's <code class="inline">list</code>. For performance-critical sequences, pre-allocate in Mojo with <code class="inline">List[Int64](capacity=n)</code> to avoid repeated reallocations.</p>
+      <p>Mojo's <code class="inline">List</code> grows dynamically like Python's <code class="inline">list</code>. For performance-critical sequences, pre-allocate in Mojo with <code class="inline">List[Int64](capacity=n)</code> to avoid repeated reallocations. Python's one-line <code class="inline">" ".join(map(str, fib))</code> has no Mojo equivalent, so the driver loop prints each value in turn.</p>
     </div>
   </section>
 
@@ -570,4 +471,141 @@ sections.forEach(s=>obs.observe(s));
 </script>
 
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
+
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body></html>

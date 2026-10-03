@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Python types · Mojo v1 The Language Manual</title>
+<meta name="description" content="Using Python objects, and what crosses the boundary.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part IV · Memory &amp; Interop</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part IV</span><span class="sep">/</span><span>Memory &amp; Interop</span><span class="sep">/</span><span class="num">25</span></nav><h1>Python types</h1>
+<p class="dek">Using Python objects, and what crosses the boundary.</p><p class="byline">Chapter 25 · 1,050 words · 13 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/python/types/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>When calling Python methods, Mojo needs to convert back and forth between native
+Python objects and native Mojo objects. Most of these conversions happen
+automatically, but there are a number of cases that Mojo doesn't handle yet.
+In these cases you may need to do an explicit conversion, or call an extra
+method.</p>
+<h2 class="h h--2" data-level="2" id="mojo-types-in-python">Mojo types in Python<a aria-label="Link to Mojo types in Python" class="h__link" href="#mojo-types-in-python"></a></h2>
+<p>Mojo primitive types implicitly convert into Python objects. Today we support
+integers, floats, booleans, and strings.</p>
+<p>To demonstrate, the following example dynamically creates an in-memory Python
+module named <code>py_utils</code> containing a <code>type_printer()</code> function, which simply
+prints the type of a given value. Then you can see how different Mojo values
+convert into corresponding Python types.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> py_module <span class="tk-operator">=</span> <span class="tk-string">"""</span></span>
+<span class="cl" data-line="5"><span class="tk-string">def type_printer(value):</span></span>
+<span class="cl" data-line="6"><span class="tk-string">    print(type(value))</span></span>
+<span class="cl" data-line="7"><span class="tk-string">"""</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> py_utils <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>evaluate<span class="tk-punctuation">(</span>py_module<span class="tk-punctuation">,</span> <span class="tk-builtin">file</span><span class="tk-operator">=</span><span class="tk-boolean">True</span><span class="tk-punctuation">,</span> name<span class="tk-operator">=</span><span class="tk-string">"py_utils"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10">    py_utils<span class="tk-punctuation">.</span>type_printer<span class="tk-punctuation">(</span><span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="11">    py_utils<span class="tk-punctuation">.</span>type_printer<span class="tk-punctuation">(</span><span class="tk-number">3.14</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12">    py_utils<span class="tk-punctuation">.</span>type_printer<span class="tk-punctuation">(</span><span class="tk-boolean">True</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13">    py_utils<span class="tk-punctuation">.</span>type_printer<span class="tk-punctuation">(</span><span class="tk-string">"Mojo"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">&lt;class 'int'&gt;</span>
+<span class="cl" data-line="2">&lt;class 'float'&gt;</span>
+<span class="cl" data-line="3">&lt;class 'bool'&gt;</span>
+<span class="cl" data-line="4">&lt;class 'str'&gt;</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="python-types-in-mojo">Python types in Mojo<a aria-label="Link to Python types in Mojo" class="h__link" href="#python-types-in-mojo"></a></h2>
+<p>You can also create and use Python objects from Mojo.</p>
+<h3 class="h h--3" data-level="3" id="mojo-wrapper-objects">Mojo wrapper objects<a aria-label="Link to Mojo wrapper objects" class="h__link" href="#mojo-wrapper-objects"></a></h3>
+<p>When you use Python objects in your Mojo code, Mojo adds the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python_object/PythonObject/" rel="noopener noreferrer"><code>PythonObject</code></a> wrapper around
+the Python object. This object exposes a number of common double underscore
+methods (dunder methods) like <code>__getitem__()</code> and <code>__getattr__()</code>, passing them
+through to the underlying Python object. Most of the time, you can treat the
+wrapped object just like you'd treat it in Python. You can use dot-notation to
+access attributes and call methods, and use the <code>[]</code> operator to access an item
+in a sequence.</p>
+<p>You can explicitly create a wrapped Python object by initializing a
+<code>PythonObject</code> with a Mojo integer, float, boolean, or string. Additionally, you
+can create several types of Python collections directly in Mojo using the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#dict" rel="noopener noreferrer"><code>Python.dict()</code></a>,
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#list" rel="noopener noreferrer"><code>Python.list()</code></a>, and
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#tuple" rel="noopener noreferrer"><code>Python.tuple()</code></a> static methods.</p>
+<p>For example, to create a Python dictionary, use the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#dict" rel="noopener noreferrer"><code>Python.dict()</code></a> method:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> py_dict <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span><span class="tk-builtin">dict</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5">    py_dict<span class="tk-punctuation">[</span><span class="tk-string">"item_name"</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-string">"whizbang"</span></span>
+<span class="cl" data-line="6">    py_dict<span class="tk-punctuation">[</span><span class="tk-string">"price"</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">11.75</span></span>
+<span class="cl" data-line="7">    py_dict<span class="tk-punctuation">[</span><span class="tk-string">"inventory"</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-number">100</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>py_dict<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">{'item_name': 'whizbang', 'price': 11.75, 'inventory': 100}</span>
+</code></pre></figure>
+<p>With the <a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#list" rel="noopener noreferrer"><code>Python.list()</code></a> method, you
+can create a Python list and optionally initialize it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> py_list <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span><span class="tk-builtin">list</span><span class="tk-punctuation">(</span><span class="tk-string">"cat"</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3.14159</span><span class="tk-punctuation">,</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> n <span class="tk-operator">=</span> py_list<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"n ="</span><span class="tk-punctuation">,</span> n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">    py_list<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span><span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8">    py_list<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-string">"aardvark"</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>py_list<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">n = 3.14159</span>
+<span class="cl" data-line="2">['aardvark', 2, 3.14159, 4, 5]</span>
+</code></pre></figure>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#tuple" rel="noopener noreferrer"><code>Python.tuple()</code></a> method creates a
+Python tuple of values:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> py_tuple <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span><span class="tk-builtin">tuple</span><span class="tk-punctuation">(</span><span class="tk-string">"cat"</span><span class="tk-punctuation">,</span> <span class="tk-number">2</span><span class="tk-punctuation">,</span> <span class="tk-number">3.1415</span><span class="tk-punctuation">,</span> <span class="tk-string">"cat"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> n <span class="tk-operator">=</span> py_tuple<span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"n ="</span><span class="tk-punctuation">,</span> n<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Number of cats:"</span><span class="tk-punctuation">,</span> py_tuple<span class="tk-punctuation">.</span>count<span class="tk-punctuation">(</span><span class="tk-string">"cat"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">n = 3.1415</span>
+<span class="cl" data-line="2">Number of cats: 2</span>
+</code></pre></figure>
+<p>If you want to construct a Python type that doesn't have a literal Mojo
+equivalent, you can also use the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#evaluate" rel="noopener noreferrer"><code>Python.evaluate()</code></a> method. For
+example, to create a Python <code>set</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> py_set <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>evaluate<span class="tk-punctuation">(</span><span class="tk-string">'{2, 3, 2, 7, 11, 3}'</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> num_items <span class="tk-operator">=</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>py_set<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>num_items<span class="tk-punctuation">,</span> <span class="tk-string">"items in the set."</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> contained <span class="tk-operator">=</span> <span class="tk-number">7</span> <span class="tk-keyword">in</span> py_set</span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Is 7 in the set:"</span><span class="tk-punctuation">,</span> contained<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">4 items in the set.</span>
+<span class="cl" data-line="2">Is 7 in the set: True</span>
+</code></pre></figure>
+<p><code>PythonObject</code> implements the <a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a>
+trait. This allows you to print Python values using the built-in
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/io/io/print/" rel="noopener noreferrer"><code>print()</code></a> function, as shown in several of the
+previous examples.</p>
+<p>However, most other Mojo APIs don't accept <code>PythonObject</code> values directly. In
+these cases you'll need to explicitly convert a Python value into a native Mojo
+value. For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> PythonObject</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> py_string <span class="tk-operator">=</span> PythonObject<span class="tk-punctuation">(</span><span class="tk-string">"Hello, Mojo!"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">var</span> py_bool <span class="tk-operator">=</span> PythonObject<span class="tk-punctuation">(</span><span class="tk-boolean">True</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">var</span> py_int <span class="tk-operator">=</span> PythonObject<span class="tk-punctuation">(</span><span class="tk-number">123</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> py_float <span class="tk-operator">=</span> PythonObject<span class="tk-punctuation">(</span><span class="tk-number">3.14</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> mojo_string <span class="tk-operator">=</span> String<span class="tk-punctuation">(</span>py<span class="tk-operator">=</span>py_string<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> mojo_bool <span class="tk-operator">=</span> Bool<span class="tk-punctuation">(</span>py<span class="tk-operator">=</span>py_bool<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">var</span> mojo_int <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>py<span class="tk-operator">=</span>py_int<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">var</span> mojo_float <span class="tk-operator">=</span> Float64<span class="tk-punctuation">(</span>py<span class="tk-operator">=</span>py_float<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="comparing-python-types-in-mojo">Comparing Python types in Mojo<a aria-label="Link to Comparing Python types in Mojo" class="h__link" href="#comparing-python-types-in-mojo"></a></h3>
+<p>You can use Python objects in Mojo comparison expressions, and the Mojo <code>is</code>
+operator also works to compare the identity of two Python objects. Python values
+like <code>False</code> and <code>None</code> evaluate as false in Mojo boolean expressions as well.</p>
+<p>If you need to know the type of the underlying Python object, you can use the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/python/python/Python/#type" rel="noopener noreferrer"><code>Python.type()</code></a> method, which is
+equivalent to the Python <code>type()</code> builtin. You can test if a Python
+object is of a particular type by performing an identity comparison against the
+type as shown below:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>python <span class="tk-keyword">import</span> Python</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> value1 <span class="tk-operator">=</span> PythonObject<span class="tk-punctuation">(</span><span class="tk-number">3.7</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> value2 <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>evaluate<span class="tk-punctuation">(</span><span class="tk-string">"10/3"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-comment"># Compare values</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Is value1 greater than 3:"</span><span class="tk-punctuation">,</span> value1 <span class="tk-operator">&gt;</span> <span class="tk-number">3</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Is value1 greater than value2:"</span><span class="tk-punctuation">,</span> value1 <span class="tk-operator">&gt;</span> value2<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># Compare identities</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> value3 <span class="tk-operator">=</span> value2</span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"value1 is value2:"</span><span class="tk-punctuation">,</span> value1 <span class="tk-keyword">is</span> value2<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"value2 is value3:"</span><span class="tk-punctuation">,</span> value2 <span class="tk-keyword">is</span> value3<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"></span>
+<span class="cl" data-line="16"> <span class="tk-comment"># Compare types</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">var</span> py_float_type <span class="tk-operator">=</span> Python<span class="tk-punctuation">.</span>evaluate<span class="tk-punctuation">(</span><span class="tk-string">"float"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Python float type:"</span><span class="tk-punctuation">,</span> py_float_type<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"value1 type:"</span><span class="tk-punctuation">,</span> Python<span class="tk-punctuation">.</span><span class="tk-builtin">type</span><span class="tk-punctuation">(</span>value1<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Is value1 a Python float:"</span><span class="tk-punctuation">,</span> Python<span class="tk-punctuation">.</span><span class="tk-builtin">type</span><span class="tk-punctuation">(</span>value1<span class="tk-punctuation">)</span> <span class="tk-keyword">is</span> py_float_type<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Is value1 greater than 3: True</span>
+<span class="cl" data-line="2">Is value1 greater than value2: True</span>
+<span class="cl" data-line="3">value1 is value2: False</span>
+<span class="cl" data-line="4">value2 is value3: True</span>
+<span class="cl" data-line="5">Python float type: &lt;class 'float'&gt;</span>
+<span class="cl" data-line="6">value1 type: &lt;class 'float'&gt;</span>
+<span class="cl" data-line="7">Is value1 a Python float: True</span>
+</code></pre></figure>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/python/types/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/python/types/</a>, saved Thu, 01 Oct 2026 15:45:33 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/24_python-interoperability.html"><span class="pager__dir">← Previous</span><span class="pager__title">Python interoperability</span></a><a class="pager__link pager__link--next" href="../pages/26_calling-python-from-mojo.html"><span class="pager__dir">Next →</span><span class="pager__title">Calling Python from Mojo</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#mojo-types-in-python">Mojo types in Python</a></li><li class="rail__depth-2"><a href="#python-types-in-mojo">Python types in Mojo</a></li><li class="rail__depth-3"><a href="#mojo-wrapper-objects">Mojo wrapper objects</a></li><li class="rail__depth-3"><a href="#comparing-python-types-in-mojo">Comparing Python types in Mojo</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#mojo-types-in-python">Mojo types in Python</a></li><li class="rail__depth-2"><a href="#python-types-in-mojo">Python types in Mojo</a></li><li class="rail__depth-3"><a href="#mojo-wrapper-objects">Mojo wrapper objects</a></li><li class="rail__depth-3"><a href="#comparing-python-types-in-mojo">Comparing Python types in Mojo</a></li></ol>
+<p class="rail__meta">Chapter 25 of 38 · Part IV, Memory &amp; Interop.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

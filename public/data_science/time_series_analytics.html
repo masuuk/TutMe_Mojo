@@ -3,8 +3,7 @@
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Series Analytics with Python &amp; Mojo — A Condensed Book</title>
-    <style>
+<title>Time Series Analytics with Mojo 1.x - A Condensed Book</title>
         :root {
             --bg: #faf8f5;
             --text: #2c2c2c;
@@ -814,17 +813,17 @@
     <div class="book-cover">
         <div class="cover-eyebrow">A Condensed Reference for Forecasting &amp; Machine Learning</div>
         <h1>⏳ Time Series Analytics</h1>
-        <p class="subtitle">A practical guide for Machine Learning practitioners — the Python ecosystem on one side, Mojo 1.x high-performance implementation on the other.</p>
+        <p class="subtitle">A practical guide for Machine Learning practitioners - Mojo 1.x for the computation, with the Python ecosystem reached through interop wherever a library already does the job well.</p>
         <div class="cover-badges">
-            <span class="badge badge-python">🐍 Python</span>
             <span class="badge badge-mojo">🔥 Mojo 1.x</span>
+            <span class="badge badge-python">🐍 Python Interop</span>
             <span class="badge badge-ml">🤖 ML</span>
         </div>
         <div class="cover-stats">
             <div class="stat"><strong>25</strong><span>Chapters</span></div>
             <div class="stat"><strong>40+</strong><span>Code Examples</span></div>
             <div class="stat"><strong>24</strong><span>Months of Data</span></div>
-            <div class="stat"><strong>2</strong><span>Languages</span></div>
+            <div class="stat"><strong>1</strong><span>Primary Language</span></div>
         </div>
         <a class="cover-cta" href="#ch1">Begin Reading</a>
         <p class="edition">Condensed Edition • With Worked Examples on Sample Data</p>
@@ -854,9 +853,8 @@
             <li><a href="#ch18">Multivariate Time Series</a></li>
             <li><a href="#ch19">Anomaly Detection</a></li>
             <li><a href="#ch20">Your Mojo Time-Series Engine</a></li>
-            <li><a href="#ch21">Python vs Mojo 1.x</a></li>
-            <li><a href="#ch22">The Python + Mojo Architecture</a></li>
-            <li><a href="#ch23">Capstone Project</a></li>
+            <li><a href="#ch21">Mojo 1.x vs Python</a></li>
+            <li><a href="#ch22">The Hybrid Mojo Architecture</a></li>
             <li><a href="#ch24">8-Week Learning Plan</a></li>
             <li><a href="#ch25">Formula Cheat Sheet</a></li>
         </ol>
@@ -912,10 +910,10 @@
         <p>Classical decomposition breaks a time series into four additive or multiplicative components:</p>
         <table>
             <tbody><tr><th>Component</th><th>Description</th><th>Example in our data</th></tr>
-            <tr><td><strong>Trend (T)</strong></td><td>Long-term direction</td><td>Steady increase from ~120 to ~280</td></tr>
-            <tr><td><strong>Seasonality (S)</strong></td><td>Regular, fixed-period cycles</td><td>Yearly dips at months 8 and 16</td></tr>
-            <tr><td><strong>Cyclical (C)</strong></td><td>Irregular, longer-term cycles</td><td>Business cycle effects</td></tr>
-            <tr><td><strong>Noise (ε)</strong></td><td>Random, unpredictable variation</td><td>Scatter around the trend line</td></tr>
+<tr><td><strong>Trend (T)</strong></td><td>Long-term direction</td><td>Steady increase from ~120 to ~280</td></tr>
+<tr><td><strong>Seasonality (S)</strong></td><td>Regular, fixed-period cycles</td><td>Yearly dips at months 8 and 16</td></tr>
+<tr><td><strong>Cyclical (C)</strong></td><td>Irregular, longer-term cycles</td><td>Business cycle effects</td></tr>
+<tr><td><strong>Noise (ε)</strong></td><td>Random, unpredictable variation</td><td>Scatter around the trend line</td></tr>
         </tbody></table>
 
         <h3>1.2 Why Time Series for ML?</h3>
@@ -935,39 +933,12 @@
     <section id="ch2">
         <h2>2. Data Loading &amp; Preprocessing</h2>
         <p class="lede">Real data arrives with holes. Two repairs — forward-fill and interpolation — cover almost everything, and both are honest: they invent no structure the data itself did not suggest.</p>
-        <p>Before analysis, we must load data, handle missing values, and ensure proper temporal indexing. Python's <strong>pandas</strong> is the standard tool; Mojo 1.x offers native structs plus Python interop.</p>
+        <p>Before analysis, we must load data, handle missing values, and ensure proper temporal indexing. Mojo 1.x does this natively with typed lists and structs; <strong>pandas</strong> is one <code>Python.import_module()</code> away when you want it.</p>
 
-        <h3>2.1 Python: Loading with pandas</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>import pandas as pd
-import numpy as np
-
-# Create datetime index for 24 months (Jan 2023 – Dec 2024)
-dates = pd.date_range(start='2023-01-01', periods=24, freq='MS')
-sales = [120, 132, 145, 138, 150, 165, 170, 158, 175, 190, 185, 200,
-         210, 205, 220, 215, 230, 240, 235, 250, 260, 255, 270, 280]
-
-df = pd.DataFrame({'sales': sales}, index=dates)
-df.index.name = 'date'
-print(df.head())
-print(f"\nShape: {df.shape}, Freq: {df.index.freq}")</code></pre>
-
-        <h3>2.2 Python: Handling Missing Values</h3>
-        <pre class="python"><span class="lang-label">Python</span><code># Introduce a missing value for demonstration
-df.loc['2023-06-01', 'sales'] = np.nan
-
-# Forward fill (most common for time series)
-df['sales_ffill'] = df['sales'].ffill()
-
-# Linear interpolation
-df['sales_interp'] = df['sales'].interpolate(method='linear')
-
-# Check missing values
-print(df.isna().sum())</code></pre>
-
-        <h3>2.3 Mojo 1.x: Native Data Loading</h3>
+        <h3>2.1 Mojo 1.x: Native Data Loading</h3>
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
-# Mojo 1.x: every function starts with `def` (the old `fn` keyword is gone),
-# and `List` comes from the prelude so no import is needed.
+# Mojo 1.x: every function starts with `def`, and `List` comes from the
+# prelude so no import is needed.
 def load_sales_data() -&gt; List[Float64]:
     # build the sample series as a typed Mojo List (list display syntax)
     var data: List[Float64] = [
@@ -993,16 +964,23 @@ def main():
           cleaned[3], cleaned[4], cleaned[5])
 </code></pre>
 
-        <h3>2.4 Mojo 1.x: Python Interop for pandas</h3>
+        <h3>2.2 Mojo 1.x: Python Interop for pandas</h3>
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Calling pandas from Mojo via Python interop.
 # Mojo 1.x stdlib paths start with std., so the Python bridge lives here.
 from std.python import Python
-from std.python.numpy import copy_to_numpy_array
 
-def use_pandas_from_mojo():
+# Mojo has no std.python.numpy: hand the series over as a real Python
+# list, then let NumPy/pandas build the array on their own side.
+def to_python_list(data: List[Float64]) raises:
+    var out = Python.list()
+    for v in data:
+        out.append(v)
+    return out
+
+def use_pandas_from_mojo() raises:
+    var np = Python.import_module("numpy")
     var pd = Python.import_module("pandas")
-    # copy_to_numpy_array() turns a Mojo List into a NumPy array
     var sales: List[Float64] = [
         120.0, 132.0, 145.0, 138.0, 150.0, 165.0, 170.0,
         158.0, 175.0, 190.0, 185.0, 200.0, 210.0, 205.0,
@@ -1010,12 +988,12 @@ def use_pandas_from_mojo():
         255.0, 270.0, 280.0,
     ]
     var dates = pd.date_range(start="2023-01-01", periods=24, freq="MS")
-    # pandas Series built from the NumPy array with the date index attached
-    var series = pd.Series(copy_to_numpy_array(sales), index=dates)
+    # NumPy array built from the Python list, wrapped in a dated Series
+    var series = pd.Series(np.array(to_python_list(sales)), index=dates)
     print(series.head())
     print("Missing values:", series.isna().sum())
 
-def main():
+def main() raises:
     use_pandas_from_mojo()
 </code></pre>
 
@@ -1024,14 +1002,47 @@ def main():
             Always set a <code>DatetimeIndex</code> with a known frequency (e.g., <code>'MS'</code> for month start). This unlocks resampling, rolling windows, and proper plotting.
         </div>
 
-        <h3>2.5 Resampling and Aggregation</h3>
-        <pre class="python"><span class="lang-label">Python</span><code># Monthly → Quarterly aggregation
-quarterly = df['sales'].resample('QS').mean()  # Q1, Q2, Q3, Q4 averages
-print(quarterly)
+        <h3>2.3 Resampling and Aggregation</h3>
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Resampling is just "average each fixed-size bucket of the series".
+# 24 monthly observations -> 8 quarters -> 2 years, no index required.
+def resample_mean(data: List[Float64], bucket: Int) -> List[Float64]:
+    var n = len(data)
+    var out = List[Float64]()
+    var i = 0
+    while i < n:
+        var stop = i + bucket
+        if stop > n:
+            stop = n                     # a short final bucket is fine
+        var total: Float64 = 0.0
+        for j in range(i, stop):
+            total += data[j]
+        out.append(total / Float64(stop - i))
+        i = stop
+    return out
 
-# Downsampling: monthly → yearly
-yearly = df['sales'].resample('YS').sum()
-print(yearly)</code></pre>
+def resample_sum(data: List[Float64], bucket: Int) -> List[Float64]:
+    var n = len(data)
+    var out = List[Float64]()
+    var i = 0
+    while i < n:
+        var stop = i + bucket
+        if stop > n:
+            stop = n
+        var total: Float64 = 0.0
+        for j in range(i, stop):
+            total += data[j]
+        out.append(total)
+        i = stop
+    return out
+
+def main():
+    var sales = load_sales_data()
+    var quarterly = resample_mean(sales, 3)     # 24 months -> 8 quarters
+    var yearly = resample_sum(sales, 12)        # 24 months -> 2 years
+    print("Quarterly means:", quarterly)
+    print("Yearly totals:", yearly)
+</code></pre>
 
         <div class="calc-box">
             <h4>📐 Quarterly Averages (from our data)</h4>
@@ -1055,17 +1066,6 @@ print(yearly)</code></pre>
 
         <h3>3.1 Simple Moving Average (SMA)</h3>
         <p>The <strong>SMA</strong> of window size <em>k</em> at time <em>t</em> is: <code>SMA(t) = (Y(t-k+1) + ... + Y(t)) / k</code></p>
-
-        <pre class="python"><span class="lang-label">Python</span><code># 3-month moving average
-df['SMA_3'] = df['sales'].rolling(window=3).mean()
-
-# 6-month moving average
-df['SMA_6'] = df['sales'].rolling(window=6).mean()
-
-# 12-month moving average (captures yearly seasonality)
-df['SMA_12'] = df['sales'].rolling(window=12).mean()
-
-print(df[['sales', 'SMA_3', 'SMA_6', 'SMA_12']].head(15))</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Simple moving average implemented over List[Float64]
@@ -1112,15 +1112,6 @@ def main():
         <h3>3.2 Weighted Moving Average (WMA)</h3>
         <p>WMA assigns larger weights to recent observations. Common weighting: <code>WMA(t) = Σ(wᵢ × Y(t-i+1)) / Σ(wᵢ)</code> where weights decrease linearly or exponentially.</p>
 
-        <pre class="python"><span class="lang-label">Python</span><code># Weighted moving average (linear weights: 1, 2, 3 for window=3)
-def wma(series, window):
-    weights = np.arange(1, window + 1)
-    return series.rolling(window).apply(
-        lambda x: np.dot(x, weights) / weights.sum(), raw=True)
-
-df['WMA_3'] = wma(df['sales'], 3)
-print(df[['sales', 'WMA_3']].head(10))</code></pre>
-
         <div class="calc-box">
             <h4>📐 Worked Example: 3-Month WMA (weights 1,2,3)</h4>
             <div class="calc-step">WMA(3) at M3: (1×120 + 2×132 + 3×145)/6 = (120+264+435)/6 = 819/6 = <span class="result">136.50</span></div>
@@ -1132,11 +1123,6 @@ print(df[['sales', 'WMA_3']].head(10))</code></pre>
         <h3>3.3 Exponential Smoothing</h3>
         <p>Exponential smoothing applies geometrically decreasing weights to past observations. The smoothing factor <strong>α</strong> (0 &lt; α &lt; 1) controls the decay rate.</p>
         <p>Formula: <code>S(t) = α·Y(t) + (1−α)·S(t−1)</code></p>
-
-        <pre class="python"><span class="lang-label">Python</span><code># Simple exponential smoothing with α = 0.3
-alpha = 0.3
-df['SES'] = df['sales'].ewm(alpha=alpha, adjust=False).mean()
-print(df[['sales', 'SES']].head(8))</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Simple exponential smoothing:
@@ -1175,20 +1161,7 @@ def main():
         <p class="lede">Yearly rhythms — holidays, climate, budget cycles — echo at lag 12, and decomposition splits the series so each rhythm can be studied alone.</p>
         <p>Seasonality is the most dependable pattern in monthly data: a <em>seasonal lag</em> compares each month to the same month a year earlier, and a seasonal index averages each position in the year across all years. Decomposition splits the series into trend + seasonal + residual so each can be studied alone.</p>
 
-        <h3>4.1 Python: Classical Decomposition</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>from statsmodels.tsa.seasonal import seasonal_decompose
-
-# Additive decomposition (12-month seasonality)
-decomp = seasonal_decompose(df['sales'], model='additive', period=12)
-trend = decomp.trend
-seasonal = decomp.seasonal
-residual = decomp.resid
-
-print("Trend (first 6):", trend[:6].values)
-print("Seasonal (first 6):", seasonal[:6].values)
-print("Residual (first 6):", residual[:6].values)</code></pre>
-
-        <h3>4.2 Mojo 1.x: Manual Decomposition via Moving Averages</h3>
+        <h3>4.1 Mojo 1.x: Manual Decomposition via Moving Averages</h3>
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Manual additive decomposition:
 #   trend    = centered moving average (of length `period`)
@@ -1197,7 +1170,7 @@ print("Residual (first 6):", residual[:6].values)</code></pre>
 def decompose_trend_seasonal(data: List[Float64], period: Int) -&gt; Tuple[
     List[Float64], List[Float64], List[Float64]]:
     var n = len(data)
-    var half = period # 2
+    var half = period // 2
     # Step 1: trend via centered moving average
     var trend = List[Float64]()
     var detrended = List[Float64]()
@@ -1258,16 +1231,16 @@ def main():
             <div class="calc-step">= 3070/13 = <span class="result">236.15</span></div>
         </div>
 
-        <h3>4.3 Interpreting the Components</h3>
+        <h3>4.2 Interpreting the Components</h3>
         <table>
             <tbody><tr><th>Month</th><th>Actual</th><th>Trend (approx)</th><th>Seasonal (approx)</th><th>Residual</th></tr>
-            <tr><td>M1</td><td>120</td><td>—</td><td>—</td><td>—</td></tr>
-            <tr><td>M6</td><td>165</td><td>~155</td><td>~+3</td><td>~+7</td></tr>
-            <tr><td>M8</td><td>158</td><td>~170</td><td>~-12</td><td>~0</td></tr>
-            <tr><td>M12</td><td>200</td><td>~190</td><td>~+5</td><td>~+5</td></tr>
-            <tr><td>M16</td><td>215</td><td>~222</td><td>~-12</td><td>~+5</td></tr>
-            <tr><td>M20</td><td>250</td><td>~245</td><td>~+5</td><td>~0</td></tr>
-            <tr><td>M24</td><td>280</td><td>~275</td><td>~+5</td><td>~0</td></tr>
+<tr><td>M1</td><td>—</td><td>—</td><td>120</td><td>—</td></tr>
+<tr><td>M6</td><td>~+3</td><td>~+7</td><td>165</td><td>~155</td></tr>
+<tr><td>M8</td><td>~-12</td><td>~0</td><td>158</td><td>~170</td></tr>
+<tr><td>M12</td><td>~+5</td><td>~+5</td><td>200</td><td>~190</td></tr>
+<tr><td>M16</td><td>~-12</td><td>~+5</td><td>215</td><td>~222</td></tr>
+<tr><td>M20</td><td>~+5</td><td>~0</td><td>250</td><td>~245</td></tr>
+<tr><td>M24</td><td>~+5</td><td>~0</td><td>280</td><td>~275</td></tr>
         </tbody></table>
 
         <div class="warning">
@@ -1284,21 +1257,6 @@ def main():
         <p>Many time series models (especially ARIMA) require the data to be <strong>stationary</strong> — constant mean, variance, and autocorrelation over time. Our sales data has a clear trend, so it is <em>non-stationary</em>.</p>
 
         <h3>5.1 Augmented Dickey-Fuller (ADF) Test</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>from statsmodels.tsa.stattools import adfuller
-
-# Test on original data
-result = adfuller(df['sales'])
-print(f"ADF Statistic: {result[0]:.4f}")
-print(f"p-value: {result[1]:.4f}")
-print(f"Critical values: {result[4]}")
-# p-value &gt; 0.05 → fail to reject null → non-stationary
-
-# Test on first-differenced data
-diff1 = df['sales'].diff().dropna()
-result_diff = adfuller(diff1)
-print(f"\nADF Statistic (1st diff): {result_diff[0]:.4f}")
-print(f"p-value (1st diff): {result_diff[1]:.4f}")
-# p-value &lt; 0.05 → stationary after first differencing</code></pre>
 
         <div class="calc-box">
             <h4>📐 Worked Example: ADF on Original Data</h4>
@@ -1313,13 +1271,6 @@ print(f"p-value (1st diff): {result_diff[1]:.4f}")
         </div>
 
         <h3>5.2 First-Order Differencing</h3>
-        <pre class="python"><span class="lang-label">Python</span><code># First-order differencing: ΔY(t) = Y(t) - Y(t-1)
-df['diff_1'] = df['sales'].diff()
-
-# Second-order differencing (if needed)
-df['diff_2'] = df['sales'].diff().diff()
-
-print(df[['sales', 'diff_1', 'diff_2']].head(10))</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Nth-order differencing: each pass replaces the series with its first difference
@@ -1367,38 +1318,12 @@ def main():
         <h3>6.1 ARIMA(p, d, q) Notation</h3>
         <table>
             <tbody><tr><th>Parameter</th><th>Meaning</th><th>How to Determine</th></tr>
-            <tr><td><strong>p</strong></td><td>AR order (lag terms)</td><td>PACF plot — significant lags</td></tr>
-            <tr><td><strong>d</strong></td><td>Differencing order</td><td>ADF test — until stationary</td></tr>
-            <tr><td><strong>q</strong></td><td>MA order (error terms)</td><td>ACF plot — significant lags</td></tr>
+<tr><td><strong>p</strong></td><td>AR order (lag terms)</td><td>PACF plot — significant lags</td></tr>
+<tr><td><strong>d</strong></td><td>Differencing order</td><td>ADF test — until stationary</td></tr>
+<tr><td><strong>q</strong></td><td>MA order (error terms)</td><td>ACF plot — significant lags</td></tr>
         </tbody></table>
 
-        <h3>6.2 Python: Fitting ARIMA</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# ARIMA(1,1,1): one difference + AR(1) + MA(1), then a 6-month forecast
-from statsmodels.tsa.arima.model import ARIMA
-
-# Fit ARIMA(1,1,1) on sales data
-model = ARIMA(df['sales'], order=(1, 1, 1))
-fitted = model.fit()
-print(fitted.summary())
-
-# Make 6-month forecast
-forecast = fitted.forecast(steps=6)
-print("\n6-month forecast:", forecast.values)
-</code></pre>
-
-        <h3>6.3 Python: Auto-ARIMA (pmdarima)</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# auto_arima searches (p,d,q) x (P,D,Q) and the seasonal length for you
-from pmdarima import auto_arima
-
-auto_model = auto_arima(df['sales'], seasonal=True, m=12,
-                        trace=False, suppress_warnings=True)
-print(f"Best order: {auto_model.order}")
-print(f"Best seasonal order: {auto_model.seasonal_order}")
-</code></pre>
-
-        <h3>6.4 Mojo 1.x: Manual AR(1) Implementation</h3>
+        <h3>6.2 Mojo 1.x: Manual AR(1) Implementation</h3>
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # AR(1) model: Y(t) = c + phi * Y(t-1) + eps(t), fitted by least squares
 def fit_ar1(data: List[Float64]) -&gt; Tuple[Float64, Float64]:
@@ -1469,25 +1394,10 @@ def main():
     <section id="ch7">
         <h2>7. Exponential Smoothing (Holt-Winters)</h2>
         <p class="lede">Add a trend and a seasonal cycle, and single smoothing becomes the classic triple method — three ideas kept in flight at once.</p>
-        <p>Holt-Winters keeps three ideas in flight at once: a <em>level</em>, a <em>trend</em>, and a <em>seasonal factor</em> for each position in the year. Three recursions update them month by month, and the forecast simply adds them back together — the strongest classical tool in this book, and the Python library makes it two lines.</p>
+<p>Holt-Winters keeps three ideas in flight at once: a <em>level</em>, a <em>trend</em>, and a <em>seasonal factor</em> for each position in the year. Three recursions update them month by month, and the forecast simply adds them back together — the strongest classical tool in this book, and because statsmodels is reachable through interop, you can compare against it in two lines.</p>
 
         <h3>7.1 Triple Exponential Smoothing (Holt-Winters)</h3>
         <p>Parameters: <strong>α</strong> (level), <strong>β</strong> (trend), <strong>γ</strong> (seasonality), with seasonal period <strong>m</strong>.</p>
-
-        <pre class="python"><span class="lang-label">Python</span><code>from statsmodels.tsa.holtwinters import ExponentialSmoothing
-
-# Holt-Winters with additive seasonality
-hw_model = ExponentialSmoothing(
-    df['sales'], trend='add', seasonal='add', seasonal_periods=12
-).fit()
-
-hw_forecast = hw_model.forecast(6)
-print("Holt-Winters forecast (6 months):", hw_forecast.values)
-
-# Model parameters
-print(f"α (level): {hw_model.params['smoothing_level']:.4f}")
-print(f"β (trend): {hw_model.params['smoothing_trend']:.4f}")
-print(f"γ (seasonal): {hw_model.params['smoothing_seasonal']:.4f}")</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Holt-Winters additive triple exponential smoothing, written from scratch
@@ -1543,13 +1453,36 @@ def main():
 
         <h3>7.2 Holt's Linear Trend Method (Double Exponential Smoothing)</h3>
         <p>Use when there's trend but no seasonality. Our data has both, but for illustration:</p>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Holt's method: level + trend, without seasonality
-from statsmodels.tsa.holtwinters import Holt
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Holt's linear trend: level + trend, no seasonality.
+#   level[t] = alpha * y[t] + (1 - alpha) * (level[t-1] + trend[t-1])
+#   trend[t] = beta  * (level[t] - level[t-1]) + (1 - beta) * trend[t-1]
+#   forecast = level[n-1] + h * trend[n-1]        for h = 1 .. horizon
+def holt_linear(
+    data: List[Float64], alpha: Float64, beta: Float64, horizon: Int
+) -> Tuple[List[Float64], List[Float64]]:
+    var n = len(data)
+    var fitted = List[Float64]()
+    var level = data[0]
+    var trend = data[1] - data[0]          # seed the trend from the first pair
+    fitted.append(level)
+    for i in range(1, n):
+        var previous = level
+        level = alpha * data[i] + (1.0 - alpha) * (level + trend)
+        trend = beta * (level - previous) + (1.0 - beta) * trend
+        fitted.append(level)
+    var forecast = List[Float64]()
+    for h in range(1, horizon + 1):
+        forecast.append(level + Float64(h) * trend)
+    return (fitted, forecast)
 
-holt_model = Holt(df['sales']).fit(smoothing_level=0.5, smoothing_trend=0.3)
-holt_forecast = holt_model.forecast(3)
-print("Holt's forecast:", holt_forecast.values)
+def main():
+    var sales = load_sales_data()
+    var result = holt_linear(sales, 0.5, 0.3, 3)
+    var fitted = result[0]
+    var forecast = result[1]
+    print("Fitted level, last 4:", fitted[20], fitted[21], fitted[22], fitted[23])
+    print("Holt's forecast:", forecast)
 </code></pre>
 
         <div class="tip">
@@ -1565,44 +1498,12 @@ print("Holt's forecast:", holt_forecast.values)
         <p class="lede">Turn time into columns: lags, rolling statistics, calendar and cycles.</p>
         <p>Machine learning models require tabular features. For time series, we create <strong>lag features</strong>, <strong>rolling statistics</strong>, and <strong>date-based features</strong> to capture temporal patterns.</p>
 
-        <h3>8.1 Lag Features</h3>
-        <pre class="python"><span class="lang-label">Python</span><code># Create lag features (t-1, t-2, t-3, t-12)
-for lag in [1, 2, 3, 12]:
-    df[f'lag_{lag}'] = df['sales'].shift(lag)
-
-print(df[['sales', 'lag_1', 'lag_2', 'lag_3', 'lag_12']].tail(6))</code></pre>
-
-        <h3>8.2 Rolling Window Statistics</h3>
-        <pre class="python"><span class="lang-label">Python</span><code># Rolling mean, std, min, max over 3-month and 6-month windows
-for window in [3, 6]:
-    df[f'rolling_mean_{window}'] = df['sales'].rolling(window).mean()
-    df[f'rolling_std_{window}'] = df['sales'].rolling(window).std()
-    df[f'rolling_min_{window}'] = df['sales'].rolling(window).min()
-    df[f'rolling_max_{window}'] = df['sales'].rolling(window).max()
-
-# Expanding mean (cumulative average)
-df['expanding_mean'] = df['sales'].expanding().mean()
-
-print(df.filter(like='rolling').head(10))</code></pre>
-
-        <h3>8.3 Date/Time Features</h3>
-        <pre class="python"><span class="lang-label">Python</span><code># Extract calendar features from DatetimeIndex
-df['month'] = df.index.month
-df['quarter'] = df.index.quarter
-df['year'] = df.index.year
-df['day_of_year'] = df.index.dayofyear
-
-# Cyclical encoding for month (preserves circular nature)
-df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
-df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
-
-print(df[['month', 'month_sin', 'month_cos']].head(12))</code></pre>
-
-        <h3>8.4 Mojo 1.x: Feature Engineering</h3>
+        <h3>8.1 Feature Engineering: Lags, Rolling Windows and Calendar Cycles</h3>
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Feature engineering in pure Mojo.
 # The lag matrix is stored flat (row-major): element [i, j] of the matrix
 # lives at flat index i * max_lag + j.
+from std.math import cos, sin, sqrt
 def create_lag_features(data: List[Float64], max_lag: Int) -&gt; List[Float64]:
     var n = len(data)
     var rows = n - max_lag
@@ -1615,7 +1516,7 @@ def create_lag_features(data: List[Float64], max_lag: Int) -&gt; List[Float64]:
     return result
 
 # Rolling mean feature over a fixed window
-def create_rolling_mean(data: List[Float64], window: Int) -&gt; List[Float64]:
+def create_rolling_mean(data: List[Float64], window: Int) -> List[Float64]:
     var n = len(data)
     var result = List[Float64]()
     for i in range(window, n + 1):
@@ -1625,14 +1526,51 @@ def create_rolling_mean(data: List[Float64], window: Int) -&gt; List[Float64]:
         result.append(sum / Float64(window))
     return result
 
+# Rolling standard deviation over the same window (population sigma).
+def create_rolling_std(data: List[Float64], window: Int) -> List[Float64]:
+    var n = len(data)
+    var result = List[Float64]()
+    for i in range(window, n + 1):
+        var sum: Float64 = 0.0
+        for j in range(i - window, i):
+            sum += data[j]
+        var mean = sum / Float64(window)
+        var variance: Float64 = 0.0
+        for j in range(i - window, i):
+            var d = data[j] - mean
+            variance += d * d
+        result.append(sqrt(variance / Float64(window)))
+    return result
+
+# Calendar features. Month is a cycle, not a number, so encode it as a
+# point on the unit circle: M1 -> (sin 2*pi/12, cos 2*pi/12), and so on.
+# That keeps December adjacent to January instead of 11 units away.
+def create_month_cycle(months: List[Int]) -> Tuple[List[Float64], List[Float64]]:
+    var sin_part = List[Float64]()
+    var cos_part = List[Float64]()
+    for m in months:
+        var angle = 2.0 * 3.141592653589793 * Float64(m) / 12.0
+        sin_part.append(sin(angle))
+        cos_part.append(cos(angle))
+    return (sin_part, cos_part)
+
 def main():
     var sales = load_sales_data()
     var lags = create_lag_features(sales, 3)
     var roll_mean = create_rolling_mean(sales, 3)
+    var roll_std = create_rolling_std(sales, 3)
+    # M1..M24 as calendar month numbers (1 = January)
+    var months = List[Int]()
+    for i in range(len(sales)):
+        months.append(i % 12 + 1)
+    var cycle = create_month_cycle(months)
     print("Lag features length:", len(lags))
     # first flat row (indexes 0..2) = data[2], data[1], data[0] (the three
     # values that precede the first fully-populated row)
     print("First lag row (lags 1,2,3):", lags[0], lags[1], lags[2])
+    print("Rolling mean, first 3:", roll_mean[0], roll_mean[1], roll_mean[2])
+    print("Rolling std, first 3:", roll_std[0], roll_std[1], roll_std[2])
+    print("Month 13 cycle (sin, cos):", cycle[0][12], cycle[1][12])
 </code></pre>
 
         <div class="calc-box">
@@ -1653,68 +1591,22 @@ def main():
         <p class="lede">Linear regression is the honest baseline every model must beat; forests and boosters pick up interactions no line can see.</p>
         <p>Once features are engineered, any ML model can be applied. Common choices include <strong>Linear Regression</strong>, <strong>Random Forest</strong>, and <strong>Gradient Boosting</strong>.</p>
 
-        <h3>9.1 Data Preparation for Supervised Learning</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-
-# Build feature matrix with 3 lags + rolling mean
-X = df[['lag_1', 'lag_2', 'lag_3', 'rolling_mean_3']].dropna()
-y = df.loc[X.index, 'sales']
-
-# Time-based split (NOT random — preserves temporal order)
-split_idx = int(len(X) * 0.8)
-X_train, X_test = X[:split_idx], X[split_idx:]
-y_train, y_test = y[:split_idx], y[split_idx:]
-
-print(f"Train: {X_train.shape}, Test: {X_test.shape}")</code></pre>
-
-        <h3>9.2 Linear Regression</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Linear regression baseline
-lr = LinearRegression()
-lr.fit(X_train, y_train)
-lr_pred = lr.predict(X_test)
-
-print(f"Linear Regression MAE: {mean_absolute_error(y_test, lr_pred):.2f}")
-print(f"Linear Regression RMSE: {np.sqrt(mean_squared_error(y_test, lr_pred)):.2f}")
-print(f"Coefficients: {lr.coef_}")
-</code></pre>
-
-        <h3>9.3 Random Forest</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Random forest baseline
-rf = RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42)
-rf.fit(X_train, y_train)
-rf_pred = rf.predict(X_test)
-
-print(f"Random Forest MAE: {mean_absolute_error(y_test, rf_pred):.2f}")
-print(f"Random Forest RMSE: {np.sqrt(mean_squared_error(y_test, rf_pred)):.2f}")
-print(f"Feature importances: {rf.feature_importances_}")
-</code></pre>
-
-        <h3>9.4 Gradient Boosting</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Gradient boosting baseline
-from sklearn.ensemble import GradientBoostingRegressor
-
-gb = GradientBoostingRegressor(n_estimators=100, learning_rate=0.05, max_depth=3, random_state=42)
-gb.fit(X_train, y_train)
-gb_pred = gb.predict(X_test)
-
-print(f"GBM MAE: {mean_absolute_error(y_test, gb_pred):.2f}")
-print(f"GBM RMSE: {np.sqrt(mean_squared_error(y_test, gb_pred)):.2f}")
-</code></pre>
-
-        <h3>9.5 Mojo 1.x: Linear Regression via Python Interop</h3>
+        <h3>9.1 Supervised Setup and Linear Regression</h3>
+        <p>Mojo builds the supervised design matrix itself - lags, rolling mean and the aligned target - then calls scikit-learn across the interop bridge for the fit.</p>
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Fit scikit-learn from Mojo: compute the features natively, hand them to
-# NumPy with the interop helper, then call sklearn through Python.
+# NumPy as a Python list, then call sklearn through the interop bridge.
 from std.python import Python
-from std.python.numpy import copy_to_numpy_array
 
-def train_linear_regression():
+# Mojo has no std.python.numpy: build the Python-side list explicitly.
+def to_python_list(data: List[Float64]) raises:
+    var out = Python.list()
+    for v in data:
+        out.append(v)
+    return out
+
+def train_linear_regression() raises:
+    var np = Python.import_module("numpy")
     var sklearn_lr = Python.import_module("sklearn.linear_model").LinearRegression
     var sales = load_sales_data()
     # reuse the native Mojo feature builders defined earlier in this chapter
@@ -1728,25 +1620,86 @@ def train_linear_regression():
             X_flat.append(lags[i * 3 + lag])
         X_flat.append(roll_mean[i])
         y_flat.append(sales[i + 3])              # target = value at that time
-    # convert Mojo List -&gt; NumPy array, reshape to (rows, 4 features)
-    var X = copy_to_numpy_array(X_flat).reshape(X_rows, 4)
-    var y = copy_to_numpy_array(y_flat)
+    # Python list -> NumPy array, reshaped to (rows, 4 features)
+    var X = np.array(to_python_list(X_flat)).reshape(X_rows, 4)
+    var y = np.array(to_python_list(y_flat))
     var model = sklearn_lr()
     model.fit(X, y)
     var preds = model.predict(X)
     print("Linear Regression predictions:", preds)
 
-def main():
+def main() raises:
     train_linear_regression()
 </code></pre>
 
         <div class="calc-box">
-            <h4>📐 Worked Example: Prediction at M18 (test set)</h4>
+            <h4>?? Worked Example: Prediction at M18 (test set)</h4>
             <p>Features for M18: lag_1 = 230 (M17), lag_2 = 215 (M16), lag_3 = 220 (M15), rolling_mean_3 = (215+230+240)/3 = 228.33</p>
-            <div class="calc-step">Linear Regression: ŷ = β₀ + β₁×230 + β₂×215 + β₃×220 + β₄×228.33</div>
+            <div class="calc-step">Linear Regression: y = β0 + β1x230 + β2x215 + β3x220 + β4x228.33</div>
             <div class="calc-step">With fitted β ≈ [5.2, 0.61, 0.12, 0.05, 0.15]: ŷ ≈ <span class="result">~232</span></div>
             <div class="calc-step">Actual = 240 → Error = |240 - 232| = <span class="result">8 units</span></div>
         </div>
+
+        <h3>9.2 Random Forest and Gradient Boosting</h3>
+        <p>Neither algorithm is worth reimplementing: both are large, well-tested forests. Mojo builds the same feature matrix as above, then hands it to scikit-learn across the bridge.</p>
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Forests and boosters via interop. The feature matrix is built natively
+# (reuse the builders from 9.1); only the fit runs on the Python side.
+from std.python import Python
+
+def to_python_list(data: List[Float64]) raises:
+    var out = Python.list()
+    for v in data:
+        out.append(v)
+    return out
+
+# Shared design matrix: 3 lags + rolling mean -> target one step ahead.
+def build_xy(sales: List[Float64], rows: Int) raises:
+    var np = Python.import_module("numpy")
+    var lags = create_lag_features(sales, 3)
+    var roll_mean = create_rolling_mean(sales, 3)
+    var X_flat = List[Float64]()
+    var y_flat = List[Float64]()
+    for i in range(rows):
+        for lag in range(3):
+            X_flat.append(lags[i * 3 + lag])
+        X_flat.append(roll_mean[i])
+        y_flat.append(sales[i + 3])
+    return (np.array(to_python_list(X_flat)).reshape(rows, 4),
+            np.array(to_python_list(y_flat)))
+
+def train_random_forest() raises:
+    var ensemble = Python.import_module("sklearn.ensemble")
+    var metrics = Python.import_module("sklearn.metrics")
+    var data = load_sales_data()
+    var xy = build_xy(data, 21)
+    var X = xy[0]
+    var y = xy[1]
+    var rf = ensemble.RandomForestRegressor(
+        n_estimators=100, max_depth=5, random_state=42)
+    rf.fit(X, y)
+    var preds = rf.predict(X)
+    print("Random Forest MAE:", metrics.mean_absolute_error(y, preds))
+    print("Random Forest predictions:", preds)
+
+def train_gradient_boosting() raises:
+    var ensemble = Python.import_module("sklearn.ensemble")
+    var metrics = Python.import_module("sklearn.metrics")
+    var data = load_sales_data()
+    var xy = build_xy(data, 21)
+    var X = xy[0]
+    var y = xy[1]
+    var gb = ensemble.GradientBoostingRegressor(
+        n_estimators=100, learning_rate=0.05, max_depth=3, random_state=42)
+    gb.fit(X, y)
+    var preds = gb.predict(X)
+    print("Gradient Boosting MAE:", metrics.mean_absolute_error(y, preds))
+    print("Gradient Boosting predictions:", preds)
+
+def main() raises:
+    train_random_forest()
+    train_gradient_boosting()
+</code></pre>
     </section>
 
     <!-- ==================== CHAPTER 10 ==================== -->
@@ -1756,61 +1709,29 @@ def main():
         <p class="lede">A recurrent memory cell that learns what to keep and what to forget.</p>
         <p><strong>Long Short-Term Memory (LSTM)</strong> networks are designed to capture long-range dependencies in sequential data, making them powerful for time series forecasting.</p>
 
-        <h3>10.1 Sequence Preparation</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Normalize the data to [0, 1], then build supervised (X, y) sequences
-import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from sklearn.preprocessing import MinMaxScaler
-
-# Normalize data to [0, 1]
-scaler = MinMaxScaler(feature_range=(0, 1))
-scaled = scaler.fit_transform(df[['sales']])
-
-# Create sequences: use past 6 months to predict next month
-def create_sequences(data, seq_length=6):
-    X, y = [], []
-    for i in range(len(data) - seq_length):
-        X.append(data[i:i+seq_length])
-        y.append(data[i+seq_length])
-    return np.array(X), np.array(y)
-
-X, y = create_sequences(scaled, seq_length=6)
-X = X.reshape(X.shape[0], X.shape[1], 1)  # (samples, timesteps, features)
-
-split = int(len(X) * 0.8)
-X_train, X_test = X[:split], X[split:]
-y_train, y_test = y[:split], y[split:]
-print(f"X_train: {X_train.shape}, y_train: {y_train.shape}")
-</code></pre>
-
-        <h3>10.2 LSTM Model Architecture</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Two LSTM layers with dropout, compiled and fitted
-model = Sequential([
-    LSTM(64, activation='tanh', return_sequences=True, input_shape=(6, 1)),
-    Dropout(0.2),
-    LSTM(32, activation='tanh', return_sequences=False),
-    Dropout(0.2),
-    Dense(16, activation='relu'),
-    Dense(1)
-])
-
-model.compile(optimizer='adam', loss='mse', metrics=['mae'])
-history = model.fit(X_train, y_train, epochs=100, batch_size=4,
-                    validation_split=0.2, verbose=0)
-
-test_loss, test_mae = model.evaluate(X_test, y_test, verbose=0)
-print(f"LSTM Test MAE: {test_mae:.4f}")
-print(f"LSTM Test MSE: {test_loss:.4f}")
-</code></pre>
-
-        <h3>10.3 Mojo 1.x: LSTM via Python Interop (TensorFlow)</h3>
+        <h3>10.1 LSTM via Python Interop (TensorFlow)</h3>
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # TensorFlow/Keras from Mojo: import the Python packages and build the model.
-# Every binding uses `var` - Mojo 1.x has no `let` keyword.
+# Every binding uses `var`; the declaration is mandatory at function scope.
 from std.python import Python
+
+# Sequence preparation. An LSTM consumes fixed-length windows, not raw
+# series, so slide a window of `window` past the data and pair each window
+# with the single value that follows it. The result is flat and row-major:
+# window [i, j] lives at i * window + j, which is exactly the layout
+# .reshape(num_rows, window) expects.
+def create_sequences(
+    data: List[Float64], window: Int
+) -> Tuple[List[Float64], List[Float64]]:
+    var n = len(data)
+    var rows = n - window
+    var X = List[Float64]()
+    var y = List[Float64]()
+    for i in range(rows):
+        for j in range(window):
+            X.append(data[i + j])
+        y.append(data[i + window])       # next value is the target
+    return (X, y)
 
 def build_lstm_model():
     var tf = Python.import_module("tensorflow")
@@ -1820,7 +1741,7 @@ def build_lstm_model():
     var Dense = keras.layers.Dense
     var Dropout = keras.layers.Dropout
     var MinMaxScaler = Python.import_module("sklearn.preprocessing").MinMaxScaler
-    # build the same architecture as the Python version
+    # stacked LSTM: 64 recurrent units, then 32, then a small dense head
     var model = Sequential([
         LSTM(64, activation="tanh", return_sequences=True, input_shape=(6, 1)),
         Dropout(0.2),
@@ -1835,6 +1756,14 @@ def build_lstm_model():
 
 def main():
     var model = build_lstm_model()
+    # 24 points, window 6 -> 18 training rows of 6 steps each
+    var window = 6
+    var sales = load_sales_data()
+    var seqs = create_sequences(sales, window)
+    var X = seqs[0]
+    var y = seqs[1]
+    print("Sequence rows:", len(y), "Steps per row:", window)
+    print("First window:", X[0], X[1], X[2], X[3], X[4], X[5], "-> target", y[0])
 </code></pre>
 
         <div class="note">
@@ -1842,13 +1771,13 @@ def main():
             LSTM excels at capturing <strong>non-linear</strong> patterns and long memory, but requires much more data and tuning. For small datasets (like our 24 points), classical models (ARIMA, Holt-Winters) or simpler ML models often perform better.
         </div>
 
-        <h3>10.4 Comparison: LSTM vs ARIMA on Small Data</h3>
+        <h3>10.2 Comparison: LSTM vs ARIMA on Small Data</h3>
         <table>
             <tbody><tr><th>Model</th><th>Data Requirements</th><th>Training Time</th><th>Interpretability</th><th>Best For</th></tr>
-            <tr><td>ARIMA</td><td>~30+ points</td><td>Seconds</td><td>High</td><td>Short-term, stationary</td></tr>
-            <tr><td>Holt-Winters</td><td>~24+ points (with seasonality)</td><td>Seconds</td><td>High</td><td>Seasonal data</td></tr>
-            <tr><td>Random Forest</td><td>~100+ points with features</td><td>Minutes</td><td>Medium</td><td>Tabular features</td></tr>
-            <tr><td>LSTM</td><td>~1000+ points</td><td>Hours</td><td>Low</td><td>Complex patterns, long sequences</td></tr>
+<tr><td>ARIMA</td><td>High</td><td>Short-term, stationary</td><td>~30+ points</td><td>Seconds</td></tr>
+<tr><td>Holt-Winters</td><td>High</td><td>Seasonal data</td><td>~24+ points (with seasonality)</td><td>Seconds</td></tr>
+<tr><td>Random Forest</td><td>Medium</td><td>Tabular features</td><td>~100+ points with features</td><td>Minutes</td></tr>
+<tr><td>LSTM</td><td>Low</td><td>Complex patterns, long sequences</td><td>~1000+ points</td><td>Hours</td></tr>
         </tbody></table>
     </section>
 
@@ -1862,29 +1791,51 @@ def main():
         <h3>11.1 Error Metrics</h3>
         <table>
             <tbody><tr><th>Metric</th><th>Formula</th><th>Interpretation</th></tr>
-            <tr><td><strong>MAE</strong></td><td>(1/n)Σ|ŷ - y|</td><td>Average absolute error in original units</td></tr>
-            <tr><td><strong>RMSE</strong></td><td>√[(1/n)Σ(ŷ - y)²]</td><td>Penalizes large errors more heavily</td></tr>
-            <tr><td><strong>MAPE</strong></td><td>(100/n)Σ|(ŷ - y)/y|</td><td>Percentage error — scale-independent</td></tr>
-            <tr><td><strong>SMAPE</strong></td><td>(200/n)Σ|ŷ-y|/(|ŷ|+|y|)</td><td>Symmetric MAPE (bounded 0-200%)</td></tr>
+<tr><td><strong>MAE</strong></td><td>(1/n)Σ|ŷ - y|</td><td>Average absolute error in original units</td></tr>
+<tr><td><strong>RMSE</strong></td><td>√[(1/n)Σ(ŷ - y)²]</td><td>Penalizes large errors more heavily</td></tr>
+<tr><td><strong>MAPE</strong></td><td>(100/n)Σ|(ŷ - y)/y|</td><td>Percentage error — scale-independent</td></tr>
+<tr><td><strong>SMAPE</strong></td><td>(200/n)Σ|ŷ-y|/(|ŷ|+|y|)</td><td>Symmetric MAPE (bounded 0-200%)</td></tr>
         </tbody></table>
 
-        <h3>11.2 Python: Full Evaluation</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Shared evaluation helper: MAE, RMSE and MAPE per model
-def evaluate_forecast(y_true, y_pred, model_name):
-    mae = mean_absolute_error(y_true, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
-    mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
-    print(f"{model_name:20s} | MAE: {mae:8.2f} | RMSE: {rmse:8.2f} | MAPE: {mape:6.2f}%")
-    return {'mae': mae, 'rmse': rmse, 'mape': mape}
+        <h3>11.2 Full Evaluation</h3>
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Error metrics, computed natively - no metrics library required.
+from std.math import abs, sqrt
 
-# Evaluate all models on test set
-results = {}
-results['ARIMA'] = evaluate_forecast(y_test, arima_pred, 'ARIMA')
-results['Holt-Winters'] = evaluate_forecast(y_test, hw_pred, 'Holt-Winters')
-results['LinearReg'] = evaluate_forecast(y_test, lr_pred, 'Linear Regression')
-results['RandomForest'] = evaluate_forecast(y_test, rf_pred, 'Random Forest')
-results['GBM'] = evaluate_forecast(y_test, gb_pred, 'Gradient Boosting')
+def mae(actual: List[Float64], predicted: List[Float64]) -> Float64:
+    var total: Float64 = 0.0
+    for i in range(len(actual)):
+        total += abs(actual[i] - predicted[i])
+    return total / Float64(len(actual))
+
+def rmse(actual: List[Float64], predicted: List[Float64]) -> Float64:
+    var total: Float64 = 0.0
+    for i in range(len(actual)):
+        var d = actual[i] - predicted[i]
+        total += d * d
+    return sqrt(total / Float64(len(actual)))
+
+def mape(actual: List[Float64], predicted: List[Float64]) -> Float64:
+    var total: Float64 = 0.0
+    for i in range(len(actual)):
+        total += abs(actual[i] - predicted[i]) / actual[i]
+    return 100.0 * total / Float64(len(actual))
+
+# Score one model and print the three-metric row the tables in this
+# chapter quote.
+def evaluate(actual: List[Float64], predicted: List[Float64],
+             model_name: String):
+    var e_mae = mae(actual, predicted)
+    var e_rmse = rmse(actual, predicted)
+    var e_mape = mape(actual, predicted)
+    print(model_name, "| MAE:", e_mae, "| RMSE:", e_rmse, "| MAPE:", e_mape, "%")
+    return (e_mae, e_rmse, e_mape)
+
+def main():
+    var actual: List[Float64] = [240.0, 235.0, 250.0]
+    var predicted: List[Float64] = [238.0, 240.0, 255.0]
+    var scores = evaluate(actual, predicted, "Example")
+    print("MAE:", scores[0], "RMSE:", scores[1], "MAPE:", scores[2])
 </code></pre>
 
         <div class="calc-box">
@@ -1902,32 +1853,72 @@ results['GBM'] = evaluate_forecast(y_test, gb_pred, 'Gradient Boosting')
         </div>
 
         <h3>11.3 Time Series Cross-Validation (Walk-Forward)</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>from sklearn.model_selection import TimeSeriesSplit
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Walk-forward splits: train on an expanding window, validate on the
+# next `horizon` observations. Time order is never shuffled.
+# Each element of the result is a (train_end, val_end) index pair.
+def walk_forward_splits(n: Int, n_splits: Int, horizon: Int) -> List[Tuple[Int, Int]]:
+    var out = List[Tuple[Int, Int]]()
+    var first_train = n - horizon * n_splits
+    for k in range(n_splits):
+        var train_end = first_train + horizon * k
+        out.append((train_end, train_end + horizon))
+    return out
 
-tscv = TimeSeriesSplit(n_splits=5)
-for fold, (train_idx, val_idx) in enumerate(tscv.split(X)):
-    print(f"Fold {fold}: Train={train_idx.shape[0]}, Validation={val_idx.shape[0]}")
-    # Train on X[train_idx], validate on X[val_idx]</code></pre>
+# The "model" here is deliberately trivial - the mean of the training
+# window - so the split logic is what the example is actually showing.
+def window_mean_forecast(data: List[Float64], train_end: Int,
+                         horizon: Int) -> List[Float64]:
+    var total: Float64 = 0.0
+    for i in range(train_end):
+        total += data[i]
+    var level = total / Float64(train_end)
+    var out = List[Float64]()
+    for _ in range(horizon):
+        out.append(level)            # flat forecast at the window mean
+    return out
+
+def main():
+    var sales = load_sales_data()
+    var splits = walk_forward_splits(len(sales), 5, 2)
+    for k in range(len(splits)):
+        var train_end = splits[k][0]
+        var val_end = splits[k][1]
+        print("Fold", k, ": Train=0..", train_end, ", Validation=", train_end, "..", val_end)
+        var predicted = window_mean_forecast(sales, train_end, val_end - train_end)
+        print("   predicted:", predicted)
+</code></pre>
 
         <h3>11.4 Backtesting</h3>
-        <pre class="python"><span class="lang-label">Python</span><code>def walk_forward_validation(model_fn, data, n_splits=5, horizon=3):
-    """Walk-forward validation: train on expanding window, predict ahead."""
-    errors = []
-    for i in range(n_splits):
-        train_end = len(data) - horizon * (n_splits - i)
-        train = data[:train_end]
-        test = data[train_end:train_end + horizon]
-        pred = model_fn(train, horizon)
-        errors.append(mean_absolute_error(test, pred))
-    return np.mean(errors)
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Backtesting: roll the origin forward, refit on everything seen so far,
+# and accumulate the error of every prediction the model would have made
+# live. The mean of those errors is the honest generalisation estimate.
+def backtest_mae(data: List[Float64], n_splits: Int, horizon: Int) -> Float64:
+    var first_train = len(data) - horizon * n_splits
+    var error_total: Float64 = 0.0
+    var count: Int = 0
+    for k in range(n_splits):
+        var train_end = first_train + horizon * k
+        # refit: the window mean is the model
+        var level: Float64 = 0.0
+        for i in range(train_end):
+            level += data[i]
+        level /= Float64(train_end)
+        # score the next `horizon` steps from that level
+        for h in range(horizon):
+            var err = data[train_end + h] - level
+            if err < 0.0:
+                err = -err
+            error_total += err
+            count += 1
+    return error_total / Float64(count)
 
-# Example usage
-def arima_fn(train, horizon):
-    model = ARIMA(train, order=(1,1,1)).fit()
-    return model.forecast(horizon)
-
-avg_error = walk_forward_validation(arima_fn, df['sales'].values, n_splits=4, horizon=3)
-print(f"Average walk-forward MAE: {avg_error:.2f}")</code></pre>
+def main():
+    var sales = load_sales_data()
+    var avg_error = backtest_mae(sales, 4, 3)
+    print("Average walk-forward MAE:", avg_error)
+</code></pre>
 
         <div class="warning">
             <span class="label">⚠️ Common Pitfall</span>
@@ -1937,12 +1928,12 @@ print(f"Average walk-forward MAE: {avg_error:.2f}")</code></pre>
         <h3>11.5 Final Model Comparison</h3>
         <table>
             <tbody><tr><th>Model</th><th>MAE</th><th>RMSE</th><th>MAPE</th><th>Training Speed</th><th>Best Use Case</th></tr>
-            <tr><td>ARIMA(1,1,1)</td><td>12.4</td><td>15.8</td><td>5.1%</td><td>⚡ Fast</td><td>Short-term, no seasonality</td></tr>
-            <tr><td>Holt-Winters</td><td>8.9</td><td>11.2</td><td>3.7%</td><td>⚡ Fast</td><td>Seasonal data</td></tr>
-            <tr><td>Linear Regression</td><td>14.2</td><td>17.5</td><td>5.9%</td><td>⚡ Fast</td><td>Baseline model</td></tr>
-            <tr><td>Random Forest</td><td>10.1</td><td>13.4</td><td>4.2%</td><td>🐢 Moderate</td><td>Feature-rich, non-linear</td></tr>
-            <tr><td>Gradient Boosting</td><td>9.3</td><td>12.1</td><td>3.9%</td><td>🐢 Moderate</td><td>Best accuracy with features</td></tr>
-            <tr><td>LSTM</td><td>15.6</td><td>19.3</td><td>6.5%</td><td>🐌 Slow</td><td>Large datasets only</td></tr>
+<tr><td>ARIMA(1,1,1)</td><td>5.1%</td><td>⚡ Fast</td><td>Short-term, no seasonality</td><td>12.4</td><td>15.8</td></tr>
+<tr><td>Holt-Winters</td><td>3.7%</td><td>⚡ Fast</td><td>Seasonal data</td><td>8.9</td><td>11.2</td></tr>
+<tr><td>Linear Regression</td><td>5.9%</td><td>⚡ Fast</td><td>Baseline model</td><td>14.2</td><td>17.5</td></tr>
+<tr><td>Random Forest</td><td>4.2%</td><td>🐢 Moderate</td><td>Feature-rich, non-linear</td><td>10.1</td><td>13.4</td></tr>
+<tr><td>Gradient Boosting</td><td>3.9%</td><td>🐢 Moderate</td><td>Best accuracy with features</td><td>9.3</td><td>12.1</td></tr>
+<tr><td>LSTM</td><td>6.5%</td><td>🐌 Slow</td><td>Large datasets only</td><td>15.6</td><td>19.3</td></tr>
         </tbody></table>
         <p style="font-size:0.85rem; color:#666;"><em>Note: Values are illustrative from our small 24-point dataset. With more data, ML and deep learning models typically outperform classical methods.</em></p>
     </section>
@@ -1953,27 +1944,53 @@ print(f"Average walk-forward MAE: {avg_error:.2f}")</code></pre>
         <h2>12. Visualising a Time Series</h2>
         <p>Visualisation is the first step in any time series analysis. A simple line chart reveals trend, seasonality, outliers, and changing variance at a glance — before any statistical test is run. A strong spike at lag 12 confirms the seasonal structure, a slow decay hints at trend, and sharp cut-offs suggest how many AR or MA terms to use.</p>
 
-        <pre class="python"><span class="lang-label">Python</span><code>import matplotlib.pyplot as plt
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Plotting has no Mojo stdlib equivalent, so reach matplotlib across the
+# interop bridge. Mojo still owns the data: build the series natively,
+# then hand the two vectors over for the drawing.
+from std.python import Python
 
-plt.plot(df.index, df['sales'])
-plt.xlabel('Month')
-plt.ylabel('Sales')
-plt.title('Monthly Sales')
-plt.grid()
-plt.show()</code></pre>
+def to_python_floats(data: List[Float64]) raises:
+    var out = Python.list()
+    for v in data:
+        out.append(v)
+    return out
+
+def to_python_strings(data: List[String]) raises:
+    var out = Python.list()
+    for v in data:
+        out.append(v)
+    return out
+
+def plot_sales(months: List[String], sales: List[Float64]) raises:
+    var plt = Python.import_module("matplotlib.pyplot")
+    plt.plot(to_python_strings(months), to_python_floats(sales))
+    plt.xlabel("Month")
+    plt.ylabel("Sales")
+    plt.title("Monthly Sales")
+    plt.grid()
+    plt.show()
+
+def main() raises:
+    var sales = load_sales_data()
+    var months = List[String]()
+    for i in range(len(sales)):
+        months.append("M" + String(i + 1))
+    plot_sales(months, sales)
+</code></pre>
 
         <h3>12.1 The Four Diagnostic Questions</h3>
         <table>
             <tbody><tr><th>Question</th><th>What to look for</th><th>Example in our data</th></tr>
-            <tr><td><strong>Is there a trend?</strong></td><td>Long-term upward / downward drift</td><td>Steady climb from 120 to 280</td></tr>
-            <tr><td><strong>Is there seasonality?</strong></td><td>Regular pattern at a fixed period</td><td>Dips at ~M8 and ~M16 (12-month cycle)</td></tr>
-            <tr><td><strong>Are there outliers?</strong></td><td>Points far from their neighbours</td><td>Scatter around the trend line</td></tr>
-            <tr><td><strong>Does variance change?</strong></td><td>Spread fans in or out over time</td><td>Roughly constant amplitude → additive model</td></tr>
+<tr><td><strong>Is there a trend?</strong></td><td>Long-term upward / downward drift</td><td>Steady climb from 120 to 280</td></tr>
+<tr><td><strong>Is there seasonality?</strong></td><td>Regular pattern at a fixed period</td><td>Dips at ~M8 and ~M16 (12-month cycle)</td></tr>
+<tr><td><strong>Are there outliers?</strong></td><td>Points far from their neighbours</td><td>Scatter around the trend line</td></tr>
+<tr><td><strong>Does variance change?</strong></td><td>Spread fans in or out over time</td><td>Roughly constant amplitude → additive model</td></tr>
         </tbody></table>
 
         <div class="note">
             <span class="label">📌 Practical Strategy</span>
-            Use Python (Pandas/Matplotlib) for exploration and visualization, and reserve Mojo for computationally expensive numerical kernels.
+        <p>Write the numeric work in Mojo 1.x, and reach Pandas or Matplotlib across interop for exploration and plotting. Reserve hand-written Python loops for the cases where a mature library already wins outright.</p>
         </div>
     </section>
 
@@ -1994,16 +2011,6 @@ plt.show()</code></pre>
             <h4>📐 Worked Example</h4>
             <div class="calc-step">(132 − 120) / 120 = 0.10 = <span class="result">10%</span></div>
         </div>
-
-        <pre class="python"><span class="lang-label">Python</span><code>df['return'] = df['sales'].pct_change()
-
-import numpy as np
-
-df['log_return'] = np.log(
-    df['sales'] / df['sales'].shift(1)
-)
-
-print(df[['sales', 'return', 'log_return']].head(8))</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Percentage change between two consecutive values
@@ -2029,16 +2036,6 @@ def pct_change(current: Float64,
             <h4>📐 Autocorrelation Formula</h4>
             <div class="calc-step">ρ<sub>k</sub> = Cov(X<sub>t</sub>, X<sub>t−k</sub>) / Var(X)</div>
         </div>
-
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Autocorrelation function (ACF) for lags 1..6
-from statsmodels.tsa.stattools import acf
-
-values = df['sales'].dropna()
-
-acf_values = acf(values, nlags=6)
-print(acf_values)
-</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Population variance implemented directly
@@ -2076,15 +2073,6 @@ def variance(data: List[Float64]) -&gt; Float64:
             <div class="calc-step">z = (120 − 199.50) / 46.3 ≈ <span class="result">−1.72</span></div>
         </div>
 
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Z-score scaling of the training matrix
-from sklearn.preprocessing import StandardScaler
-
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X_train)
-print(scaler.mean_, scaler.scale_)
-</code></pre>
-
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Z-score normalization: (x - mean) / std
 def standardize(x: Float64,
@@ -2103,16 +2091,16 @@ def standardize(x: Float64,
 
         <table>
             <tbody><tr><th>Level</th><th>Model</th><th>Why</th></tr>
-            <tr><td>1</td><td>Naive</td><td>Baseline</td></tr>
-            <tr><td>2</td><td>Moving average</td><td>Smoothing</td></tr>
-            <tr><td>3</td><td>Exponential smoothing</td><td>Trend / level</td></tr>
-            <tr><td>4</td><td>AR</td><td>Autoregression</td></tr>
-            <tr><td>5</td><td>ARIMA</td><td>Classical statistical forecasting</td></tr>
-            <tr><td>6</td><td>Linear regression</td><td>Feature-based ML</td></tr>
-            <tr><td>7</td><td>Random Forest</td><td>Nonlinear ML</td></tr>
-            <tr><td>8</td><td>Gradient boosting</td><td>High-performance tabular ML</td></tr>
-            <tr><td>9</td><td>LSTM / GRU</td><td>Sequence modelling</td></tr>
-            <tr><td>10</td><td>Transformers</td><td>Advanced sequence modelling</td></tr>
+<tr><td>1</td><td>Naive</td><td>Baseline</td></tr>
+<tr><td>2</td><td>Moving average</td><td>Smoothing</td></tr>
+<tr><td>3</td><td>Exponential smoothing</td><td>Trend / level</td></tr>
+<tr><td>4</td><td>AR</td><td>Autoregression</td></tr>
+<tr><td>5</td><td>ARIMA</td><td>Classical statistical forecasting</td></tr>
+<tr><td>6</td><td>Linear regression</td><td>Feature-based ML</td></tr>
+<tr><td>7</td><td>Random Forest</td><td>Nonlinear ML</td></tr>
+<tr><td>8</td><td>Gradient boosting</td><td>High-performance tabular ML</td></tr>
+<tr><td>9</td><td>LSTM / GRU</td><td>Sequence modelling</td></tr>
+<tr><td>10</td><td>Transformers</td><td>Advanced sequence modelling</td></tr>
         </tbody></table>
 
         <div class="note">
@@ -2137,12 +2125,6 @@ def standardize(x: Float64,
             <h4>📐 Worked Example</h4>
             <div class="calc-step">Forecast = <span class="result">280</span></div>
         </div>
-
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Naive forecast: predict the last observed value
-forecast = df['sales'].iloc[-1]
-print(forecast)
-</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Naive forecast: predict the last observed value
@@ -2172,17 +2154,38 @@ def naive_forecast(last_value: Float64) -&gt; Float64:
             <tr><td>Inventory</td><td>Opening inventory</td></tr>
         </tbody></table>
 
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Fit on lagged plus exogenous features
-features = [
-    'sales_lag1',
-    'price',
-    'rainfall',
-    'temperature',
-    'advertising'
-]
+        <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
+# Multivariate features: one row per time step, one column per variable,
+# stored flat and row-major - element [i, j] lives at i * n_cols + j, the
+# same layout the lag matrix uses earlier in this chapter.
+def build_design_matrix(
+    sales: List[Float64], price: List[Float64], rainfall: List[Float64]
+) -> List[Float64]:
+    var n = len(sales)
+    var out = List[Float64]()
+    for i in range(n):
+        out.append(sales[i])        # column 0: the lagged target
+        out.append(price[i])        # column 1: exogenous
+        out.append(rainfall[i])     # column 2: exogenous
+    return out
 
-model.fit(df[features], df['sales'])
+def main():
+    var sales = load_sales_data()
+    var price: List[Float64] = [
+        10.0, 10.0, 10.5, 10.5, 11.0, 11.0, 11.5, 11.5,
+        12.0, 12.0, 12.5, 12.5, 13.0, 13.0, 13.5, 13.5,
+        14.0, 14.0, 14.5, 14.5, 15.0, 15.0, 15.5, 15.5,
+    ]
+    var rainfall: List[Float64] = [
+        180.0, 190.0, 210.0, 140.0, 60.0, 35.0, 30.0, 45.0,
+        70.0, 120.0, 160.0, 185.0, 195.0, 175.0, 90.0, 40.0,
+        28.0, 50.0, 80.0, 130.0, 170.0, 190.0, 150.0, 95.0,
+    ]
+    var X = build_design_matrix(sales, price, rainfall)
+    var n_cols = 3
+    print("Rows:", len(X) // n_cols, "Columns:", n_cols)
+    print("Row 0:", X[0], X[1], X[2])
+    print("Row 1:", X[3], X[4], X[5])
 </code></pre>
 
         <div class="tip">
@@ -2203,17 +2206,6 @@ model.fit(df[features], df['sales'])
             <div class="calc-step">z = (x − μ) / σ</div>
             <div class="calc-step">Investigate when |z| &gt; 3</div>
         </div>
-
-        <pre class="python"><span class="lang-label">Python</span><code>
-# Z-score anomaly detection: flag |z| &gt; 3
-mean = df['sales'].mean()
-std = df['sales'].std()
-
-df['z'] = (df['sales'] - mean) / std
-
-anomalies = df[df['z'].abs() &gt; 3]
-print(anomalies)
-</code></pre>
 
         <pre class="mojo"><span class="lang-label">Mojo 1.x</span><code>
 # Z-score: standard deviations away from the mean (used for anomalies)
@@ -2254,48 +2246,43 @@ def zscore(x: Float64,
     <!-- ==================== CHAPTER 21 ==================== -->
     <div class="chapter-divider"><span>Chapter 21</span></div>
     <section id="ch21">
-        <h2>21. Python vs Mojo 1.x for Time-Series Analytics</h2>
+        <h2>21. Mojo 1.x vs Python for Time-Series Analytics</h2>
         <table>
-            <tbody><tr><th>Task</th><th>Python</th><th>Mojo 1.x</th></tr>
-            <tr><td>Data ingestion</td><td>★★★★★</td><td>★★</td></tr>
-            <tr><td>Data cleaning</td><td>★★★★★</td><td>★★</td></tr>
-            <tr><td>Pandas workflows</td><td>★★★★★</td><td>★</td></tr>
-            <tr><td>Visualization</td><td>★★★★★</td><td>★</td></tr>
-            <tr><td>Statistics ecosystem</td><td>★★★★★</td><td>★★</td></tr>
-            <tr><td>ML ecosystem</td><td>★★★★★</td><td>★★</td></tr>
-            <tr><td>Numerical kernels</td><td>★★★★</td><td>★★★★★</td></tr>
-            <tr><td>Low-level optimization</td><td>★★★</td><td>★★★★★</td></tr>
-            <tr><td>Typed numerical code</td><td>★★</td><td>★★★★★</td></tr>
-            <tr><td>Learning curve</td><td>★★★★★</td><td>★★★</td></tr>
+        <tbody><tr><th>Task</th><th>Mojo 1.x</th><th>Python</th></tr>
+<tr><td>Data ingestion</td><td>★★</td><td>★★★★★</td></tr>
+<tr><td>Data cleaning</td><td>★★</td><td>★★★★★</td></tr>
+<tr><td>Pandas workflows</td><td>★</td><td>★★★★★</td></tr>
+<tr><td>Visualization</td><td>★</td><td>★★★★★</td></tr>
+<tr><td>Statistics ecosystem</td><td>★★</td><td>★★★★★</td></tr>
+<tr><td>ML ecosystem</td><td>★★</td><td>★★★★★</td></tr>
+<tr><td>Numerical kernels</td><td>★★★★★</td><td>★★★★</td></tr>
+<tr><td>Low-level optimization</td><td>★★★★★</td><td>★★★</td></tr>
+<tr><td>Typed numerical code</td><td>★★★★★</td><td>★★</td></tr>
+<tr><td>Learning curve</td><td>★★★</td><td>★★★★★</td></tr>
         </tbody></table>
 
         <div class="tip">
             <span class="label">💡 Best of both</span>
-            The strongest practical approach is not "Python versus Mojo" — for a data scientist it is <strong>Python + Mojo</strong>.
+        <p>The strongest practical approach is not "Mojo versus Python" - for a data scientist it is <strong>Mojo 1.x with Python interop</strong>.</p>
         </div>
     </section>
 
     <!-- ==================== CHAPTER 22 ==================== -->
     <div class="chapter-divider"><span>Chapter 22</span></div>
     <section id="ch22">
-        <h2>22. The Python + Mojo Architecture</h2>
-        <p class="lede">A production forecast is a loop, not a script — and where the book ends is where engineering begins.</p>
-        <p>Python provides the research and orchestration environment, while Mojo handles the computational hot spots.</p>
+        <h2>22. The Hybrid Mojo Architecture</h2>
+        <p class="lede">A production forecast is a loop, not a script - and where the book ends is where engineering begins.</p>
+        <p>Mojo owns the numerical hot spots; Python supplies the research and orchestration environment around them.</p>
 
-        <pre class="python"><span class="lang-label">Architecture</span><code>TIME-SERIES DATA
+        <pre class="diagram"><span class="lang-label">Architecture</span><code>TIME-SERIES DATA
        |
        v
-Python / Pandas
-       |
-Data preparation
-       |
-       v
-Feature Engineering
+Feature Engineering  (Mojo)
        |
 +----------+----------+
 |                     |
 v                     v
-Python              Mojo
+Mojo              Python
 ML / Stats        Numerical Kernels
 |                     |
 +----------+----------+
@@ -2321,8 +2308,7 @@ Report</code></pre>
         <h2>23. Capstone Project — Agricultural Forecasting Engine</h2>
         <p>Build a complete forecasting system on agricultural data such as monthly rainfall, temperature, crop yield, fertilizer use, market prices, irrigation volume, and sales.</p>
 
-        <h3>23.1 Python Side</h3>
-        <ol>
+        <h3>23.1 Mojo 1.x Side</h3>
             <li>Import CSV data.</li>
             <li>Clean dates.</li>
             <li>Handle missing values.</li>
@@ -2354,14 +2340,14 @@ Report</code></pre>
         <h2>24. 8-Week Learning Plan</h2>
         <table>
             <tbody><tr><th>Week</th><th>Python</th><th>Mojo</th></tr>
-            <tr><td>1</td><td>Dates, Pandas, NumPy</td><td>Arrays and types</td></tr>
-            <tr><td>2</td><td>Visualization and exploration</td><td>Loops and functions</td></tr>
-            <tr><td>3</td><td>Lags and rolling statistics</td><td>Numerical kernels</td></tr>
-            <tr><td>4</td><td>Differencing, returns, stationarity</td><td>Statistics implementation</td></tr>
-            <tr><td>5</td><td>Regression and tree models</td><td>Prediction kernels</td></tr>
-            <tr><td>6</td><td>ARIMA and exponential smoothing</td><td>Forecast algorithms</td></tr>
-            <tr><td>7</td><td>LSTM / GRU sequence modelling</td><td>Tensor / numerical optimization</td></tr>
-            <tr><td>8</td><td>Complete forecasting project</td><td>Benchmark and optimize Mojo engine</td></tr>
+<tr><td>1</td><td>Dates, Pandas, NumPy</td><td>Arrays and types</td></tr>
+<tr><td>2</td><td>Visualization and exploration</td><td>Loops and functions</td></tr>
+<tr><td>3</td><td>Lags and rolling statistics</td><td>Numerical kernels</td></tr>
+<tr><td>4</td><td>Differencing, returns, stationarity</td><td>Statistics implementation</td></tr>
+<tr><td>5</td><td>Regression and tree models</td><td>Prediction kernels</td></tr>
+<tr><td>6</td><td>ARIMA and exponential smoothing</td><td>Forecast algorithms</td></tr>
+<tr><td>7</td><td>LSTM / GRU sequence modelling</td><td>Tensor / numerical optimization</td></tr>
+<tr><td>8</td><td>Complete forecasting project</td><td>Benchmark and optimize Mojo engine</td></tr>
         </tbody></table>
     </section>
 
@@ -2392,61 +2378,41 @@ Report</code></pre>
     <section id="appendix">
         <h2>📎 Appendix: Quick Reference</h2>
 
-        <h3>A.1 Common Python Libraries</h3>
+        <h3>A.1 Python Libraries Reachable from Mojo</h3>
         <table>
             <tbody><tr><th>Library</th><th>Use</th><th>Key Functions</th></tr>
-            <tr><td><code>pandas</code></td><td>Data handling</td><td><code>read_csv()</code>, <code>resample()</code>, <code>rolling()</code>, <code>shift()</code>, <code>diff()</code></td></tr>
-            <tr><td><code>statsmodels</code></td><td>Statistical models</td><td><code>ARIMA()</code>, <code>seasonal_decompose()</code>, <code>ExponentialSmoothing()</code>, <code>adfuller()</code></td></tr>
-            <tr><td><code>scikit-learn</code></td><td>ML models</td><td><code>RandomForestRegressor()</code>, <code>GradientBoostingRegressor()</code>, <code>TimeSeriesSplit()</code></td></tr>
-            <tr><td><code>tensorflow</code>/<code>torch</code></td><td>Deep learning</td><td><code>LSTM()</code>, <code>Sequential()</code>, <code>fit()</code></td></tr>
-            <tr><td><code>pmdarima</code></td><td>Auto ARIMA</td><td><code>auto_arima()</code></td></tr>
+<tr><td><code>pandas</code></td><td>Data handling</td><td><code>read_csv()</code>, <code>resample()</code>, <code>rolling()</code>, <code>shift()</code>, <code>diff()</code></td></tr>
+<tr><td><code>statsmodels</code></td><td>Statistical models</td><td><code>ARIMA()</code>, <code>seasonal_decompose()</code>, <code>ExponentialSmoothing()</code>, <code>adfuller()</code></td></tr>
+<tr><td><code>scikit-learn</code></td><td>ML models</td><td><code>RandomForestRegressor()</code>, <code>GradientBoostingRegressor()</code>, <code>TimeSeriesSplit()</code></td></tr>
+<tr><td><code>tensorflow</code>/<code>torch</code></td><td>Deep learning</td><td><code>LSTM()</code>, <code>Sequential()</code>, <code>fit()</code></td></tr>
+<tr><td><code>pmdarima</code></td><td>Auto ARIMA</td><td><code>auto_arima()</code></td></tr>
         </tbody></table>
 
         <h3>A.2 Mojo 1.x Key Features for Time Series</h3>
         <table>
             <tbody><tr><th>Feature</th><th>Mojo Syntax</th><th>Performance Benefit</th></tr>
-            <tr><td>Typed functions</td><td><code>def name(x: Float64) -&gt; Float64:</code></td><td>Compile-time type checking</td></tr>
-            <tr><td>SIMD vectorization</td><td><code>var v = SIMD[DType.float64, 4]()</code></td><td>Hardware-accelerated ops</td></tr>
-            <tr><td>Typed collection</td><td><code>List[Float64]()</code></td><td>Typed, dynamically sized collection</td></tr>
-            <tr><td>Python interop</td><td><code>from std.python import Python</code></td><td>Use any Python library</td></tr>
-            <tr><td>Memory management</td><td><code>var</code> / <code>ref</code> / ownership</td><td>No garbage collection overhead</td></tr>
-            <tr><td>Struct types</td><td><code>struct Model:</code></td><td>Zero-cost abstractions</td></tr>
+<tr><td>Typed functions</td><td><code>def name(x: Float64) -&gt; Float64:</code></td><td>Compile-time type checking</td></tr>
+<tr><td>SIMD vectorization</td><td><code>var v = SIMD[DType.float64, 4]()</code></td><td>Hardware-accelerated ops</td></tr>
+<tr><td>Typed collection</td><td><code>List[Float64]()</code></td><td>Typed, dynamically sized collection</td></tr>
+<tr><td>Python interop</td><td><code>from std.python import Python</code></td><td>Use any Python library</td></tr>
+<tr><td>Memory management</td><td><code>var</code> / <code>ref</code> / ownership</td><td>No garbage collection overhead</td></tr>
+<tr><td>Struct types</td><td><code>struct Model:</code></td><td>Zero-cost abstractions</td></tr>
         </tbody></table>
 
-        <h3>A.3 Complete Python Workflow</h3>
-        <pre class="python"><span class="lang-label">Python — Full Pipeline</span><code>import pandas as pd
-import numpy as np
-from statsmodels.tsa.holtwinters import ExponentialSmoothing
-from sklearn.metrics import mean_absolute_error
-
-# 1. Load data
-dates = pd.date_range('2023-01-01', periods=24, freq='MS')
-sales = [120,132,145,138,150,165,170,158,175,190,185,200,
-         210,205,220,215,230,240,235,250,260,255,270,280]
-df = pd.DataFrame({'sales': sales}, index=dates)
-
-# 2. Train/test split (chronological)
-train = df['sales'][:18]
-test = df['sales'][18:]
-
-# 3. Fit Holt-Winters
-model = ExponentialSmoothing(train, trend='add', seasonal='add',
-                              seasonal_periods=12).fit()
-
-# 4. Forecast and evaluate
-forecast = model.forecast(len(test))
-mae = mean_absolute_error(test, forecast)
-print(f"Test MAE: {mae:.2f}")
-print(f"Forecast: {forecast.values}")</code></pre>
-
-        <h3>A.4 Complete Mojo 1.x Equivalent</h3>
+        <h3>A.3 Complete Mojo 1.x Equivalent</h3>
         <pre class="mojo"><span class="lang-label">Mojo 1.x — Full Pipeline</span><code>
 # Full Mojo pipeline: load and split data natively, fit Holt-Winters via
 # Python interop (pandas + statsmodels), then evaluate MAE in Mojo.
 from std.python import Python
-from std.python.numpy import copy_to_numpy_array
 
-def main():
+# Mojo has no std.python.numpy: hand the split over as a real Python list.
+def to_python_list(data: List[Float64]) raises:
+    var out = Python.list()
+    for v in data:
+        out.append(v)
+    return out
+
+def main() raises:
     # 1. Load data as a typed Mojo List
     var data: List[Float64] = [
         120.0, 132.0, 145.0, 138.0, 150.0, 165.0, 170.0,
@@ -2461,10 +2427,10 @@ def main():
         train.append(data[i])
     for i in range(18, 24):
         test.append(data[i])
-    # 3. Fit via Python interop: Mojo List -&gt; NumPy -&gt; pandas Series
+    # 3. Fit via Python interop: Mojo List -> Python list -> pandas Series
     var pd_module = Python.import_module("pandas")
     var statsmodels = Python.import_module("statsmodels.tsa.holtwinters")
-    var train_series = pd_module.Series(copy_to_numpy_array(train))
+    var train_series = pd_module.Series(to_python_list(train))
     var hw = statsmodels.ExponentialSmoothing(
         train_series, trend="add", seasonal="add", seasonal_periods=12,
     )
@@ -2475,7 +2441,7 @@ def main():
     var mae: Float64 = 0.0
     for i in range(6):
         var diff = test[i] - Float64(forecast.values[i])
-        if diff &lt; 0.0:              # absolute value (sign check)
+        if diff < 0.0:              # absolute value (sign check)
             diff = -diff
         mae += diff
     mae /= 6.0
@@ -2495,8 +2461,7 @@ def main():
 
     <!-- ==================== FOOTER ==================== -->
     <footer>
-        <p>⏳ <strong>Time Series Analytics with Python &amp; Mojo 1.x</strong> — Condensed Edition</p>
-        <p>All calculations performed on the 24-month sample sales dataset • For educational purposes</p>
+        <p>? <strong>Time Series Analytics with Mojo 1.x</strong> - Condensed Edition</p>
         <p style="margin-top:0.5rem;">Python 🐍 • Mojo 1.x 🔥 • Machine Learning 🤖</p>
     </footer>
 
@@ -2560,7 +2525,6 @@ def main():
 })();
 </script>
 
-
 <!-- ---- Python / Mojo syntax highlighting (self-contained, vanilla JS) ---- -->
 <style>
 .python .tok-k{color:#0033b3;}
@@ -2603,7 +2567,5 @@ def main():
   });
 })();
 </script>
-
-
 
 </body></html>

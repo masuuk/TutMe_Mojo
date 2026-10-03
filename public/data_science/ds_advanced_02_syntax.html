@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -114,12 +114,11 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
 
   <section id="fn-def">
     <h2>def: One Keyword, Two Flavors of Strictness</h2>
-    <p>Mojo 1.x defines all functions with a single keyword: <code>def</code>. An unannotated <code>def</code> behaves like a Python function — lenient, great for scripting. A fully annotated <code>def</code> gives you what the old <code>fn</code> keyword used to provide: parameters with explicit types, enforced raise checking, and stronger compiler optimization.</p>
+    <p>Mojo 1.x defines all functions with a single keyword: <code>def</code>. An unannotated <code>def</code> behaves like a Python function — lenient, great for scripting. A fully annotated <code>def</code> gives you parameters with explicit types, enforced raise checking, and stronger compiler optimization.</p>
 
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-fndef">Mojo</div>
-        <div class="tab" data-target="python-fndef">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -135,16 +134,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <span class="kw">if</span> b == <span class="num">0</span>:
         <span class="kw">raise</span> <span class="str">"Division by zero"</span>
     <span class="kw">return</span> a / b</code></pre>
-        <pre class="code-block" id="python-fndef"><code><span class="kw">def</span> <span class="fn">greet</span>(name):
-    <span class="kw">return</span> <span class="str">"Hello, "</span> + name
-
-<span class="kw">def</span> <span class="fn">add</span>(a: int, b: int) -&gt; int:
-    <span class="kw">return</span> a + b
-
-<span class="kw">def</span> <span class="fn">divide</span>(a: float, b: float) -&gt; float:
-    <span class="kw">if</span> b == <span class="num">0</span>:
-        <span class="kw">raise</span> ValueError(<span class="str">"Division by zero"</span>)
-    <span class="kw">return</span> a / b</code></pre>
       </div>
     </div>
 
@@ -154,8 +143,8 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     </div>
 
     <div class="info-box">
-      <strong>What happened to fn?</strong>
-      <p>The <code>fn</code> keyword was deprecated in v26.2 and is a hard compilation error in Mojo 1.x — the two keywords unified into <code>def</code>. Annotate your <code>def</code> for compile-time safety, explicit type contracts, and maximum performance; skip annotations for quick prototyping.</p>
+      <strong>Annotate or not?</strong>
+      <p>Annotate a <code>def</code> for compile-time safety, explicit type contracts, and maximum performance; leave annotations off for quick prototyping. The two forms are the same keyword — the annotations, not the declaration, decide how much the compiler can check.</p>
     </div>
   </section>
 
@@ -166,7 +155,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-struct">Mojo</div>
-        <div class="tab" data-target="python-struct">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -186,28 +174,13 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
 
 <span class="kw">var</span> p = <span class="type">Point</span>(<span class="num">3.0</span>, <span class="num">4.0</span>)
 <span class="kw">print</span>(p.magnitude())  <span class="com"># 5.0</span></code></pre>
-        <pre class="code-block" id="python-struct"><code><span class="kw">import</span> math
-
-<span class="kw">class</span> <span class="type">Point</span>:
-    <span class="kw">def</span> <span class="fn">__init__</span>(self, x: float, y: float):
-        self.x = x
-        self.y = y
-
-    <span class="kw">def</span> <span class="fn">magnitude</span>(self) -&gt; float:
-        <span class="kw">return</span> math.sqrt(self.x ** <span class="num">2</span> + self.y ** <span class="num">2</span>)
-
-    <span class="kw">def</span> <span class="fn">__add__</span>(self, other: <span class="str">"Point"</span>) -&gt; <span class="str">"Point"</span>:
-        <span class="kw">return</span> Point(self.x + other.x, self.y + other.y)
-
-p = Point(<span class="num">3.0</span>, <span class="num">4.0</span>)
-<span class="kw">print</span>(p.magnitude())  <span class="com"># 5.0</span></code></pre>
       </div>
     </div>
   </section>
 
   <section id="var-let">
     <h2>var: The One Binding Keyword</h2>
-    <p>Mojo 1.x declares every local variable with <code>var</code> — and the keyword is mandatory: a first assignment without <code>var</code> is a deprecation error. The old immutable-binding keyword <code>let</code> was removed before 1.0; a variable you never reassign is your immutable binding.</p>
+    <p>Mojo 1.x declares every local variable with <code>var</code> — and the keyword is mandatory: a first assignment without <code>var</code> is a deprecation error. A variable you never reassign is your immutable binding.</p>
 
     <div class="code-playground">
       <div class="tabs">
@@ -245,7 +218,6 @@ counter += <span class="num">1</span>  <span class="com"># OK</span>
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-control">Mojo</div>
-        <div class="tab" data-target="python-control">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -267,24 +239,6 @@ counter += <span class="num">1</span>  <span class="com"># OK</span>
 
 <span class="com"># while loop</span>
 <span class="kw">var</span> n = <span class="num">10</span>
-<span class="kw">while</span> n &gt; <span class="num">0</span>:
-    n -= <span class="num">1</span></code></pre>
-        <pre class="code-block" id="python-control"><code><span class="com"># Pattern matching (Python 3.10+)</span>
-<span class="kw">def</span> <span class="fn">classify</span>(x: int) -&gt; str:
-    <span class="kw">match</span> x:
-        <span class="kw">case</span> <span class="num">0</span>:
-            <span class="kw">return</span> <span class="str">"zero"</span>
-        <span class="kw">case</span> <span class="num">1</span> | <span class="num">2</span> | <span class="num">3</span>:
-            <span class="kw">return</span> <span class="str">"small"</span>
-        <span class="kw">case</span> x <span class="kw">if</span> x &gt; <span class="num">0</span>:
-            <span class="kw">return</span> <span class="str">"positive"</span>
-        <span class="kw">case</span> _:
-            <span class="kw">return</span> <span class="str">"negative"</span>
-
-<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
-    <span class="kw">print</span>(i)
-
-n = <span class="num">10</span>
 <span class="kw">while</span> n &gt; <span class="num">0</span>:
     n -= <span class="num">1</span></code></pre>
       </div>
@@ -332,26 +286,14 @@ n = <span class="num">10</span>
     <h2>✅ Check Your Understanding</h2>
     <div class="quiz">
       <div class="qlbl">Quick Check 1</div>
-      <div class="qtext">What happens if you write <code>fn</code> in Mojo 1.x code?</div>
-      <div class="opts" id="quiz1">
-        <button class="opt" data-correct="false">It still works, but the compiler warns about style</button>
-        <button class="opt" data-correct="false">It's treated as an alias for <code>def</code></button>
-        <button class="opt" data-correct="true">It's a hard compilation error — <code>fn</code> was removed in the 1.0 unification</button>
-        <button class="opt" data-correct="false">It only works inside structs</button>
-      </div>
-      <div class="feedback" id="feedback1"></div>
-    </div>
-
-    <div class="quiz">
-      <div class="qlbl">Quick Check 2</div>
       <div class="qtext">What does the <code>@fieldwise_init</code> decorator generate for a struct?</div>
-      <div class="opts" id="quiz2">
+      <div class="opts" id="quiz1">
         <button class="opt" data-correct="false">Nothing — it's just a marker</button>
         <button class="opt" data-correct="true">The one-argument-per-field constructor</button>
         <button class="opt" data-correct="false">A destructor only</button>
         <button class="opt" data-correct="false">All methods for every trait it conforms to</button>
       </div>
-      <div class="feedback" id="feedback2"></div>
+      <div class="feedback" id="feedback1"></div>
     </div>
   </section>
 
@@ -414,7 +356,6 @@ function wireQuiz(id,fid){
   });});
 }
 wireQuiz('quiz1','feedback1');
-wireQuiz('quiz2','feedback2');
 </script>
 
 </body></html>

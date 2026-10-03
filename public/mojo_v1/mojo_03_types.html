@@ -14,7 +14,7 @@
   --font-mono:'JetBrains Mono',monospace;
   --bg-primary:#0b0d15;--bg-secondary:#12162b;--bg-card:rgba(255,255,255,0.04);
   --bg-code:rgba(0,0,0,0.4);
-  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#a8b6d4;
+  --text-primary:#ffffff;--text-secondary:#d8def0;--text-muted:#ffd98f;
   --accent-1:#6c5ce7;--accent-2:#00b4d8;--accent-3:#f77f00;
   --accent-gradient:linear-gradient(135deg,#6c5ce7,#00b4d8,#f77f00);
   --border-color:rgba(255,255,255,0.18);--radius:16px;--radius-sm:8px;
@@ -204,19 +204,19 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
         <button class="tab-btn active" data-tab="ch3-mat-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch3-mat-mojo">
-        <pre><code>def main():
-    var float1 = 3.3          # float1 is type Float64
-    var float2: Float32 = 7.5
-    var int1 = 5              # int1 is type Int
-    var int2: Int8 = 4
-    # Compile-time: exact, arbitrary precision
-    var arbitrary_precision = 3.0 * (4.0 / 3.0 - 1.0)
-    # Force runtime evaluation with a variable: rounding appears
-    var three = 3.0
-    var finite_precision = three * (4.0 / three - 1.0)
-    print(arbitrary_precision, finite_precision)
-    # 1.0 0.99999999999999978
-</code></pre>
+        <pre><span class="kw">var</span> float1 = <span class="num">3.3</span>          <span class="cmt"># float1 is type Float64</span>
+<span class="kw">var</span> float2: <span class="type">Float32</span> = <span class="num">7.5</span>
+<span class="kw">var</span> int1 = <span class="num">5</span>              <span class="cmt"># int1 is type Int</span>
+<span class="kw">var</span> int2: <span class="type">Int8</span> = <span class="num">4</span>
+
+<span class="cmt"># Compile-time: exact, arbitrary precision</span>
+<span class="kw">var</span> arbitrary_precision = <span class="num">3.0</span> * (<span class="num">4.0</span> / <span class="num">3.0</span> - <span class="num">1.0</span>)
+
+<span class="cmt"># Force runtime evaluation with a variable: rounding appears</span>
+<span class="kw">var</span> three = <span class="num">3.0</span>
+<span class="kw">var</span> finite_precision = three * (<span class="num">4.0</span> / three - <span class="num">1.0</span>)
+<span class="fn">print</span>(arbitrary_precision, finite_precision)
+<span class="cmt"># 1.0 0.99999999999999978</span></pre>
       </div>
     </div>
 
@@ -239,14 +239,21 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 <span class="kw">var</span> vec = <span class="type">SIMD</span>[<span class="type">DType</span>.float32, <span class="num">4</span>](<span class="num">3.0</span>, <span class="num">2.0</span>, <span class="num">2.0</span>, <span class="num">1.0</span>)
 
 <span class="cmt"># Math is applied elementwise</span>
-<span class="kw">var</span> vec1 = <span class="type">SIMD</span>[<span class="type">DType</span>.int8, <span class="num">4</span>](<span class="num">2</span>, <span class="num">3</span>, <span class="n<pre><code>def main():
-    # A vector of four Float32 values
-    var vec = SIMD[DType.float32, 4](3.0, 2.0, 2.0, 1.0)
-    # Math is applied elementwise
-    var vec1 = SIMD[DType.int8, 4](2, 3, 5, 7)
-    var vec2 = SIMD[DType.int8, 4](1, 2, 3, 4)
-    print(vec1 * vec2)   # [2, 6, 15, 28]
-</code></pre>span class="kw">comptime</span> Int = Scalar[<span class="type">DType</span>.int]
+<span class="kw">var</span> vec1 = <span class="type">SIMD</span>[<span class="type">DType</span>.int8, <span class="num">4</span>](<span class="num">2</span>, <span class="num">3</span>, <span class="num">5</span>, <span class="num">7</span>)
+<span class="kw">var</span> vec2 = <span class="type">SIMD</span>[<span class="type">DType</span>.int8, <span class="num">4</span>](<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>)
+<span class="fn">print</span>(vec1 * vec2)   <span class="cmt"># [2, 6, 15, 28]</span></pre>
+      </div>
+    </div>
+
+    <p>A scalar is just a one-element vector — <code class="inline">Int</code>, <code class="inline">Int8</code>, <code class="inline">Float32</code>, etc., are all type aliases for single-element SIMD values:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch3-scalar-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch3-scalar-mojo">
+        <pre><span class="kw">comptime</span> Scalar = <span class="type">SIMD</span>[length=<span class="num">1</span>]
+<span class="kw">comptime</span> Int = Scalar[<span class="type">DType</span>.int]
 <span class="kw">comptime</span> Int8 = Scalar[<span class="type">DType</span>.int8]
 <span class="kw">comptime</span> Float32 = Scalar[<span class="type">DType</span>.float32]</pre>
       </div>
@@ -272,17 +279,31 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
 
 <span class="cmt"># Scalars: construct the target type</span>
 <span class="kw">var</span> my_int: <span class="type">Int16</span> = <span class="num">12</span>
-<span class="kw">var</span> result = <span class="type">Float32</span>(my_int) * <span class="num">0.75</span>   <span class="cmt"><pre><code>def main():
-    var simd1 = SIMD[DType.float32, 4](2.2, 3.3, 4.4, 5.5)
-    var simd2 = SIMD[DType.int16, 4](-1, 2, -3, 4)
-    # Convert with cast()
-    var simd3 = simd1 * simd2.cast[DType.float32]()
-    # Convert with the SIMD constructor
-    var simd4 = simd2 + SIMD[DType.int16, 4](simd1)
-    # Scalars: construct the target type
-    var my_int: Int16 = 12
-    var result = Float32(my_int) * 0.75   # 9.0
-</code></pre>n> + <span class="type">String</span>(<span class="num">5</span>)
+<span class="kw">var</span> result = <span class="type">Float32</span>(my_int) * <span class="num">0.75</span>   <span class="cmt"># 9.0</span></pre>
+      </div>
+    </div>
+
+    <div class="info-box tip-box">
+      <strong>🚀 Pro Tip:</strong>
+      <p>Note that <code class="inline">DType.float64</code> is not a type — it's a <em>value</em> describing a data type. You can't declare a variable of type <code class="inline">DType.float64</code>; you declare <code class="inline">SIMD[DType.float64, 1]</code> — or just write <code class="inline">Float64</code>.</p>
+    </div>
+  </section>
+
+  <section id="strings">
+    <h2>4. Strings</h2>
+    <p><strong><code class="inline">String</code></strong> is Mojo's primary text type: a mutable, UTF-8 encoded string with an ergonomic API:</p>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="ch3-str-mojo">Mojo</button>
+      </div>
+      <div class="tab-content active" id="ch3-str-mojo">
+        <pre><span class="kw">var</span> s: <span class="type">String</span> = <span class="str">"Testing"</span>
+s += <span class="str">" Mojo strings"</span>
+<span class="fn">print</span>(s)   <span class="cmt"># Testing Mojo strings</span>
+
+<span class="cmt"># Explicit conversion with String(...)</span>
+<span class="kw">var</span> s1 = <span class="str">"Items in list: "</span> + <span class="type">String</span>(<span class="num">5</span>)
 <span class="cmt"># Variadic construction — no per-value String() needed</span>
 <span class="kw">var</span> s2 = <span class="type">String</span>(<span class="str">"Items in list: "</span>, <span class="num">5</span>)</pre>
       </div>
@@ -308,15 +329,19 @@ table.cheat code{font-family:var(--font-mono);font-size:0.82em;color:#c084fc;}
           <span class="str">"graphemes="</span>, s.<span class="fn">count_graphemes</span>())
 
 <span class="kw">def</span> <span class="fn">main</span>():
-    <span class<pre><code>def main():
-    var s: String = &quot;Testing&quot;
-    s += &quot; Mojo strings&quot;
-    print(s)   # Testing Mojo strings
-    # Explicit conversion with String(...)
-    var s1 = &quot;Items in list: &quot; + String(5)
-    # Variadic construction — no per-value String() needed
-    var s2 = String(&quot;Items in list: &quot;, 5)
-</code></pre>s="tabs-header">
+    <span class="fn">show</span>(<span class="str">"wave "</span>, <span class="str">"👋🏽"</span>)</pre>
+      </div>
+      <div class="tab-content" id="ch3-graph-out">
+        <pre>wave  bytes=8 codepoints=2 graphemes=1</pre>
+      </div>
+    </div>
+
+    <p>A skin-tone wave emoji is <em>one grapheme</em> built from two code points. To avoid non-ASCII bytes in source, spell code points with hex escapes: <code class="inline">"\U0001F44B"</code> (8-digit form, up to U+10FFFF), <code class="inline">"\u00A9"</code> (4-digit, up to U+FFFF), or <code class="inline">chr(0x1F44B)</code>.</p>
+
+    <h3>Raw strings &amp; literals</h3>
+
+    <div class="code-tabs">
+      <div class="tabs-header">
         <button class="tab-btn active" data-tab="ch3-raw-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch3-raw-mojo">
@@ -359,16 +384,15 @@ enter long blocks of text."""</span></pre>
 <span class="kw">var</span> list = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
 <span class="fn">print</span>(t<span class="str">"{list[0] + list[1]}"</span>)      <span class="cmt"># 3 — arbitrary expressions OK</span>
 
-<span class="kw"><pre><code>def main():
-    print(r&quot;Hello\nWorld&quot;)     # Prints Hello\nWorld literally
-    # Adjacent literals concatenate across lines
-    comptime s = &quot;A very long string which is &quot;
-                 &quot;broken into two literals for legibility.&quot;
-    # Triple quotes for multi-line text
-    comptime doc = &quot;&quot;&quot;
-    Multi-line string literals let you
-    enter long blocks of text.&quot;&quot;&quot;
-</code></pre>gs (<code class="inline">rt"...")</code> interpolate but don't expand escapes: <code class="inline">rt"Hello,\t{name}."</code> keeps the backslash-t.</li>
+<span class="kw">var</span> name = <span class="str">"Nate"</span>
+<span class="kw">var</span> s = <span class="type">String</span>(t<span class="str">"Hello, {name}!"</span>)  <span class="cmt"># Explicit allocation only here</span></pre>
+      </div>
+    </div>
+
+    <ul>
+      <li>TStrings insert the <code class="inline">Writable</code> representation of any expression between braces.</li>
+      <li>They're <strong>lazy</strong>: nothing allocates until you explicitly construct a <code class="inline">String</code> — printing writes pieces straight to output.</li>
+      <li>Raw template strings (<code class="inline">rt"...")</code> interpolate but don't expand escapes: <code class="inline">rt"Hello,\t{name}."</code> keeps the backslash-t.</li>
     </ul>
 
     <div class="info-box warning-box">
@@ -387,18 +411,23 @@ enter long blocks of text."""</span></pre>
       </div>
       <div class="tab-content active" id="ch3-bool-mojo">
         <pre><span class="kw">var</span> conditionA = <span class="kw">False</span>
-<span class="kw">var</span> conditionB: <span class=<pre><code>def main():
-    var count = 3
-    var items = &quot;apples&quot;
-    var template = t&quot;Give me {count} {items}.&quot;
-    print(template)            # Give me 3 apples.
-    var x = 41
-    print(t&quot;The answer is {x + 1}&quot;)   # No allocation!
-    var list = [1, 2, 3]
-    print(t&quot;{list[0] + list[1]}&quot;)      # 3 — arbitrary expressions OK
-    var name = &quot;Nate&quot;
-    var s = String(t&quot;Hello, {name}!&quot;)  # Explicit allocation only here
-</code></pre> element types are fixed, though individual elements can be mutated:</p>
+<span class="kw">var</span> conditionB: <span class="type">Bool</span>
+conditionB = <span class="kw">not</span> conditionA
+<span class="fn">print</span>(conditionA, conditionB)   <span class="cmt"># False True</span></pre>
+      </div>
+    </div>
+
+    <p>Many other types have a boolean representation through the <strong><code class="inline">Boolable</code></strong> trait. The general principles:</p>
+    <ul>
+      <li>Collections evaluate as <code class="inline">True</code> if they contain any elements, <code class="inline">False</code> if empty.</li>
+      <li>Strings evaluate as <code class="inline">True</code> if they have non-zero length.</li>
+    </ul>
+    <p>You'll see this used constantly with <code class="inline">Optional</code> below, and in <code class="inline">if</code>/<code class="inline">while</code> conditions in Chapter 5.</p>
+  </section>
+
+  <section id="tuples">
+    <h2>7. Tuples</h2>
+    <p>A <strong><code class="inline">Tuple</code></strong> is a lightweight, fixed-size, heterogeneous collection with value semantics. Its size and element types are fixed, though individual elements can be mutated:</p>
 
     <div class="code-tabs">
       <div class="tabs-header">
@@ -434,12 +463,9 @@ enter long blocks of text."""</span></pre>
     <table class="cheat">
       <thead><tr><th>Type</th><th>Description</th><th>Element requirements</th></tr></thead>
       <tbody>
-        <tr><td><code>List[T]</code></td><td>Dynamically-sized a<pre><code>def main():
-    var conditionA = False
-    var conditionB: Bool
-    conditionB = not conditionA
-    print(conditionA, conditionB)   # False True
-</code></pre>yElement</code></td></tr>
+        <tr><td><code>List[T]</code></td><td>Dynamically-sized array</td><td><code>Copyable</code></td></tr>
+        <tr><td><code>Dict[K, V]</code></td><td>Associative array of key-value pairs</td><td>K: <code>KeyElement</code>, V: <code>Copyable</code></td></tr>
+        <tr><td><code>Set[T]</code></td><td>Unordered unique items + set algebra</td><td><code>KeyElement</code></td></tr>
         <tr><td><code>Optional[T]</code></td><td>A value that may or may not be present</td><td><code>Copyable</code></td></tr>
       </tbody>
     </table>
@@ -457,18 +483,21 @@ enter long blocks of text."""</span></pre>
 
 nums.<span class="fn">append</span>(<span class="num">7</span>)
 nums.<span class="fn">append</span>(<span class="num">11</span>)
-<span class="fn">print</span>(<span class="str">"Popping l<pre><code>def main():
-    # Explicitly typed...
-    var example_tuple = Tuple[Int, String](1, &quot;Example&quot;)
-    # ...or inferred from a literal
-    var pair = (1, &quot;Example&quot;)
-    # Unpack into multiple variables
-    var x, y = pair
-    print(x, y)         # 1 Example
-    # Or index individual values
-    var s = pair[1]
-    print(s)            # Example
-</code></pre>:</strong>
+<span class="fn">print</span>(<span class="str">"Popping last item:"</span>, nums.<span class="fn">pop</span>())   <span class="cmt"># 11</span>
+<span class="kw">for</span> idx <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(nums)):
+    <span class="fn">print</span>(nums[idx], end=<span class="str">", "</span>)              <span class="cmt"># 2, 3, 5, 7,</span>
+
+<span class="cmt"># Comprehensions for compact conditional initialization</span>
+<span class="kw">var</span> squares = [i * i <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>)]</pre>
+      </div>
+      <div class="tab-content" id="ch3-list-out">
+        <pre>Popping last item: 11
+2, 3, 5, 7,</pre>
+      </div>
+    </div>
+
+    <div class="info-box warning-box">
+      <strong>⚠️ Watch Out:</strong>
       <p>You can't <code class="inline">print()</code> a whole list or convert it directly to a string — print the individual elements instead (they just need to be <code class="inline">Writable</code>).</p>
     </div>
 
@@ -542,13 +571,16 @@ After loop: 0 0 0</pre>
         <button class="tab-btn active" data-tab="ch3-opt-mojo">Mojo</button>
       </div>
       <div class="tab-content active" id="ch3-opt-mojo">
-        <pre><span class="c<pre><code>def main():
-    var list = [2, 3, 4]
-    for ref item in list:   # Capture a ref to the list element
-        print(item, end=&quot;, &quot;)
-        item = 0            # Mutates the element inside the list
-    print(&quot;\nAfter loop:&quot;, list[0], list[1], list[2])
-</code></pre>>var</span> opt: <span class="type">Optional</span>[<span class="type">String</span>] = <span class="str">"Testing"</span>
+        <pre><span class="cmt"># With a value — two ways</span>
+<span class="kw">var</span> opt1 = <span class="type">Optional</span>(<span class="num">5</span>)
+<span class="kw">var</span> opt2: <span class="type">Optional</span>[<span class="type">Int</span>] = <span class="num">5</span>
+
+<span class="cmt"># Without a value — two ways</span>
+<span class="kw">var</span> opt3 = <span class="type">Optional</span>[<span class="type">Int</span>]()
+<span class="kw">var</span> opt4: <span class="type">Optional</span>[<span class="type">Int</span>] = <span class="kw">None</span>
+
+<span class="cmt"># Truthy when holding a value; guard before unwrapping</span>
+<span class="kw">var</span> opt: <span class="type">Optional</span>[<span class="type">String</span>] = <span class="str">"Testing"</span>
 <span class="kw">if</span> opt:
     <span class="kw">var</span> value_ref = opt.<span class="fn">value</span>()
     <span class="fn">print</span>(value_ref)
@@ -557,18 +589,28 @@ After loop: 0 0 0</pre>
 <span class="kw">var</span> greeting: <span class="type">Optional</span>[<span class="type">String</span>] = <span class="kw">None</span>
 <span class="fn">print</span>(greeting.<span class="fn">or_else</span>(<span class="str">"Hello"</span>))   <span class="cmt"># Hello</span>
 greeting = <span class="str">"Hi"</span>
-<span class="fn">print</span>(greeting.<span class="fn">or_else</span>(<span cla<pre><code>def main():
-    var empty_dict: Dict[String, Float64] = {}
-    var values: Dict[String, Float64] = {&quot;pi&quot;: 3.14159, &quot;e&quot;: 2.71828}
-    var d = Dict[String, Float64]()   # Constructor syntax works too
-    # Iterating items() yields references
-    var props: Dict[String, Float64] = {
-        &quot;plasticity&quot;: 3.1,
-        &quot;elasticity&quot;: 1.3,
-    }
-    for item in props.items():
-        print(item.key, item.value)
-</code></pre>code>UInt256</code></td><td><code>var b: UInt8 = 255</code></td></tr>
+<span class="fn">print</span>(greeting.<span class="fn">or_else</span>(<span class="str">"Hello"</span>))   <span class="cmt"># Hi</span></pre>
+      </div>
+    </div>
+
+    <div class="info-box warning-box">
+      <strong>⚠️ Watch Out:</strong>
+      <p>Calling <code class="inline">value()</code> on an empty <code class="inline">Optional</code> is undefined behavior. Always check truthiness first (as above) — that's what makes the pattern safe.</p>
+    </div>
+
+    <div class="info-box tip-box">
+      <strong>🚀 Pro Tip:</strong>
+      <p>Where you need one variable that could hold, say, either an <code class="inline">Int32</code> or a <code class="inline">Float64</code>, look at the <code class="inline">Variant</code> type — it holds exactly one of several listed types at a time.</p>
+    </div>
+  </section>
+
+  <section id="summary">
+    <h2>9. Summary</h2>
+    <table class="cheat">
+      <thead><tr><th>You need…</th><th>Reach for</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>A general integer</td><td><code>Int</code></td><td><code>var n = 42</code></td></tr>
+        <tr><td>A specific-width integer</td><td><code>Int8</code>…<code>Int256</code>, <code>UInt8</code>…<code>UInt256</code></td><td><code>var b: UInt8 = 255</code></td></tr>
         <tr><td>A float</td><td><code>Float64</code> (default choice)</td><td><code>var x = 3.14</code></td></tr>
         <tr><td>Data parallelism</td><td><code>SIMD[DType.*, width]</code></td><td><code>SIMD[DType.float32, 4](1, 2, 3, 4)</code></td></tr>
         <tr><td>Mutable text</td><td><code>String</code></td><td><code>s += "!"</code></td></tr>
@@ -576,14 +618,19 @@ greeting = <span class="str">"Hi"</span>
         <tr><td>Fixed heterogeneous bundle</td><td><code>Tuple</code></td><td><code>var x, y = (1, "one")</code></td></tr>
         <tr><td>Growable sequence</td><td><code>List[T]</code></td><td><code>var xs = [1, 2, 3]</code></td></tr>
         <tr><td>Key-value lookup</td><td><code>Dict[K, V]</code></td><td><code>{"pi": 3.14}</code></td></tr>
-        <tr><td>Unique members / algebra</td><td><code>Set[T]</code></td><td><code>a.intersection(b)</code></td><pre><code>def main():
-    var i_like = {&quot;sushi&quot;, &quot;ice cream&quot;, &quot;tacos&quot;, &quot;pho&quot;}
-    var you_like = {&quot;burgers&quot;, &quot;tacos&quot;, &quot;salad&quot;, &quot;ice cream&quot;}
-    var we_like = i_like.intersection(you_like)
-    print(&quot;We both like:&quot;)
-    for item in we_like:
-        print(&quot;-&quot;, item)
-</code></pre>class="navbtn" href="mojo_04_functions.html">Ch 04 · Functions →</a>
+        <tr><td>Unique members / algebra</td><td><code>Set[T]</code></td><td><code>a.intersection(b)</code></td></tr>
+        <tr><td>Maybe-absent value</td><td><code>Optional[T]</code></td><td><code>var o: Optional[Int] = None</code></td></tr>
+      </tbody>
+    </table>
+    <div class="info-box">
+      <strong>📋 Summary:</strong>
+      <p>Every value has a nominal type; numbers are SIMD-based scalars with explicit widths; strings are mutable UTF-8 with lazy template formatting; tuples bundle heterogeneously; and List/Dict/Set/Optional cover everyday containers. Next: functions — how Mojo declares, parameterizes, and passes arguments.</p>
+    </div>
+  </section>
+
+  <div class="chapnav">
+    <a class="navbtn" href="mojo_02_basics.html">← Ch 02 · Language Basics</a>
+    <a class="navbtn" href="mojo_04_functions.html">Ch 04 · Functions →</a>
   </div>
 </div>
 </div>
@@ -601,21 +648,21 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     group.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     group.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     this.classList.add('active');
-    const target=<pre><code>def main():
-    # With a value — two ways
-    var opt1 = Optional(5)
-    var opt2: Optional[Int] = 5
-    # Without a value — two ways
-    var opt3 = Optional[Int]()
-    var opt4: Optional[Int] = None
-    # Truthy when holding a value; guard before unwrapping
-    var opt: Optional[String] = &quot;Testing&quot;
-    if opt:
-        var value_ref = opt.value()
-        print(value_ref)
-    # Or supply a default
-    var greeting: Optional[String] = None
-    print(greeting.or_else(&quot;Hello&quot;))   # Hello
-    greeting = &quot;Hi&quot;
-    print(greeting.or_else(&quot;Hello&quot;))   # Hi
-</code></pre>
+    const target=group.querySelector('#'+this.getAttribute('data-tab'));
+    if(target) target.classList.add('active');
+  });
+});
+
+const sections=[...document.querySelectorAll('section[id]')];
+const dots=document.querySelectorAll('#miniToc a');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      dots.forEach(d=>d.classList.toggle('active',d.getAttribute('href')==='#'+entry.target.id));
+    }
+  });
+},{rootMargin:'-40% 0px -50% 0px'});
+sections.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

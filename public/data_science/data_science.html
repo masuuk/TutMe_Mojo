@@ -22,8 +22,6 @@
   --teal-1:#3b82f6;
   --teal-2:#8ab6ff;
   --teal-3:#1d4ed8;
-  --py-blue:#4b8bbe;
-  --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24);
   --line-strong:rgba(244,234,215,0.48);
   --shadow-glow:0 0 60px rgba(59,130,246,0.15);
@@ -222,7 +220,7 @@ pre.mojo{
 pre.mojo::before{
   display:block;font-family:'JetBrains Mono',monospace;font-size:0.66rem;
   letter-spacing:0.14em;text-transform:uppercase;color:var(--teal-2);
-  margin-bottom:0.7rem;content:"mojo 1.0 — alternative";
+  margin-bottom:0.7rem;content:"mojo 1.x — alternative";
 }
 
 /* ---------- key takeaway callout ---------- */
@@ -275,14 +273,13 @@ footer{
   <a href="../index.html" style="color:#fff;font-weight:700;text-decoration:none;">📚 TutMe</a>
   <a href="../mojo_v1/index.html" style="color:#9fd3ff;text-decoration:none;">📊 Data Science lessons</a>
   <a href="perceptrons_and_activation.html" style="color:#9fd3ff;text-decoration:none;">🧠 Perceptrons &amp; Activations Tutorial</a>
+  <a href="nn_mojo.html" style="color:#9fd3ff;text-decoration:none;">🧮 3-4-1 NN · Mojo &amp; NumPy</a>
   <a href="fine_tuning_llms.html" style="color:#9fd3ff;text-decoration:none;">🤖 Fine-Tuning LLMs</a>
-  <a href="ai_agents_python_vs_mojo.html" style="color:#9fd3ff;text-decoration:none;">🤝 AI Agents · Python vs Mojo</a>
   <a href="time_series_analytics.html" style="color:#9fd3ff;text-decoration:none;">📈 Time Series Analytics</a>
   <a href="linear_regression.html" style="color:#9fd3ff;text-decoration:none;">📉 Linear Regression</a>
   <a href="decision_aware_ml.html" style="color:#9fd3ff;text-decoration:none;">🧩 Decision-Aware ML</a>
+  <a href="ai_agents_python_vs_mojo.html" style="color:#9fd3ff;text-decoration:none;">💬 AI Agents · Python vs Mojo</a>
   <a href="../index.html" style="color:#9fd3ff;text-decoration:none;">🏠 Home</a>
-  <a href="neural_network.html" style="color:#9fd3ff;text-decoration:none;">🧠 NN from Scratch</a>
-  <a href="mlp_xor.html" style="color:#9fd3ff;text-decoration:none;">🎯 MLP XOR Lab</a>
 </nav>
 <div class="grain"></div>
 
@@ -353,26 +350,9 @@ footer{
       <li><strong>Model.</strong> Fit a statistical or machine-learning model on training data, and evaluate it honestly on data it has never seen.</li>
       <li><strong>Communicate.</strong> A result that cannot be explained is a result that cannot change a decision. Charts, a one-page memo, a dashboard — the medium follows the audience.</li>
     </ul>
-    <p>Notice that the output of the loop is a <em>better question</em>. Here is the whole workflow as one compact, runnable Python sketch — the shape you will use for the rest of this book:</p>
+    <p>Notice that the output of the loop is a <em>better question</em>. Here is the whole workflow as one compact, runnable program - the shape you will use for the rest of this book:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-<span class="tok-kw">from</span> sklearn.model_selection <span class="tok-kw">import</span> train_test_split
-<span class="tok-kw">from</span> sklearn.pipeline <span class="tok-kw">import</span> Pipeline
-<span class="tok-kw">from</span> sklearn.preprocessing <span class="tok-kw">import</span> StandardScaler
-<span class="tok-kw">from</span> sklearn.linear_model <span class="tok-kw">import</span> LinearRegression
-
-df = pd.read_csv(<span class="tok-str">"grades.csv"</span>)                <span class="tok-com"># acquire</span>
-df = df.dropna().drop_duplicates()            <span class="tok-com"># clean</span>
-corr = df.corr()                              <span class="tok-com"># explore</span>
-X = df.drop(<span class="tok-str">"final"</span>, axis=<span class="tok-num">1</span>)
-y = df[<span class="tok-str">"final"</span>]
-Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=<span class="tok-num">0.2</span>, random_state=<span class="tok-num">42</span>)
-model = Pipeline([(<span class="tok-str">"scale"</span>, StandardScaler()),
-                  (<span class="tok-str">"reg"</span>, LinearRegression())])
-model.fit(Xtr, ytr)                            <span class="tok-com"># model</span>
-r2 = model.score(Xte, yte)                    <span class="tok-com"># evaluate → communicate</span>
-<span class="tok-kw">print</span>(<span class="tok-str">f"test R^2 = {r2:.3f}"</span>)</code></pre>
-    <p>The same loop from <strong>Mojo 1.x</strong>: the six stages are identical, and the data plumbing (pandas + scikit-learn) rides the interop bridge — Mojo drives the pipeline instead of a Python script:</p>
+    <p>The workflow in <strong>Mojo 1.x</strong>: the six stages are identical, and the data plumbing (pandas + scikit-learn) rides the interop bridge — Mojo drives the pipeline instead of a Python script:</p>
   <pre class="mojo"><code><span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
 
 <span class="tok-kw">def</span> <span class="tok-fn">main</span>() raises:
@@ -414,25 +394,18 @@ r2 = model.score(Xte, yte)                    <span class="tok-com"># evaluate �
   <div class="prose">
     <p>You can watch it numerically — evaluating sin(x)/x at shrinking x and watching the values approach 1:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">sinc_squeeze</span>(x):
-    <span class="tok-kw">return</span> np.sin(x) / x
-
-xs = np.array([<span class="tok-num">1e-1</span>, <span class="tok-num">1e-2</span>, <span class="tok-num">1e-3</span>, <span class="tok-num">1e-4</span>, <span class="tok-num">1e-5</span>])
-<span class="tok-kw">print</span>(sinc_squeeze(xs))   <span class="tok-com"># → [0.998 0.99998 0.9999998 ...] creeping toward 1.0</span></code></pre>
     <p>Scalar-for-scalar in <strong>Mojo 1.x</strong> — a typed <code>sinc_squeeze</code> over a static array, compiled and branch-safe at <code>x = 0</code>:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sin
+  <pre class="mojo">from std.math import sin
 
-<span class="tok-kw">def</span> <span class="tok-fn">sinc_squeeze</span>(x: Float64) -&gt; Float64:
-    <span class="tok-kw">if</span> x == <span class="tok-num">0.0</span>:
-        <span class="tok-kw">return</span> <span class="tok-num">1.0</span>            <span class="tok-com"># limit, not a division by zero</span>
-    <span class="tok-kw">return</span> sin(x) / x
+def sinc_squeeze(x: Float64) -&gt; Float64:
+    if x == 0.0:
+        return 1.0            # limit, not a division by zero
+    return sin(x) / x
 
-<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
-    <span class="tok-kw">var</span> xs = [<span class="tok-num">1e-1</span>, <span class="tok-num">1e-2</span>, <span class="tok-num">1e-3</span>, <span class="tok-num">1e-4</span>, <span class="tok-num">1e-5</span>]
-    <span class="tok-kw">for</span> x <span class="tok-kw">in</span> xs:
-        print(sinc_squeeze(x))   <span class="tok-com"># 0.998 → 0.9999998, creeping toward 1.0</span></code></pre>
+def main():
+    var xs = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
+    for x in xs:
+        print(sinc_squeeze(x))   # 0.998 → 0.9999998, creeping toward 1.0</pre>
   <div class="prose">
     <h3 style="font-family:'Fraunces',serif;font-size:1.3rem;margin:1.6rem 0 0.5rem;">Derivatives</h3>
     <p>The derivative is the instantaneous rate of change — the slope of the tangent line. It is the definition from which the whole of gradient descent follows.</p>
@@ -442,13 +415,6 @@ xs = np.array([<span class="tok-num">1e-1</span>, <span class="tok-num">1e-2</sp
     <p>Three rules cover almost everything you will differentiate by hand: the <strong>power rule</strong> <code class="inline">d/dx xⁿ = n·xⁿ⁻¹</code>, the <strong>product rule</strong> <code class="inline">(fg)′ = f′g + fg′</code>, and the <strong>chain rule</strong> <code class="inline">d/dx f(g(x)) = f′(g(x))·g′(x)</code>. The chain rule is the one that matters for neural networks: it is exactly what backpropagation computes, layer by layer.</p>
     <p>Numerically, you can approximate any derivative with the <em>central difference</em> — symmetric around the point, which cancels the leading error term:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">num_diff</span>(f, x, h=<span class="tok-num">1e-6</span>):
-    <span class="tok-kw">return</span> (f(x + h) - f(x - h)) / (<span class="tok-num">2</span> * h)
-
-f = <span class="tok-kw">lambda</span> x: x ** <span class="tok-num">2</span>
-<span class="tok-kw">print</span>(num_diff(f, <span class="tok-num">3.0</span>))   <span class="tok-com"># → 6.0  (true answer: f'(3) = 2·3)</span></code></pre>
     <p>In <strong>Mojo 1.x</strong> the central difference is a generic — the function <code>f</code> is a compile-time type parameter, so its type flows into <code>num_diff</code> with no runtime indirection:</p>
   <pre class="mojo"><code><span class="tok-kw">def</span> <span class="tok-fn">num_diff</span>[f: def(Float64) -&gt; Float64](x: Float64, h: Float64 = <span class="tok-num">1e-6</span>) -&gt; Float64:
     <span class="tok-kw">return</span> (f(x + h) - f(x - h)) / (<span class="tok-num">2.0</span> * h)
@@ -466,18 +432,9 @@ f = <span class="tok-kw">lambda</span> x: x ** <span class="tok-num">2</span>
   <div class="prose">
     <p>Eigenvectors are the directions that a transformation keeps fixed in direction; eigenvalues say how much it stretches them. This powers <strong>PCA</strong> (eigenvectors of the covariance matrix are the principal components), Markov chains (the leading eigenvector of a transition matrix is the steady state), and stability analysis in differential equations. A transition matrix whose eigenvalue-1 eigenvector gives the long-run distribution:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-A = np.array([[<span class="tok-num">0.7</span>, <span class="tok-num">0.3</span>],
-              [<span class="tok-num">0.2</span>, <span class="tok-num">0.8</span>]])            <span class="tok-com"># Markov transition matrix</span>
-vals, vecs = np.linalg.eig(A)
-<span class="tok-kw">print</span>(vals)                            <span class="tok-com"># → [1.  0.5]</span>
-stationary = vecs[:, np.argmax(vals)]   <span class="tok-com"># eigenvector for λ=1</span>
-stationary = stationary / stationary.sum()
-<span class="tok-kw">print</span>(np.round(stationary, <span class="tok-num">3</span>))      <span class="tok-com"># → [0.4 0.6] steady state</span></code></pre>
     <p>For a Markov steady state you never need the full eigendecomposition — <strong>power iteration</strong> (multiply by A, then normalize) converges to the leading (λ = 1) eigenvector, and it ports naturally to compiled <strong>Mojo 1.x</strong>:</p>
   <pre class="mojo"><code><span class="tok-kw">from</span> tensor <span class="tok-kw">import</span> Tensor
-<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
+<span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt
 
 <span class="tok-kw">def</span> <span class="tok-fn">main</span>():
     <span class="tok-kw">var</span> A = Tensor[DType.float64](<span class="tok-num">2</span>, <span class="tok-num">2</span>)
@@ -507,15 +464,6 @@ stationary = stationary / stationary.sum()
   <div class="prose">
     <p>You almost never need a closed-form solution — <strong>Euler's method</strong> steps forward in time, adding the derivative times a small step, and it is the same mental model as gradient descent:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-r, K, dt, steps = <span class="tok-num">0.8</span>, <span class="tok-num">100.0</span>, <span class="tok-num">0.01</span>, <span class="tok-num">2000</span>
-y = <span class="tok-num">5.0</span>                              <span class="tok-com"># initial population</span>
-history = []
-<span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(steps):
-    y = y + dt * r * y * (<span class="tok-num">1</span> - y / K)   <span class="tok-com"># Euler step</span>
-    history.append(y)
-<span class="tok-kw">print</span>(<span class="tok-str">f"plateau ≈ {history[-1]:.1f}"</span>)   <span class="tok-com"># → 100.0, the carrying capacity</span></code></pre>
     <p>The same Euler loop is a straight, near-verbatim <strong>Mojo 1.x</strong> port — a <code>var</code> accumulator stepped in a compiled loop:</p>
   <pre class="mojo"><code><span class="tok-kw">def</span> <span class="tok-fn">main</span>():
     <span class="tok-kw">var</span> r: Float64 = <span class="tok-num">0.8</span>
@@ -542,15 +490,6 @@ history = []
   <div class="prose">
     <p>A NumPy array is a block of memory holding numbers of one type, described by a <strong>shape</strong> and a <strong>dtype</strong>. The payoff of the fixed type is that a whole array can be processed in compiled code. The idioms you need are creation, fancy indexing, masks, and the shape-changing routines:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-a = np.array([[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>],
-              [<span class="tok-num">4</span>, <span class="tok-num">5</span>, <span class="tok-num">6</span>]])
-<span class="tok-kw">print</span>(a.shape, a.dtype)                 <span class="tok-com"># (2, 3) int64</span>
-<span class="tok-kw">print</span>(np.arange(<span class="tok-num">12</span>).reshape(<span class="tok-num">3</span>, <span class="tok-num">4</span>))  <span class="tok-com"># contiguous 0..11 → 3×4</span>
-<span class="tok-kw">print</span>(np.zeros((<span class="tok-num">2</span>, <span class="tok-num">2</span>)))           <span class="tok-com"># zeros, ones, eye all exist</span>
-<span class="tok-kw">print</span>(a[:, <span class="tok-num">1</span>])                      <span class="tok-com"># column 1 → [2 5]</span>
-<span class="tok-kw">print</span>(a[a <span class="tok-fn">&gt;</span> <span class="tok-num">3</span>])                     <span class="tok-com"># boolean mask → [4 5 6]</span></code></pre>
     <p>The same ideas carry to <strong>Mojo 1.x</strong>'s <code>Tensor</code> — a typed, n-dimensional grid like the ndarray. Creation, a shape query, and element access are native; a boolean "mask" becomes an explicit filtered loop:</p>
   <pre class="mojo"><code><span class="tok-kw">from</span> tensor <span class="tok-kw">import</span> Tensor
 
@@ -573,23 +512,8 @@ a = np.array([[<span class="tok-num">1</span>, <span class="tok-num">2</span>, <
   <div class="prose">
     <p><strong>Broadcasting</strong> is the rule that lets arrays of different shapes combine: NumPy stretches a smaller array to match a larger one along its trailing dimensions. It is why you can subtract a vector's mean from a whole matrix without a loop. <strong>Ufuncs</strong> (universal functions) apply element-wise in compiled code — <code class="inline">np.exp</code>, <code class="inline">np.sqrt</code>, <code class="inline">np.maximum</code> — and these, not Python loops, are how you should do math on arrays.</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-scores = np.array([<span class="tok-num">72</span>, <span class="tok-num">85</span>, <span class="tok-num">90</span>, <span class="tok-num">61</span>])          <span class="tok-com"># shape (4,)</span>
-z = (scores - scores.mean()) / scores.std()      <span class="tok-com"># broadcasting → z-scores</span>
-<span class="tok-kw">print</span>(np.round(z, <span class="tok-num">2</span>))                        <span class="tok-com"># [-1.18  0.47  1.1  -0.39]</span>
-
-<span class="tok-kw">print</span>(np.exp(np.array([<span class="tok-num">0.</span>, <span class="tok-num">1.</span>])))             <span class="tok-com"># ufunc: [1.    2.718]</span>
-
-A = np.array([[<span class="tok-num">3</span>, <span class="tok-num">1</span>],
-              [<span class="tok-num">1</span>, <span class="tok-num">2</span>]])
-b = np.array([<span class="tok-num">9</span>, <span class="tok-num">8</span>])
-x = np.linalg.solve(A, b)                        <span class="tok-com"># solve A·x = b</span>
-<span class="tok-kw">print</span>(x)                                        <span class="tok-com"># → [2. 3.]</span>
-<span class="tok-kw">print</span>(np.linalg.eigvals(A))                     <span class="tok-com"># eigenvalues</span>
-<span class="tok-kw">print</span>(np.linalg.norm(scores))                   <span class="tok-com"># L2 norm</span></code></pre>
     <p>The z-score (broadcast mean/std), <code>exp</code>, and a 2×2 <code>A·x = b</code> solve, done with explicit loops in <strong>Mojo 1.x</strong> — compiled, so the loop is the fast path, not the slow one:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> exp, sqrt
+  <pre class="mojo"><code><span class="tok-kw">from</span> math <span class="tok-kw">import</span> exp, sqrt
 
 <span class="tok-kw">def</span> <span class="tok-fn">main</span>():
     <span class="tok-kw">var</span> scores = [<span class="tok-num">72.0</span>, <span class="tok-num">85.0</span>, <span class="tok-num">90.0</span>, <span class="tok-num">61.0</span>]
@@ -630,22 +554,6 @@ x = np.linalg.solve(A, b)                        <span class="tok-com"># solve A
   <div class="prose">
     <p>A <strong>DataFrame</strong> is a collection of Series (named columns) sharing one row index. Its superpower is <em>alignment</em>: operations match rows and columns by label, not by position. The daily verbs are <code class="inline">read_csv</code>, inspection (<code class="inline">head</code>, <code class="inline">dtypes</code>, <code class="inline">info</code>), missing-data handling (<code class="inline">isna</code>, <code class="inline">dropna</code>, <code class="inline">fillna</code>), and boolean masking. All runnable here with an inline CSV:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-<span class="tok-kw">from</span> io <span class="tok-kw">import</span> StringIO
-
-csv_data = <span class="tok-str">"""student,course,score,attended
-Ana,math,92,yes
-Bo,math,74,yes
-Cam,math,58,no
-Ana,physics,81,yes
-Bo,physics,88,yes
-Cam,physics,65,no"""</span>
-
-df = pd.read_csv(StringIO(csv_data))
-<span class="tok-kw">print</span>(df.shape, <span class="tok-kw">list</span>(df.dtypes))
-
-passed = df[df[<span class="tok-str">"score"</span>] &gt;= <span class="tok-num">60</span>]               <span class="tok-com"># boolean mask on rows</span>
-<span class="tok-kw">print</span>(df.loc[df[<span class="tok-str">"score"</span>].idxmax(), <span class="tok-str">"student"</span>])  <span class="tok-com"># label-based lookup</span></code></pre>
     <p>You keep pandas for the general table — but the two queries in this example are simple enough to run on plain slices in <strong>Mojo 1.x</strong>: parse the CSV, filter rows on <code>score ≥ 60</code>, and find which student owns the max score:</p>
   <pre class="mojo"><code><span class="tok-kw">def</span> <span class="tok-fn">main</span>():
     <span class="tok-kw">var</span> rows: String = <span class="tok-str">"Ana,math,92,yes\nBo,math,74,yes\nCam,math,58,no\nAna,physics,81,yes\nBo,physics,88,yes\nCam,physics,65,no"</span>
@@ -665,26 +573,9 @@ passed = df[df[<span class="tok-str">"score"</span>] &gt;= <span class="tok-num"
   <div class="prose">
     <p><strong>GroupBy</strong> is the split-apply-combine pattern — arguably the single most important verb in data analysis. Split the rows by a key column, apply an aggregation, and combine the results back into one table:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-<span class="tok-kw">from</span> io <span class="tok-kw">import</span> StringIO
-
-df = pd.read_csv(StringIO(<span class="tok-str">"""student,course,score,attended
-Ana,math,92,yes
-Bo,math,74,yes
-Cam,math,58,no
-Ana,physics,81,yes
-Bo,physics,88,yes
-Cam,physics,65,no"""</span>))
-
-summary = df.groupby(<span class="tok-str">"course"</span>)[<span class="tok-str">"score"</span>].agg([<span class="tok-str">"mean"</span>, <span class="tok-str">"max"</span>, <span class="tok-str">"count"</span>])
-<span class="tok-kw">print</span>(summary)
-
-meta = pd.DataFrame({<span class="tok-str">"course"</span>: [<span class="tok-str">"math"</span>, <span class="tok-str">"physics"</span>],
-                     <span class="tok-str">"credits"</span>: [<span class="tok-num">4</span>, <span class="tok-num">3</span>]})
-joined = df.merge(meta, on=<span class="tok-str">"course"</span>)      <span class="tok-com"># SQL-style join on a key</span>
-<span class="tok-kw">print</span>(joined)</code></pre>
     <p>The <strong>GroupBy → mean / max / count</strong> aggregation is a tight loop over rows grouped by a key — trivial to compile in <strong>Mojo 1.x</strong>. Two small <code>Dict</code>-of-accumulators give you the same per-course summary:</p>
-  <pre class="mojo">
+  <pre class="mojo"><code><span class="tok-kw">from</span> collections <span class="tok-kw">import</span> Dict
+
 <span class="tok-kw">def</span> <span class="tok-fn">main</span>():
     <span class="tok-kw">var</span> courses = [<span class="tok-str">"math"</span>, <span class="tok-str">"math"</span>, <span class="tok-str">"math"</span>,
                     <span class="tok-str">"physics"</span>, <span class="tok-str">"physics"</span>, <span class="tok-str">"physics"</span>]
@@ -722,18 +613,9 @@ joined = df.merge(meta, on=<span class="tok-str">"course"</span>)      <span cla
     <p><strong>Descriptive statistics</strong> summarize a distribution. The <strong>mean</strong> is the balance point, sensitive to outliers; the <strong>median</strong> is the middle value, robust to them. The <strong>variance</strong> measures spread — the mean squared distance from the mean — and the <strong>standard deviation</strong> is its square root, back in the original units. With <code class="inline">ddof=1</code> you get the sample (n−1) version used when estimating from a sample.</p>
   </div>
   <div class="math">mean: x̄ = (1/n)·Σ xᵢ &nbsp;&nbsp;·&nbsp;&nbsp; variance: s² = (1/(n−1))·Σ (xᵢ − x̄)²</div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-rng = np.random.default_rng(<span class="tok-num">42</span>)
-control = rng.normal(<span class="tok-num">50</span>, <span class="tok-num">10</span>, <span class="tok-num">30</span>)
-treated = rng.normal(<span class="tok-num">55</span>, <span class="tok-num">10</span>, <span class="tok-num">30</span>)
-
-<span class="tok-kw">print</span>(<span class="tok-str">"mean"</span>, round(control.mean(), <span class="tok-num">2</span>),
-      <span class="tok-str">"median"</span>, round(np.median(control), <span class="tok-num">2</span>),
-      <span class="tok-str">"sd"</span>, round(control.std(ddof=<span class="tok-num">1</span>), <span class="tok-num">2</span>))</code></pre>
     <p>Mean, median, and sample (n−1) standard deviation are a dozen lines in <strong>Mojo 1.x</strong> — sort for the median, accumulate for mean and variance:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
-<span class="tok-kw">from</span> std.algorithm <span class="tok-kw">import</span> sort
+  <pre class="mojo"><code><span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt
+<span class="tok-kw">from</span> algorithm <span class="tok-kw">import</span> sort
 
 <span class="tok-kw">def</span> <span class="tok-fn">describe</span>(s: List[Float64]):
     <span class="tok-kw">var</span> n = <span class="tok-kw">float64</span>(s.size)
@@ -747,7 +629,7 @@ treated = rng.normal(<span class="tok-num">55</span>, <span class="tok-num">10</
     var_ /= (n - <span class="tok-num">1</span>)                 <span class="tok-com"># ddof = 1 → sample variance</span>
     <span class="tok-kw">var</span> sorted_s = s.copy()
     sort(sorted_s)
-    <span class="tok-kw">var</span> mid = sorted_s.size # <span class="tok-num">2</span>
+    <span class="tok-kw">var</span> mid = sorted_s.size // <span class="tok-num">2</span>
     <span class="tok-kw">var</span> median: Float64
     <span class="tok-kw">if</span> sorted_s.size % <span class="tok-num">2</span> == <span class="tok-num">1</span>:
         median = sorted_s[mid]
@@ -762,19 +644,8 @@ treated = rng.normal(<span class="tok-num">55</span>, <span class="tok-num">10</
     <p><strong>Distributions</strong> describe how likely each value is. The <strong>normal</strong> distribution rules continuous data; the <strong>binomial</strong> rules counts of successes; the <strong>Poisson</strong> rules rare events in time. Sampling from them with <code class="inline">np.random.default_rng().normal(...)</code> is the fastest way to build intuition — generate data from a distribution you control and check whether your analysis recovers it.</p>
     <p><strong>Correlation</strong> measures the strength and direction of a linear relationship, on a scale from −1 to 1. It is not causation, and it only describes straight-line association — a perfect circle has correlation near zero. The p-value attached to a correlation or a difference of means answers: <em>if there were really no effect, how surprised would this data make me?</em> A small p-value means "surprised" — evidence, not proof.</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-<span class="tok-kw">from</span> scipy <span class="tok-kw">import</span> stats
-
-hours = np.array([<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>, <span class="tok-num">6</span>, <span class="tok-num">7</span>])
-score = np.array([<span class="tok-num">38</span>, <span class="tok-num">55</span>, <span class="tok-num">49</span>, <span class="tok-num">71</span>, <span class="tok-num">82</span>, <span class="tok-num">79</span>, <span class="tok-num">95</span>])
-
-r, p = stats.pearsonr(hours, score)     <span class="tok-com"># correlation + its p-value</span>
-<span class="tok-kw">print</span>(<span class="tok-str">f"r = {r:.2f}, p = {p:.4f}"</span>)      <span class="tok-com"># r ≈ 0.95, p ≈ 0.001</span>
-
-t, p2 = stats.ttest_ind(control, treated)  <span class="tok-com"># two-sample t-test</span>
-<span class="tok-kw">print</span>(<span class="tok-str">f"t = {t:.2f}, p = {p2:.3f}"</span>)</code></pre>
     <p>Pearson's <em>r</em> is a rolling sum — a natural <strong>Mojo 1.x</strong> computation. The special-function t-test / p-value, by contrast, rides the interop bridge to <code>scipy</code>:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
+  <pre class="mojo"><code><span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt
 <span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
 
 <span class="tok-kw">def</span> <span class="tok-fn">pearson</span>(x: List[Float64], y: List[Float64]) -&gt; Float64:
@@ -810,27 +681,9 @@ t, p2 = stats.ttest_ind(control, treated)  <span class="tok-com"># two-sample t-
   <div class="prose">
     <p>The four plots you will use constantly: the <strong>histogram</strong> (shape of one variable), the <strong>scatter</strong> (relationship between two), the <strong>box plot</strong> (spread across groups, outliers as dots), and the <strong>heatmap</strong> (a whole matrix of correlations at once).</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-<span class="tok-kw">import</span> matplotlib.pyplot <span class="tok-kw">as</span> plt
-<span class="tok-kw">import</span> seaborn <span class="tok-kw">as</span> sns
-
-rng = np.random.default_rng(<span class="tok-num">7</span>)
-x = rng.normal(<span class="tok-num">0</span>, <span class="tok-num">1</span>, <span class="tok-num">200</span>)
-y = <span class="tok-num">2</span> * x + rng.normal(<span class="tok-num">0</span>, <span class="tok-num">0.5</span>, <span class="tok-num">200</span>)
-groups = rng.normal(<span class="tok-num">50</span>, <span class="tok-num">15</span>, <span class="tok-num">300</span>)
-
-fig, axes = plt.subplots(<span class="tok-num">1</span>, <span class="tok-num">3</span>, figsize=(<span class="tok-num">12</span>, <span class="tok-num">3.5</span>))
-axes[<span class="tok-num">0</span>].hist(x, bins=<span class="tok-num">25</span>, color=<span class="tok-str">"#3b82f6"</span>)
-axes[<span class="tok-num">0</span>].set_title(<span class="tok-str">"histogram"</span>)
-axes[<span class="tok-num">1</span>].scatter(x, y, s=<span class="tok-num">12</span>, color=<span class="tok-str">"#3b82f6"</span>, alpha=<span class="tok-num">0.7</span>)
-axes[<span class="tok-num">1</span>].set_title(<span class="tok-str">"scatter"</span>)
-sns.boxplot(x=groups, ax=axes[<span class="tok-num">2</span>])
-axes[<span class="tok-num">2</span>].set_title(<span class="tok-str">"boxplot"</span>)
-plt.tight_layout()
-plt.show()</code></pre>
     <p>Mojo 1.x has no mature plotting stack — so the <em>data</em> is prepared natively (compiled loops, zero-copy into NumPy) and handed to <code>matplotlib</code> over the interop bridge for the actual drawing:</p>
   <pre class="mojo"><code><span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
-<span class="tok-kw">from</span> std.random <span class="tok-kw">import</span> Random
+<span class="tok-kw">from</span> random <span class="tok-kw">import</span> Random
 
 <span class="tok-kw">def</span> <span class="tok-fn">main</span>() raises:
     <span class="tok-kw">var</span> np = Python.import_module(<span class="tok-str">"numpy"</span>)
@@ -848,16 +701,6 @@ plt.show()</code></pre>
   <div class="prose">
     <p>Heatmaps earn their keep the moment you have more than a handful of features — a correlation matrix in text is unreadable, but as a colored grid, structure jumps out immediately:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-<span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-<span class="tok-kw">import</span> seaborn <span class="tok-kw">as</span> sns
-<span class="tok-kw">import</span> matplotlib.pyplot <span class="tok-kw">as</span> plt
-
-rng = np.random.default_rng(<span class="tok-num">1</span>)
-mat = pd.DataFrame(rng.normal(<span class="tok-num">0</span>, <span class="tok-num">1</span>, (<span class="tok-num">5</span>, <span class="tok-num">5</span>)),
-                   columns=<span class="tok-kw">list</span>(<span class="tok-str">"abcde"</span>))
-sns.heatmap(mat.corr(), annot=<span class="tok-kw">True</span>, cmap=<span class="tok-str">"viridis"</span>, center=<span class="tok-num">0</span>)
-plt.show()</code></pre>
     <p>A <strong>Mojo 1.x</strong> heatmap: build the 5×5 correlation matrix natively, then pass it to seaborn's <code>heatmap</code> over the bridge — the matrix math is compiled, the drawing is still Python:</p>
   <pre class="mojo"><code><span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
 
@@ -886,29 +729,6 @@ plt.show()</code></pre>
   <div class="prose">
     <p>A machine learning pipeline is a list of preprocessing steps followed by an estimator, applied as one unit. You already saw it in Section 1; here is the full discipline. The most important habit in the entire book is the <strong>train/test split</strong>: hold out a slice of data before you ever look at it, and let it judge your model exactly once.</p>
   </div>
-<pre><code><span class="tok-kw">import</span> pandas <span class="tok-kw">as</span> pd
-<span class="tok-kw">from</span> sklearn.model_selection <span class="tok-kw">import</span> train_test_split
-<span class="tok-kw">from</span> sklearn.pipeline <span class="tok-kw">import</span> Pipeline
-<span class="tok-kw">from</span> sklearn.preprocessing <span class="tok-kw">import</span> StandardScaler
-<span class="tok-kw">from</span> sklearn.linear_model <span class="tok-kw">import</span> LogisticRegression
-<span class="tok-kw">from</span> sklearn.metrics <span class="tok-kw">import</span> accuracy_score, confusion_matrix
-
-X = pd.DataFrame({
-    <span class="tok-str">"hours"</span>: [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>, <span class="tok-num">4</span>, <span class="tok-num">5</span>, <span class="tok-num">6</span>, <span class="tok-num">7</span>, <span class="tok-num">8</span>, <span class="tok-num">9</span>, <span class="tok-num">10</span>],
-    <span class="tok-str">"prev"</span>:  [<span class="tok-num">40</span>, <span class="tok-num">55</span>, <span class="tok-num">60</span>, <span class="tok-num">70</span>, <span class="tok-num">75</span>, <span class="tok-num">80</span>, <span class="tok-num">82</span>, <span class="tok-num">88</span>, <span class="tok-num">90</span>, <span class="tok-num">95</span>],
-})
-y = [<span class="tok-num">0</span>, <span class="tok-num">0</span>, <span class="tok-num">0</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>]   <span class="tok-com"># passed?</span>
-
-Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=<span class="tok-num">0.3</span>, random_state=<span class="tok-num">0</span>)
-
-pipe = Pipeline([
-    (<span class="tok-str">"scale"</span>, StandardScaler()),      <span class="tok-com"># fit on train only, transform both</span>
-    (<span class="tok-str">"clf"</span>, LogisticRegression()),
-])
-pipe.fit(Xtr, ytr)
-pred = pipe.predict(Xte)
-<span class="tok-kw">print</span>(<span class="tok-str">"accuracy"</span>, round(accuracy_score(yte, pred), <span class="tok-num">2</span>))
-<span class="tok-kw">print</span>(confusion_matrix(yte, pred))</code></pre>
     <p>The whole pipeline — split, scale, fit, predict, evaluate — driven from <strong>Mojo 1.x</strong> over the bridge. The Python libraries handle ML; Mojo compiles the surrounding orchestration:</p>
   <pre class="mojo"><code><span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
 
@@ -950,41 +770,26 @@ pred = pipe.predict(Xte)
     </ul>
   </div>
   <div class="math">linear: ŷ = w·x + b &nbsp;&nbsp;·&nbsp;&nbsp; logistic: p(y=1) = σ(w·x + b), σ(z) = 1/(1+e⁻ᶻ)</div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-<span class="tok-kw">from</span> sklearn.linear_model <span class="tok-kw">import</span> LinearRegression, LogisticRegression
-<span class="tok-kw">from</span> sklearn.ensemble <span class="tok-kw">import</span> RandomForestClassifier
-
-<span class="tok-com"># --- regression: continuous target ---</span>
-X = np.array([<span class="tok-num">1.</span>, <span class="tok-num">2.</span>, <span class="tok-num">3.</span>, <span class="tok-num">4.</span>, <span class="tok-num">5.</span>, <span class="tok-num">6.</span>]).reshape(-<span class="tok-num">1</span>, <span class="tok-num">1</span>)
-y = <span class="tok-num">3</span> * X.ravel() + <span class="tok-num">2</span>
-lr = LinearRegression().fit(X, y)
-<span class="tok-kw">print</span>(lr.coef_, lr.intercept_)          <span class="tok-com"># → [3.] 2.0  (recovers the line)</span>
-
-<span class="tok-com"># --- classification: categorical target ---</span>
-Xc = np.array([[<span class="tok-num">1.</span>, <span class="tok-num">0.</span>], [<span class="tok-num">2.</span>, <span class="tok-num">0.</span>], [<span class="tok-num">3.</span>, <span class="tok-num">1.</span>], [<span class="tok-num">4.</span>, <span class="tok-num">1.</span>]])
-yc = np.array([<span class="tok-num">0</span>, <span class="tok-num">0</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>])
-<span class="tok-kw">print</span>(LogisticRegression().fit(Xc, yc).predict([[<span class="tok-num">2.5</span>, <span class="tok-num">0.5</span>]]))   <span class="tok-com"># → [0]</span>
-<span class="tok-kw">print</span>(RandomForestClassifier(n_estimators=<span class="tok-num">100</span>).fit(Xc, yc).predict([[<span class="tok-num">3.5</span>, <span class="tok-num">1.0</span>]]))  <span class="tok-com"># → [1]</span></code></pre>
     <p>Regression and classification from <strong>Mojo 1.x</strong> — the same estimator API, driven over the bridge. <code>LinearRegression</code>'s coefficients are visible; random forests hide behind more trees but the shape of the call is identical:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
+  <pre class="mojo">from std.python import Python
 
-<span class="tok-kw">def</span> <span class="tok-fn">main</span>() raises:
-    <span class="tok-kw">var</span> np = Python.import_module(<span class="tok-str">"numpy"</span>)
-    <span class="tok-kw">var</span> lm = Python.import_module(<span class="tok-str">"sklearn.linear_model"</span>)
-    <span class="tok-kw">var</span> en = Python.import_module(<span class="tok-str">"sklearn.ensemble"</span>)
+def main() raises:
+    var np = Python.import_module("numpy")
+    var lm = Python.import_module("sklearn.linear_model")
+    var en = Python.import_module("sklearn.ensemble")
 
-    <span class="tok-com"># --- regression: y = 3x + 2 ---</span>
-    <span class="tok-kw">var</span> X = np.array([[<span class="tok-num">1</span>],[<span class="tok-num">2</span>],[<span class="tok-num">3</span>],[<span class="tok-num">4</span>],[<span class="tok-num">5</span>],[<span class="tok-num">6</span>]])
-    <span class="tok-kw">var</span> y = np.array([<span class="tok-num">5</span>,<span class="tok-num">8</span>,<span class="tok-num">11</span>,<span class="tok-num">14</span>,<span class="tok-num">17</span>,<span class="tok-num">20</span>])
-    <span class="tok-kw">var</span> lr = lm.LinearRegression().fit(X, y)
-    print(<span class="tok-str">"coef ="</span>, lr.coef_, <span class="tok-str">"intercept ="</span>, lr.intercept_)   <span class="tok-com"># [3.] 2.0</span>
+    # --- regression: y = 3x + 2 ---
+    var X = np.array([[1],[2],[3],[4],[5],[6]])
+    var y = np.array([5,8,11,14,17,20])
+    var lr = lm.LinearRegression().fit(X, y)
+    print("coef =", lr.coef_, "intercept =", lr.intercept_)   # [3.] 2.0
 
-    <span class="tok-com"># --- classification ---</span>
-    <span class="tok-kw">var</span> Xc = np.array([[<span class="tok-num">1</span>,<span class="tok-num">0</span>],[<span class="tok-num">2</span>,<span class="tok-num">0</span>],[<span class="tok-num">3</span>,<span class="tok-num">1</span>],[<span class="tok-num">4</span>,<span class="tok-num">1</span>]])
-    <span class="tok-kw">var</span> yc = np.array([<span class="tok-num">0</span>,<span class="tok-num">0</span>,<span class="tok-num">1</span>,<span class="tok-num">1</span>])
-    print(lm.LogisticRegression().fit(Xc, yc).predict([[<span class="tok-num">2.5</span>,<span class="tok-num">0.5</span>]]))   <span class="tok-com"># → [0]</span>
-    print(en.RandomForestClassifier(n_estimators=<span class="tok-num">100</span>)
-          .fit(Xc, yc).predict([[<span class="tok-num">3.5</span>,<span class="tok-num">1.0</span>]]))   <span class="tok-com"># → [1]</span></code></pre>
+    # --- classification ---
+    var Xc = np.array([[1,0],[2,0],[3,1],[4,1]])
+    var yc = np.array([0,0,1,1])
+    print(lm.LogisticRegression().fit(Xc, yc).predict([[2.5,0.5]]))   # → [0]
+    print(en.RandomForestClassifier(n_estimators=100)
+          .fit(Xc, yc).predict([[3.5,1.0]]))   # → [1]</pre>
   <div class="prose">
     <p>Which to reach for first? If the problem is well-understood and stakeholders need to <em>explain</em> the decision, start linear or logistic — the coefficients are the story. If you need accuracy and don't care how it was decided, or the features are noisy and non-linear, random forests are the honest default. Only after those underperform should you escalate to deep learning (Section 9), which earns its complexity only with enough data and a target with genuine structure.</p>
   </div>
@@ -1001,28 +806,10 @@ yc = np.array([<span class="tok-num">0</span>, <span class="tok-num">0</span>, <
   </div>
   <div class="math">output = step(w·x + b) &nbsp;&nbsp;·&nbsp;&nbsp; update: w ← w + η·(y − ŷ)·x</div>
   <div class="prose">
-    <p>Here is a perceptron trained from scratch on the OR gate — no libraries beyond NumPy:</p>
+    <p>Here is a perceptron trained from scratch on the OR gate — no libraries at all:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">perceptron</span>(X, y, epochs=<span class="tok-num">10</span>, lr=<span class="tok-num">0.1</span>):
-    w = np.zeros(X.shape[<span class="tok-num">1</span>])
-    b = <span class="tok-num">0.0</span>
-    <span class="tok-kw">for</span> _ <span class="tok-kw">in</span> <span class="tok-fn">range</span>(epochs):
-        <span class="tok-kw">for</span> xi, yi <span class="tok-kw">in</span> <span class="tok-fn">zip</span>(X, y):
-            yhat = <span class="tok-num">1</span> <span class="tok-kw">if</span> (w @ xi + b) <span class="tok-fn">&gt;</span> <span class="tok-num">0</span> <span class="tok-kw">else</span> <span class="tok-num">0</span>
-            err = yi - yhat
-            w += lr * err * xi
-            b += lr * err
-    <span class="tok-kw">return</span> w, b
-
-X = np.array([[<span class="tok-num">0</span>, <span class="tok-num">0</span>], [<span class="tok-num">0</span>, <span class="tok-num">1</span>], [<span class="tok-num">1</span>, <span class="tok-num">0</span>], [<span class="tok-num">1</span>, <span class="tok-num">1</span>]])
-y = np.array([<span class="tok-num">0</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>, <span class="tok-num">1</span>])   <span class="tok-com"># OR gate</span>
-w, b = perceptron(X, y)
-<span class="tok-kw">print</span>(w, b)
-<span class="tok-kw">print</span>([<span class="tok-num">1</span> <span class="tok-kw">if</span> w @ xi + b <span class="tok-fn">&gt;</span> <span class="tok-num">0</span> <span class="tok-kw">else</span> <span class="tok-num">0</span> <span class="tok-kw">for</span> xi <span class="tok-kw">in</span> X])   <span class="tok-com"># [0, 1, 1, 1] ✓</span></code></pre>
     <p>Written from scratch in <strong>Mojo 1.x</strong> — typed, compiled weights, no NumPy in sight:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
+  <pre class="mojo"><code><span class="tok-kw">from</span> math <span class="tok-kw">import</span> sqrt
 
 <span class="tok-kw">def</span> <span class="tok-fn">perceptron</span>(X: List[List[Float64]], y: List[Float64],
                epochs: Int = <span class="tok-num">10</span>, lr: Float64 = <span class="tok-num">0.1</span>) -&gt; (List[Float64], Float64):
@@ -1058,58 +845,30 @@ w, b = perceptron(X, y)
       <li><strong>Tanh</strong> squashes to (−1, 1), zero-centered, which helps gradients flow.</li>
     </ul>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-<span class="tok-kw">def</span> <span class="tok-fn">sigmoid</span>(x): <span class="tok-kw">return</span> <span class="tok-num">1</span> / (<span class="tok-num">1</span> + np.exp(-x))
-<span class="tok-kw">def</span> <span class="tok-fn">relu</span>(x):    <span class="tok-kw">return</span> np.maximum(<span class="tok-num">0</span>, x)
-<span class="tok-kw">def</span> <span class="tok-fn">tanh</span>(x):    <span class="tok-kw">return</span> np.tanh(x)
-
-x = np.array([-<span class="tok-num">2.</span>, -<span class="tok-num">1.</span>, <span class="tok-num">0.</span>, <span class="tok-num">1.</span>, <span class="tok-num">2.</span>])
-<span class="tok-kw">print</span>(sigmoid(x).round(<span class="tok-num">3</span>))   <span class="tok-com"># [0.119 0.269 0.5 0.731 0.881]</span>
-<span class="tok-kw">print</span>(relu(x))                 <span class="tok-com"># [0. 0. 0. 1. 2.]</span></code></pre>
     <p>Compiled in <strong>Mojo 1.x</strong> — no library dependency, every activation is a typed loop that compiles to vectorised machine code:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> exp
+  <pre class="mojo">from std.math import exp
 
-<span class="tok-kw">def</span> <span class="tok-fn">sigmoid</span>(x: Float64) -&gt; Float64:
-    <span class="tok-kw">return</span> <span class="tok-num">1.0</span> / (<span class="tok-num">1.0</span> + exp(-x))
+def sigmoid(x: Float64) -&gt; Float64:
+    return 1.0 / (1.0 + exp(-x))
 
-<span class="tok-kw">def</span> <span class="tok-fn">relu</span>(x: Float64) -&gt; Float64:
-    <span class="tok-kw">if</span> x <span class="tok-kw">&gt;</span> <span class="tok-num">0.0</span>: <span class="tok-kw">return</span> x
-    <span class="tok-kw">return</span> <span class="tok-num">0.0</span>
+def relu(x: Float64) -&gt; Float64:
+    if x &gt; 0.0: return x
+    return 0.0
 
-<span class="tok-kw">def</span> <span class="tok-fn">main</span>():
-    <span class="tok-kw">var</span> xs = [-<span class="tok-num">2.0</span>, -<span class="tok-num">1.0</span>, <span class="tok-num">0.0</span>, <span class="tok-num">1.0</span>, <span class="tok-num">2.0</span>]
-    <span class="tok-kw">var</span> sig = List[Float64]()
-    <span class="tok-kw">var</span> rel = List[Float64]()
-    <span class="tok-kw">for</span> v <span class="tok-kw">in</span> xs:
+def main():
+    var xs = [-2.0, -1.0, 0.0, 1.0, 2.0]
+    var sig = List[Float64]()
+    var rel = List[Float64]()
+    for v in xs:
         sig.append(sigmoid(v))
         rel.append(relu(v))
-    print(sig)   <span class="tok-com"># [0.119 0.269 0.5 0.731 0.881]</span>
-    print(rel)   <span class="tok-com"># [0.0 0.0 0.0 1.0 2.0]</span></code></pre>
+    print(sig)   # [0.119 0.269 0.5 0.731 0.881]
+    print(rel)   # [0.0 0.0 0.0 1.0 2.0]</pre>
   <div class="prose">
     <p><strong>Backpropagation</strong> is the chain rule applied mechanically, backward. The loss at the output is differentiated with respect to every weight; because each layer's error depends on the layer after it, you propagate errors from output to input, layer by layer — exactly the chain rule <code class="inline">(f(g(x)))′ = f′(g(x))·g′(x)</code> from Section 2, in bookkeeping form. Then each weight nudges downhill by a step proportional to its gradient: gradient descent.</p>
     <p><strong>Architectures.</strong> <strong>CNNs</strong> exploit spatial structure with sliding convolution filters plus pooling — images. <strong>RNNs</strong> and their gated cousins (LSTM, GRU) pass a hidden state across time steps — sequences. <strong>Transformers</strong> replaced recurrence with <em>attention</em>: every token looks at every other token, weighted by learned relevance. Attention is what lets transformers train in parallel and scale to billions of parameters — and it is the foundation of the LLMs in Section 10.</p>
-    <p>In practice you almost never write the training loop by hand — PyTorch's autograd computes every gradient for you:</p>
+    <p>In practice you almost never write the training loop by hand — PyTorch's autograd computes every gradient for you. The same four-line loop, driven from Mojo 1.x:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> torch
-<span class="tok-kw">import</span> torch.nn <span class="tok-kw">as</span> nn
-
-net = nn.Sequential(
-    nn.Linear(<span class="tok-num">4</span>, <span class="tok-num">8</span>), nn.ReLU(),
-    nn.Linear(<span class="tok-num">8</span>, <span class="tok-num">1</span>),
-)
-opt = torch.optim.Adam(net.parameters(), lr=<span class="tok-num">1e-3</span>)
-loss_fn = nn.MSELoss()
-
-X = torch.randn(<span class="tok-num">64</span>, <span class="tok-num">4</span>)
-y = (X[:, <span class="tok-num">0</span>] * <span class="tok-num">2</span> + X[:, <span class="tok-num">1</span>] - <span class="tok-num">1</span>).unsqueeze(<span class="tok-num">1</span>)
-
-<span class="tok-kw">for</span> step <span class="tok-kw">in</span> <span class="tok-fn">range</span>(<span class="tok-num">300</span>):
-    opt.zero_grad()
-    loss = loss_fn(net(X), y)      <span class="tok-com"># forward pass</span>
-    loss.backward()                <span class="tok-com"># backprop: computes all gradients</span>
-    opt.step()                     <span class="tok-com"># gradient descent step</span>
-<span class="tok-kw">print</span>(round(loss.item(), <span class="tok-num">5</span>))</code></pre>
     <p>The same four-line loop, driven from <strong>Mojo 1.x</strong>. Autograd is Python territory, so <code>torch</code> stays behind the bridge, but the outer training script — the bit you rewrite for every experiment — compiles natively:</p>
   <pre class="mojo"><code><span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
 
@@ -1149,23 +908,8 @@ y = (X[:, <span class="tok-num">0</span>] * <span class="tok-num">2</span> + X[:
     <p>LLMs do not read text — they read <strong>tokens</strong>, chunks of a few characters each (roughly 0.75 tokens per English word). The <strong>context window</strong> is how many tokens the model can look at at once; everything beyond it is simply invisible, which is why long documents get chunked and why prompt length competes with content.</p>
     <p>At each step the model assigns a probability to every possible next token. <strong>Temperature</strong> shapes that distribution before sampling: low temperature pushes toward the most likely token (precise, repetitive, deterministic); high temperature flattens the distribution (varied, creative, sometimes nonsense). The math is a softmax with the logits divided by T:</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-
-logits = np.array([<span class="tok-num">2.0</span>, <span class="tok-num">0.5</span>, <span class="tok-num">0.1</span>, -<span class="tok-num">0.3</span>])
-
-<span class="tok-kw">def</span> <span class="tok-fn">softmax</span>(z, temperature=<span class="tok-num">1.0</span>):
-    z = z / temperature
-    e = np.exp(z - z.max())          <span class="tok-com"># subtract max for stability</span>
-    <span class="tok-kw">return</span> e / e.sum()
-
-<span class="tok-kw">for</span> T <span class="tok-kw">in</span> (<span class="tok-num">0.2</span>, <span class="tok-num">1.0</span>, <span class="tok-num">5.0</span>):
-    p = softmax(logits, T)
-    <span class="tok-kw">print</span>(<span class="tok-str">f"T={T}: {np.round(p, 3)}"</span>)
-<span class="tok-com"># T=0.2 → [0.996 0.003 0.001 0.0]  nearly greedy</span>
-<span class="tok-com"># T=1.0 → [0.756 0.174 0.052 0.019]</span>
-<span class="tok-com"># T=5.0 → [0.382 0.267 0.201 0.149]  approaching uniform</span></code></pre>
     <p>Softmax from scratch in <strong>Mojo 1.x</strong> — numerically stable (the <code>z − max</code> trick) and typed, so the compiler can vectorise the <code>exp</code> loop over the SIMD width:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> exp
+  <pre class="mojo"><code><span class="tok-kw">from</span> math <span class="tok-kw">import</span> exp
 
 <span class="tok-kw">def</span> <span class="tok-fn">softmax</span>(z: List[Float64], temperature: Float64 = <span class="tok-num">1.0</span>) -&gt; List[Float64]:
     <span class="tok-kw">var</span> mz = z[<span class="tok-num">0</span>] / temperature
@@ -1208,38 +952,22 @@ logits = np.array([<span class="tok-num">2.0</span>, <span class="tok-num">0.5</
   <div class="prose">
     <p><strong>Data leakage</strong> is when information from the future (or the test set) reaches the model during training. The classic examples: scaling before the split (the scaler "peeks" at test statistics), filling missing values with statistics computed on the whole dataset, or — the subtle one — dropping duplicates <em>after</em> splitting, so identical rows leak across the boundary. The rule: <em>split first, then fit every transform only on the training fold.</em> That is exactly what <code class="inline">Pipeline</code> enforces for you.</p>
   </div>
-<pre><code><span class="tok-kw">import</span> numpy <span class="tok-kw">as</span> np
-<span class="tok-kw">from</span> sklearn.datasets <span class="tok-kw">import</span> load_iris
-<span class="tok-kw">from</span> sklearn.model_selection <span class="tok-kw">import</span> train_test_split, cross_val_score
-<span class="tok-kw">from</span> sklearn.ensemble <span class="tok-kw">import</span> RandomForestClassifier
-
-data = load_iris()
-X, y = data.data, data.target
-
-Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=<span class="tok-num">0.25</span>, random_state=<span class="tok-num">0</span>)
-
-clf = RandomForestClassifier(n_estimators=<span class="tok-num">200</span>, random_state=<span class="tok-num">0</span>)
-clf.fit(Xtr, ytr)
-<span class="tok-kw">print</span>(<span class="tok-str">"hold-out accuracy"</span>, round(clf.score(Xte, yte), <span class="tok-num">3</span>))  <span class="tok-com"># judged once</span>
-
-cv = cross_val_score(clf, Xtr, ytr, cv=<span class="tok-num">5</span>)        <span class="tok-com"># 5-fold cross-validation</span>
-<span class="tok-kw">print</span>(<span class="tok-str">"CV mean / std"</span>, round(cv.mean(), <span class="tok-num">3</span>), round(cv.std(), <span class="tok-num">3</span>))</code></pre>
     <p>Leakage-proof training with a <strong>Mojo 1.x</strong> driver: the <code>Pipeline</code> enforces the rule (fit the scaler only on the training fold), and <code>cross_val_score</code> stays on the bridge — the same pattern, compiled where it counts:</p>
-  <pre class="mojo"><code><span class="tok-kw">from</span> python <span class="tok-kw">import</span> Python
+  <pre class="mojo">from std.python import Python
 
-<span class="tok-kw">def</span> <span class="tok-fn">main</span>() raises:
-    <span class="tok-kw">var</span> np = Python.import_module(<span class="tok-str">"numpy"</span>)
-    <span class="tok-kw">var</span> sklearn = Python.import_module(<span class="tok-str">"sklearn"</span>)
-    <span class="tok-kw">var</span> RF = sklearn.ensemble.RandomForestClassifier(n_estimators=<span class="tok-num">200</span>, random_state=<span class="tok-num">0</span>)
+def main() raises:
+    var np = Python.import_module("numpy")
+    var sklearn = Python.import_module("sklearn")
+    var RF = sklearn.ensemble.RandomForestClassifier(n_estimators=200, random_state=0)
 
-    <span class="tok-kw">var</span> iris = sklearn.datasets.load_iris()
-    <span class="tok-kw">var</span> tts = sklearn.model_selection.train_test_split(
-        iris.data, iris.target, test_size=<span class="tok-num">0.25</span>, random_state=<span class="tok-num">0</span>)
-    RF.fit(tts[<span class="tok-num">0</span>], tts[<span class="tok-num">2</span>])
-    print(<span class="tok-str">"hold-out accuracy"</span>, RF.score(tts[<span class="tok-num">1</span>], tts[<span class="tok-num">3</span>]))
+    var iris = sklearn.datasets.load_iris()
+    var tts = sklearn.model_selection.train_test_split(
+        iris.data, iris.target, test_size=0.25, random_state=0)
+    RF.fit(tts[0], tts[2])
+    print("hold-out accuracy", RF.score(tts[1], tts[3]))
 
-    <span class="tok-kw">var</span> cv = sklearn.model_selection.cross_val_score(RF, tts[<span class="tok-num">0</span>], tts[<span class="tok-num">2</span>], cv=<span class="tok-num">5</span>)
-    print(<span class="tok-str">"CV mean / std"</span>, cv.mean().__round__(<span class="tok-num">3</span>), cv.std().__round__(<span class="tok-num">3</span>))</code></pre>
+    var cv = sklearn.model_selection.cross_val_score(RF, tts[0], tts[2], cv=5)
+    print("CV mean / std", cv.mean().__round__(3), cv.std().__round__(3))</pre>
   <div class="prose">
     <p><strong>Overfitting</strong> is memorizing the training data instead of learning the pattern: great training accuracy, poor generalization. It is the most common failure in all of machine learning, and it scales with model flexibility — a deep network with more parameters than data points can memorize any noise. Its antidotes are more data, regularization (dropout, L1/L2 penalties, early stopping), or a simpler model.</p>
   </div>
@@ -1258,6 +986,142 @@ cv = cross_val_score(clf, Xtr, ytr, cv=<span class="tok-num">5</span>)        <s
   <div>Data Science: A Concise Textbook &middot; single-file HTML &middot; 11 sections</div>
 </footer>
 
+<!-- tutme-hl:runtime -->
+<style>
+/* Mojo runtime syntax highlighting (tutme) - dark default, light variant auto-applied */
+pre .hkw{color:#c792ea}
+pre .hty{color:#ffcb6b}
+pre .hfn{color:#82aaff}
+pre .hstr{color:#c3e88d}
+pre .hnum{color:#f78c6c}
+pre .hcm{color:#676e95;font-style:italic}
+pre .hop{color:#89ddff}
+pre.tutme-light .hkw{color:#6d28d9}
+pre.tutme-light .hty{color:#b45309}
+pre.tutme-light .hfn{color:#1d4ed8}
+pre.tutme-light .hstr{color:#15803d}
+pre.tutme-light .hnum{color:#c2410c}
+pre.tutme-light .hcm{color:#6b7280;font-style:italic}
+pre.tutme-light .hop{color:#0f766e}
+</style>
+<script>
+(function(){
+  if (window.__tutmeHL) return; window.__tutmeHL = true;
 
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var KW='def fn struct trait alias var let return if elif else for while in break continue '+
+    'from import as mut out self yield raise raises try except with match case and or not '+
+    'lambda pass global static public private true false none parameterize is';
+  var TY='Float64 Float32 Float16 Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 '+
+    'String StringRef Bool List Dict Tensor TensorShape SIMD DType Pointer Slice '+
+    'Memory Atomic Scalar Tuple NoneType object Int Index';
+  var kwRe = new RegExp('\\b(?:'+KW.split(' ').join('|')+')\\b','ig');
+  var tyRe = new RegExp('\\b(?:'+TY.split(' ').join('|')+')\\b','g');
+  var RULES = [
+    ['cm', /#[^\n]*/g],
+    ['str', /"""[^]*?"""/g],
+    ['str', /'''[^]*?'''/g],
+    ['str', /"(?:\\.|[^"\\\n])*"/g],
+    ['str', /'(?:\\.|[^'\\\n])*'/g],
+    ['num', /(?:\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?[iu]?|\.\d+)/g],
+    ['kw', kwRe],
+    ['ty', tyRe],
+    ['fn', /([A-Za-z_]\w*)(\s*\()/g],
+    ['op', /(?:\+\+|-{2}|->|=>|==|!=|<=|>=|\+=|-=|\*=|\/=|\/\/|\*\*|::|\|\||&&|\.\.\.|[+\-*/%<>=!@&~|])/g]
+  ];
+
+  function highlight(text){
+    var marks = [];
+    for (var r=0; r<RULES.length; r++){
+      var cls = RULES[r][0], rx = RULES[r][1];
+      rx.lastIndex = 0;
+      var m;
+      while ((m = rx.exec(text)) !== null){
+        if (m[0].length){
+          marks.push([m.index, m.index+m[0].length, cls, m]);
+        }
+        rx.lastIndex = m.index + Math.max(1, m[0].length);
+      }
+    }
+    marks.sort(function(a,b){ return a[0]-b[0] || a[1]-b[1]; });
+    var out = [], i = 0;
+    for (var k=0; k<marks.length; k++){
+      var st = marks[k][0], en = marks[k][1], cls = marks[k][2], mm = marks[k][3];
+      if (st < i) continue;
+      if (st > i) out.push(esc(text.slice(i, st)));
+      if (cls === 'fn'){
+        out.push('<span class="hfn">'+esc(mm[1])+esc(mm[2])+'</span>');
+      } else {
+        out.push('<span class="h'+cls+'">'+esc(text.slice(st, en))+'</span>');
+      }
+      i = en;
+    }
+    out.push(esc(text.slice(i)));
+    return out.join('');
+  }
+
+  function hexLum(h){
+    h = h.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map(function(x){ return x+x; }).join('');
+    var n = parseInt(h.slice(0,6), 16);
+    return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+  }
+
+  function fallbackLum(){
+    try {
+      var s = window.getComputedStyle(document.body);
+      var colors = ((s.backgroundImage || '') + ' ' + (s.backgroundColor || '')).match(/(?:#[0-9a-f]{3,8}|rgba?\([^)]*\))/ig) || [];
+      var i;
+      for (i=0; i<colors.length; i++){
+        var c = colors[i];
+        if (c.charAt(0) === '#'){
+          if (c.length < 7) continue;
+          return hexLum(c);
+        }
+        var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(c);
+        if (m && (m[4] === undefined || parseFloat(m[4]) > 0.3)){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function detectLum(pre){
+    var n = pre;
+    for (var i=0; i<4 && n; i++, n=n.parentElement){
+      var bg;
+      try { bg = window.getComputedStyle(n).backgroundColor; } catch(e){ return null; }
+      var m = /rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\)/.exec(bg);
+      if (m){
+        var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        if (a > 0.3){
+          return 0.299*+m[1] + 0.587*+m[2] + 0.114*+m[3];
+        }
+      }
+    }
+    return fallbackLum();
+  }
+
+  var pres = document.querySelectorAll('pre');
+  for (var p=0; p<pres.length; p++){
+    var pre = pres[p];
+    if (pre.className && /(^|\s)math(\s|$)/.test(pre.className)) continue;
+    var kids = pre.children.length, el = pre;
+    if (kids === 1 && pre.firstElementChild && pre.firstElementChild.tagName === 'CODE'){
+      el = pre.firstElementChild;
+    } else if (kids > 0) {
+      continue;
+    }
+    if (/<[a-z]/i.test(el.innerHTML)) continue;
+    var txt = el.textContent;
+    if (!/(?:def|fn|struct|trait|var|let|import|from|for|while|return|print|Float64|if|class)\b/.test(txt)) continue;
+    var lum = detectLum(pre);
+    if (lum !== null && lum > 170) pre.className = (pre.className ? pre.className + ' ' : '') + 'tutme-light';
+    el.innerHTML = highlight(txt);
+  }
+})();
+</script>
 </body>
 </html>

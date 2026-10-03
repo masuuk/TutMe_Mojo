@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#0f1115;--surface:#16181d;--surface-hover:#1e2128;
-  --text:#f4f6fc;--text-muted:#c0c7d4;
+  --text:#f4f6fc;--text-muted:#ffe4a3;
   --accent:#6c5ce7;--accent-light:#a29bfe;
   --success:#00cec9;--warning:#fdcb6e;
   --code-bg:#111317;--border:#434b59;
@@ -122,7 +122,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo-arena"><code><span class="com"># Memory Arena — bump-allocate, bulk-free</span>
-<span class="kw">from</span> std.memory <span class="kw">import</span> Arena
+<span class="kw">from</span> memory <span class="kw">import</span> Arena
 
 <span class="kw">struct</span> <span class="type">BumpAllocator</span>:
     <span class="kw">var</span> arena: Arena
@@ -219,7 +219,6 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <div class="code-playground">
       <div class="tabs">
         <div class="tab active" data-target="mojo-zc">Mojo</div>
-        <div class="tab" data-target="python-zc">Python</div>
       </div>
       <div class="code-content">
         <button class="copy-btn">Copy</button>
@@ -261,28 +260,20 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
     <span class="kw">for</span> i <span class="kw">in</span> parallelize(data.size()):
         result[i] = data[i]
     <span class="kw">return</span> result</code></pre>
-        <pre class="code-block" id="python-zc"><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="com"># Python: each step typically copies</span>
-<span class="kw">def</span> <span class="fn">pipeline_naive</span>(data):
-    normalized = np.array(data - np.mean(data))  <span class="com"># copy</span>
-    features = np.array(normalized * <span class="num">2.0</span>)       <span class="com"># copy</span>
-    result = np.sum(features, axis=<span class="num">1</span>)           <span class="com"># copy</span>
-    <span class="kw">return</span> result
-
-<span class="com"># Better: use views where possible</span>
-<span class="kw">def</span> <span class="fn">pipeline_better</span>(data):
-    normalized = data - np.mean(data)  <span class="com"># view (no copy)</span>
-    features = normalized * <span class="num">2.0</span>       <span class="com"># copy</span>
-    result = np.sum(features, axis=<span class="num">1</span>)  <span class="com"># copy</span>
-    <span class="kw">return</span> result
-
-<span class="com"># NumPy views are zero-copy for simple operations:</span>
-<span class="kw">def</span> <span class="fn">view_example</span>(data):
-    slice_view = data[<span class="num">10</span>:<span class="num">20</span>]      <span class="com"># zero-copy</span>
-    transposed = data.T            <span class="com"># zero-copy</span>
-    reshaped = data.reshape(<span class="num">10</span>, <span class="num">10</span>)  <span class="com"># zero-copy</span></code></pre>
       </div>
+    </div>
+
+    <div class="info-box">
+      <strong>What the Python version looked like</strong>
+      <p>The same three stages written with NumPy are a useful baseline, because NumPy is
+      explicit about copying in a way Mojo is not. <code>np.array(data - np.mean(data))</code>
+      materialises a new buffer, while the bare expression <code>data - np.mean(data)</code>
+      returns a view onto a fresh temporary. Slicing (<code>data[10:20]</code>),
+      transposing (<code>data.T</code>) and <code>reshape</code> are all views too - they
+      change how the buffer is interpreted without moving it. So a NumPy pipeline is cheap
+      exactly as long as you keep the views, and quietly expensive the moment a view is
+      wrapped in <code>np.array</code>. Mojo's <code>View</code> type makes that distinction
+      part of the signature instead of something you have to remember.</p>
     </div>
   </section>
 
@@ -297,7 +288,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
       <div class="code-content">
         <button class="copy-btn">Copy</button>
         <pre class="code-block active" id="mojo-ring"><code><span class="com"># Ring Buffer — fixed-size circular buffer</span>
-<span class="kw">from</span> std.memory <span class="kw">import</span> alloc, Layout
+<span class="kw">from</span> std.memory <span class="kw">import</span> alloc
 
 <span class="kw">struct</span> <span class="type">RingBuffer</span>[T: <span class="type">AnyType</span>]:
     <span class="kw">var</span> data: Pointer[T]
@@ -311,7 +302,7 @@ code{font-family:var(--font-mono);font-size:0.88em;background:rgba(108,92,231,0.
         <span class="kw">self</span>.head = <span class="num">0</span>
         <span class="kw">self</span>.tail = <span class="num">0</span>
         <span class="kw">self</span>.count = <span class="num">0</span>
-        <span class="kw">self</span>.data = alloc(Layout[T](count=capacity)).<span class="fn">unsafe_leak</span>()
+        <span class="kw">self</span>.data = alloc[T](capacity)
 
     <span class="kw">def</span> <span class="fn">push</span>(<span class="kw">mut</span> <span class="kw">self</span>, value: <span class="type">T</span>):
         <span class="kw">if</span> <span class="kw">self</span>.count == <span class="kw">self</span>.capacity:

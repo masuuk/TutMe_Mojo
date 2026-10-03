@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Lifetimes, origins, and references · Mojo v1 The Language Manual</title>
+<meta name="description" content="Reading the origin lattice and writing safe borrows.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part III · Abstraction &amp; Values</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part III</span><span class="sep">/</span><span>Abstraction &amp; Values</span><span class="sep">/</span><span class="num">21</span></nav><h1>Lifetimes, origins, and references</h1>
+<p class="dek">Reading the origin lattice and writing safe borrows.</p><p class="byline">Chapter 21 · 2,692 words · 18 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/values/lifetimes/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>The Mojo compiler includes a lifetime checker, a compiler pass that analyzes
+dataflow through your program. It identifies when variables are valid and
+inserts deinitializer calls when a variable's lifetime ends.</p>
+<p>The Mojo compiler uses a special value called an <em>origin</em> to track the lifetime
+of variables and the validity of references.</p>
+<p>Specifically, an origin answers two questions:</p>
+<ul>
+<li class="">What variable "owns" this value?</li>
+<li class="">Can the value be mutated using this reference?</li>
+</ul>
+<p>For example, consider the following code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">print_str</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>s<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String <span class="tk-operator">=</span> <span class="tk-string">"Joan"</span></span>
+<span class="cl" data-line="6">    print_str<span class="tk-punctuation">(</span>name<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Joan</span>
+</code></pre></figure>
+<p>The line <code>name = "Joan"</code> declares a variable with an identifier (<code>name</code>)
+and logical storage space for a <code>String</code> value. When you pass <code>name</code> into the
+<code>print_str()</code> function, the function gets an immutable reference to the value.
+So both <code>name</code> and <code>s</code> refer to the same logical storage space, and have
+associated origin values that lets the Mojo compiler reason about them.</p>
+<p>Origin tracking and lifetime checking is done at compile time, so origins don't
+track the actual storage space allocated for the <code>name</code> variable, for example.
+Instead, origins track variables symbolically, so the compiler tracks that
+<code>print_str()</code> is called with a value owned by <code>name</code> in the caller's scope. By
+tracking how owned data flows through the program, the compiler can identify
+the lifetimes of values.</p>
+<p>Most of the time, origins are handled automatically by the compiler.
+However, in some cases you'll need to interact with origins directly:</p>
+<ul>
+<li class="">
+<p>When working with references—specifically <code>ref</code> arguments and <code>ref</code> return
+values.</p>
+</li>
+<li class="">
+<p>When working with types like
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/pointer/Pointer/" rel="noopener noreferrer"><code>Pointer</code></a> or
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/span/Span/" rel="noopener noreferrer"><code>Span</code></a> which are parameterized on the
+origin of the data they refer to.</p>
+</li>
+</ul>
+<p>This section also covers <a href="../pages/21_lifetimes-origins-and-references.html#ref-arguments"><code>ref</code> arguments</a> and
+<a href="../pages/21_lifetimes-origins-and-references.html#ref-return-values"><code>ref</code> return values</a>, which let functions take arguments
+and provide return values as references with parametric origins.</p>
+<h2 class="h h--2" data-level="2" id="working-with-origins">Working with origins<a aria-label="Link to Working with origins" class="h__link" href="#working-with-origins"></a></h2>
+<p>Mojo's origin values are mostly created by the
+compiler, so you can't just create your own origin value—you usually need to
+derive an origin from an existing value.</p>
+<p>Among other things, Mojo uses origins to extend the lifetimes of referenced
+values, so values aren't destroyed prematurely.</p>
+<h3 class="h h--3" data-level="3" id="origin-types">Origin types<a aria-label="Link to Origin types" class="h__link" href="#origin-types"></a></h3>
+<p>Mojo supplies a struct and a set of type aliases (<code>comptime</code> values) that you
+can use to specify origin types. As the names suggest, the <code>ImmOrigin</code> and
+<code>MutOrigin</code> <code>comptime</code> values represent immutable and mutable origins,
+respectively:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">ImmutRef</span><span class="tk-punctuation">[</span>origin<span class="tk-punctuation">:</span> ImmOrigin<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">pass</span></span>
+</code></pre></figure>
+<p>Or you can use the <a class="ext" data-external="" href="https://mojolang.org/docs/std/origin/Origin/" rel="noopener noreferrer"><code>Origin</code></a>
+struct to specify an origin with parametric mutability:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">ParametricRef</span><span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    is_mutable<span class="tk-punctuation">:</span> Bool<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="3"> <span class="tk-operator">//</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="4">    origin<span class="tk-punctuation">:</span> Origin<span class="tk-punctuation">[</span><span class="tk-keyword">mut</span><span class="tk-operator">=</span>is_mutable<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">pass</span></span>
+</code></pre></figure>
+<p>Origin types carry the mutability of a reference as a boolean parameter value,
+indicating whether the origin is mutable, immutable, or even with mutability
+depending on a parameter specified by the enclosing API.</p>
+<p>The <code>is_mutable</code> parameter here is an <a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/#infer-only-parameters" rel="noopener noreferrer">infer-only
+parameter</a>. The <code>origin</code> value
+is often inferred, as well. For example, the following code creates a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/pointer/Pointer/" rel="noopener noreferrer"><code>Pointer</code></a> to an existing value, but
+doesn't need to specify an origin—the <code>origin</code> is inferred from the existing
+value.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> Pointer</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> <span class="tk-function">use_pointer</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> a <span class="tk-operator">=</span> <span class="tk-number">10</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> ptr <span class="tk-operator">=</span> Pointer<span class="tk-punctuation">(</span>to<span class="tk-operator">=</span>a<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="origin-sets">Origin sets<a aria-label="Link to Origin sets" class="h__link" href="#origin-sets"></a></h3>
+<p>An <code>OriginSet</code> is not a type of origin, it represents a group of origins. Origin
+sets are used for tracking the lifetimes of values captured in parametric
+closures.</p>
+<p>An <code>OriginSet</code> <strong>isn't</strong> a general-purpose mechanism for expressing a
+combination of multiple origins. Instead, you can use <code>origin_of()</code> to express
+an <a href="../pages/21_lifetimes-origins-and-references.html#origin-unions">origin union</a>.</p>
+<h3 class="h h--3" data-level="3" id="origin-values">Origin values<a aria-label="Link to Origin values" class="h__link" href="#origin-values"></a></h3>
+<p>Most origin values are created by the compiler. As a developer, there are a
+few ways to specify origin values:</p>
+<ul>
+<li class="">Static origin. The <code>ImmStaticOrigin</code> <code>comptime</code> value
+represents immutable values that last for the duration of the program.
+String literal values have a <code>ImmStaticOrigin</code>.</li>
+<li class="">Derived origin. The <code>origin_of()</code> magic function returns the origin
+associated with the value (or values) passed in.</li>
+<li class="">Inferred origin. You can use inferred parameters to capture the origin of a
+value passed in to a function.</li>
+<li class="">Untracked origins. The untracked origins, <code>MutUntrackedOrigin</code> and
+<code>ImmUntrackedOrigin</code> represent values that are not tracked by the lifetime
+checker, such as dynamically-allocated memory.</li>
+<li class="">Wildcard origins. The <code>ImmUnsafeAnyOrigin</code> and <code>MutUnsafeAnyOrigin</code>
+<code>comptime</code> values are special cases indicating a reference that might access
+any live value.</li>
+</ul>
+<h4 class="h h--4" data-level="4" id="static-origins">Static origins<a aria-label="Link to Static origins" class="h__link" href="#static-origins"></a></h4>
+<p>You can use the static origin <code>ImmStaticOrigin</code> when you have a
+value that exists for the entire duration of the program.</p>
+<p>For example, the <code>StringLiteral</code> method
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/string_literal/StringLiteral/#as_string_slice" rel="noopener noreferrer"><code>as_string_slice()</code></a>
+returns a <a class="ext" data-external="" href="https://mojolang.org/docs/std/collections/string/string_span/StringSpan/" rel="noopener noreferrer"><code>StringSpan</code></a>
+pointing to the original string literal. String literals are static—they're
+allocated at compile time and never destroyed—so the slice is created with an
+immutable, static origin.</p>
+<h4 class="h h--4" data-level="4" id="derived-origins">Derived origins<a aria-label="Link to Derived origins" class="h__link" href="#derived-origins"></a></h4>
+<p>Use the <code>origin_of(value)</code> operator to obtain a value's origin. An argument
+to <code>origin_of()</code> can take an arbitrary expression that yields one of the
+following:</p>
+<ul>
+<li class="">
+<p>An origin value.</p>
+</li>
+<li class="">
+<p>A value with a memory location.</p>
+</li>
+</ul>
+<p>For example:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">origin_of<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="2">origin_of<span class="tk-punctuation">(</span>x<span class="tk-punctuation">.</span>y<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3">origin_of<span class="tk-punctuation">(</span>foo<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The <code>origin_of()</code> operator is analyzed statically at compile time;
+The expressions passed to <code>origin_of()</code> are never evaluated. (For example,
+when the compiler analyzes <code>origin_of(foo())</code>, it doesn't run the <code>foo()</code>
+function.)</p>
+<p>The following struct stores a string value using a
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/owned_pointer/OwnedPointer/" rel="noopener noreferrer"><code>OwnedPointer</code></a>: a smart
+pointer that holds an owned value. The <code>as_ptr()</code> method returns a <code>Pointer</code> to
+the stored string, using the same origin as the original <code>OwnedPointer</code>.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>memory <span class="tk-keyword">import</span> OwnedPointer<span class="tk-punctuation">,</span> Pointer</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">struct</span> <span class="tk-class-name">BoxedString</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> o_ptr<span class="tk-punctuation">:</span> OwnedPointer<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> value<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>o_ptr <span class="tk-operator">=</span> OwnedPointer<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">as_ptr</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Pointer<span class="tk-punctuation">[</span>String<span class="tk-punctuation">,</span> origin_of<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>o_ptr<span class="tk-punctuation">)</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">return</span> Pointer<span class="tk-punctuation">(</span>to<span class="tk-operator">=</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>o_ptr<span class="tk-punctuation">[</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Note that the <code>as_ptr()</code> method takes its <code>self</code> argument as <code>mut self</code>. If it
+used the default argument convention, it would be immutable, and the
+derived origin (<code>origin_of(self.o_ptr)</code>) would also be immutable.</p>
+<p>You can also pass multiple expressions to <code>origin_of()</code> to express the union
+of two or more origins:</p>
+<p><code>origin_of(a, b)</code></p>
+<h4 class="h h--4" data-level="4" id="origin-unions">Origin unions<a aria-label="Link to Origin unions" class="h__link" href="#origin-unions"></a></h4>
+<p>When a function returns a reference or pointer that can have one of several
+different origins, you can express the referenced origin as a union of all
+of the possible origin values.</p>
+<p>The union of two or more origins creates a new origin that references all of the
+original origins for the purposes of lifetime extension (so a union of the
+origins of <code>a</code> and <code>b</code> extends both lifetimes). An origin union is mutable if
+and only if all of its constituent origins are mutable. Use an origin union</p>
+<p>For an example, see
+<a href="../pages/21_lifetimes-origins-and-references.html#return-values-with-union-origins">Return values with union origins</a>.</p>
+<h4 class="h h--4" data-level="4" id="inferred-origins">Inferred origins<a aria-label="Link to Inferred origins" class="h__link" href="#inferred-origins"></a></h4>
+<p>Since origins are parameters, the compiler can <em>infer</em> an origin value from
+the argument passed to a function or method, as described in
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/#parameter-inference" rel="noopener noreferrer">Parameter inference</a>. This allows
+a function to return a value that has the same origin as the argument passed to
+it.</p>
+<p>See the section on <a href="../pages/21_lifetimes-origins-and-references.html#ref-arguments"><code>ref</code> arguments</a> for an example using an
+inferred origin.</p>
+<h4 class="h h--4" data-level="4" id="untracked-origins">Untracked origins<a aria-label="Link to Untracked origins" class="h__link" href="#untracked-origins"></a></h4>
+<p>The untracked origins, <code>MutUntrackedOrigin</code> and <code>ImmUntrackedOrigin</code> represent
+values that do not alias any existing value. That is, they point to memory that
+is not owned by any other variable, and are therefore not tracked by the
+lifetime checker. For example, the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/alloc/alloc/" rel="noopener noreferrer"><code>alloc()</code></a> function returns an
+<code>Allocation</code> for a new dynamically-allocated block of memory, with the origin
+<code>MutUntrackedOrigin</code>. The origin indicates that the memory is not managed by the
+Mojo ownership system. When you use an unsafe API like this, you're responsible
+for managing the lifetime yourself: for example, a struct that allocates memory
+should generally free that memory in its deinitializer.</p>
+<h4 class="h h--4" data-level="4" id="wildcard-origins">Wildcard origins<a aria-label="Link to Wildcard origins" class="h__link" href="#wildcard-origins"></a></h4>
+<p>The wildcard origins, <code>ImmUnsafeAnyOrigin</code> and <code>MutUnsafeAnyOrigin</code>, are
+special cases indicating a reference that might access any live value. These
+were previously widely used for unsafe pointers. Using a pointer with a wildcard
+origin into a scope effectively disables Mojo's ASAP destruction for any values
+in that scope, as long as the pointer is live. It also prevents Mojo from
+enforcing
+<a href="../pages/20_ownership.html#argument-exclusivity">argument exclusivity</a> and
+hides unused variable warnings.</p>
+<p>Accordingly, the use of wildcard origins is discouraged, and should be used as a
+last resort.</p>
+<h2 class="h h--2" data-level="2" id="working-with-references">Working with references<a aria-label="Link to Working with references" class="h__link" href="#working-with-references"></a></h2>
+<p>You can use the <code>ref</code> keyword with arguments and return values to specify a
+reference with parametric mutability. That is, they can be either mutable or
+immutable.</p>
+<p>A <code>ref</code> return value looks like any other return value to the calling function,
+but it's a <em>reference</em> to an existing value, not a copy.</p>
+<h3 class="h h--3" data-level="3" id="ref-arguments"><code>ref</code> arguments<a aria-label="Link to ref arguments" class="h__link" href="#ref-arguments"></a></h3>
+<p>The <code>ref</code> argument convention lets you specify an argument of parametric
+mutability: that is, you don't need to know in advance whether the passed
+argument will be mutable or immutable. There are several reasons you might want
+to use a <code>ref</code> argument:</p>
+<ul>
+<li class="">
+<p>You want to accept an argument with parametric mutability.</p>
+</li>
+<li class="">
+<p>You want to tie the lifetime of one argument to the lifetime of another
+argument.</p>
+</li>
+<li class="">
+<p>When you want an argument that is guaranteed to be passed in memory: this
+can be useful for parameterized arguments that need an identity, whether
+or not the concrete type is register passable.</p>
+</li>
+</ul>
+<p>The syntax for a <code>ref</code> argument is:</p>
+<code><strong>ref</strong> <var>arg_name</var>: <var>arg_type</var></code>
+<p>Or:</p>
+<code><strong>ref[</strong><var>origin_specifier(s)</var><strong>] </strong>
+<var>arg_name</var>: <var>arg_type</var></code>
+<p>In the first form, the origin and mutability of the <code>ref</code> argument is inferred
+from the value passed in. The second form includes an origin clause, consisting
+of one or more origin specifiers inside square brackets. An origin
+specifier can be either:</p>
+<ul>
+<li class="">
+<p>An origin value.</p>
+</li>
+<li class="">
+<p>An arbitrary expression, which is treated as shorthand for
+<code>origin_of(expression)</code>. In other words, the following declarations are
+equivalent:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">ref</span><span class="tk-punctuation">[</span>origin_of<span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">ref</span><span class="tk-punctuation">[</span><span class="tk-special-vars">self</span><span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+</li>
+<li class="">
+<p>An <a class="ext" data-external="" href="https://mojolang.org/docs/std/memory/address_space/AddressSpace/" rel="noopener noreferrer"><code>AddressSpace</code></a> value.</p>
+</li>
+<li class="">
+<p>An underscore character (<code>_</code>) to indicate that the origin is <em>unbound</em>. This
+is equivalent to omitting the origin specifier.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">add_ref</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span> a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> a<span class="tk-operator">+</span>b</span>
+</code></pre></figure>
+</li>
+</ul>
+<p>You can also name the origin explicitly. This is useful if you want to
+restrict the argument to either a <code>ImmOrigin</code> or <code>MutOrigin</code>, or if you
+want to bind a function's return value to the origin of an argument.</p>
+<p>For example, the <code>Span</code> type is a non-owning view of contiguous data (like
+a substring of a string, or a subset of a list). Because it points to data
+that it doesn't own, it is parameterized on an origin value that represents
+the lifetime and ownership of the data it points to.</p>
+<p>In the following example, the <code>to_byte_span()</code> function takes a
+<code>List[Byte]</code> and returns a <code>Span[Byte]</code> with the same origin as the list:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>collections <span class="tk-keyword">import</span> List<span class="tk-punctuation">,</span> Span</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-keyword">def</span> to_byte_span<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="4">    is_mutable<span class="tk-punctuation">:</span> Bool<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="5"> <span class="tk-operator">//</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="6">    origin<span class="tk-punctuation">:</span> Origin<span class="tk-punctuation">[</span><span class="tk-keyword">mut</span><span class="tk-operator">=</span>is_mutable<span class="tk-punctuation">]</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="7"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span><span class="tk-punctuation">[</span>origin<span class="tk-punctuation">]</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Byte<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Span<span class="tk-punctuation">[</span>Byte<span class="tk-punctuation">,</span> origin<span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> Span<span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">var</span> <span class="tk-builtin">list</span><span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>Byte<span class="tk-punctuation">]</span> <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-number">77</span><span class="tk-punctuation">,</span> <span class="tk-number">111</span><span class="tk-punctuation">,</span> <span class="tk-number">106</span><span class="tk-punctuation">,</span> <span class="tk-number">111</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="12">    _ <span class="tk-operator">=</span> to_byte_span<span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>In this example, the <code>origin</code> parameter is inferred from the <code>list</code> argument,
+and then used as the origin for the returned <code>Span</code>.</p>
+<p>Since the <code>Span</code> takes on the origin of the <code>list</code> argument, the Mojo compiler
+can identify the span's data as owned by the list. The span will have the same
+lifetime as the list, and the span will be mutable if the list is mutable.</p>
+<h3 class="h h--3" data-level="3" id="ref-return-values"><code>ref</code> return values<a aria-label="Link to ref return values" class="h__link" href="#ref-return-values"></a></h3>
+<p>Like <code>ref</code> arguments, <code>ref</code> return values allow a function to return a mutable
+or immutable reference to a value. The syntax for a <code>ref</code> return value is:</p>
+<code><strong>-&gt; ref[</strong><var>origin_specifier(s)</var><strong>] </strong>
+<var>arg_type</var></code>
+<p>Note that you <strong>must</strong> provide an origin specifier for a <code>ref</code> return value. The
+values allowed for origin specifiers are the same as the ones listed for
+<a href="../pages/21_lifetimes-origins-and-references.html#ref-arguments"><code>ref</code> arguments</a>.</p>
+<p><code>ref</code> return values can be an efficient way to handle updating items in a
+collection. The standard way to do this is by implementing the <code>__getitem__()</code>
+and <code>__setitem__()</code> dunder methods. These are invoked to read from and write to
+a subscripted item in a collection:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> value <span class="tk-operator">=</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span>a<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="2"><span class="tk-builtin">list</span><span class="tk-punctuation">[</span>b<span class="tk-punctuation">]</span> <span class="tk-operator">+=</span> <span class="tk-number">10</span></span>
+</code></pre></figure>
+<p>With a <code>ref</code> argument, <code>__getitem__()</code> can return a mutable reference that can
+be modified directly. This has pros and cons compared to using a <code>__setitem__()</code>
+method:</p>
+<ul>
+<li class="">
+<p>The mutable reference is more efficient—a single update isn't broken up across
+two methods. However, the referenced value must be in memory.</p>
+</li>
+<li class="">
+<p>A <code>__getitem__()</code>/<code>__setitem__()</code> pair allows for arbitrary code to be run
+when values are retrieved and set. For example, <code>__setitem__()</code> can validate
+or constrain input values.</p>
+</li>
+</ul>
+<p>For example, in the following example, <code>NameList</code> has a <code>__getitem__()</code> method
+that returns a reference:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">struct</span> <span class="tk-class-name">NameList</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> names<span class="tk-punctuation">:</span> List<span class="tk-punctuation">[</span>String<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-operator">*</span>names<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>names <span class="tk-operator">=</span> <span class="tk-punctuation">[</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">for</span> name <span class="tk-keyword">in</span> names<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>names<span class="tk-punctuation">.</span>append<span class="tk-punctuation">(</span>name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> index<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-keyword">ref</span><span class="tk-punctuation">[</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>names<span class="tk-punctuation">[</span><span class="tk-number">0</span><span class="tk-punctuation">]</span><span class="tk-punctuation">]</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span>index <span class="tk-operator">&gt;=</span><span class="tk-number">0</span> <span class="tk-keyword">and</span> index <span class="tk-operator">&lt;</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>names<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>names<span class="tk-punctuation">[</span>index<span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"index out of bounds"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> <span class="tk-builtin">list</span> <span class="tk-operator">=</span> NameList<span class="tk-punctuation">(</span><span class="tk-string">"Thor"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Athena"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Dana"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Vrinda"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">ref</span> name <span class="tk-operator">=</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19">    name <span class="tk-operator">+=</span> <span class="tk-string">"?"</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Dana</span>
+<span class="cl" data-line="2">Dana?</span>
+</code></pre></figure>
+<p>Note the use of the <code>ref name</code> syntax to create a reference binding.</p>
+<p>If you assign a <code>ref</code> return value to a variable, the variable receives a
+<em>copy</em> of the referenced item. Use a
+<a href="../pages/05_variables.html#reference-bindings">reference binding</a> if you need to
+capture the reference for future use:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">var</span> name_copy <span class="tk-operator">=</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span> <span class="tk-comment"># owned copy of list[2]</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">ref</span> name_ref <span class="tk-operator">=</span> <span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span> <span class="tk-comment"># reference to list[2]</span></span>
+</code></pre></figure>
+<h4 class="h h--4" data-level="4" id="parametric-mutability-of-return-values">Parametric mutability of return values<a aria-label="Link to Parametric mutability of return values" class="h__link" href="#parametric-mutability-of-return-values"></a></h4>
+<p>Another advantage of <code>ref</code> return arguments is the ability to support parametric
+mutability. For example, recall the signature of the <code>__getitem__()</code> method
+above:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">__getitem__</span><span class="tk-punctuation">(</span><span class="tk-keyword">ref</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> index<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-keyword">ref</span><span class="tk-punctuation">[</span><span class="tk-special-vars">self</span><span class="tk-punctuation">]</span> String<span class="tk-punctuation">:</span></span>
+</code></pre></figure>
+<p>Since the <code>origin</code> of the return value is tied to the origin of <code>self</code>, the
+returned reference will be mutable if the method was called using a
+mutable reference. The method still works if you have an immutable reference
+to the <code>NameList</code>, but it returns an immutable reference:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">pass_immutable_list</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">:</span> NameList<span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">[</span><span class="tk-number">2</span><span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># list[2] += "?" # Error, this list is immutable</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> <span class="tk-builtin">list</span> <span class="tk-operator">=</span> NameList<span class="tk-punctuation">(</span><span class="tk-string">"Sophie"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Jack"</span><span class="tk-punctuation">,</span> <span class="tk-string">"Diana"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7">    pass_immutable_list<span class="tk-punctuation">(</span><span class="tk-builtin">list</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Diana</span>
+</code></pre></figure>
+<p>Without parametric mutability, you'd need to write two versions of
+<code>__getitem__()</code>, one that accepts an immutable <code>self</code> and another that accepts
+a mutable <code>self</code>.</p>
+<h4 class="h h--4" data-level="4" id="return-values-with-union-origins">Return values with union origins<a aria-label="Link to Return values with union origins" class="h__link" href="#return-values-with-union-origins"></a></h4>
+<p>A <code>ref</code> return value can include multiple values in its origin specifier, which
+yields the union of the origins. For example, the following <code>pick_one()</code>
+function returns a reference to one of the two input strings, with an origin
+that's a union of both origins.</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">pick_one</span><span class="tk-punctuation">(</span>cond<span class="tk-punctuation">:</span> Bool<span class="tk-punctuation">,</span> <span class="tk-keyword">ref</span> a<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> <span class="tk-keyword">ref</span> b<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-keyword">ref</span><span class="tk-punctuation">[</span>a<span class="tk-punctuation">,</span> b<span class="tk-punctuation">]</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> a <span class="tk-keyword">if</span> cond <span class="tk-keyword">else</span> b</span>
+</code></pre></figure>
+<p>Because the compiler can't statically determine which branch will be picked,
+this function must use the union origin <code>[a, b]</code>. This ensures that the compiler
+extends the lifetime of <em>both</em> values as long as the returned reference is live.</p>
+<p>The returned reference is mutable if <strong>both</strong> <code>a</code> and <code>b</code> are mutable.</p>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/values/lifetimes/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/values/lifetimes/</a>, saved Thu, 01 Oct 2026 15:37:58 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/20_ownership.html"><span class="pager__dir">← Previous</span><span class="pager__title">Ownership</span></a><a class="pager__link pager__link--next" href="../pages/22_intro-to-pointers.html"><span class="pager__dir">Next →</span><span class="pager__title">Intro to pointers</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#working-with-origins">Working with origins</a></li><li class="rail__depth-2"><a href="#working-with-references">Working with references</a></li><li class="rail__depth-3"><a href="#origin-types">Origin types</a></li><li class="rail__depth-3"><a href="#origin-sets">Origin sets</a></li><li class="rail__depth-3"><a href="#origin-values">Origin values</a></li><li class="rail__depth-3"><a href="#ref-arguments">ref arguments</a></li><li class="rail__depth-3"><a href="#ref-return-values">ref return values</a></li><li class="rail__depth-4"><a href="#static-origins">Static origins</a></li><li class="rail__depth-4"><a href="#derived-origins">Derived origins</a></li><li class="rail__depth-4"><a href="#origin-unions">Origin unions</a></li><li class="rail__depth-4"><a href="#inferred-origins">Inferred origins</a></li><li class="rail__depth-4"><a href="#untracked-origins">Untracked origins</a></li><li class="rail__depth-4"><a href="#wildcard-origins">Wildcard origins</a></li><li class="rail__depth-4"><a href="#parametric-mutability-of-return-values">Parametric mutability of return values</a></li><li class="rail__depth-4"><a href="#return-values-with-union-origins">Return values with union origins</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#working-with-origins">Working with origins</a></li><li class="rail__depth-2"><a href="#working-with-references">Working with references</a></li><li class="rail__depth-3"><a href="#origin-types">Origin types</a></li><li class="rail__depth-3"><a href="#origin-sets">Origin sets</a></li><li class="rail__depth-3"><a href="#origin-values">Origin values</a></li><li class="rail__depth-3"><a href="#ref-arguments">ref arguments</a></li><li class="rail__depth-3"><a href="#ref-return-values">ref return values</a></li><li class="rail__depth-4"><a href="#static-origins">Static origins</a></li><li class="rail__depth-4"><a href="#derived-origins">Derived origins</a></li><li class="rail__depth-4"><a href="#origin-unions">Origin unions</a></li><li class="rail__depth-4"><a href="#inferred-origins">Inferred origins</a></li><li class="rail__depth-4"><a href="#untracked-origins">Untracked origins</a></li><li class="rail__depth-4"><a href="#wildcard-origins">Wildcard origins</a></li><li class="rail__depth-4"><a href="#parametric-mutability-of-return-values">Parametric mutability of return values</a></li><li class="rail__depth-4"><a href="#return-values-with-union-origins">Return values with union origins</a></li></ol>
+<p class="rail__meta">Chapter 21 of 38 · Part III, Abstraction &amp; Values.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>

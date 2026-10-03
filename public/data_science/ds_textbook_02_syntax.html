@@ -12,7 +12,6 @@
   --bg:#0c0906; --bg-1:#120c08; --bg-2:#191009;
   --paper:#fdf8ea; --paper-dim:#e8dcc0; --paper-faint:#c9b898;
   --ember-1:#ff7a1a; --ember-2:#ffb238; --ember-3:#c2360c;
-  --py-blue:#4b8bbe; --py-yellow:#ffd43b;
   --line:rgba(244,234,215,0.24); --line-strong:rgba(244,234,215,0.48);
   --good:#9fe6a8; --bad:#e88b8b;
 }
@@ -48,7 +47,6 @@ code.inline{font-family:'JetBrains Mono',monospace;font-size:0.86em;background:r
 .tab{font-family:'JetBrains Mono',monospace;font-size:0.78rem;padding:0.8rem 1.2rem;cursor:pointer;color:var(--paper-faint);border-right:1px solid var(--line);white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,background .15s;}
 .tab .sw{width:7px;height:7px;border-radius:50%;flex:none;}
 .tab[data-lang="mojo"] .sw{background:var(--ember-2);}
-.tab[data-lang="python"] .sw{background:var(--py-blue);}
 .tab.active{color:var(--paper);background:var(--bg);}
 .tab:hover{color:var(--paper);}
 .pane{display:none;padding:1.3rem 1.5rem;}
@@ -110,23 +108,17 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
   <p class="dek">A guided translation of Python's familiar shapes into Mojo's compiled equivalents — enough to read every chapter that follows without getting lost in the syntax.</p>
 
   <section id="intro">
-    <p>Mojo looks like Python because it was designed to. Indentation-based blocks, <code class="inline">for</code> loops, list comprehensions, f-strings — the reading experience is intentionally familiar. But beneath the surface, Mojo is a compiled language with static typing, ownership semantics, and a compiler that turns your code into machine-native instructions.</p>
+    <p>Mojo looks like Python because it was designed to. Indentation-based blocks, <code class="inline">for</code> loops, list comprehensions, t-strings — the reading experience is intentionally familiar. But beneath the surface, Mojo is a compiled language with static typing, ownership semantics, and a compiler that turns your code into machine-native instructions.</p>
     <p>This chapter walks through the three constructs you'll encounter most often in this book: <b>functions</b> (<code class="inline">def</code>), <b>variables</b> (<code class="inline">var</code>), and <b>structs</b> (Mojo's answer to Python classes). By the end, you'll be able to read any Mojo example in the chapters that follow.</p>
   </section>
 
   <section id="fn-def">
     <h2>def — one function keyword</h2>
-    <p>Mojo 1.x has a single function keyword: <code class="inline">def</code>, working almost exactly like Python's <code class="inline">def</code>. Add explicit type annotations and you get the strict, fully-checked, optimizable behavior that the old <code class="inline">fn</code> keyword used to provide — annotations are enforced at compile time and ownership rules apply.</p>
-
-    <div class="callout">
-      <span class="lbl">As of Mojo 1.x</span>
-      <p>The <code class="inline">fn</code> keyword has been removed entirely — it was deprecated in v26.2 and became a hard compilation error by 1.0.0 final, completing the <code class="inline">def</code>/<code class="inline">fn</code> unification. A fully-annotated <code class="inline">def</code> is treated identically to the old <code class="inline">fn</code>, and this behavior is part of the 1.0 source-stability guarantee. Older tutorials showing <code class="inline">fn</code> are pre-1.0.</p>
-    </div>
+    <p>Mojo 1.x has a single function keyword: <code class="inline">def</code>, working almost exactly like Python's <code class="inline">def</code>. Add explicit type annotations and you get strict, fully-checked, optimizable code — annotations are enforced at compile time and ownership rules apply.</p>
 
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="fndef"><span class="sw"></span>functions.mojo</div>
-        <div class="tab" data-lang="python" data-group="fndef"><span class="sw"></span>functions.py</div>
       </div>
       <div class="panes" data-group="fndef">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — def with full type annotations</span>
@@ -152,23 +144,9 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
 
 <span class="tok-kw">def</span> <span class="tok-fn">strict_add</span>(a: Int, b: Int) -&gt; Int:
     <span class="tok-kw">return</span> a + b  <span class="tok-com"># same result, stricter checking</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — equivalent functions</span>
-<span class="tok-kw">def</span> <span class="tok-fn">add</span>(a: int, b: int) -&gt; int:
-    <span class="tok-kw">return</span> a + b
-
-<span class="tok-kw">def</span> <span class="tok-fn">my_pow</span>(base: int, exp: int = <span class="tok-num">2</span>) -&gt; int:
-    <span class="tok-kw">return</span> base ** exp
-
-<span class="tok-kw">def</span> <span class="tok-fn">sum_all</span>(*values: int) -&gt; int:
-    <span class="tok-kw">return</span> <span class="tok-fn">sum</span>(values)
-
-<span class="tok-kw">def</span> <span class="tok-fn">divide</span>(a: float, b: float) -&gt; float:
-    <span class="tok-kw">if</span> b == <span class="tok-num">0.0</span>:
-        <span class="tok-kw">raise</span> <span class="tok-fn">ValueError</span>(<span class="tok-str">"Division by zero"</span>)
-    <span class="tok-kw">return</span> a / b</pre></div>
       </div>
     </div>
-    <p class="cap">Notice how similar the API surface is — Mojo borrows Python's optional args, variadic args, and raise syntax directly.</p>
+    <p class="cap">Notice how similar the API surface is — Mojo borrows Python's optional args, variadic args, and raise syntax directly. Two habits change: there is no builtin <code class="inline">sum</code> over a variadic, so <code class="inline">sum_all</code> accumulates with a <code class="inline">var</code> loop, and a failure is <code class="inline">raise Error(...)</code> rather than a typed <code class="inline">ValueError</code> — the <code class="inline">raises</code> declaration above is what makes that legal.</p>
 
     <p>Key differences to internalize:</p>
     <ul>
@@ -180,12 +158,11 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
 
   <section id="vars">
     <h2>Variables: var only</h2>
-    <p>Mojo 1.x has a single variable declaration keyword: <code class="inline">var</code>. The declaration is mandatory — a first assignment without <code class="inline">var</code> is a deprecation error in 1.0. The old immutable-binding keyword <code class="inline">let</code> was removed during the pre-1.0 cleanups; if you don't reassign a variable, just don't reassign it. A type annotation is required when the type cannot be inferred.</p>
+    <p>Mojo 1.x has a single variable declaration keyword: <code class="inline">var</code>. The declaration is mandatory — a first assignment without <code class="inline">var</code> is a deprecation error in 1.0. If you don't reassign a variable, just don't reassign it. A type annotation is required when the type cannot be inferred.</p>
 
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="vars"><span class="sw"></span>variables.mojo</div>
-        <div class="tab" data-lang="python" data-group="vars"><span class="sw"></span>variables.py</div>
       </div>
       <div class="panes" data-group="vars">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Explicit type annotation</span>
@@ -211,24 +188,10 @@ td:first-child, th:first-child{color:var(--paper);font-family:'JetBrains Mono',m
 <span class="tok-kw">var</span> first = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>]
 <span class="tok-kw">var</span> second = first.copy()   <span class="tok-com"># explicit copy</span>
 <span class="tok-kw">var</span> third = first^          <span class="tok-com"># move (transfers ownership)</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — dynamic typing</span>
-greeting = <span class="tok-str">"Hello World"</span>
-count = <span class="tok-num">0</span>
-pi = <span class="tok-num">3.14159</span>
-
-name = <span class="tok-str">"Mojo"</span>
-temperature = <span class="tok-num">22.5</span>
-
-max_retries = <span class="tok-num">3</span>  <span class="tok-com"># not truly immutable</span>
-
-<span class="tok-com"># No equivalent — Python doesn't have block scope</span>
-
-<span class="tok-com"># Copying — Python always copies by reference</span>
-first = [<span class="tok-num">1</span>, <span class="tok-num">2</span>, <span class="tok-num">3</span>]
-second = first.copy()
-third = first  <span class="tok-com"># both point to same list</span></pre></div>
       </div>
     </div>
+
+    <p class="cap">The Python version of this file needs no annotations at all, has no block scope — a name first assigned inside an <code class="inline">if</code> is still live afterwards, which is why the <code class="inline">result</code> declaration above sits outside both branches — and binding a second name to a list makes an <b>alias</b>, not a copy. Mojo spells those last two operations <code class="inline">first.copy()</code> and <code class="inline">first^</code>.</p>
 
     <p>The critical difference from Python: <b>Mojo variables are statically typed.</b> Once you assign a value to a variable, its type is locked in. You cannot reassign a <code class="inline">String</code> variable to an <code class="inline">Int</code>. This is what enables the compiler to generate fast, predictable code.</p>
 
@@ -245,43 +208,28 @@ third = first  <span class="tok-com"># both point to same list</span></pre></div
     <div class="demo">
       <div class="tabbar">
         <div class="tab active" data-lang="mojo" data-group="structs"><span class="sw"></span>structs.mojo</div>
-        <div class="tab" data-lang="python" data-group="structs"><span class="sw"></span>classes.py</div>
       </div>
       <div class="panes" data-group="structs">
         <div class="pane active" data-lang="mojo"><pre><span class="tok-com"># Mojo — struct with fieldwise init</span>
+<span class="tok-kw">from</span> std.math <span class="tok-kw">import</span> sqrt
+
 <span class="tok-kw">@fieldwise_init</span>
 <span class="tok-kw">struct</span> <span class="tok-ty">Point</span>:
     <span class="tok-kw">var</span> x: Float64
     <span class="tok-kw">var</span> y: Float64
 
     <span class="tok-kw">def</span> <span class="tok-fn">distance_to</span>(self, other: <span class="tok-ty">Point</span>) -&gt; Float64:
-        <span class="tok-kw">return</span> ((self.x - other.x)**<span class="tok-num">2</span> + (self.y - other.y)**<span class="tok-num">2</span>)
+        <span class="tok-kw">return</span> sqrt((self.x - other.x)**<span class="tok-num">2</span> + (self.y - other.y)**<span class="tok-num">2</span>)
 
 <span class="tok-com"># Usage</span>
 <span class="tok-kw">var</span> p1 = <span class="tok-ty">Point</span>(x=<span class="tok-num">3.0</span>, y=<span class="tok-num">4.0</span>)
 <span class="tok-kw">var</span> p2 = <span class="tok-ty">Point</span>(x=<span class="tok-num">0.0</span>, y=<span class="tok-num">0.0</span>)
 <span class="tok-kw">var</span> d = p1.distance_to(p2)
 print(d)  <span class="tok-com"># 5.0</span></pre></div>
-        <div class="pane" data-lang="python"><pre><span class="tok-com"># Python — dataclass equivalent</span>
-<span class="tok-kw">from</span> dataclasses <span class="tok-kw">import</span> dataclass
-<span class="tok-kw">import</span> math
-
-<span class="tok-kw">@dataclass</span>
-<span class="tok-kw">class</span> <span class="tok-ty">Point</span>:
-    x: float
-    y: float
-
-    <span class="tok-kw">def</span> <span class="tok-fn">distance_to</span>(self, other: <span class="tok-str">"Point"</span>) -&gt; float:
-        <span class="tok-kw">return</span> math.sqrt((self.x - other.x)**<span class="tok-num">2</span> + (self.y - other.y)**<span class="tok-num">2</span>)
-
-p1 = <span class="tok-ty">Point</span>(x=<span class="tok-num">3.0</span>, y=<span class="tok-num">4.0</span>)
-p2 = <span class="tok-ty">Point</span>(x=<span class="tok-num">0.0</span>, y=<span class="tok-num">0.0</span>)
-d = p1.distance_to(p2)
-<span class="tok-fn">print</span>(d)  <span class="tok-com"># 5.0</span></pre></div>
       </div>
     </div>
 
-    <p>The <code class="inline">@fieldwise_init</code> decorator generates a constructor that initializes each field from its argument — equivalent to Python's <code class="inline">@dataclass</code>. Without it, you'd write the constructor manually using <code class="inline">def __init__(out self, ...)</code>.</p>
+    <p>The <code class="inline">@fieldwise_init</code> decorator generates a constructor that initializes each field from its argument — equivalent to Python's <code class="inline">@dataclass</code>. Without it, you'd write the constructor manually using <code class="inline">def __init__(out self, ...)</code>. One Python habit does not carry over: a method taking another <code class="inline">Point</code> has to quote the type as <code class="inline">-> "Point"</code>, because the class body is not finished when the signature is read. Mojo names the type directly.</p>
 
     <h3>Methods and mutation</h3>
     <p>Methods in Mojo use <code class="inline">self</code> as the first argument (just like Python). To modify fields, mark the method with <code class="inline">mut</code>:</p>
@@ -371,7 +319,7 @@ print_description(dog)  <span class="tok-com"># Rex the Labrador</span></pre>
     <div class="exercises">
       <ol>
         <li>Write a Mojo struct called <code class="inline">Vector2D</code> with fields <code class="inline">x</code> and <code class="inline">y</code> (both <code class="inline">Float64</code>), a <code class="inline">magnitude</code> method that returns the length of the vector, and a <code class="inline">normalize</code> method that returns a new unit vector.</li>
-        <li>Rewrite the <code class="inline">standardize</code> function from Chapter 1 using Mojo's type annotations and <code class="inline">var</code>/<code class="inline">let</code> declarations instead of Python-style dynamic typing.</li>
+        <li>Rewrite the <code class="inline">standardize</code> function from Chapter 1 using Mojo's type annotations and a mandatory <code class="inline">var</code> on every binding instead of Python-style dynamic typing.</li>
         <li>Create a trait called <code class="inline">Printable</code> with a single method <code class="inline">to_string</code>, then implement it for at least two different structs.</li>
       </ol>
     </div>

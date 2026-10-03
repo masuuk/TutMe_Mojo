@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0906">
+<title>Errors, error handling, and context managers · Mojo v1 The Language Manual</title>
+<meta name="description" content="Failable types, raises, and cleanup.">
+<link rel="stylesheet" href="../assets/mojo.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff7a1a'/%3E%3Cpath d='M7 22V10l5 7 5-7v12' fill='none' stroke='%230c0906' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+</head>
+<body class="page">
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" role="presentation"></div>
+<header class="head">
+<a class="brand" href="../index.html"><span class="brand__mark">Mojo</span> v1 <span class="brand__sub">· The Language Manual</span></a>
+<span class="head__part">Part II · The Language</span>
+<span class="head__spacer"></span>
+<div class="search" data-search-index="../assets/search-index.json">
+  <label class="visually-hidden" for="search">Search the manual</label>
+  <input class="search__input" id="search" type="search" placeholder="Search the manual" data-search autocomplete="off" spellcheck="false">
+  <span class="search__hint">/</span>
+  <div class="search__results" data-search-results role="listbox" aria-label="Search results"></div>
+</div>
+<button class="iconbtn" type="button" data-theme-toggle aria-label="Switch theme">☀</button>
+</header>
+<main class="shell" id="main">
+<article class="article">
+<nav class="crumb" aria-label="Breadcrumb"><a href="../index.html">Manual</a><span class="sep">/</span><span>Part II</span><span class="sep">/</span><span>The Language</span><span class="sep">/</span><span class="num">12</span></nav><h1>Errors, error handling, and context managers</h1>
+<p class="dek">Failable types, raises, and cleanup.</p><p class="byline">Chapter 12 · 6,045 words · 65 code blocks · <a class="ext" href="https://mojolang.org/docs/manual/errors/" rel="noopener noreferrer" data-external>docs source</a></p>
+<p>Mojo represents errors as values—specifically, as alternate return values from
+functions. Unlike stack-unwinding exceptions in languages like C++ or Java, Mojo
+errors don't require expensive call stack unwinding, so their runtime overhead
+is as low as returning and checking an extra <code>Bool</code>. This design also enables
+error handling in contexts where traditional exceptions aren't available, like
+GPU kernels.</p>
+<p>This page covers:</p>
+<ul>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#raise-an-error"><strong>Raise an error</strong></a> — Use the built-in <code>Error</code> type to
+raise errors with string messages.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#handle-an-error"><strong>Handle an error</strong></a> — Use <code>try</code>/<code>except</code>/<code>else</code>/<code>finally</code>
+to detect and recover from errors.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#typed-errors"><strong>Typed errors</strong></a> — Define custom error types as structs for
+structured error data and compile-time type checking.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#representing-multiple-error-conditions"><strong>Representing multiple error conditions</strong></a>
+— Use enumerated error types or the <code>Variant</code> type for pattern matching.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#the-never-type"><strong>The <code>Never</code> type</strong></a> — Mark functions that always raise
+or never raise.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#parametric-raises"><strong>Parametric raises</strong></a> — Write parameterized functions
+that propagate error types from their arguments.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#typed-errors-and-error-interaction"><strong>Typed and <code>Error</code> interaction</strong></a> —
+Work with code that uses both error styles.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#enable-stack-trace-generation-for-errors"><strong>Stack traces</strong></a> — Enable stack
+trace collection for debugging.</li>
+<li class=""><a href="../pages/12_errors-and-context-managers.html#use-a-context-manager"><strong>Context managers</strong></a> — Manage resources safely
+with the <code>with</code> statement.</li>
+</ul>
+<p>An error interrupts the normal execution flow of your program. If you provide an
+error handler (using <a href="../pages/12_errors-and-context-managers.html#handle-an-error"><code>try</code>/<code>except</code></a>) in the current
+function, execution resumes with that handler. If the error isn't handled in the
+current function, it propagates to the calling function, and so on. If an error
+isn't caught by any handler, your program terminates with a non-zero exit code
+and prints the error message:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Unhandled exception caught during execution: record not found</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="raise-an-error">Raise an error<a aria-label="Link to Raise an error" class="h__link" href="#raise-an-error"></a></h2>
+<p>The built-in <a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/error/Error/" rel="noopener noreferrer"><code>Error</code></a> type is the default error
+type for most Mojo code. It carries a text message describing what went wrong,
+and it's the right choice for application-level error handling—simple,
+well-supported, and sufficient for the majority of use cases.</p>
+<p>You can raise an <code>Error</code> with the initializer or a string literal shorthand:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># These are equivalent</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"file not found"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">raise</span> <span class="tk-string">"file not found"</span></span>
+</code></pre></figure>
+<p>The string literal form is a convenience—the compiler automatically wraps it in
+an <code>Error</code>.</p>
+<p>By declaring <code>raises</code>, you tell Mojo that a function may raise an error:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">read_file_fn</span><span class="tk-punctuation">(</span>path<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> path<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> <span class="tk-string">"path cannot be empty"</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> <span class="tk-string">"contents of "</span> <span class="tk-operator">+</span> path</span>
+</code></pre></figure>
+<aside class="callout callout--tip"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">✦</span>Tip</p><div class="callout__body"><p>If you need structured error data—like separate fields for an error code and
+description—or allocation-free errors for GPU kernels, see
+<a href="../pages/12_errors-and-context-managers.html#typed-errors">Typed errors</a> later on this page. For most application code,
+<code>Error</code> with a descriptive string message is all you need.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="handle-an-error">Handle an error<a aria-label="Link to Handle an error" class="h__link" href="#handle-an-error"></a></h2>
+<p>Mojo uses <code>try</code>/<code>except</code> to detect and handle errors. The full syntax is:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-comment"># Code that might raise an error</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># Runs if an error occurs</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-comment"># Runs if no error occurs</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">finally</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># Always runs, regardless of outcome</span></span>
+</code></pre></figure>
+<p>You must include one or both of <code>except</code> and <code>finally</code>. The <code>else</code> clause is
+optional.</p>
+<h3 class="h h--3" data-level="3" id="how-each-clause-works">How each clause works<a aria-label="Link to How each clause works" class="h__link" href="#how-each-clause-works"></a></h3>
+<ul>
+<li class="">
+<p><code>try</code> — Contains code that might raise an error. If no error occurs, the
+entire block executes. If an error occurs, execution stops at the <code>raise</code>
+point and continues with the <code>except</code> clause (if present) or the <code>finally</code>
+clause.</p>
+</li>
+<li class="">
+<p><code>except</code> — Runs only when an error occurs in the <code>try</code> block. If you
+provide a variable name (<code>except e:</code>), the error is bound to that variable.
+A <code>try</code> block can have only one <code>except</code> clause.</p>
+</li>
+<li class="">
+<p><code>else</code> — Runs only when no error occurs in the <code>try</code> block. The <code>else</code>
+clause is <em>skipped</em> if the <code>try</code> clause exits via <code>continue</code>, <code>break</code>, or
+<code>return</code>.</p>
+</li>
+<li class="">
+<p><code>finally</code> — Runs after the <code>try</code> and any <code>except</code> or <code>else</code> clause,
+regardless of outcome. It executes even if another clause exits via
+<code>continue</code>, <code>break</code>, <code>return</code>, or by raising a new error. Use <code>finally</code> to
+release resources (such as file handles) that must be cleaned up regardless
+of whether an error occurred.</p>
+</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="example">Example<a aria-label="Link to Example" class="h__link" href="#example"></a></h3>
+<p>The following example demonstrates all four clauses. The <code>process_record()</code>
+function raises <code>Error</code> for different conditions, and the caller loops over
+a list of IDs to exercise each clause:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">handle_error.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">process_record</span><span class="tk-punctuation">(</span><span class="tk-builtin">id</span><span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> <span class="tk-builtin">id</span> <span class="tk-operator">&lt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"invalid record ID: must be non-negative"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> <span class="tk-builtin">id</span> <span class="tk-operator">&gt;</span> <span class="tk-number">999</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"record not found"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> String<span class="tk-punctuation">(</span><span class="tk-string">"record_"</span><span class="tk-punctuation">,</span> <span class="tk-builtin">id</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">for</span> <span class="tk-builtin">id</span> <span class="tk-keyword">in</span> <span class="tk-punctuation">[</span><span class="tk-number">5</span><span class="tk-punctuation">,</span> <span class="tk-number">0</span><span class="tk-punctuation">,</span> <span class="tk-number">1001</span><span class="tk-punctuation">,</span> <span class="tk-operator">-</span><span class="tk-number">3</span><span class="tk-punctuation">,</span> <span class="tk-number">42</span><span class="tk-punctuation">]</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> result<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="13"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"try     =&gt; id:"</span><span class="tk-punctuation">,</span> <span class="tk-builtin">id</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">if</span> <span class="tk-builtin">id</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="18">                result <span class="tk-operator">=</span> process_record<span class="tk-punctuation">(</span><span class="tk-builtin">id</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">if</span> <span class="tk-string">"invalid"</span> <span class="tk-keyword">in</span> String<span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"except  =&gt; fatal:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">raise</span> e</span>
+<span class="cl" data-line="23"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"except  =&gt; handled:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"else    =&gt; success:"</span><span class="tk-punctuation">,</span> result<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">finally</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"finally =&gt; done with id:"</span><span class="tk-punctuation">,</span> <span class="tk-builtin">id</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="28"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="29"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"\nre-raised error:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"></span>
+<span class="cl" data-line="2">try     =&gt; id: 5</span>
+<span class="cl" data-line="3">else    =&gt; success: record_5</span>
+<span class="cl" data-line="4">finally =&gt; done with id: 5</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6">try     =&gt; id: 0</span>
+<span class="cl" data-line="7">finally =&gt; done with id: 0</span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9">try     =&gt; id: 1001</span>
+<span class="cl" data-line="10">except  =&gt; handled: record not found</span>
+<span class="cl" data-line="11">finally =&gt; done with id: 1001</span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13">try     =&gt; id: -3</span>
+<span class="cl" data-line="14">except  =&gt; fatal: invalid record ID: must be non-negative</span>
+<span class="cl" data-line="15">finally =&gt; done with id: -3</span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17">re-raised error: invalid record ID: must be non-negative</span>
+</code></pre></figure>
+<p>Notice:</p>
+<ul>
+<li class="">When <code>id</code> is 5: <code>process_record()</code> succeeds, so <code>else</code> runs, then <code>finally</code>.</li>
+<li class="">When <code>id</code> is 0: <code>continue</code> exits the <code>try</code> block, skipping both <code>except</code>
+and <code>else</code>. Only <code>finally</code> runs.</li>
+<li class="">When <code>id</code> is 1001: <code>process_record()</code> raises an error. The <code>except</code> clause
+handles it and execution continues with the next iteration.</li>
+<li class="">When <code>id</code> is -3: <code>process_record()</code> raises an "invalid" error. The <code>except</code>
+clause re-raises it, so it propagates to the outer <code>try</code>/<code>except</code>. The
+<code>finally</code> clause still runs before the error propagates. Because the re-raise
+exits the loop, <code>id</code> 42 is never processed.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="re-raise-an-error">Re-raise an error<a aria-label="Link to Re-raise an error" class="h__link" href="#re-raise-an-error"></a></h3>
+<p>To re-raise a caught error, pass it to <code>raise</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> result <span class="tk-operator">=</span> process_record<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Logging error:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">raise</span> e  <span class="tk-comment"># re-raise</span></span>
+</code></pre></figure>
+<p>You can also raise a different error from within an <code>except</code> clause.</p>
+<p>Re-raising copies the error, which is cheap because both its message and its
+optional stack trace are reference counted. To avoid the copy, transfer the
+error with the
+<a href="../pages/20_ownership.html#transfer-arguments-var-and-">transfer sigil</a>:
+<code>raise e^</code>. A <a href="../pages/12_errors-and-context-managers.html#typed-errors">custom error type</a> that doesn't conform to
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/traits/copyable/ImplicitlyCopyable/" rel="noopener noreferrer"><code>ImplicitlyCopyable</code></a> requires
+the transfer sigil to re-raise.</p>
+<h2 class="h h--2" data-level="2" id="typed-errors">Typed errors<a aria-label="Link to Typed errors" class="h__link" href="#typed-errors"></a></h2>
+<p>For code that needs more than a string message—like standard library APIs,
+GPU abstractions, or situations where callers need structured error data—Mojo
+lets you define custom error types as <a href="../pages/13_mojo-structs.html">structs</a>.</p>
+<h3 class="h h--3" data-level="3" id="define-a-custom-error-type">Define a custom error type<a aria-label="Link to Define a custom error type" class="h__link" href="#define-a-custom-error-type"></a></h3>
+<p>In Mojo, any struct can serve as an error type—no special base class or trait
+is required. However, implementing the
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a> trait is recommended so the error
+produces a readable message when printed or when the program terminates with an
+unhandled error:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">ValidationError</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> field<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">var</span> reason<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">"ValidationError("</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>field<span class="tk-punctuation">,</span> <span class="tk-string">"): "</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>reason<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The <a class="ext" data-external="" href="https://mojolang.org/docs/reference/decorators/fieldwise-init/" rel="noopener noreferrer"><code>@fieldwise_init</code></a> decorator
+generates an <code>__init__()</code> method with an argument for each field, so you
+can construct errors like <code>ValidationError("username", "too short")</code> or with
+keyword arguments like <code>ValidationError(field="username", reason="too short")</code>.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Typed errors work on GPUs and embedded targets as long as you avoid
+heap-allocated types like <code>String</code>. For more on GPU programming, see
+<a class="ext" data-external="" href="https://max.modular.com/gpu/fundamentals/" rel="noopener noreferrer">GPU fundamentals</a>.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="raise-a-typed-error">Raise a typed error<a aria-label="Link to Raise a typed error" class="h__link" href="#raise-a-typed-error"></a></h3>
+<p>To declare that a function can raise a typed error, add <code>raises YourErrorType</code>
+to its signature:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">validate_username</span><span class="tk-punctuation">(</span>username<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> raises ValidationError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> username<span class="tk-punctuation">.</span>byte_length<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> ValidationError<span class="tk-punctuation">(</span>field<span class="tk-operator">=</span><span class="tk-string">"username"</span><span class="tk-punctuation">,</span> reason<span class="tk-operator">=</span><span class="tk-string">"cannot be empty"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> username<span class="tk-punctuation">.</span>count_codepoints<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">&lt;</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">raise</span> ValidationError<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="6">            field<span class="tk-operator">=</span><span class="tk-string">"username"</span><span class="tk-punctuation">,</span> reason<span class="tk-operator">=</span><span class="tk-string">"must be at least 3 characters"</span></span>
+<span class="cl" data-line="7"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> username</span>
+</code></pre></figure>
+<p>Mojo functions are non-raising by default. Including <code>raises</code> (with or
+without a type) makes it a raising function. Each function can declare
+at most one error type. The compiler enforces this—if any <code>raise</code>
+statement in the function body doesn't match the declared type, the
+program won't compile.</p>
+<p>If a non-raising function calls a raising function, it must handle the error
+locally:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># This doesn't compile — validate_username() can raise</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">process_name</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>validate_username<span class="tk-punctuation">(</span>name<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># This compiles — the error is handled</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">process_name_safe</span><span class="tk-punctuation">(</span>name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>validate_username<span class="tk-punctuation">(</span>name<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Invalid:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="catch-a-typed-error">Catch a typed error<a aria-label="Link to Catch a typed error" class="h__link" href="#catch-a-typed-error"></a></h3>
+<p>Use <code>try</code>/<code>except</code> to catch a typed error. The compiler automatically infers the
+error type from the function being called, so <code>except e:</code> gives you a fully
+typed error value—no casting required:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> name <span class="tk-operator">=</span> validate_username<span class="tk-punctuation">(</span><span class="tk-string">""</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># e is a ValidationError — access fields directly</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Error in field '"</span> <span class="tk-operator">+</span> e<span class="tk-punctuation">.</span>field <span class="tk-operator">+</span> <span class="tk-string">"': "</span> <span class="tk-operator">+</span> e<span class="tk-punctuation">.</span>reason<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Which produces this output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Error in field 'username': cannot be empty</span>
+</code></pre></figure>
+<p>A <code>try</code> block can include only one <code>except</code> clause. Mojo doesn't support
+<code>except ErrorType as e:</code> syntax—the type is always inferred from the
+function being called.</p>
+<p>If you need to handle calls that raise different error types, use separate
+<code>try</code> blocks:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Each try block handles one error type</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> name <span class="tk-operator">=</span> validate_username<span class="tk-punctuation">(</span><span class="tk-builtin">input</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># e is a ValidationError — access fields directly</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Validation failed:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">.</span>field<span class="tk-punctuation">,</span> e<span class="tk-punctuation">.</span>reason<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">var</span> <span class="tk-builtin">file</span> <span class="tk-operator">=</span> open_file<span class="tk-punctuation">(</span>path<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-comment"># e is a FileError — match on variant</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">if</span> e <span class="tk-operator">==</span> FileError<span class="tk-punctuation">.</span>not_found<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Missing:"</span><span class="tk-punctuation">,</span> path<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>If your error type implements the <a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a>
+trait, you can also pass <code>e</code> directly to <code>print()</code>:</p><figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span> <span class="tk-comment"># calls ValidationError.write_to()</span></span>
+</code></pre></figure><p>Which produces this output:</p><figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">ValidationError(username): cannot be empty</span>
+</code></pre></figure></div></aside>
+<h2 class="h h--2" data-level="2" id="representing-multiple-error-conditions">Representing multiple error conditions<a aria-label="Link to Representing multiple error conditions" class="h__link" href="#representing-multiple-error-conditions"></a></h2>
+<p>Each function can declare only one error type in its <code>raises</code> clause. When
+a function can fail in multiple distinct ways, you need to represent those
+conditions within a single type. Mojo offers two approaches:</p>
+<ul>
+<li class=""><strong>Enumerated error types</strong> — A single struct with <code>comptime</code> variant aliases.
+Simpler and more efficient when you only need to distinguish between
+conditions.</li>
+<li class=""><strong>The <code>Variant</code> type</strong> — The standard library
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/utils/variant/Variant/" rel="noopener noreferrer"><code>Variant</code></a> type with separate structs per
+condition. More flexible when each condition needs to carry different data.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="enumerated-error-types">Enumerated error types<a aria-label="Link to Enumerated error types" class="h__link" href="#enumerated-error-types"></a></h3>
+<p>A single struct can represent all error conditions using an integer <code>_variant</code>
+field and
+<a href="../pages/30_compile-time-evaluation.html#comptime-values"><code>comptime</code> values</a>
+as named constants. The <code>write_to</code> method generates human-readable strings from
+the variant code:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">struct</span> <span class="tk-class-name">FileError</span><span class="tk-punctuation">(</span>Equatable<span class="tk-punctuation">,</span> ImplicitlyCopyable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> _variant<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># Compile-time constant variants</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">comptime</span> not_found <span class="tk-operator">=</span> FileError<span class="tk-punctuation">(</span>_variant<span class="tk-operator">=</span><span class="tk-number">1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">comptime</span> permission_denied <span class="tk-operator">=</span> FileError<span class="tk-punctuation">(</span>_variant<span class="tk-operator">=</span><span class="tk-number">2</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">comptime</span> already_exists <span class="tk-operator">=</span> FileError<span class="tk-punctuation">(</span>_variant<span class="tk-operator">=</span><span class="tk-number">3</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">def</span> <span class="tk-function">variant_name</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">if</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>_variant <span class="tk-operator">==</span> <span class="tk-number">1</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">return</span> <span class="tk-string">"not_found"</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">elif</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>_variant <span class="tk-operator">==</span> <span class="tk-number">2</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">return</span> <span class="tk-string">"permission_denied"</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">elif</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>_variant <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">return</span> <span class="tk-string">"already_exists"</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">return</span> <span class="tk-string">"unknown"</span></span>
+<span class="cl" data-line="18"></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="20">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">"FileError."</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>variant_name<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Because <code>FileError</code> has a single <code>Int</code> field and conforms to
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/comparable/Equatable/" rel="noopener noreferrer"><code>Equatable</code></a>, the compiler
+auto-synthesizes <code>__eq__()</code>, so you can compare variants directly:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">open_file</span><span class="tk-punctuation">(</span>path<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> raises FileError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> path<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> FileError<span class="tk-punctuation">.</span>not_found</span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> path <span class="tk-operator">==</span> <span class="tk-string">"/secret"</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">raise</span> FileError<span class="tk-punctuation">.</span>permission_denied</span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> <span class="tk-string">"Contents of "</span> <span class="tk-operator">+</span> path</span>
+</code></pre></figure>
+<p>You can then match on specific variants in the handler:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>open_file<span class="tk-punctuation">(</span><span class="tk-string">"/secret"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> e <span class="tk-operator">==</span> FileError<span class="tk-punctuation">.</span>not_found<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Not found:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">elif</span> e <span class="tk-operator">==</span> FileError<span class="tk-punctuation">.</span>permission_denied<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Permission denied:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Which produces this output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Permission denied: FileError.permission_denied</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="the-variant-type">The <code>Variant</code> type<a aria-label="Link to The Variant type" class="h__link" href="#the-variant-type"></a></h3>
+<p>When each error condition needs to carry different data, you can use the
+standard library <a class="ext" data-external="" href="https://mojolang.org/docs/std/utils/variant/Variant/" rel="noopener noreferrer"><code>Variant</code></a> type instead of
+an integer-based enumeration. Define a separate struct for each condition, then
+combine them into a single error type with a <code>comptime</code> alias:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">variant_errors.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>utils <span class="tk-keyword">import</span> Variant</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">struct</span> <span class="tk-class-name">NotFoundError</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> path<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">"file not found: "</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>path<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"></span>
+<span class="cl" data-line="12"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="13"><span class="tk-keyword">struct</span> <span class="tk-class-name">PermissionError</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">var</span> path<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="15"> <span class="tk-keyword">var</span> required_role<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="16"></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="18">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="19"> <span class="tk-string">"permission denied on "</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="20"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>path<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="21"> <span class="tk-string">" (requires "</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="22"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>required_role<span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="23"> <span class="tk-string">")"</span><span class="tk-punctuation">,</span></span>
+<span class="cl" data-line="24"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="25"></span>
+<span class="cl" data-line="26"></span>
+<span class="cl" data-line="27"><span class="tk-keyword">comptime</span> FileError <span class="tk-operator">=</span> Variant<span class="tk-punctuation">[</span>NotFoundError<span class="tk-punctuation">,</span> PermissionError<span class="tk-punctuation">]</span></span>
+</code></pre></figure>
+<p>Construct a <code>Variant</code> by wrapping the inner error in the <code>Variant</code> type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">open_file</span><span class="tk-punctuation">(</span>path<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> raises FileError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> String<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> <span class="tk-keyword">not</span> path<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> FileError<span class="tk-punctuation">(</span>NotFoundError<span class="tk-punctuation">(</span><span class="tk-string">""</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> path <span class="tk-operator">==</span> <span class="tk-string">"/secret"</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">raise</span> FileError<span class="tk-punctuation">(</span>PermissionError<span class="tk-punctuation">(</span><span class="tk-string">"/secret"</span><span class="tk-punctuation">,</span> <span class="tk-string">"admin"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> <span class="tk-string">"Contents of "</span> <span class="tk-operator">+</span> path</span>
+</code></pre></figure>
+<p>In the handler, use <code>.isa[T]()</code> to test which condition occurred and <code>e[T]</code> to
+access the inner error with its full type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>open_file<span class="tk-punctuation">(</span><span class="tk-string">"/secret"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">if</span> e<span class="tk-punctuation">.</span>isa<span class="tk-punctuation">[</span>NotFoundError<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Not found:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">[</span>NotFoundError<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">elif</span> e<span class="tk-punctuation">.</span>isa<span class="tk-punctuation">[</span>PermissionError<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Access denied:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">[</span>PermissionError<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Access denied: permission denied on /secret (requires admin)</span>
+</code></pre></figure>
+<p>Use the <code>Variant</code> approach when each condition carries different fields (like
+<code>path</code> vs <code>path</code> + <code>required_role</code> above). Use the
+<a href="../pages/12_errors-and-context-managers.html#enumerated-error-types">enumerated error type</a> pattern when you only need to
+distinguish between conditions without carrying different data per condition.</p>
+<h2 class="h h--2" data-level="2" id="the-never-type">The <code>Never</code> type<a aria-label="Link to The Never type" class="h__link" href="#the-never-type"></a></h2>
+<p><code>Never</code> is a type with no initializers. It can't be instantiated. This makes
+it useful in error-handling signatures to express two opposite guarantees:</p>
+<ul>
+<li class=""><code>raises YourErrorType -&gt; Never</code> — The function <em>always</em> raises and never
+returns a value. This is useful for functions like <code>panic()</code> that
+unconditionally signal an error.</li>
+<li class=""><code>raises Never -&gt; ReturnType</code> — The function <em>never</em> raises and always returns
+a value. This is equivalent to omitting <code>raises</code> entirely.</li>
+</ul>
+<h3 class="h h--3" data-level="3" id="functions-that-always-raise">Functions that always raise<a aria-label="Link to Functions that always raise" class="h__link" href="#functions-that-always-raise"></a></h3>
+<p>A function with <code>-&gt; Never</code> as its return type must never terminate with a
+<code>return</code> statement—it must raise on every code path (or loop infinitely).
+Because <code>Never</code> can substitute for any type, the compiler allows using such a
+function in place of a return value:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Always raises, never returns</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">panic</span><span class="tk-punctuation">(</span>msg<span class="tk-punctuation">:</span> String<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Never<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span>msg<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">get_value_or_panic</span><span class="tk-punctuation">(</span>maybe<span class="tk-punctuation">:</span> Optional<span class="tk-punctuation">[</span>Int<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">if</span> maybe<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">return</span> maybe<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># Never substitutes for Int in this branch</span></span>
+<span class="cl" data-line="9">    panic<span class="tk-punctuation">(</span><span class="tk-string">"value is missing"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="functions-that-never-raise">Functions that never raise<a aria-label="Link to Functions that never raise" class="h__link" href="#functions-that-never-raise"></a></h3>
+<p>A function with <code>raises Never</code> guarantees at compile time that it never raises.
+This is equivalent to writing a plain non-raising function:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># These two signatures are equivalent:</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">safe_add</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises Never <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> a <span class="tk-operator">+</span> b</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">safe_add</span><span class="tk-punctuation">(</span>a<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">,</span> b<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">return</span> a <span class="tk-operator">+</span> b</span>
+</code></pre></figure>
+<p>This equivalency is especially useful in combination with
+<a href="../pages/12_errors-and-context-managers.html#parametric-raises">parametric raises</a>, where the compiler infers
+<code>raises Never</code> when a function argument doesn't raise.</p>
+<h2 class="h h--2" data-level="2" id="parametric-raises">Parametric raises<a aria-label="Link to Parametric raises" class="h__link" href="#parametric-raises"></a></h2>
+<p>You can write
+<a class="ext" data-external="" href="https://mojolang.org/docs/manual/parameters/#parameters-and-generics" rel="noopener noreferrer">parameterized functions</a> that
+propagate the error type from a function argument to the caller. This uses a
+compile-time parameter for the error type:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> run_action<span class="tk-punctuation">[</span></span>
+<span class="cl" data-line="2">    ErrorType<span class="tk-punctuation">:</span> AnyType</span>
+<span class="cl" data-line="3"><span class="tk-punctuation">]</span><span class="tk-punctuation">(</span>action<span class="tk-punctuation">:</span> <span class="tk-keyword">def</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> thin raises ErrorType <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">)</span> raises ErrorType <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> action<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The function type uses <code>thin</code> because <code>action</code> is a noncapturing function
+value.</p>
+<p>The <code>ErrorType</code> parameter is inferred from the function you pass in. If the
+function raises <code>NetworkError</code>, then <code>run_action</code> raises <code>NetworkError</code>. If the
+function raises <code>ParseError</code>, then <code>run_action</code> raises <code>ParseError</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">fetch_data</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises NetworkError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> NetworkError<span class="tk-punctuation">(</span>code<span class="tk-operator">=</span><span class="tk-number">404</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">parse_config</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises ParseError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">raise</span> ParseError<span class="tk-punctuation">(</span>position<span class="tk-operator">=</span><span class="tk-number">42</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-comment"># ...</span></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-comment"># ErrorType inferred as NetworkError</span></span>
+<span class="cl" data-line="10"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11">    _ <span class="tk-operator">=</span> run_action<span class="tk-punctuation">(</span>fetch_data<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Network failure:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"><span class="tk-comment"># ErrorType inferred as ParseError</span></span>
+<span class="cl" data-line="16"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="17">    _ <span class="tk-operator">=</span> run_action<span class="tk-punctuation">(</span>parse_config<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Parse failure:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>If the function argument doesn't raise at all, the compiler infers <code>Never</code> as
+the error type. This means <code>run_action</code> itself becomes non-raising, and no <code>try</code>
+block is needed:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">get_value</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">return</span> <span class="tk-number">99</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-comment"># ...</span></span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-comment"># ErrorType inferred as Never — no try block needed</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">var</span> result <span class="tk-operator">=</span> run_action<span class="tk-punctuation">(</span>get_value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Got value:"</span><span class="tk-punctuation">,</span> result<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Which produces this output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Got value: 99</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="typed-errors-and-error-interaction">Typed errors and <code>Error</code> interaction<a aria-label="Link to Typed errors and Error interaction" class="h__link" href="#typed-errors-and-error-interaction"></a></h2>
+<p>Most codebases contain a mix of functions that raise, don't raise, or
+raise typed errors. This section covers how the styles interact and how
+to work with them effectively.</p>
+<h3 class="h h--3" data-level="3" id="wrap-error-at-api-boundaries">Wrap <code>Error</code> at API boundaries<a aria-label="Link to Wrap Error at API boundaries" class="h__link" href="#wrap-error-at-api-boundaries"></a></h3>
+<p>When calling raising functions or other <code>Error</code>-raising code from a function
+that uses typed errors, catch the <code>Error</code> and convert it:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">validate_with_error</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">if</span> value <span class="tk-operator">&lt;</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">raise</span> <span class="tk-string">"value cannot be negative"</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">return</span> value</span>
+<span class="cl" data-line="5"></span>
+<span class="cl" data-line="6"><span class="tk-keyword">def</span> <span class="tk-function">wrapped_validate</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises ValidationError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">return</span> validate_with_error<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">raise</span> ValidationError<span class="tk-punctuation">(</span>field<span class="tk-operator">=</span><span class="tk-string">"value"</span><span class="tk-punctuation">,</span> reason<span class="tk-operator">=</span>String<span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="avoid-bare-raises-with-typed-errors">Avoid bare <code>raises</code> with typed errors<a aria-label="Link to Avoid bare raises with typed errors" class="h__link" href="#avoid-bare-raises-with-typed-errors"></a></h3>
+<p>Using bare <code>raises</code> (without a type) on an function that calls typed-error
+functions causes <em>type erasure</em>—the compiler forgets the specific error type,
+even though the runtime preserves the error's identity:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Anti-pattern: bare raises erases type info at compile time</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">def</span> <span class="tk-function">validate_bare_raises</span><span class="tk-punctuation">(</span>value<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">return</span> validate_typed<span class="tk-punctuation">(</span>value<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The caller of <code>validate_bare_raises()</code> receives an <code>Error</code>, not a
+<code>ValidationError</code>:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2">    _ <span class="tk-operator">=</span> validate_bare_raises<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="4"> <span class="tk-comment"># e is typed as Error — no field access available</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># e.field would not compile here</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">ValidationError(value): cannot be negative</span>
+</code></pre></figure>
+<p>The error message still shows <code>ValidationError</code> because the runtime preserves
+the original error's <a class="ext" data-external="" href="https://mojolang.org/docs/std/format/Writable/" rel="noopener noreferrer"><code>Writable</code></a> output. But the
+compiler sees only <code>Error</code>, so you lose access to structured fields. Always use
+<code>raises YourErrorType</code> to maintain type safety.</p>
+<p>Note that type erasure only affects <em>uncaught</em> errors that propagate through a
+bare <code>raises</code> function. If you catch the typed error locally, you still get full
+field access:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">error_caller</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3">        _ <span class="tk-operator">=</span> validate_typed<span class="tk-punctuation">(</span><span class="tk-operator">-</span><span class="tk-number">5</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-comment"># e is a ValidationError — field access works</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Field:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">.</span>field<span class="tk-punctuation">,</span> <span class="tk-string">"Reason:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">.</span>reason<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Field: value Reason: cannot be negative</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="dont-mix-error-types-in-a-single-try-block">Don't mix error types in a single <code>try</code> block<a aria-label="Link to Don't mix error types in a single try block" class="h__link" href="#dont-mix-error-types-in-a-single-try-block"></a></h3>
+<p>You can't call functions that raise different error types in the same <code>try</code>
+block. The compiler rejects the mismatch:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">error_func</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> <span class="tk-string">"something went wrong"</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">def</span> <span class="tk-function">typed_func</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises ValidationError <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">raise</span> ValidationError<span class="tk-punctuation">(</span>field<span class="tk-operator">=</span><span class="tk-string">"x"</span><span class="tk-punctuation">,</span> reason<span class="tk-operator">=</span><span class="tk-string">"invalid"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"><span class="tk-comment"># This doesn't compile</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">def</span> <span class="tk-function">mixed</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises ValidationError<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10">        _ <span class="tk-operator">=</span> error_func<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># raises Error</span></span>
+<span class="cl" data-line="11">        _ <span class="tk-operator">=</span> typed_func<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># raises ValidationError</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>The compiler reports:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">error: cannot call function that may raise 'Error' in a context that</span>
+<span class="cl" data-line="2">supports an error type of 'ValidationError'</span>
+</code></pre></figure>
+<p>To call both functions, use separate <code>try</code> blocks or wrap the <code>Error</code>-raising
+function as shown in
+<a href="../pages/12_errors-and-context-managers.html#wrap-error-at-api-boundaries">Wrap <code>Error</code> at API boundaries</a>.</p>
+<h3 class="h h--3" data-level="3" id="recommendations-for-mixed-codebases">Recommendations for mixed codebases<a aria-label="Link to Recommendations for mixed codebases" class="h__link" href="#recommendations-for-mixed-codebases"></a></h3>
+<p>When working with both <code>Error</code> and typed errors:</p>
+<ul>
+<li class=""><strong>Use <code>raises YourErrorType</code></strong> — Always specify the error type in function
+signatures. Bare <code>raises</code> discards type information.</li>
+<li class=""><strong>Use separate <code>try</code> blocks</strong> — When calling functions with different error
+types, use nested or sequential <code>try</code> blocks to handle each type
+independently.</li>
+</ul>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>For a complete working example of these interaction patterns, see
+<a class="ext" data-external="" href="https://github.com/modular/modular/blob/mojo/v1.1.0/Mojo/docs/site/code/manual/errors/error_interaction.mojo" rel="noopener noreferrer"><code>error_interaction.mojo</code></a>.</p></div></aside>
+<h2 class="h h--2" data-level="2" id="enable-stack-trace-generation-for-errors">Enable stack trace generation for errors<a aria-label="Link to Enable stack trace generation for errors" class="h__link" href="#enable-stack-trace-generation-for-errors"></a></h2>
+<p>Because Mojo represents errors as alternate return values rather than
+stack-unwinding exceptions, stack trace collection isn't automatic. Collecting
+a stack trace requires heap allocation and adds runtime overhead, so it's
+disabled by default to keep error handling lightweight.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>important</p><div class="callout__body"><p>Stack traces are a feature of the built-in <code>Error</code> type only. Typed errors
+currently don't capture stack traces because the trace is collected inside
+<code>Error.__init__()</code>, and custom error structs have no equivalent hook. The
+examples in this section all use <code>Error</code> intentionally.</p></div></aside>
+<p>Mojo generates a stack trace when your program hits a segmentation fault.
+However, by default Mojo <em>doesn't</em> generate a stack trace when your program
+raises an error—this avoids the additional runtime overhead. To enable stack
+traces for raised errors, set the <code>MODULAR_DEBUG</code> environment variable to
+<code>stack-trace-on-error</code>, as shown in the examples below.</p>
+<p>Keep in mind that when you compile your program with
+<a class="ext" data-external="" href="https://mojolang.org/docs/cli/build/" rel="noopener noreferrer"><code>mojo build</code></a>, the compiler optimizes and strips symbols by
+default, so often your stack trace won't be very useful.</p>
+<p>Consider this program:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">stacktrace_error.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">func2</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"Intentional error"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">func1</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">    func2<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10">    func1<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>If you compile the program with default settings and run it with the
+environment variable set, you'll see a stack trace without symbols:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo build stacktrace_error.mojo</span>
+</code></pre></figure>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">MODULAR_DEBUG<span class="tk-operator">=</span>stack-trace-on-error ./stacktrace_error</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">#0 0x... llvm::sys::PrintStackTrace(llvm::raw_ostream&amp;, int)</span>
+<span class="cl" data-line="2">#1 0x... KGEN_CompilerRT_GetStackTrace</span>
+<span class="cl" data-line="3">#2 0x... main (./stacktrace_error+...)</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5">Unhandled exception caught during execution: Intentional error</span>
+</code></pre></figure>
+<p>To generate a more useful stack trace, compile the program with
+<code>--debug-level full</code> (or <code>-g</code>) to include debug symbols:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo build --debug-level full stacktrace_error.mojo</span>
+</code></pre></figure>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">MODULAR_DEBUG<span class="tk-operator">=</span>stack-trace-on-error ./stacktrace_error</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">#0 0x... llvm::sys::PrintStackTrace(llvm::raw_ostream&amp;, int)</span>
+<span class="cl" data-line="2">#1 0x... KGEN_CompilerRT_GetStackTrace</span>
+<span class="cl" data-line="3">#2 0x... Error.__init__[...](...) .../builtin/error.mojo:159:38</span>
+<span class="cl" data-line="4">#3 0x... stacktrace_error::func2() stacktrace_error.mojo:14:16</span>
+<span class="cl" data-line="5">#4 0x... stacktrace_error::func1() stacktrace_error.mojo:18:10</span>
+<span class="cl" data-line="6">#5 0x... stacktrace_error::main() stacktrace_error.mojo:22:10</span>
+<span class="cl" data-line="7">#6 0x... __wrap_and_execute_raising_main[...](...) .../builtin/_startup.mojo:88:18</span>
+<span class="cl" data-line="8">#7 0x... main .../builtin/_startup.mojo:103:4</span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10">Unhandled exception caught during execution: Intentional error</span>
+</code></pre></figure>
+<p>With debug symbols, the trace shows the function call chain and source
+locations: <code>main()</code> → <code>func1()</code> → <code>func2()</code> → <code>Error.__init__()</code>.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Running your program directly with <a class="ext" data-external="" href="https://mojolang.org/docs/cli/run/" rel="noopener noreferrer"><code>mojo run</code></a> or
+<code>mojo</code> doesn't include debug symbols in the stack trace, even with
+<code>--debug-level full</code>. Use <code>mojo build</code> with <code>-g</code> and run the compiled binary
+for symbolicated stack traces.</p></div></aside>
+<h3 class="h h--3" data-level="3" id="capture-a-stack-trace-programmatically">Capture a stack trace programmatically<a aria-label="Link to Capture a stack trace programmatically" class="h__link" href="#capture-a-stack-trace-programmatically"></a></h3>
+<p>You can bind the <code>Error</code> instance to a variable in the <code>except</code> clause and
+call its
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/builtin/error/Error/#get_stack_trace" rel="noopener noreferrer"><code>get_stack_trace()</code></a> method
+to get the stack trace as an <code>Optional[String]</code>. The method returns <code>None</code> if
+stack trace collection was disabled or unavailable:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">stacktrace_error_capture.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">func2</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">raise</span> Error<span class="tk-punctuation">(</span><span class="tk-string">"Intentional error"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-keyword">def</span> <span class="tk-function">func1</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> <span class="tk-boolean">None</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6">    func2<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"></span>
+<span class="cl" data-line="9"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11">        func1<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">except</span> e<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"-"</span> <span class="tk-operator">*</span> <span class="tk-number">20</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">var</span> stack_trace <span class="tk-operator">=</span> e<span class="tk-punctuation">.</span>get_stack_trace<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">if</span> stack_trace<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span>stack_trace<span class="tk-punctuation">.</span>value<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="18"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"No stack trace available"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>When you compile with debug symbols and run with stack trace generation enabled:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo build --debug-level full stacktrace_error_capture.mojo</span>
+</code></pre></figure>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">MODULAR_DEBUG<span class="tk-operator">=</span>stack-trace-on-error ./stacktrace_error_capture</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Intentional error</span>
+<span class="cl" data-line="2">--------------------</span>
+<span class="cl" data-line="3">#0 0x... llvm::sys::PrintStackTrace(llvm::raw_ostream&amp;, int)</span>
+<span class="cl" data-line="4">#1 0x... KGEN_CompilerRT_GetStackTrace</span>
+<span class="cl" data-line="5">#2 0x... Error.__init__[...](...) .../builtin/error.mojo:159:38</span>
+<span class="cl" data-line="6">#3 0x... stacktrace_error_capture::func2() stacktrace_error_capture.mojo:14:16</span>
+<span class="cl" data-line="7">#4 0x... stacktrace_error_capture::func1() stacktrace_error_capture.mojo:18:10</span>
+<span class="cl" data-line="8">#5 0x... stacktrace_error_capture::main() stacktrace_error_capture.mojo:23:14</span>
+<span class="cl" data-line="9">#6 0x... __wrap_and_execute_raising_main[...](...) .../builtin/_startup.mojo:88:18</span>
+<span class="cl" data-line="10">#7 0x... main .../builtin/_startup.mojo:103:4</span>
+</code></pre></figure>
+<p>Without enabling stack trace generation, the output is:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Intentional error</span>
+<span class="cl" data-line="2">--------------------</span>
+<span class="cl" data-line="3">No stack trace available</span>
+</code></pre></figure>
+<h2 class="h h--2" data-level="2" id="use-a-context-manager">Use a context manager<a aria-label="Link to Use a context manager" class="h__link" href="#use-a-context-manager"></a></h2>
+<p>A <em>context manager</em> is an object that manages resources such as files, network
+connections, and database connections. It provides a way to allocate resources
+and release them automatically when they are no longer needed, ensuring proper
+cleanup and preventing resource leaks even when errors occur.</p>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>Context managers work with both typed errors and the built-in <code>Error</code> type. The
+<code>with</code> statement handles either error style transparently.</p></div></aside>
+<p>As an example, consider reading data from a file. A naive approach might look
+like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Obtain a file handle to read from storage</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> f <span class="tk-operator">=</span> <span class="tk-builtin">open</span><span class="tk-punctuation">(</span>input_file<span class="tk-punctuation">,</span> <span class="tk-string">"r"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"><span class="tk-keyword">var</span> content <span class="tk-operator">=</span> f<span class="tk-punctuation">.</span><span class="tk-keyword">read</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"><span class="tk-comment"># Process the content as needed</span></span>
+<span class="cl" data-line="5"><span class="tk-comment"># Close the file handle</span></span>
+<span class="cl" data-line="6">f<span class="tk-punctuation">.</span>close<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Calling <a class="ext" data-external="" href="https://mojolang.org/docs/std/io/file/FileHandle/#close" rel="noopener noreferrer"><code>close()</code></a> releases the
+memory and other operating system resources associated with the opened file. If
+your program were to open many files without closing them, you could exhaust the
+resources available to your program and cause errors. The problem is even worse
+if you were writing to a file instead of reading from it, because the operating
+system might buffer the output in memory until the file is closed. If your
+program were to crash instead of exiting normally, that buffered data could be
+lost instead of being written to storage.</p>
+<p>The example above includes the call to <code>close()</code>, but it ignores the
+possibility that <a class="ext" data-external="" href="https://mojolang.org/docs/std/io/file/FileHandle/#read" rel="noopener noreferrer"><code>read()</code></a> could
+raise an error, which would prevent the <code>close()</code> from executing.
+To handle this scenario, you could rewrite the code to use <code>try</code> like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># Obtain a file handle to read from storage</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">var</span> f <span class="tk-operator">=</span> <span class="tk-builtin">open</span><span class="tk-punctuation">(</span>input_file<span class="tk-punctuation">,</span> <span class="tk-string">"r"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-keyword">try</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> content <span class="tk-operator">=</span> f<span class="tk-punctuation">.</span><span class="tk-keyword">read</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="6"> <span class="tk-comment"># Process the content as needed</span></span>
+<span class="cl" data-line="7"><span class="tk-keyword">finally</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-comment"># Ensure that the file handle is closed even if read() raises an error</span></span>
+<span class="cl" data-line="9">    f<span class="tk-punctuation">.</span>close<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>However, the <a class="ext" data-external="" href="https://mojolang.org/docs/std/io/file/FileHandle/" rel="noopener noreferrer"><code>FileHandle</code></a> struct
+returned by <a class="ext" data-external="" href="https://mojolang.org/docs/std/io/file/open/" rel="noopener noreferrer"><code>open()</code></a> is a context manager.
+When used with Mojo's <code>with</code> statement, a context manager ensures that the
+resources it manages are properly released at the end of the block, even if an
+error occurs. In the case of a <code>FileHandle</code>, that means the call to <code>close()</code>
+takes place automatically. So you could rewrite the example above to take
+advantage of the context manager (and omit the explicit call to <code>close()</code>)
+like this:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">with</span> <span class="tk-builtin">open</span><span class="tk-punctuation">(</span>input_file<span class="tk-punctuation">,</span> <span class="tk-string">"r"</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> f<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> content <span class="tk-operator">=</span> f<span class="tk-punctuation">.</span><span class="tk-keyword">read</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-comment"># Process the content as needed</span></span>
+</code></pre></figure>
+<p>The <code>with</code> statement also allows you to use multiple context managers within the
+same code block. As an example, the following code opens one text file, reads
+its entire content, converts it to upper case, and then writes the result to a
+different file:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">with</span> <span class="tk-builtin">open</span><span class="tk-punctuation">(</span>input_file<span class="tk-punctuation">,</span> <span class="tk-string">"r"</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> f_in<span class="tk-punctuation">,</span> <span class="tk-builtin">open</span><span class="tk-punctuation">(</span>output_file<span class="tk-punctuation">,</span> <span class="tk-string">"w"</span><span class="tk-punctuation">)</span> <span class="tk-keyword">as</span> f_out<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="2"> <span class="tk-keyword">var</span> input_text <span class="tk-operator">=</span> f_in<span class="tk-punctuation">.</span><span class="tk-keyword">read</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">var</span> output_text <span class="tk-operator">=</span> input_text<span class="tk-punctuation">.</span>upper<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4">    f_out<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span>output_text<span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p><code>FileHandle</code> is perhaps the most commonly used context manager. Other examples
+of context managers in the Mojo standard library are
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/tempfile/tempfile/NamedTemporaryFile/" rel="noopener noreferrer"><code>NamedTemporaryFile</code></a>,
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/tempfile/tempfile/TemporaryDirectory/" rel="noopener noreferrer"><code>TemporaryDirectory</code></a>,
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/utils/lock/BlockingScopedLock/" rel="noopener noreferrer"><code>BlockingScopedLock</code></a>, and
+<a class="ext" data-external="" href="https://mojolang.org/docs/std/testing/testing/assert_raises/" rel="noopener noreferrer"><code>assert_raises</code></a>. You can also
+create your own custom context managers, as described in <a href="../pages/12_errors-and-context-managers.html#write-a-custom-context-manager">Write a custom context
+manager</a> below.</p>
+<h2 class="h h--2" data-level="2" id="write-a-custom-context-manager">Write a custom context manager<a aria-label="Link to Write a custom context manager" class="h__link" href="#write-a-custom-context-manager"></a></h2>
+<p>Writing a custom context manager is a matter of defining a
+<a href="../pages/13_mojo-structs.html">struct</a> that implements two special <em>dunder</em> methods
+("double underscore" methods): <code>__enter__()</code> and <code>__exit__()</code>:</p>
+<ul>
+<li class="">
+<p><code>__enter__()</code> is called by the <code>with</code> statement to enter the runtime context.
+The <code>__enter__()</code> method should initialize any state necessary for the context
+and return the context manager.</p>
+</li>
+<li class="">
+<p><code>__exit__()</code> is called when the <code>with</code> code block completes execution, even if
+the <code>with</code> code block terminates with a call to <code>continue</code>, <code>break</code>, or
+<code>return</code>. The <code>__exit__()</code> method should release any resources associated with
+the context. After the <code>__exit__()</code> method returns, the context manager is
+destroyed.</p>
+<p>If the <code>with</code> code block raises an error, then the <code>__exit__()</code> method runs
+before any error processing occurs (that is, before it is caught by a
+<code>try</code>/<code>except</code> structure or your program terminates). If you'd like to define
+conditional processing for error conditions in a <code>with</code> code block, you can
+implement an overloaded version of <code>__exit__()</code> that takes an error
+argument. For more information, see
+<a href="../pages/12_errors-and-context-managers.html#define-a-conditional-__exit__-method">Define a conditional <code>__exit__()</code> method</a>
+and
+<a href="../pages/12_errors-and-context-managers.html#handle-typed-errors-in-__exit__">Handle typed errors in <code>__exit__()</code></a>
+below.</p>
+<p>For context managers that don't need to release resources or perform other
+actions on termination, you are not required to implement an <code>__exit__()</code>
+method. In that case the context manager is destroyed automatically after the
+<code>with</code> code block completes execution.</p>
+</li>
+</ul>
+<p>Here is an example of implementing a <code>Timer</code> context manager, which prints the
+amount of time spent executing the <code>with</code> code block:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">context_mgr.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> std<span class="tk-punctuation">.</span>sys</span>
+<span class="cl" data-line="2"><span class="tk-keyword">import</span> std<span class="tk-punctuation">.</span>time</span>
+<span class="cl" data-line="3"></span>
+<span class="cl" data-line="4"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="5"><span class="tk-keyword">struct</span> <span class="tk-class-name">Timer</span><span class="tk-punctuation">(</span>ImplicitlyCopyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="6"> <span class="tk-keyword">var</span> start_time<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="9"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>start_time <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"> <span class="tk-keyword">def</span> <span class="tk-function">__enter__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>start_time <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>time<span class="tk-punctuation">.</span>perf_counter_ns<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="13"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span></span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">def</span> <span class="tk-function">__exit__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> end_time <span class="tk-operator">=</span> time<span class="tk-punctuation">.</span>perf_counter_ns<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="17"> <span class="tk-keyword">var</span> elapsed_time_ms <span class="tk-operator">=</span> <span class="tk-builtin">round</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="18">            Float64<span class="tk-punctuation">(</span>end_time <span class="tk-operator">-</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>start_time<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> <span class="tk-number">1e6</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span></span>
+<span class="cl" data-line="19"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Elapsed time:"</span><span class="tk-punctuation">,</span> elapsed_time_ms<span class="tk-punctuation">,</span> <span class="tk-string">"milliseconds"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21"></span>
+<span class="cl" data-line="22"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">with</span> Timer<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Beginning execution"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="25">        time<span class="tk-punctuation">.</span>sleep<span class="tk-punctuation">(</span><span class="tk-number">1.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">if</span> <span class="tk-builtin">len</span><span class="tk-punctuation">(</span>sys<span class="tk-punctuation">.</span>argv<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span> <span class="tk-operator">&gt;</span> <span class="tk-number">1</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">raise</span> <span class="tk-string">"simulated error"</span></span>
+<span class="cl" data-line="28">        time<span class="tk-punctuation">.</span>sleep<span class="tk-punctuation">(</span><span class="tk-number">1.0</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="29"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Ending execution"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Running this example produces output like this:</p>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo context_mgr.mojo</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Beginning execution</span>
+<span class="cl" data-line="2">Ending execution</span>
+<span class="cl" data-line="3">Elapsed time: 2010.0 milliseconds</span>
+</code></pre></figure>
+<figure class="cb" data-lang="sh"><figcaption class="cb__bar"><span class="cb__lang">Shell</span><span class="cb__spacer"></span><button aria-label="Copy Shell code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">mojo context_mgr.mojo fail</span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Beginning execution</span>
+<span class="cl" data-line="2">Elapsed time: 1002.0 milliseconds</span>
+<span class="cl" data-line="3">Unhandled exception caught during execution: simulated error</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="define-a-conditional-__exit__-method">Define a conditional <code>__exit__()</code> method<a aria-label="Link to Define a conditional __exit__() method" class="h__link" href="#define-a-conditional-__exit__-method"></a></h3>
+<p>When creating a context manager, you can implement the <code>__exit__(self)</code> form of
+the <code>__exit__()</code> method to handle completion of the <code>with</code> statement under all
+circumstances including errors. However, you have the option of additionally
+implementing an overloaded version that is invoked instead when an <code>Error</code>
+occurs in the <code>with</code> code block:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> <span class="tk-function">__exit__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> error<span class="tk-punctuation">:</span> Error<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool</span>
+</code></pre></figure>
+<p>Given the <code>Error</code> that occurred as an argument, the method can do any of the
+following:</p>
+<ul>
+<li class="">Return <code>True</code> to suppress the error.</li>
+<li class="">Return <code>False</code> to re-raise the error.</li>
+<li class="">Raise a new error.</li>
+</ul>
+<p>The following is an example of a context manager that suppresses only a certain
+error condition and propagates all others:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__file">conditional_context_mgr.mojo</span><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">import</span> std<span class="tk-punctuation">.</span>time</span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">struct</span> <span class="tk-class-name">ConditionalTimer</span><span class="tk-punctuation">(</span>ImplicitlyCopyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> start_time<span class="tk-punctuation">:</span> Int</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>start_time <span class="tk-operator">=</span> <span class="tk-number">0</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"> <span class="tk-keyword">def</span> <span class="tk-function">__enter__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="11"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>start_time <span class="tk-operator">=</span> Int<span class="tk-punctuation">(</span>time<span class="tk-punctuation">.</span>perf_counter_ns<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span></span>
+<span class="cl" data-line="13"></span>
+<span class="cl" data-line="14"> <span class="tk-keyword">def</span> <span class="tk-function">__exit__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">var</span> end_time <span class="tk-operator">=</span> time<span class="tk-punctuation">.</span>perf_counter_ns<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="16"> <span class="tk-keyword">var</span> elapsed_time_ms <span class="tk-operator">=</span> <span class="tk-builtin">round</span><span class="tk-punctuation">(</span></span>
+<span class="cl" data-line="17">            Float64<span class="tk-punctuation">(</span>end_time <span class="tk-operator">-</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>start_time<span class="tk-punctuation">)</span> <span class="tk-operator">/</span> <span class="tk-number">1e6</span><span class="tk-punctuation">,</span> <span class="tk-number">3</span></span>
+<span class="cl" data-line="18"> <span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Elapsed time:"</span><span class="tk-punctuation">,</span> elapsed_time_ms<span class="tk-punctuation">,</span> <span class="tk-string">"milliseconds"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="20"></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">def</span> <span class="tk-function">__exit__</span><span class="tk-punctuation">(</span><span class="tk-keyword">mut</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">:</span> Error<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="22"> <span class="tk-keyword">if</span> String<span class="tk-punctuation">(</span>e<span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-string">"just a warning"</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Suppressing error:"</span><span class="tk-punctuation">,</span> e<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="24"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>__exit__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="25"> <span class="tk-keyword">return</span> <span class="tk-boolean">True</span></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Propagating error"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="28"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>__exit__<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="29"> <span class="tk-keyword">return</span> <span class="tk-boolean">False</span></span>
+<span class="cl" data-line="30"></span>
+<span class="cl" data-line="31"><span class="tk-keyword">def</span> <span class="tk-function">flaky_identity</span><span class="tk-punctuation">(</span>n<span class="tk-punctuation">:</span> Int<span class="tk-punctuation">)</span> raises <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Int<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="32"> <span class="tk-keyword">if</span> <span class="tk-punctuation">(</span>n <span class="tk-operator">%</span> <span class="tk-number">4</span><span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="33"> <span class="tk-keyword">raise</span> <span class="tk-string">"really bad"</span></span>
+<span class="cl" data-line="34"> <span class="tk-keyword">elif</span> <span class="tk-punctuation">(</span>n <span class="tk-operator">%</span> <span class="tk-number">2</span><span class="tk-punctuation">)</span> <span class="tk-operator">==</span> <span class="tk-number">0</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="35"> <span class="tk-keyword">raise</span> <span class="tk-string">"just a warning"</span></span>
+<span class="cl" data-line="36"> <span class="tk-keyword">else</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="37"> <span class="tk-keyword">return</span> n</span>
+<span class="cl" data-line="38"></span>
+<span class="cl" data-line="39"><span class="tk-keyword">def</span> <span class="tk-function">main</span><span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> raises<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="40"> <span class="tk-keyword">for</span> i <span class="tk-keyword">in</span> <span class="tk-builtin">range</span><span class="tk-punctuation">(</span><span class="tk-number">1</span><span class="tk-punctuation">,</span> <span class="tk-number">9</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="41"> <span class="tk-keyword">with</span> ConditionalTimer<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="42"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"\nBeginning execution"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="43"></span>
+<span class="cl" data-line="44"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"i ="</span><span class="tk-punctuation">,</span> i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="45">            time<span class="tk-punctuation">.</span>sleep<span class="tk-punctuation">(</span><span class="tk-number">0.1</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="46"></span>
+<span class="cl" data-line="47"> <span class="tk-keyword">if</span> i <span class="tk-operator">==</span> <span class="tk-number">3</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="48"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"continue executed"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="49"> <span class="tk-keyword">continue</span></span>
+<span class="cl" data-line="50"></span>
+<span class="cl" data-line="51"> <span class="tk-keyword">var</span> j <span class="tk-operator">=</span> flaky_identity<span class="tk-punctuation">(</span>i<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="52"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"j ="</span><span class="tk-punctuation">,</span> j<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="53"></span>
+<span class="cl" data-line="54"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Ending execution"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<p>Running this example produces this output:</p>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"></span>
+<span class="cl" data-line="2">Beginning execution</span>
+<span class="cl" data-line="3">i = 1</span>
+<span class="cl" data-line="4">j = 1</span>
+<span class="cl" data-line="5">Ending execution</span>
+<span class="cl" data-line="6">Elapsed time: 105.0 milliseconds</span>
+<span class="cl" data-line="7"></span>
+<span class="cl" data-line="8">Beginning execution</span>
+<span class="cl" data-line="9">i = 2</span>
+<span class="cl" data-line="10">Suppressing error: just a warning</span>
+<span class="cl" data-line="11">Elapsed time: 106.0 milliseconds</span>
+<span class="cl" data-line="12"></span>
+<span class="cl" data-line="13">Beginning execution</span>
+<span class="cl" data-line="14">i = 3</span>
+<span class="cl" data-line="15">continue executed</span>
+<span class="cl" data-line="16">Elapsed time: 106.0 milliseconds</span>
+<span class="cl" data-line="17"></span>
+<span class="cl" data-line="18">Beginning execution</span>
+<span class="cl" data-line="19">i = 4</span>
+<span class="cl" data-line="20">Propagating error</span>
+<span class="cl" data-line="21">Elapsed time: 106.0 milliseconds</span>
+<span class="cl" data-line="22">Unhandled exception caught during execution: really bad</span>
+</code></pre></figure>
+<h3 class="h h--3" data-level="3" id="handle-typed-errors-in-__exit__">Handle typed errors in <code>__exit__()</code><a aria-label="Link to Handle typed errors in __exit__()" class="h__link" href="#handle-typed-errors-in-__exit__"></a></h3>
+<p>The <code>__exit__(self, error: Error)</code> overload handles only <code>Error</code> values.
+To handle typed errors, implement a parameterized <code>__exit__()</code> method with a
+compile-time error type parameter:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">def</span> __exit__<span class="tk-punctuation">[</span>ErrType<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> err<span class="tk-punctuation">:</span> ErrType<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool</span>
+</code></pre></figure>
+<p>This method receives the typed error directly, preserving its full type
+information. You can use
+<a href="../pages/33_reflection.html">reflection</a> to inspect the error
+type at compile time. For example, you can:</p>
+<ul>
+<li class=""><code>reflect[ErrType].name()</code> — Get the error type's name as a string.</li>
+<li class=""><code>comptime if conforms_to(ErrType, Writable)</code> — Check if the error
+implements <code>Writable</code>, and if so, access the error through its <code>Writable</code>
+interface.</li>
+</ul>
+<p>The following <code>ResourceGuard</code> example demonstrates this pattern:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-keyword">from</span> std<span class="tk-punctuation">.</span>reflection <span class="tk-keyword">import</span> <span class="tk-operator">*</span></span>
+<span class="cl" data-line="2"></span>
+<span class="cl" data-line="3"><span class="tk-punctuation">@fieldwise_init</span></span>
+<span class="cl" data-line="4"><span class="tk-keyword">struct</span> <span class="tk-class-name">ConnectionError</span><span class="tk-punctuation">(</span>Copyable<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="5"> <span class="tk-keyword">var</span> message<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="6"></span>
+<span class="cl" data-line="7"> <span class="tk-keyword">def</span> <span class="tk-function">write_to</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> <span class="tk-keyword">mut</span> writer<span class="tk-punctuation">:</span> Some<span class="tk-punctuation">[</span>Writer<span class="tk-punctuation">]</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="8">        writer<span class="tk-punctuation">.</span>write<span class="tk-punctuation">(</span><span class="tk-string">"ConnectionError: "</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>message<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="9"></span>
+<span class="cl" data-line="10"></span>
+<span class="cl" data-line="11"><span class="tk-keyword">struct</span> <span class="tk-class-name">ResourceGuard</span><span class="tk-punctuation">(</span>ImplicitlyCopyable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="12"> <span class="tk-keyword">var</span> name<span class="tk-punctuation">:</span> String</span>
+<span class="cl" data-line="13"> <span class="tk-keyword">var</span> suppress_errors<span class="tk-punctuation">:</span> Bool</span>
+<span class="cl" data-line="14"></span>
+<span class="cl" data-line="15"> <span class="tk-keyword">def</span> <span class="tk-function">__init__</span><span class="tk-punctuation">(</span><span class="tk-keyword">out</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> name<span class="tk-punctuation">:</span> String<span class="tk-punctuation">,</span> suppress_errors<span class="tk-punctuation">:</span> Bool <span class="tk-operator">=</span> <span class="tk-boolean">False</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="16"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>name <span class="tk-operator">=</span> name</span>
+<span class="cl" data-line="17"> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>suppress_errors <span class="tk-operator">=</span> suppress_errors</span>
+<span class="cl" data-line="18"></span>
+<span class="cl" data-line="19"> <span class="tk-keyword">def</span> <span class="tk-function">__enter__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Self<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="20"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Acquiring:"</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="21"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span></span>
+<span class="cl" data-line="22"></span>
+<span class="cl" data-line="23"> <span class="tk-keyword">def</span> <span class="tk-function">__exit__</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="24"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Releasing:"</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>name<span class="tk-punctuation">,</span> <span class="tk-string">"(no error)"</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="25"></span>
+<span class="cl" data-line="26"> <span class="tk-keyword">def</span> __exit__<span class="tk-punctuation">[</span>ErrType<span class="tk-punctuation">:</span> AnyType<span class="tk-punctuation">]</span><span class="tk-punctuation">(</span><span class="tk-special-vars">self</span><span class="tk-punctuation">,</span> err<span class="tk-punctuation">:</span> ErrType<span class="tk-punctuation">)</span> <span class="tk-operator">-</span><span class="tk-operator">&gt;</span> Bool<span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="27"> <span class="tk-keyword">comptime</span> type_name <span class="tk-operator">=</span> reflect<span class="tk-punctuation">[</span>ErrType<span class="tk-punctuation">]</span><span class="tk-punctuation">.</span>name<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="28"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Releasing:"</span><span class="tk-punctuation">,</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="29"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"  Error type:"</span><span class="tk-punctuation">,</span> type_name<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="30"></span>
+<span class="cl" data-line="31"> <span class="tk-keyword">comptime</span> <span class="tk-keyword">if</span> conforms_to<span class="tk-punctuation">(</span>ErrType<span class="tk-punctuation">,</span> Writable<span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="32"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"  Message:"</span><span class="tk-punctuation">,</span> err<span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="33"></span>
+<span class="cl" data-line="34"> <span class="tk-keyword">return</span> <span class="tk-special-vars">self</span><span class="tk-punctuation">.</span>suppress_errors</span>
+</code></pre></figure>
+<p>When no error occurs, <code>__exit__(self)</code> runs as usual. When a typed error occurs,
+<code>__exit__[ErrType]()</code> runs instead, giving you access to the error type and
+its data:</p>
+<figure class="cb" data-lang="mojo"><figcaption class="cb__bar"><span class="cb__lang">Mojo</span><span class="cb__spacer"></span><button aria-label="Copy Mojo code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1"><span class="tk-comment"># No error — calls __exit__(self)</span></span>
+<span class="cl" data-line="2"><span class="tk-keyword">with</span> ResourceGuard<span class="tk-punctuation">(</span><span class="tk-string">"database"</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="3"> <span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Working..."</span><span class="tk-punctuation">)</span></span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5"><span class="tk-comment"># Typed error, suppressed — __exit__[ErrType] returns True</span></span>
+<span class="cl" data-line="6"><span class="tk-keyword">with</span> ResourceGuard<span class="tk-punctuation">(</span><span class="tk-string">"cache"</span><span class="tk-punctuation">,</span> suppress_errors<span class="tk-operator">=</span><span class="tk-boolean">True</span><span class="tk-punctuation">)</span><span class="tk-punctuation">:</span></span>
+<span class="cl" data-line="7">    use_connection<span class="tk-punctuation">(</span><span class="tk-punctuation">)</span> <span class="tk-comment"># raises ConnectionError</span></span>
+<span class="cl" data-line="8"><span class="tk-keyword">print</span><span class="tk-punctuation">(</span><span class="tk-string">"Continued after suppressed error"</span><span class="tk-punctuation">)</span></span>
+</code></pre></figure>
+<figure class="cb cb--transcript" data-lang="output"><figcaption class="cb__bar"><span class="cb__lang">Output</span><span class="cb__spacer"></span><button aria-label="Copy Output code to clipboard" class="cb__copy" data-copy="" type="button">Copy</button></figcaption><pre class="cb__pre"><code class="cb__code"><span class="cl" data-line="1">Acquiring: database</span>
+<span class="cl" data-line="2">Working...</span>
+<span class="cl" data-line="3">Releasing: database (no error)</span>
+<span class="cl" data-line="4"></span>
+<span class="cl" data-line="5">Acquiring: cache</span>
+<span class="cl" data-line="6">Releasing: cache</span>
+<span class="cl" data-line="7">  Error type: ConnectionError</span>
+<span class="cl" data-line="8">  Message: ConnectionError: connection timed out</span>
+<span class="cl" data-line="9">Continued after suppressed error</span>
+</code></pre></figure>
+<aside class="callout callout--note"><p class="callout__label"><span aria-hidden="true" class="callout__glyph">◆</span>Note</p><div class="callout__body"><p>For a complete working example including error suppression and propagation, see
+<a class="ext" data-external="" href="https://github.com/modular/modular/blob/mojo/v1.1.0/Mojo/docs/site/code/manual/errors/resource_guard.mojo" rel="noopener noreferrer"><code>resource_guard.mojo</code></a>.</p></div></aside>
+<p class="colophon">This chapter is a faithful rendering of the Mojo documentation page <a class="ext" href="https://mojolang.org/docs/manual/errors/" rel="noopener noreferrer" data-external>https://mojolang.org/docs/manual/errors/</a>, saved Thu, 01 Oct 2026 15:34:08 GMT.</p>
+<nav class="pager" aria-label="Chapter navigation"><a class="pager__link pager__link--prev" href="../pages/11_control-flow.html"><span class="pager__dir">← Previous</span><span class="pager__title">Control flow</span></a><a class="pager__link pager__link--next" href="../pages/13_mojo-structs.html"><span class="pager__dir">Next →</span><span class="pager__title">Mojo structs</span></a></nav>
+</article>
+<details class="rail rail--inline"><summary>On this page</summary><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#raise-an-error">Raise an error</a></li><li class="rail__depth-2"><a href="#handle-an-error">Handle an error</a></li><li class="rail__depth-2"><a href="#typed-errors">Typed errors</a></li><li class="rail__depth-2"><a href="#representing-multiple-error-conditions">Representing multiple error conditions</a></li><li class="rail__depth-2"><a href="#the-never-type">The Never type</a></li><li class="rail__depth-2"><a href="#parametric-raises">Parametric raises</a></li><li class="rail__depth-2"><a href="#typed-errors-and-error-interaction">Typed errors and Error interaction</a></li><li class="rail__depth-2"><a href="#enable-stack-trace-generation-for-errors">Enable stack trace generation for errors</a></li><li class="rail__depth-2"><a href="#use-a-context-manager">Use a context manager</a></li><li class="rail__depth-2"><a href="#write-a-custom-context-manager">Write a custom context manager</a></li><li class="rail__depth-3"><a href="#how-each-clause-works">How each clause works</a></li><li class="rail__depth-3"><a href="#example">Example</a></li><li class="rail__depth-3"><a href="#re-raise-an-error">Re-raise an error</a></li><li class="rail__depth-3"><a href="#define-a-custom-error-type">Define a custom error type</a></li><li class="rail__depth-3"><a href="#raise-a-typed-error">Raise a typed error</a></li><li class="rail__depth-3"><a href="#catch-a-typed-error">Catch a typed error</a></li><li class="rail__depth-3"><a href="#enumerated-error-types">Enumerated error types</a></li><li class="rail__depth-3"><a href="#the-variant-type">The Variant type</a></li><li class="rail__depth-3"><a href="#functions-that-always-raise">Functions that always raise</a></li><li class="rail__depth-3"><a href="#functions-that-never-raise">Functions that never raise</a></li><li class="rail__depth-3"><a href="#wrap-error-at-api-boundaries">Wrap Error at API boundaries</a></li><li class="rail__depth-3"><a href="#avoid-bare-raises-with-typed-errors">Avoid bare raises with typed errors</a></li><li class="rail__depth-3"><a href="#dont-mix-error-types-in-a-single-try-block">Don't mix error types in a single try block</a></li><li class="rail__depth-3"><a href="#recommendations-for-mixed-codebases">Recommendations for mixed codebases</a></li><li class="rail__depth-3"><a href="#capture-a-stack-trace-programmatically">Capture a stack trace programmatically</a></li><li class="rail__depth-3"><a href="#define-a-conditional-__exit__-method">Define a conditional __exit__() method</a></li><li class="rail__depth-3"><a href="#handle-typed-errors-in-__exit__">Handle typed errors in __exit__()</a></li></ol></details>
+<nav class="rail" aria-label="On this page"><p class="rail__title">On this page</p><ol><li class="rail__depth-2"><a href="#raise-an-error">Raise an error</a></li><li class="rail__depth-2"><a href="#handle-an-error">Handle an error</a></li><li class="rail__depth-2"><a href="#typed-errors">Typed errors</a></li><li class="rail__depth-2"><a href="#representing-multiple-error-conditions">Representing multiple error conditions</a></li><li class="rail__depth-2"><a href="#the-never-type">The Never type</a></li><li class="rail__depth-2"><a href="#parametric-raises">Parametric raises</a></li><li class="rail__depth-2"><a href="#typed-errors-and-error-interaction">Typed errors and Error interaction</a></li><li class="rail__depth-2"><a href="#enable-stack-trace-generation-for-errors">Enable stack trace generation for errors</a></li><li class="rail__depth-2"><a href="#use-a-context-manager">Use a context manager</a></li><li class="rail__depth-2"><a href="#write-a-custom-context-manager">Write a custom context manager</a></li><li class="rail__depth-3"><a href="#how-each-clause-works">How each clause works</a></li><li class="rail__depth-3"><a href="#example">Example</a></li><li class="rail__depth-3"><a href="#re-raise-an-error">Re-raise an error</a></li><li class="rail__depth-3"><a href="#define-a-custom-error-type">Define a custom error type</a></li><li class="rail__depth-3"><a href="#raise-a-typed-error">Raise a typed error</a></li><li class="rail__depth-3"><a href="#catch-a-typed-error">Catch a typed error</a></li><li class="rail__depth-3"><a href="#enumerated-error-types">Enumerated error types</a></li><li class="rail__depth-3"><a href="#the-variant-type">The Variant type</a></li><li class="rail__depth-3"><a href="#functions-that-always-raise">Functions that always raise</a></li><li class="rail__depth-3"><a href="#functions-that-never-raise">Functions that never raise</a></li><li class="rail__depth-3"><a href="#wrap-error-at-api-boundaries">Wrap Error at API boundaries</a></li><li class="rail__depth-3"><a href="#avoid-bare-raises-with-typed-errors">Avoid bare raises with typed errors</a></li><li class="rail__depth-3"><a href="#dont-mix-error-types-in-a-single-try-block">Don't mix error types in a single try block</a></li><li class="rail__depth-3"><a href="#recommendations-for-mixed-codebases">Recommendations for mixed codebases</a></li><li class="rail__depth-3"><a href="#capture-a-stack-trace-programmatically">Capture a stack trace programmatically</a></li><li class="rail__depth-3"><a href="#define-a-conditional-__exit__-method">Define a conditional __exit__() method</a></li><li class="rail__depth-3"><a href="#handle-typed-errors-in-__exit__">Handle typed errors in __exit__()</a></li></ol>
+<p class="rail__meta">Chapter 12 of 38 · Part II, The Language.</p>
+</nav>
+</main>
+<footer class="foot"><div class="foot__inner">
+<span>Rendered from the saved Mojo v1 documentation. Text and code belong to Modular.</span>
+<span><a href="../index.html">Contents</a> · <a href="../raw/">Archives</a></span>
+</div></footer>
+<script src="../assets/mojo.js" defer></script>
+</body>
+</html>
