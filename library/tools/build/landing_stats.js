@@ -10,7 +10,7 @@
  * Python, so it is empty by design now that the migration is done.
  *
  * Every figure is derived, never typed in by hand:
- *   pages / mojo / interop / python  <- py_census.js --csv  (headless Chrome)
+ *   pages / mojo / interop / python  <- py_census.js --csv-all --dir public/
  *   drills / projects                 <- counted from the filesystem
  */
 import { execFileSync } from "node:child_process";
@@ -45,11 +45,20 @@ function census() {
     raw = readFileSync(given, "utf8");
   } else {
     process.stderr.write("rendering census in headless Chrome, this takes a minute...\n");
-    raw = execFileSync("bun", ["run", "library/tools/py_census.js", "--csv-all"], {
-      cwd: ROOT,
-      encoding: "utf8",
-      maxBuffer: 32 * 1024 * 1024,
-    });
+    /* --dir public/ scopes the census to the tutorial. py_census.js otherwise walks
+     * the whole repo root, which sweeps in the vendored Mojo manual (78 pages under
+     * "single_source_of_truth mojo/") and the root index.html redirect stub. Neither is
+     * tutorial content, and the manual carries its own code blocks, so an unscoped run
+     * inflates pages, mojo and interop alike. */
+    raw = execFileSync(
+      "bun",
+      ["run", "library/tools/py_census.js", "--csv-all", "--dir", "public/"],
+      {
+        cwd: ROOT,
+        encoding: "utf8",
+        maxBuffer: 32 * 1024 * 1024,
+      },
+    );
   }
 
   /* CSV header is: page,py,py_labelled,py_guess,mojo,interop,c,unknown,unlabelled,py_lines */
