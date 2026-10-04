@@ -7,27 +7,22 @@
   <h1>Writing <span class="grad">Mojo Libraries</span></h1>
   <p class="sechead-sub" style="margin:0 auto">A practitioner's guide to packages in Mojo 1.1 — designing a public surface you can defend, across seven complete domain libraries.</p>
   <div class="actions">
-    <a class="btn primary" href="mojo_libs.html">📘 Read the book →</a>
-    <a class="btn" href="mojo_libs_interactive.html">🧪 Interactive Lab</a>
+    <a class="btn primary" href="mojo_libs_interactive.html">📘 Read the tutorial →</a>
     <a class="btn" href="#packages">The seven packages</a>
     <a class="btn" href="../../../single_source_of_truth%20mojo/index.html">📖 Language manual</a>
   </div>
 </div>
 
 <section id="editions"><div class="wrap">
-<div class="sechead"><span class="index">01</span><h2>Choose an edition</h2></div>
-<p class="sechead-sub">The same twenty chapters, built two ways. Both are single self-contained files — no build step, no network requests, no dependencies.</p>
+<div class="sechead"><span class="index">01</span><h2>The tutorial</h2></div>
+<p class="sechead-sub">Twenty chapters in one self-contained file — no build step, no network requests, no dependencies. Built for reading on screen.</p>
 <div class="rule"></div>
 <div class="grid">
 <div class="book-card">
-<div class="book-cover"><div class="cap">Book</div>1.1</div>
-<div class="book-body"><h3><a href="mojo_libs.html">The Book</a></h3><p class="meta">20 chapters · contents rail · light &amp; dark</p>
-<p>The reference edition. A persistent table of contents down the left edge, full chapter prose, and a print stylesheet that drops the chrome so it comes out clean on paper.</p></div>
-</div>
-<div class="book-card">
-<div class="book-cover"><div class="cap">Lab</div>Web</div>
-<div class="book-body"><h3><a href="mojo_libs_interactive.html">The Interactive Lab</a></h3><p class="meta">20 chapters · guided path · web-first</p>
-<p>The web edition. A guided learning path, a jump-to-section header, and shorter steps sized for reading on screen. Same content, different pacing.</p></div>
+<div class="book-cover"><div class="cap">Mojo</div>1.1</div>
+<div class="book-body"><h3><a href="mojo_libs_interactive.html">Writing Mojo Libraries</a></h3><p class="meta">20 chapters · guided path · light &amp; dark</p>
+<p>A guided learning path with a jump-to-section header and shorter steps sized for a screen, plus a contents rail for jumping between the twenty chapters. Every code listing is Mojo 1.x, and the whole document is one file you can keep offline.</p>
+<div class="tags"><a class="pill" href="mojo_libs_interactive.html#model">Package model</a><a class="pill" href="mojo_libs_interactive.html#api">API design</a><a class="pill" href="mojo_libs_interactive.html#packaging">Packaging</a><a class="pill" href="mojo_libs_interactive.html#interop">Interop</a></div></div>
 </div>
 </div>
 </div></section>
@@ -40,13 +35,13 @@
 <div class="book-cover"><div class="cap">Packages</div>7</div>
 <div class="book-body"><h3>Domain libraries</h3><p class="meta">geomatics · mstats · mopt · mfin · mdat · mmath · mphysics</p>
 <div class="chapters">
-<a class="chapter" href="mojo_libs.html#lib-geomatics"><span class="num">01</span><span><span class="t">Geomatics</span><br><span class="d">Geodesy, levelling and traverse — units and angle conventions stated up front.</span></span><span class="arr">→</span></a>
-<a class="chapter" href="mojo_libs.html#lib-mstats"><span class="num">02</span><span><span class="t">Statistics</span><br><span class="d">Descriptive statistics, probability and relationships — sample vs. population made explicit.</span></span><span class="arr">→</span></a>
-<a class="chapter" href="mojo_libs.html#lib-mopt"><span class="num">03</span><span><span class="t">Operations research</span><br><span class="d">Linear programming, assignment and network models, with infeasibility handled honestly.</span></span><span class="arr">→</span></a>
-<a class="chapter" href="mojo_libs.html#lib-mfin"><span class="num">04</span><span><span class="t">Financial management &amp; risk</span><br><span class="d">Return conventions, risk measures and portfolio maths — arithmetic vs. log returns never blurred.</span></span><span class="arr">→</span></a>
-<a class="chapter" href="mojo_libs.html#lib-mdat"><span class="num">05</span><span><span class="t">Data analytics</span><br><span class="d">Series cleaning, metrics and windowed computation over ragged input.</span></span><span class="arr">→</span></a>
-<a class="chapter" href="mojo_libs.html#lib-mmath"><span class="num">06</span><span><span class="t">Mathematics</span><br><span class="d">Root finding, polynomial arithmetic and linear algebra with convergence guarantees.</span></span><span class="arr">→</span></a>
-<a class="chapter" href="mojo_libs.html#lib-mphysics"><span class="num">07</span><span><span class="t">Physics</span><br><span class="d">Mechanics and oscillation — SI units enforced at the boundary.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs_interactive.html#lib-geomatics"><span class="num">01</span><span><span class="t">Geomatics</span><br><span class="d">Geodesy, levelling and traverse — units and angle conventions stated up front.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs_interactive.html#lib-mstats"><span class="num">02</span><span><span class="t">Statistics</span><br><span class="d">Descriptive statistics, probability and relationships — sample vs. population made explicit.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs_interactive.html#lib-mopt"><span class="num">03</span><span><span class="t">Operations research</span><br><span class="d">Linear programming, assignment and network models, with infeasibility handled honestly.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs_interactive.html#lib-mfin"><span class="num">04</span><span><span class="t">Financial management &amp; risk</span><br><span class="d">Return conventions, risk measures and portfolio maths — arithmetic vs. log returns never blurred.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs_interactive.html#lib-mdat"><span class="num">05</span><span><span class="t">Data analytics</span><br><span class="d">Series cleaning, metrics and windowed computation over ragged input.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs_interactive.html#lib-mmath"><span class="num">06</span><span><span class="t">Mathematics</span><br><span class="d">Root finding, polynomial arithmetic and linear algebra with convergence guarantees.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs_interactive.html#lib-mphysics"><span class="num">07</span><span><span class="t">Physics</span><br><span class="d">Mechanics and oscillation — SI units enforced at the boundary.</span></span><span class="arr">→</span></a>
 </div>
 </div>
 </div>
@@ -91,8 +86,8 @@
 </div></section>
 </main>
 <footer><div class="wrap"><div class="footgrid">
-<div><h4>Editions</h4><a href="mojo_libs.html">The Book</a><a href="mojo_libs_interactive.html">Interactive Lab</a><a href="../../../single_source_of_truth%20mojo/index.html">Language manual</a><a href="#packages">The seven packages</a></div>
-<div><h4>Chapters</h4><a href="mojo_libs.html#model">Package model</a><a href="mojo_libs.html#api">Public API design</a><a href="mojo_libs.html#packaging">Packaging &amp; publishing</a></div>
+<div><h4>Tutorial</h4><a href="mojo_libs_interactive.html">Writing Mojo Libraries</a><a href="#packages">The seven packages</a><a href="../../../single_source_of_truth%20mojo/index.html">Language manual</a><a href="tutorial/build.py">Rebuild it yourself</a></div>
+<div><h4>Chapters</h4><a href="mojo_libs_interactive.html#model">Package model</a><a href="mojo_libs_interactive.html#api">Public API design</a><a href="mojo_libs_interactive.html#packaging">Packaging &amp; publishing</a></div>
 <div><h4>Next</h4><a href="../index.html">Fundamentals</a><a href="../../applications/index.html">Applications</a><a href="../../praxis/index.html">Praxis</a></div>
 <div><h4>Home</h4><a href="../../index.html">Learning Hub</a></div>
 </div>

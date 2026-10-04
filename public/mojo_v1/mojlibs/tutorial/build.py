@@ -6,20 +6,13 @@ import sys
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from render import build, build_interactive
+from render import build_interactive
 
 if __name__ == "__main__":
+    # One edition only. The print build (render.build + src/theme.css) was retired
+    # when mojo_libs.html was withdrawn; the web edition is the single artefact.
     args = sys.argv[1:]
-    if args and args[0] == "interactive":
-        target = ROOT.parent / "mojo_libs_interactive.html"
-        rc = build_interactive(target)
-        print(f"built {target}")
-        raise SystemExit(rc)
-
-    book_target = Path(args[0]) if args else ROOT.parent / "mojo_libs.html"
-    rc = build(book_target)
-    print(f"built {book_target}")
-    interactive_target = ROOT.parent / "mojo_libs_interactive.html"
-    interactive_rc = build_interactive(interactive_target)
-    print(f"built {interactive_target}")
-    raise SystemExit(rc or interactive_rc)
+    target = Path(args[0]) if args else ROOT.parent / "mojo_libs_interactive.html"
+    rc = build_interactive(target)
+    print(f"built {target}")
+    raise SystemExit(rc)
