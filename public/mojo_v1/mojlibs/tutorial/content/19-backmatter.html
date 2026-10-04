@@ -1,0 +1,22 @@
+<section class="chapter">
+  <h2 id="backmatter">Conclusion</h2>
+  <p>Good Mojo libraries are not built by accumulating features. They are built by making the domain assumptions explicit and by giving the caller a contract that can be trusted under ordinary and abnormal conditions.</p>
+  <p>The arc of this book has been simple and deliberate: start with the package model, define the rules of the language, design a narrow API, build a workflow, and then see the same principles applied across seven domains. That progression matters. A library is strongest when the design choices around units, probability conventions, risk definitions, and failure cases are visible rather than implied.</p>
+  <p>The best next step is not to build an enormous codebase. It is to pick one domain and make one package a little more complete than the sketch in this document. Use the package layout here as a template, then refine the API around the actual semantics you need. The right library is not the one with the largest number of functions. It is the one whose contract a domain expert can read and trust.</p>
+  <div class="card">
+    <p><strong>Final reminder.</strong> The examples in this tutorial follow Mojo 1.1 conventions as documented in the source-of-truth manual. They are intentionally explicit about naming, return conventions, and error handling so the code remains readable and teachable.</p>
+  </div>
+  <div class="card">
+    <h3 id="backmatter-next">Where to go next</h3>
+    <p>Library design is the point where the language shelves stop being separate. The chapters
+    below take the contracts you have just seen into the rest of the site &mdash; the reference
+    material behind them, the domains that consume them, and the drills that make them stick.</p>
+    <div class="next-grid">
+      <a href="../mojo_12_modules.html"><b>Ch 12 &middot; Modules &amp; Packages</b><span>Revisit the package model with the API-design intent this tutorial built up.</span></a>
+      <a href="../../data_science/index.html"><b>Data Science</b><span>Three companion books on numerical and analytical computing with Mojo.</span></a>
+      <a href="../../applications/index.html"><b>Applications</b><span>Geomatics, quantitative finance and operations research &mdash; the domains these seven packages are drawn from.</span></a>
+      <a href="../../praxis/index.html"><b>Praxis</b><span>Twenty-eight drills and three mini-projects to turn the patterns into muscle memory.</span></a>
+      <a href="index.html"><b>Library tutorial home</b><span>Both editions of this tutorial, the seven Mojo packages, and the 38-chapter language manual it cites.</span></a>
+    </div>
+  </div>
+</section>

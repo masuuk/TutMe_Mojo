@@ -1,0 +1,10 @@
+<section class="chapter">
+  <h2 id="lib-geomatics">1. Geomatics</h2>
+  <p>Surveying and engineering survey work live or die by coordinate conventions. This package makes those conventions explicit at the API boundary, so callers can distinguish lat/lon handling, traverse checks, and leveling adjustments.</p>
+  {{libtree:geomatics}}
+  <div class="card">
+    <h3 id="geomatics-core">Core geodesy logic</h3>
+    {{code:libs/geomatics/geodesy.mojo|1,74}}
+  </div>
+  <p>When you ship a survey library, the boring rules are the real features: validation, angle units, and correction logic that are easy to audit.</p>
+</section>

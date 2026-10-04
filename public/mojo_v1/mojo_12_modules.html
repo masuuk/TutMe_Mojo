@@ -664,7 +664,17 @@ sum=499500</pre>
       <li><strong>Hosted Mojo</strong>: <code class="inline">--emit shared-lib</code> + <code class="inline">@export … abi("C")</code> + <code class="inline">initialize_runtime()</code> puts Mojo kernels inside C/C++ hosts.</li>
     </ul>
   </section>
+
+  <div class="info-box tip-box">
+    <strong>Turn this into a library.</strong>
+    <p>This chapter hands you the package model — a directory, an <code class="inline">__init__.mojo</code>, and a
+    build target. <a href="mojlibs/index.html"><strong>Writing Mojo Libraries</strong></a> is the follow-on: how to
+    design a public surface worth committing to, how wide a contract should be, when a function should refuse rather
+    than return a plausible wrong number, and how to get seven domain packages out of the shape you just learned.</p>
+  </div>
+
   <nav class="chapnav">
+    <a class="navbtn" href="mojlibs/index.html">📦 Writing Mojo Libraries</a>
     <a href="mojo_11_interop.html" class="navbtn">← Ch 11 · Python &amp; C Interop</a>
     <a href="mojo_13_closures.html" class="navbtn">Ch 13 · Closures &amp; Lambdas →</a>
   </nav>

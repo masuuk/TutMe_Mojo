@@ -1,0 +1,16 @@
+<section class="chapter">
+  <h2 id="interop">Python interop and trust boundaries</h2>
+  <p>Once a Mojo package is useful, the next question is usually whether it can be consumed from Python without leaking implementation details. That is a design decision, not a packaging trick.</p>
+  <p>Keep the Python-facing surface small. A Python caller should be able to import a package, call a few stable functions, and treat the result as data. They should not need to understand your internal module graph or your internal mutable state.</p>
+  <div class="card">
+    <h3 id="interop-pattern">A good interop pattern</h3>
+    <p>Expose domain-specific values, not private helper objects. The public API should be simpler than the implementation.</p>
+    {{code:inline|mojo}}from mstats import mean
+from mstats import variance
+
+var xs = [1.0, 2.0, 3.0, 4.0]
+print(mean(xs))
+print(variance(xs, sample=True)){{/code}}
+  </div>
+  <p>The point is not merely that Python can call Mojo. It is that your boundary is explicitly chosen. The library still owns the semantics, while the external caller gets a predictable, documented contract.</p>
+</section>

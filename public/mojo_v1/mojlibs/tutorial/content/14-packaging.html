@@ -1,0 +1,9 @@
+<section class="chapter">
+  <h2 id="packaging">Packaging and publishing</h2>
+  <p>Once the API is stable, packaging is mostly a matter of making the structure obvious. The language manual describes packaging as a directory plus a package surface, and that is exactly how the tutorial organizes each library.</p>
+  {{code:inline|toml}}[package]
+name = "mstats"
+version = "0.1.0"
+{{/code}}
+  <p>In a real Mojo environment, the package is then built or precompiled for distribution in the target environment. The important design point is not the packaging format alone; it is that the public surface can survive being moved, cached, or re-exported without unexpected internal coupling.</p>
+</section>

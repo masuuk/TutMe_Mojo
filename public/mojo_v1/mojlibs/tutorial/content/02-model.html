@@ -1,0 +1,15 @@
+<section class="chapter">
+  <h2 id="model">Three layers: app, package, module</h2>
+  <p>Mojo code is easiest to reason about when you keep the layers distinct. The application is where you collect inputs, the package is the contract, and the module is the implementation.</p>
+  <ul>
+    <li><strong>Application</strong>: a small program that reads input, calls the library, and prints a result.</li>
+    <li><strong>Package</strong>: a directory containing one public <code>__init__.mojo</code> and a small set of modules.</li>
+    <li><strong>Module</strong>: a file that contains the actual algorithmic code.</li>
+  </ul>
+  <div class="card">
+    <h3 id="model-shape">Package layout</h3>
+    {{libtree:mojo_core}}
+  </div>
+  <p>The package root is not a dumping ground. It is the public surface. The modules underneath implement the details. Good package design keeps the import path honest: callers choose a capability, not a random file.</p>
+  <p>That is why every package in this tutorial exports a predictable API from its <code>__init__.mojo</code> and keeps concrete logic in focused modules such as <code>descriptive.mojo</code>, <code>risk.mojo</code>, or <code>lp.mojo</code>.</p>
+</section>

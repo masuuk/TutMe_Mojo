@@ -2,3 +2,7 @@ desktop.ini
 
 # compiler-migration safety nets (not source)
 *.bak
+
+# python build artifacts (not source)
+__pycache__/
+*.py[cod]

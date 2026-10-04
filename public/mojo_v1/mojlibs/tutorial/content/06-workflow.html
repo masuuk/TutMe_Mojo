@@ -1,0 +1,8 @@
+<section class="chapter">
+  <h2 id="workflow">Build, run, test, refine</h2>
+  <p>Mojo's workflow is simple. You build modules, run examples, and keep tests close to the code to make regressions impossible to ignore.</p>
+  {{code:inline|bash}}mojo build tutorial/libs/mstats
+mojo run tutorial/apps/demo_mstats.mojo
+mojo run tutorial/apps/test_mstats.mojo{{/code}}
+  <p>The important habit is not the command itself. It is the loop: write the smallest API that expresses the domain, run a focused example, and test the edge conditions that would silently produce wrong numbers.</p>
+</section>

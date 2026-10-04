@@ -1,0 +1,10 @@
+<section class="chapter">
+  <h2 id="lib-mdat">5. Data analytics</h2>
+  <p>Data analytics packages make the library's data model explicit. Missing values, irregular time series, and rolling windows are rarely one-off problems; they are part of the domain contract.</p>
+  {{libtree:mdat}}
+  <div class="card">
+    <h3 id="mdat-core">Series cleaning and metrics</h3>
+    {{code:libs/mdat/series.mojo|1,80}}
+  </div>
+  <p>Good data libraries are careful about completeness. They do not pretend an observed value is a true value just because the array is dense enough.</p>
+</section>

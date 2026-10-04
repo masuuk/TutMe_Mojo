@@ -1,0 +1,36 @@
+<section class="chapter">
+  <h2 id="front">Introduction</h2>
+  <p class="lede">Mojo is a systems language, but the best Mojo libraries are not just fast. They are predictable, well-typed, and easy to trace. This tutorial treats library design as a craft: small public surfaces, honest contracts, and code that is easy to read when it is deployed in real work.</p>
+  <div class="card">
+    <p><strong>Scope.</strong> We build a single, self-contained book around seven package sketches: geomatics, statistics, operations research, finance, data analytics, mathematics and physics.</p>
+    <p><strong>Version note.</strong> The examples in this document target Mojo 1.1 syntax. No Mojo toolchain is available on this machine, so runtime transcripts are not claimed here. The arithmetic is deliberate and checkable.</p>
+  </div>
+  <div class="card">
+    <h3>Book structure</h3>
+    <ol>
+      <li>Introduction and design principles</li>
+      <li>Mojo package model and syntax conventions</li>
+      <li>Library anatomy and public API design</li>
+      <li>Build, run and test workflow</li>
+      <li>The seven domain libraries</li>
+      <li>Interop, packaging and advanced patterns</li>
+      <li>Conclusion and next steps</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3 id="front-prereqs">Before you start</h3>
+    <p>This tutorial assumes you can already read Mojo. It deliberately does not re-teach the
+    language; it takes the package model as given and asks what a good package built on it looks
+    like. If any of these feel unfamiliar, the Fundamentals shelf is the place to close the gap
+    first &mdash; each link below points at the chapter that carries the concept.</p>
+    <div class="next-grid">
+      <a href="../mojo_12_modules.html"><b>Ch 12 &middot; Modules &amp; Packages</b><span>The closest prerequisite. Packages, <code>__init__.mojo</code> re-exports, precompile and build targets.</span></a>
+      <a href="../mojo_08_metaprogramming.html"><b>Ch 08 &middot; Metaprogramming</b><span>Parameters, <code>where</code> clauses and <code>comptime</code> &mdash; the advanced-patterns chapter depends on these.</span></a>
+      <a href="../mojo_11_interop.html"><b>Ch 11 &middot; Python &amp; C Interop</b><span>The <code>std.python</code> boundary behind the interop and trust-boundary chapter.</span></a>
+      <a href="../mojo_15_docstrings.html"><b>Ch 15 &middot; Docstrings</b><span>Labelled, compiler-validated docs for exactly the kind of public surface you are about to design.</span></a>
+      <a href="../mojo_06_structs.html"><b>Ch 06 &middot; Structs &amp; Traits</b><span>The value types your API will hand back to callers.</span></a>
+      <a href="../index.html"><b>Fundamentals shelf</b><span>The full fifteen-chapter Mojo 1.x textbook that this tutorial is a companion to.</span></a>
+    </div>
+  </div>
+  <!--LIBNAV-->
+</section>

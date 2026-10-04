@@ -1,0 +1,16 @@
+<section class="chapter">
+  <h2 id="advanced">Advanced patterns: traits, comptime and safety</h2>
+  <p>Once a library is trusted, the next level is to make that trust systematic. That means using comptime values where the compiler can enforce invariants and using traits to communicate capabilities rather than scattering type checks through the code.</p>
+  <ul>
+    <li><strong>comptime</strong> values encode invariant configuration.</li>
+    <li><strong>traits</strong> state what a type can do without requiring runtime branch logic.</li>
+    <li><strong>error contracts</strong> are clearer than silent coercions.</li>
+  </ul>
+  <div class="card">
+    <h3 id="advanced-guard">A simple safety pattern</h3>
+    {{code:inline|mojo}}def require_positive(value: Float64) raises:
+    if value <= 0.0:
+        raise Error("value must be positive"){{/code}}
+  </div>
+  <p>That rule is small but important. It prevents meaningless results from spreading through the program and gives downstream callers a precision target when they need to handle the failure.</p>
+</section>

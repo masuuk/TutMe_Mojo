@@ -1,0 +1,15 @@
+<section class="chapter">
+  <h2 id="syntax">The conventions that make the code readable</h2>
+  <p>Mojo 1.1 uses a small, direct syntax. In this tutorial we treat the following as the baseline:</p>
+  <ul>
+    <li><code>def</code> defines a function.</li>
+    <li><code>var</code> is the mutating variable declaration; <code>comptime</code> is used for compile-time values.</li>
+    <li>Argument conventions are written as <code>mut</code>, <code>var</code>, <code>ref</code>, <code>out</code>, and <code>deinit</code> where needed.</li>
+    <li>Libraries expose a stable interface through package re-exports, not by leaking internal implementation details.</li>
+  </ul>
+  <div class="card">
+    <h3 id="syntax-sample">Example function</h3>
+    {{code:libs/mojo_core/numeric.mojo|1,44}}
+  </div>
+  <p>Good Mojo library code is not clever for its own sake. It is explicit about inputs, output units, and failure modes. That keeps the API honest and makes testing much simpler.</p>
+</section>

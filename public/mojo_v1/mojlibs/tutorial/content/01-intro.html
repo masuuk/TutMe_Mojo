@@ -1,0 +1,11 @@
+<section class="chapter">
+  <h2 id="intro">A library is a promise</h2>
+  <p>In Mojo, a library is usually a package directory with a public <code>__init__.mojo</code> file and a small set of modules that expose a coherent API. The value of a library is not the number of functions. It is the clarity of the contract: what input does it accept, what units are assumed, what errors are raised, and what numerical defaults it chooses.</p>
+  <p>Before writing code, decide what the package is for and which assumptions are non-negotiable. In surveying, the library must carry angle units explicitly. In statistics, the library must distinguish sample and population variance. In finance, the library must distinguish arithmetic from log returns. Those are not incidental details; they are the reason the library exists.</p>
+  <div class="card">
+    <h3 id="intro-example">A minimal package shape</h3>
+    <p>Here is the package shape used throughout the tutorial.</p>
+    {{code:libs/mstats/__init__.mojo|1,32}}
+  </div>
+  <p>That public API is intentionally small. It tells callers what is supported and it gives maintainers a place to enforce stable semantics. A large, noisy API is often a sign that the library is still deciding what it is.</p>
+</section>

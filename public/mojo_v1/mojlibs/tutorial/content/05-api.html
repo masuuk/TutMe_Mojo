@@ -1,0 +1,14 @@
+<section class="chapter">
+  <h2 id="api">Designing the public API</h2>
+  <p>A public API is not a place to dump everything you know. It is a place to communicate clear assumptions. The best library APIs are narrow, explicit, and hard to misuse.</p>
+  <ul>
+    <li><strong>Semantic names.</strong> Prefer <code>normal_cdf</code> over a vague <code>cdf</code>.</li>
+    <li><strong>Unit-bearing names.</strong> Prefer <code>bearing_deg</code> over an ambiguous <code>bearing</code>.</li>
+    <li><strong>Violations raise.</strong> Empty data, mismatched lengths, and invalid probabilities should fail loudly.</li>
+  </ul>
+  <div class="card">
+    <h3 id="api-surface">A stable domain surface</h3>
+    {{code:libs/mfin/__init__.mojo|1,42}}
+  </div>
+  <p>These domain packages are intentionally small. The goal is not to mimic a sprawling ecosystem. It is to give each domain a thoughtful, trustworthy core.</p>
+</section>

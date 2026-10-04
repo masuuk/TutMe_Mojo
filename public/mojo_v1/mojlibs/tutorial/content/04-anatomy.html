@@ -1,0 +1,10 @@
+<section class="chapter">
+  <h2 id="anatomy">Anatomy of a package</h2>
+  <p>The package directory is part of the public contract. A package should be easier to navigate by reading its tree than by reading its code by accident.</p>
+  {{libtree:mstats}}
+  <div class="card">
+    <h3 id="anatomy-public">Public API and implementation split</h3>
+    {{code:libs/mstats/__init__.mojo|1,46}}
+  </div>
+  <p>Notice how the package root is just re-exports. That is the right separation of concerns: the package tells the story, while the modules own the details.</p>
+</section>

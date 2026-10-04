@@ -1,0 +1,12 @@
+<section class="chapter">
+  <h2 id="principles">Professor's rules of thumb</h2>
+  <p>Production libraries are judged by how they fail when the input is bad. A library that looks correct on the happy path but silently misbehaves at the boundary is not trustworthy.</p>
+  <ol>
+    <li>Make every domain assumption explicit: units, variance convention, return type, error policy.</li>
+    <li>Keep the public surface smaller than the implementation. The package should communicate confidence.</li>
+    <li>Write tests that fail on edge cases, not just on the normal path.</li>
+    <li>Prefer small, honest APIs over heavy reflection or hidden magic.</li>
+    <li>Document the defaults and make them easy to override.</li>
+  </ol>
+  <p>The best library is one that makes its users feel safe enough to operate on real data without losing the ability to reason about what the code is doing.</p>
+</section>

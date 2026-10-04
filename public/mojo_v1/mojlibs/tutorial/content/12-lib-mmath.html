@@ -1,0 +1,10 @@
+<section class="chapter">
+  <h2 id="lib-mmath">6. Mathematics</h2>
+  <p>Mathematics libraries often become the substrate for everything else. They should be dependable, numerically honest, and careful about what conditions a solver requires.</p>
+  {{libtree:mmath}}
+  <div class="card">
+    <h3 id="mmath-core">Root finding and polynomial arithmetic</h3>
+    {{code:libs/mmath/polynomial.mojo|1,80}}
+  </div>
+  <p>For a foundational math library, the key design rule is to keep the contract tight enough that callers can reason about the solver assumptions before they choose an algorithm.</p>
+</section>

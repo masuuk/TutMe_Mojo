@@ -1,0 +1,98 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TutMe🔥 · Writing Mojo Libraries</title><meta name="description" content="A practitioner's guide to building, testing, documenting and packaging production Mojo 1.1 libraries, built around seven complete domain packages."><link rel="stylesheet" href="../../styles.css"><link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%22 stop-color=%22%235bd4ff%22/><stop offset=%221%22 stop-color=%22%232f8fe0%22/></linearGradient></defs><rect width=%2240%22 height=%2240%22 rx=%2210%22 fill=%22url(%23g)%22/><g fill=%22none%22 stroke=%22%2306101c%22 stroke-width=%222.4%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 transform=%22translate(8 8)%22><path d=%22M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z%22/><path d=%22M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z%22/></g></svg>"></head><body>
+<nav><div class="wrap navin"><a class="brand" href="../../index.html"><span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span><span>TutMe🔥 <span style="color:#5bd4ff">Learning Hub</span></span></a>
+<div class="navlinks"><a class="pill" href="../../index.html">Home</a><a class="pill" href="../index.html">Fundamentals</a><a class="pill" href="../../data_science/index.html">Data Science</a><a class="pill" href="../../applications/index.html">Applications</a><a class="pill" href="../../praxis/index.html">Praxis</a></div></div></nav>
+<main>
+<div class="wrap pagehead">
+  <h1>Writing <span class="grad">Mojo Libraries</span></h1>
+  <p class="sechead-sub" style="margin:0 auto">A practitioner's guide to packages in Mojo 1.1 — designing a public surface you can defend, across seven complete domain libraries.</p>
+  <div class="actions">
+    <a class="btn primary" href="mojo_libs.html">📘 Read the book →</a>
+    <a class="btn" href="mojo_libs_interactive.html">🧪 Interactive Lab</a>
+    <a class="btn" href="#packages">The seven packages</a>
+  </div>
+</div>
+
+<section id="editions"><div class="wrap">
+<div class="sechead"><span class="index">01</span><h2>Choose an edition</h2></div>
+<p class="sechead-sub">The same twenty chapters, built two ways. Both are single self-contained files — no build step, no network requests, no dependencies.</p>
+<div class="rule"></div>
+<div class="grid">
+<div class="book-card">
+<div class="book-cover"><div class="cap">Book</div>1.1</div>
+<div class="book-body"><h3><a href="mojo_libs.html">The Book</a></h3><p class="meta">20 chapters · contents rail · light &amp; dark</p>
+<p>The reference edition. A persistent table of contents down the left edge, full chapter prose, and a print stylesheet that drops the chrome so it comes out clean on paper.</p></div>
+</div>
+<div class="book-card">
+<div class="book-cover"><div class="cap">Lab</div>Web</div>
+<div class="book-body"><h3><a href="mojo_libs_interactive.html">The Interactive Lab</a></h3><p class="meta">20 chapters · guided path · web-first</p>
+<p>The web edition. A guided learning path, a jump-to-section header, and shorter steps sized for reading on screen. Same content, different pacing.</p></div>
+</div>
+</div>
+</div></section>
+
+<section id="packages"><div class="wrap">
+<div class="sechead"><span class="index">02</span><h2>The seven packages</h2></div>
+<p class="sechead-sub">One shared set of design rules, applied to seven domains. Each chapter walks the same arc: state the contract, build the surface, then show the failure cases.</p>
+<div class="rule"></div>
+<div class="book-card">
+<div class="book-cover"><div class="cap">Packages</div>7</div>
+<div class="book-body"><h3>Domain libraries</h3><p class="meta">geomatics · mstats · mopt · mfin · mdat · mmath · mphysics</p>
+<div class="chapters">
+<a class="chapter" href="mojo_libs.html#lib-geomatics"><span class="num">01</span><span><span class="t">Geomatics</span><br><span class="d">Geodesy, levelling and traverse — units and angle conventions stated up front.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs.html#lib-mstats"><span class="num">02</span><span><span class="t">Statistics</span><br><span class="d">Descriptive statistics, probability and relationships — sample vs. population made explicit.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs.html#lib-mopt"><span class="num">03</span><span><span class="t">Operations research</span><br><span class="d">Linear programming, assignment and network models, with infeasibility handled honestly.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs.html#lib-mfin"><span class="num">04</span><span><span class="t">Financial management &amp; risk</span><br><span class="d">Return conventions, risk measures and portfolio maths — arithmetic vs. log returns never blurred.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs.html#lib-mdat"><span class="num">05</span><span><span class="t">Data analytics</span><br><span class="d">Series cleaning, metrics and windowed computation over ragged input.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs.html#lib-mmath"><span class="num">06</span><span><span class="t">Mathematics</span><br><span class="d">Root finding, polynomial arithmetic and linear algebra with convergence guarantees.</span></span><span class="arr">→</span></a>
+<a class="chapter" href="mojo_libs.html#lib-mphysics"><span class="num">07</span><span><span class="t">Physics</span><br><span class="d">Mechanics and oscillation — SI units enforced at the boundary.</span></span><span class="arr">→</span></a>
+</div>
+</div>
+</div>
+</div></section>
+
+<section id="prereqs"><div class="wrap">
+<div class="sechead"><span class="index">03</span><h2>Before you start</h2></div>
+<p class="sechead-sub">This tutorial assumes you can already read Mojo. It takes the package model as given rather than re-teaching the language, so close any gap here first.</p>
+<div class="rule"></div>
+<div class="mini-grid">
+<a class="mini-chip" href="../mojo_12_modules.html"><span class="ic">📦</span>Ch 12 · Modules &amp; Packages<small>The closest prerequisite</small></a>
+<a class="mini-chip" href="../mojo_08_metaprogramming.html"><span class="ic">⚙️</span>Ch 08 · Metaprogramming<small>Parameters, where clauses, comptime</small></a>
+<a class="mini-chip" href="../mojo_11_interop.html"><span class="ic">🔗</span>Ch 11 · Python &amp; C Interop<small>The std.python boundary</small></a>
+<a class="mini-chip" href="../mojo_15_docstrings.html"><span class="ic">📝</span>Ch 15 · Docstrings<small>Compiler-validated API docs</small></a>
+<a class="mini-chip" href="../mojo_06_structs.html"><span class="ic">🧱</span>Ch 06 · Structs &amp; Traits<small>The value types you return</small></a>
+<a class="mini-chip" href="../mojo_10_errors.html"><span class="ic">🚨</span>Ch 10 · Errors &amp; Context<small>Raising instead of guessing</small></a>
+</div>
+</div></section>
+
+<section id="source"><div class="wrap">
+<div class="sechead"><span class="index">04</span><h2>Source on disk</h2></div>
+<p class="sechead-sub">Every listing in the book is generated from real files under <code>tutorial/</code>. Read them directly, or build both editions yourself.</p>
+<div class="rule"></div>
+<div class="grid">
+<div class="cardline"><h3><span class="k">Package</span></h3><p>Seven <code>__init__.mojo</code> public APIs, each re-exporting focused modules beneath it.</p><div class="tags"><a class="pill" href="tutorial/libs/mojo_core/__init__.mojo">mojo_core</a><a class="pill" href="tutorial/libs/geomatics/__init__.mojo">geomatics</a><a class="pill" href="tutorial/libs/mstats/__init__.mojo">mstats</a><a class="pill" href="tutorial/libs/mopt/__init__.mojo">mopt</a><a class="pill" href="tutorial/libs/mfin/__init__.mojo">mfin</a><a class="pill" href="tutorial/libs/mdat/__init__.mojo">mdat</a><a class="pill" href="tutorial/libs/mmath/__init__.mojo">mmath</a><a class="pill" href="tutorial/libs/mphysics/__init__.mojo">mphysics</a></div></div>
+<div class="cardline"><h3><span class="k">Consumers</span></h3><p>Thirteen runnable <code>apps/</code> programs — six demos and seven test drivers, one pair per package.</p><div class="tags"><a class="pill" href="tutorial/apps/demo_mstats.mojo">demo_mstats.mojo</a><a class="pill" href="tutorial/apps/test_mstats.mojo">test_mstats.mojo</a><a class="pill" href="tutorial/libs/mstats/descriptive.mojo">descriptive.mojo</a></div></div>
+<div class="cardline"><h3><span class="k">Generator</span></h3><p>A small Python build assembles both editions from the chapter sources and inlines the theme and script.</p><div class="tags"><a class="pill" href="tutorial/build.py">build.py</a><a class="pill" href="tutorial/src/render.py">src/render.py</a><a class="pill" href="tutorial/content/00-front.html">content/00-front.html</a></div></div>
+<div class="cardline"><h3><span class="k">Chapters</span></h3><p>The twenty chapter sources both editions are assembled from, in reading order.</p><div class="tags"><a class="pill" href="tutorial/content/00-front.html">00-front.html</a><a class="pill" href="tutorial/content/07-lib-geomatics.html">07-lib-geomatics.html</a><a class="pill" href="tutorial/content/19-backmatter.html">19-backmatter.html</a></div></div>
+</div>
+</div></section>
+
+<section id="next"><div class="wrap">
+<div class="sechead"><span class="index">05</span><h2>Keep going</h2></div>
+<p class="sechead-sub">Library design is where the shelves stop being separate. Take these contracts into the domains that consume them, or drill them until they are automatic.</p>
+<div class="rule"></div>
+<div class="hubrow">
+<div class="hubcard"><span class="k">Foundations</span><h3>Fundamentals</h3><p>The fifteen-chapter Mojo 1.x textbook this tutorial is a companion to.</p><a class="goto" href="../index.html">Open Fundamentals →</a></div>
+<div class="hubcard"><span class="k">Apply</span><h3>Applications</h3><p>Geomatics, quantitative finance and operations research — the domains these packages come from.</p><a class="goto" href="../../applications/index.html">Open Applications →</a></div>
+<div class="hubcard"><span class="k">Practice</span><h3>Praxis</h3><p>Twenty-eight drills plus three mini-projects to turn the patterns into muscle memory.</p><a class="goto" href="../../praxis/index.html">Open Praxis →</a></div>
+</div>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="footgrid">
+<div><h4>Editions</h4><a href="mojo_libs.html">The Book</a><a href="mojo_libs_interactive.html">Interactive Lab</a><a href="#packages">The seven packages</a></div>
+<div><h4>Chapters</h4><a href="mojo_libs.html#model">Package model</a><a href="mojo_libs.html#api">Public API design</a><a href="mojo_libs.html#packaging">Packaging &amp; publishing</a></div>
+<div><h4>Next</h4><a href="../index.html">Fundamentals</a><a href="../../applications/index.html">Applications</a><a href="../../praxis/index.html">Praxis</a></div>
+<div><h4>Home</h4><a href="../../index.html">Learning Hub</a></div>
+</div>
+<div class="small">TutMe🔥 · A structured path from syntax → fundamentals → applications → practice.</div>
+</div></footer></body></html>

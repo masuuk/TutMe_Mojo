@@ -1,0 +1,10 @@
+<section class="chapter">
+  <h2 id="lib-mfin">4. Financial management and risk</h2>
+  <p>Finance code is easy to get subtly wrong because return conventions are messy. A monthly return, a log return, and a simple gross return are not interchangeable. The package makes that distinction part of the API.</p>
+  {{libtree:mfin}}
+  <div class="card">
+    <h3 id="mfin-core">Return conventions and risk</h3>
+    {{code:libs/mfin/risk.mojo|1,80}}
+  </div>
+  <p>Risk libraries are a reminder that a library must name its assumptions. If a risk model quietly mixes arithmetic and log returns, the output will look precise while being wrong.</p>
+</section>

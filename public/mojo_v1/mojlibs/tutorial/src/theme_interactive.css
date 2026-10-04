@@ -1,0 +1,544 @@
+:root {
+  color-scheme: dark;
+  --bg: #090b12;
+  --bg-2: #111827;
+  --panel: rgba(15, 23, 42, 0.9);
+  --panel-strong: #111827;
+  --panel-soft: #151d2d;
+  --line: rgba(148, 163, 184, 0.28);
+  --line-strong: rgba(96, 165, 250, 0.4);
+  --tx: #f8fafc;
+  --tx-soft: #dbeafe;
+  --muted: #a5b4cf;
+  --accent: #ff7a18;
+  --accent-2: #7c3aed;
+  --accent-3: #22d3ee;
+  --accent-4: #34d399;
+  --code-bg: #0b1120;
+  --shadow: 0 20px 50px rgba(15, 23, 42, 0.55);
+  --radius: 22px;
+  --header-h: 72px;
+  --mono: ui-monospace, "SFMono-Regular", "Consolas", monospace;
+  --sans: Inter, "Segoe UI", sans-serif;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f8ff;
+  --bg-2: #eef4ff;
+  --panel: rgba(255, 255, 255, 0.9);
+  --panel-strong: #ffffff;
+  --panel-soft: #f2f7ff;
+  --line: rgba(148, 163, 184, 0.35);
+  --line-strong: rgba(59, 130, 246, 0.45);
+  --tx: #111827;
+  --tx-soft: #1f2937;
+  --muted: #4b5563;
+  --code-bg: #f4f7ff;
+  --shadow: 0 20px 40px rgba(148, 163, 184, 0.24);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 12px); }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.35), transparent 32%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.24), transparent 26%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  color: var(--tx);
+  line-height: 1.7;
+}
+
+a { color: inherit; }
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--accent);
+  color: white;
+  padding: 0.8rem 1rem;
+  border-radius: 0 0 12px 0;
+}
+.skip:focus { left: 0; }
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: var(--header-h);
+  padding: 0.8rem clamp(1rem, 2vw, 2.2rem);
+  background: rgba(9, 11, 18, 0.72);
+  border-bottom: 1px solid var(--line);
+}
+html[data-theme="light"] .site-header {
+  background: rgba(247, 248, 255, 0.8);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+.brand__mark {
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-family: var(--mono);
+  letter-spacing: 0.12em;
+  background: linear-gradient(135deg, rgba(255, 122, 24, 0.18), rgba(124, 58, 237, 0.12));
+  border: 1px solid rgba(255, 122, 24, 0.4);
+  color: var(--accent);
+}
+.brand__sub { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.topnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+.topnav a {
+  text-decoration: none;
+  color: var(--tx-soft);
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.topnav a:hover {
+  border-color: rgba(34, 211, 238, 0.7);
+  background: rgba(34, 211, 238, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Site-level cross-navigation. Sits between the brand and the in-page .topnav; the
+   in-page bar keeps `margin-left:auto`, so this one must not claim that space. */
+.sitenav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.sitenav a {
+  text-decoration: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.sitenav a:hover {
+  border-color: var(--accent);
+  background: rgba(255, 122, 24, 0.12);
+  transform: translateY(-1px);
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.06);
+  color: var(--tx-soft);
+  cursor: pointer;
+}
+.theme-toggle .sun { display: none; }
+html[data-theme="light"] .theme-toggle .sun { display: inline; }
+html[data-theme="light"] .theme-toggle .moon { display: none; }
+
+.progress {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.8);
+}
+
+.interactive-shell {
+  display: grid;
+  grid-template-columns: minmax(240px, 290px) minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(0.9rem, 2vw, 1.8rem) 4rem;
+}
+
+.interactive-rail {
+  position: sticky;
+  top: calc(var(--header-h) + 1rem);
+  align-self: start;
+}
+
+.rail-panel {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.9), rgba(15, 23, 42, 0.8));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+html[data-theme="light"] .rail-panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.96));
+}
+
+.rail-label {
+  margin: 0 0 0.8rem;
+  color: var(--accent-3);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.rail-list,
+.rail-list ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rail-list li { margin: 0.15rem 0; }
+.rail-list a {
+  display: block;
+  text-decoration: none;
+  color: var(--tx-soft);
+  background: rgba(148, 163, 184, 0.04);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+.rail-list a:hover {
+  border-color: rgba(124, 58, 237, 0.35);
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--tx);
+}
+.rail-list a.active {
+  color: var(--tx);
+  background: linear-gradient(90deg, rgba(255, 122, 24, 0.1), rgba(124, 58, 237, 0.14));
+  border-color: rgba(255, 122, 24, 0.45);
+}
+
+body.rail-collapsed .interactive-shell {
+  grid-template-columns: 1fr;
+}
+body.rail-collapsed .interactive-rail {
+  display: none;
+}
+
+.interactive-main {
+  min-width: 0;
+}
+
+.interactive-hero {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(34, 211, 238, 0.05), rgba(255, 122, 24, 0.12));
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow);
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  margin-bottom: 1.3rem;
+}
+.eyebrow {
+  display: inline-block;
+  margin: 0 0 0.9rem;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 122, 24, 0.12);
+  border: 1px solid rgba(255, 122, 24, 0.4);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.interactive-hero h1 {
+  margin: 0;
+  max-width: 16ch;
+  font-size: clamp(2.3rem, 4vw, 4rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+.interactive-hero .lede {
+  margin: 1rem 0 0;
+  font-size: clamp(1.03rem, 1.4vw, 1.2rem);
+  max-width: 60ch;
+  color: var(--tx-soft);
+}
+.hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.3rem;
+}
+.hero-pills span {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 999px;
+  padding: 0.42rem 0.72rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--tx-soft);
+}
+
+.doc--interactive .chapter {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: clamp(1.2rem, 2vw, 1.7rem);
+  margin: 0 0 1rem;
+}
+html[data-theme="light"] .doc--interactive .chapter {
+  background: rgba(255,255,255,0.88);
+}
+
+.doc--interactive .chapter h2 {
+  margin: 0 0 0.8rem;
+  font-size: clamp(1.7rem, 2vw, 2.5rem);
+  letter-spacing: -0.04em;
+}
+.doc--interactive .card {
+  background: linear-gradient(180deg, rgba(124,58,237,0.08), rgba(34,211,238,0.04));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+  margin-top: 1rem;
+}
+.doc--interactive .card p,
+.doc--interactive .chapter p,
+.doc--interactive .chapter li {
+  color: var(--tx-soft);
+}
+.doc--interactive .chapter a {
+  color: var(--accent-3);
+}
+.cb {
+  margin: 1.3rem 0 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--code-bg);
+  box-shadow: var(--shadow);
+}
+.cb__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.42rem 0.6rem 0.42rem 0.8rem;
+  background: rgba(148, 163, 184, 0.08);
+  border-bottom: 1px solid var(--line);
+  min-height: 36px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+.cb__dots { display: flex; gap: .3rem; flex: 0 0 auto; }
+.cb__dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+.cb__dots i:nth-child(1) { background: #ff5f57; }
+.cb__dots i:nth-child(2) { background: #febc2e; }
+.cb__dots i:nth-child(3) { background: #28c840; }
+.cb__file { color: var(--tx-soft); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb__lang {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cb__copy {
+  flex: 0 0 auto;
+  background: transparent;
+  color: var(--tx-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.68rem;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+}
+.cb__copy:hover { color: var(--tx); border-color: rgba(34, 211, 238, 0.8); }
+.cb__copy.copied { color: var(--accent-4); border-color: rgba(52, 211, 153, 0.7); }
+.cb__scroll { overflow-x: auto; }
+.cb__pre {
+  margin: 0;
+  padding: 0.8rem 0;
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.62;
+  tab-size: 4;
+}
+.cb__code { display: block; min-width: max-content; padding: 0 1rem; }
+.cl { display: block; padding-left: 3.1rem; position: relative; }
+.cl::before {
+  content: attr(data-line);
+  position: absolute; left: 0; width: 2.2rem; text-align: right;
+  color: rgba(148, 163, 184, 0.8);
+  font-size: 0.8em;
+  user-select: none;
+}
+.cb--plain .cl { padding-left: 1rem; }
+.cb--plain .cl::before { content: none; }
+
+.tk-keyword   { color: #ff9a5c; }
+.tk-builtin   { color: #7dd3fc; }
+.tk-function  { color: #d8b4fe; }
+.tk-class-name{ color: #fbbf24; font-weight: 700; }
+.tk-string    { color: #6ee7b7; }
+.tk-number    { color: #fdba74; }
+.tk-boolean   { color: #f9a8d4; }
+.tk-comment   { color: #94a3b8; font-style: italic; }
+.tk-operator  { color: #7dd3fc; }
+.tk-punctuation { color: #cbd5e1; }
+.tk-property  { color: #93c5fd; }
+.tk-atrule    { color: #f9a8d4; }
+
+.doc--interactive .tree,
+.doc--interactive table {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.site-footer {
+  color: var(--tx-soft);
+}
+.interactive-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  margin-top: 1.5rem;
+}
+.footer-h {
+  margin: 1.75rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Cross-link cards. The print theme has carried these since the first build; the
+   interactive edition emits the same markup, so it needs the same rules. */
+.next-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.75rem;
+  margin: 0.85rem 0 1.5rem;
+}
+.next-grid a {
+  display: block;
+  padding: 0.85rem 0.95rem;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.06);
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+.next-grid a:hover {
+  border-color: var(--accent);
+  background: rgba(255, 122, 24, 0.1);
+  transform: translateY(-2px);
+}
+.next-grid b {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--tx);
+  margin-bottom: 0.2rem;
+}
+.next-grid span {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* The seven-library chip bar. Emitted by the shared `_rewrite_libnav` pass into both
+   editions, but only the print theme ever styled it. */
+.libnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1.25rem 0 1.5rem;
+  padding: 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.05);
+}
+.libnav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(148, 163, 184, 0.06);
+  color: var(--tx-soft);
+  text-decoration: none;
+  font-size: 0.76rem;
+  font-weight: 600;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.libnav a:hover {
+  border-color: var(--accent);
+  color: var(--tx);
+  background: rgba(255, 122, 24, 0.1);
+}
+.libnav a .idx {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+.libnav a .dom { color: var(--muted); font-weight: 400; }
+
+@media (max-width: 980px) {
+  .interactive-shell {
+    grid-template-columns: 1fr;
+  }
+  .interactive-rail {
+    position: static;
+  }
+  .topnav {
+    display: none;
+  }
+  /* Below this width the header runs out of room for three bars; the in-page rail
+     and the footer cross-links still reach every shelf. */
+  .sitenav {
+    display: none;
+  }
+}
+
+@media (min-width: 981px) {
+    .rail-toggle {
+    display: inline-grid;
+  }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .interactive-hero h1 { max-width: 12ch; }
+  .site-header { gap: 0.5rem; }
+  .brand { font-size: 0.9rem; }
+}
